@@ -1,0 +1,478 @@
+{
+ "amps": {
+  "acheron": {
+   "name": "Acheron",
+   "spec": "amps/acheron.json",
+   "role": "rhythm (resin)",
+   "cab": "acheron_cab"
+  },
+  "aether": {
+   "name": "Aether",
+   "spec": "amps/aether.json",
+   "role": "modern clean",
+   "cab": "aether_cab"
+  },
+  "ares": {
+   "name": "Ares",
+   "spec": "amps/ares.json",
+   "role": "rhythm",
+   "cab": "ares_cab"
+  },
+  "atlantis": {
+   "name": "Atlantis",
+   "spec": "amps/atlantis.json",
+   "role": "art deco"
+  },
+  "bastion": {
+   "name": "Bastion",
+   "spec": "amps/bastion.json",
+   "role": "medieval"
+  },
+  "calliope": {
+   "name": "Calliope",
+   "spec": "amps/calliope.json",
+   "role": "acoustic clean",
+   "cab": "calliope_cab"
+  },
+  "cerberus": {
+   "name": "Cerberus",
+   "spec": "amps/cerberus.json",
+   "role": "rhythm",
+   "cab": "cerberus_cab"
+  },
+  "citadel": {
+   "name": "Citadel",
+   "spec": "amps/citadel.json",
+   "role": "medieval",
+   "cab": "citadel_cab"
+  },
+  "elysium": {
+   "name": "Elysium",
+   "spec": "amps/elysium.json",
+   "role": "clean",
+   "cab": "elysium_cab"
+  },
+  "eos": {
+   "name": "Eos",
+   "spec": "amps/eos.json",
+   "role": "open-core clean",
+   "cab": "eos_cab"
+  },
+  "erebus": {
+   "name": "Erebus",
+   "spec": "amps/erebus.json",
+   "role": "rhythm",
+   "cab": "erebus_cab"
+  },
+  "erinyes": {
+   "name": "Erinyes",
+   "spec": "amps/erinyes.json",
+   "role": "lead",
+   "cab": "erinyes_cab"
+  },
+  "hades": {
+   "name": "Hades",
+   "spec": "amps/hades.json",
+   "role": "rhythm",
+   "cab": "hades_cab"
+  },
+  "hanami": {
+   "name": "Hanami",
+   "spec": "amps/hanami.json",
+   "role": "sakura",
+   "cab": "hanami_cab"
+  },
+  "hecate": {
+   "name": "Hecate",
+   "spec": "amps/hecate.json",
+   "role": "lead",
+   "cab": "hecate_cab"
+  },
+  "hephaestus": {
+   "name": "Hephaestus",
+   "spec": "amps/hephaestus.json",
+   "role": "magma rhythm"
+  },
+  "icarus": {
+   "name": "Icarus",
+   "spec": "amps/icarus.json",
+   "role": "lead",
+   "cab": "icarus_cab"
+  },
+  "kraken": {
+   "name": "Kraken",
+   "spec": "amps/kraken.json",
+   "role": "art deco"
+  },
+  "kronos2": {
+   "name": "Kronos IIC",
+   "spec": "amps/kronos2.json",
+   "role": "Mark IIC+ inspired",
+   "cab": "kronos_cab"
+  },
+  "kronos4": {
+   "name": "Kronos IV",
+   "spec": "amps/kronos4.json",
+   "role": "Mark III/IV inspired",
+   "cab": "kronos_cab"
+  },
+  "leviathan": {
+   "name": "Leviathan",
+   "spec": "amps/leviathan.json",
+   "role": "art deco",
+   "cab": "leviathan_cab"
+  },
+  "mjolnir": {
+   "name": "Mjolnir",
+   "spec": "amps/mjolnir.json",
+   "role": "Norse",
+   "cab": "mjolnir_cab"
+  },
+  "mnemosyne": {
+   "name": "Mnemosyne",
+   "spec": "amps/mnemosyne.json",
+   "role": "NAM capture loader",
+   "cab": "mnemosyne_cab"
+  },
+  "nemesis": {
+   "name": "Nemesis",
+   "spec": "amps/nemesis.json",
+   "role": "rhythm",
+   "cab": "nemesis_cab"
+  },
+  "nereid": {
+   "name": "Nereid",
+   "spec": "amps/nereid.json",
+   "role": "clean",
+   "cab": "nereid_cab"
+  },
+  "nyx": {
+   "name": "Nyx",
+   "spec": "amps/nyx.json",
+   "role": "ambient",
+   "cab": "nyx_cab"
+  },
+  "orpheus": {
+   "name": "Orpheus",
+   "spec": "amps/orpheus.json",
+   "role": "lead",
+   "cab": "orpheus_cab"
+  },
+  "plvto": {
+   "name": "Plvto",
+   "spec": "amps/plvto.json",
+   "role": "rhythm",
+   "cab": "plvto_cab"
+  },
+  "requiem": {
+   "name": "Requiem",
+   "spec": "amps/requiem.json",
+   "role": "gothic",
+   "cab": "requiem_cab"
+  },
+  "sanctum": {
+   "name": "Sanctum",
+   "spec": "amps/sanctum.json",
+   "role": "gothic"
+  },
+  "selene": {
+   "name": "Selene",
+   "spec": "amps/selene.json",
+   "role": "clean",
+   "cab": "selene_cab"
+  },
+  "styx": {
+   "name": "Styx",
+   "spec": "amps/styx.json",
+   "role": "rhythm",
+   "cab": "styx_cab"
+  },
+  "tartarus": {
+   "name": "Tartarus",
+   "spec": "amps/tartarus.json",
+   "role": "rhythm",
+   "cab": "tartarus_cab"
+  },
+  "thanatos": {
+   "name": "Thanatos",
+   "spec": "amps/thanatos.json",
+   "role": "lead",
+   "cab": "thanatos_cab"
+  },
+  "valkyrie": {
+   "name": "Valkyrie",
+   "spec": "amps/valkyrie.json",
+   "role": "Norse"
+  },
+  "vulcan": {
+   "name": "Vulcan",
+   "spec": "amps/vulcan.json",
+   "role": "magma rhythm",
+   "cab": "vulcan_cab"
+  },
+  "yggdrasil": {
+   "name": "Yggdrasil",
+   "spec": "amps/yggdrasil.json",
+   "role": "Norse"
+  }
+ },
+ "cabs": {
+  "acheron_cab": {
+   "name": "Acheron 4x12",
+   "spec": "cabs/acheron_cab.json",
+   "size": "4x12"
+  },
+  "aether_cab": {
+   "name": "Aether 2x12 vertical",
+   "spec": "cabs/aether_cab.json",
+   "size": "2x12 vertical"
+  },
+  "ares_cab": {
+   "name": "Ares 2x12",
+   "spec": "cabs/ares_cab.json",
+   "size": "2x12"
+  },
+  "calliope_cab": {
+   "name": "Calliope 1x12",
+   "spec": "cabs/calliope_cab.json",
+   "size": "1x12"
+  },
+  "cerberus_cab": {
+   "name": "Cerberus 4x12",
+   "spec": "cabs/cerberus_cab.json",
+   "size": "4x12"
+  },
+  "citadel_cab": {
+   "name": "Citadel 4x12",
+   "spec": "cabs/citadel_cab.json",
+   "size": "4x12"
+  },
+  "elysium_cab": {
+   "name": "Elysium 2x12",
+   "spec": "cabs/elysium_cab.json",
+   "size": "2x12"
+  },
+  "eos_cab": {
+   "name": "Eos 1x12",
+   "spec": "cabs/eos_cab.json",
+   "size": "1x12"
+  },
+  "erebus_cab": {
+   "name": "Erebus 4x12",
+   "spec": "cabs/erebus_cab.json",
+   "size": "4x12"
+  },
+  "erinyes_cab": {
+   "name": "Erinyes 4x12",
+   "spec": "cabs/erinyes_cab.json",
+   "size": "4x12"
+  },
+  "hades_cab": {
+   "name": "Hades 2x12v",
+   "spec": "cabs/hades_cab.json",
+   "size": "2x12 vertical"
+  },
+  "hanami_cab": {
+   "name": "Hanami 2x12",
+   "spec": "cabs/hanami_cab.json",
+   "size": "2x12"
+  },
+  "hecate_cab": {
+   "name": "Hecate 1x12",
+   "spec": "cabs/hecate_cab.json",
+   "size": "1x12"
+  },
+  "icarus_cab": {
+   "name": "Icarus 4x12",
+   "spec": "cabs/icarus_cab.json",
+   "size": "4x12"
+  },
+  "kronos_cab": {
+   "name": "Kronos 1x12",
+   "spec": "cabs/kronos_cab.json",
+   "size": "1x12"
+  },
+  "leviathan_cab": {
+   "name": "Leviathan 2x12",
+   "spec": "cabs/leviathan_cab.json",
+   "size": "2x12"
+  },
+  "mjolnir_cab": {
+   "name": "Mjolnir 4x12",
+   "spec": "cabs/mjolnir_cab.json",
+   "size": "4x12"
+  },
+  "mnemosyne_cab": {
+   "name": "Mnemosyne 2x12",
+   "spec": "cabs/mnemosyne_cab.json",
+   "size": "2x12"
+  },
+  "nemesis_cab": {
+   "name": "Nemesis 4x10",
+   "spec": "cabs/nemesis_cab.json",
+   "size": "4x10"
+  },
+  "nereid_cab": {
+   "name": "Nereid 2x12",
+   "spec": "cabs/nereid_cab.json",
+   "size": "2x12"
+  },
+  "nyx_cab": {
+   "name": "Nyx 4x12",
+   "spec": "cabs/nyx_cab.json",
+   "size": "4x12"
+  },
+  "orpheus_cab": {
+   "name": "Orpheus 1x12",
+   "spec": "cabs/orpheus_cab.json",
+   "size": "1x12"
+  },
+  "plvto_cab": {
+   "name": "Plvto 4x12",
+   "spec": "cabs/plvto_cab.json",
+   "size": "4x12"
+  },
+  "requiem_cab": {
+   "name": "Requiem 4x12",
+   "spec": "cabs/requiem_cab.json",
+   "size": "4x12"
+  },
+  "selene_cab": {
+   "name": "Selene 1x12",
+   "spec": "cabs/selene_cab.json",
+   "size": "1x12"
+  },
+  "styx_cab": {
+   "name": "Styx 2x12",
+   "spec": "cabs/styx_cab.json",
+   "size": "2x12"
+  },
+  "tartarus_cab": {
+   "name": "Tartarus 4x12",
+   "spec": "cabs/tartarus_cab.json",
+   "size": "4x12"
+  },
+  "thanatos_cab": {
+   "name": "Thanatos 2x12",
+   "spec": "cabs/thanatos_cab.json",
+   "size": "2x12"
+  },
+  "vulcan_cab": {
+   "name": "Vulcan 4x12",
+   "spec": "cabs/vulcan_cab.json",
+   "size": "4x12"
+  }
+ },
+ "pedals": {
+  "abyss": {
+   "name": "Abyss",
+   "spec": "pedals/abyss.json",
+   "type": "octave"
+  },
+  "ascend": {
+   "name": "Ascend",
+   "spec": "pedals/ascend.json",
+   "type": "pitch / whammy"
+  },
+  "aurora": {
+   "name": "Aurora",
+   "spec": "pedals/aurora.json",
+   "type": "ambient swell"
+  },
+  "bloom": {
+   "name": "Bloom",
+   "spec": "pedals/bloom.json",
+   "type": "envelope filter"
+  },
+  "crypt": {
+   "name": "Crypt",
+   "spec": "pedals/crypt.json",
+   "type": "reverb"
+  },
+  "ember": {
+   "name": "Ember",
+   "spec": "pedals/ember.json",
+   "type": "fuzz"
+  },
+  "gravity": {
+   "name": "Gravity",
+   "spec": "pedals/gravity.json",
+   "type": "tape stop"
+  },
+  "hex": {
+   "name": "Hex",
+   "spec": "pedals/hex.json",
+   "type": "bitcrusher"
+  },
+  "lament": {
+   "name": "Lament",
+   "spec": "pedals/lament.json",
+   "type": "wah"
+  },
+  "legion": {
+   "name": "Legion",
+   "spec": "pedals/legion.json",
+   "type": "harmoniser"
+  },
+  "lethe": {
+   "name": "Lethe",
+   "spec": "pedals/lethe.json",
+   "type": "delay"
+  },
+  "photon": {
+   "name": "Photon",
+   "spec": "pedals/photon.json",
+   "type": "laser"
+  },
+  "prism": {
+   "name": "Prism",
+   "spec": "pedals/prism.json",
+   "type": "phaser"
+  },
+  "pulse": {
+   "name": "Pulse",
+   "spec": "pedals/pulse.json",
+   "type": "tremolo"
+  },
+  "richter": {
+   "name": "Richter",
+   "spec": "pedals/richter.json",
+   "type": "earthquake sub-octave"
+  },
+  "seraph": {
+   "name": "Seraph",
+   "spec": "pedals/seraph.json",
+   "type": "shimmer reverb"
+  },
+  "shatter": {
+   "name": "Shatter",
+   "spec": "pedals/shatter.json",
+   "type": "glitch workstation"
+  },
+  "spectre": {
+   "name": "Spectre",
+   "spec": "pedals/spectre.json",
+   "type": "modulation"
+  },
+  "stasis": {
+   "name": "Stasis",
+   "spec": "pedals/stasis.json",
+   "type": "freeze"
+  },
+  "tesla": {
+   "name": "Tesla",
+   "spec": "pedals/tesla.json",
+   "type": "ring mod / arc"
+  },
+  "tide": {
+   "name": "Tide",
+   "spec": "pedals/tide.json",
+   "type": "chorus"
+  },
+  "vortex": {
+   "name": "Vortex",
+   "spec": "pedals/vortex.json",
+   "type": "flanger"
+  }
+ }
+}

@@ -1,0 +1,78 @@
+{
+ "art": "art/ascend_art.png",
+ "artmat": {
+  "rough": 0.4,
+  "metal": 0.0
+ },
+ "enclosure": {
+  "color": [
+   0.55,
+   0.56,
+   0.59
+  ],
+  "metal": 1.0,
+  "rough": 0.32,
+  "bump": [
+   "brush",
+   200,
+   0.08
+  ]
+ },
+ "treadle": {
+  "at": [
+   660,
+   840
+  ],
+  "w": 6.0,
+  "l": 7.6,
+  "art": "art/ascend_tread.png",
+  "glow": 1.2
+ },
+ "knobs": [
+  {
+   "at": [
+    560,
+    2020
+   ],
+   "r": 0.62,
+   "style": "black",
+   "v": 0.875
+  },
+  {
+   "at": [
+    200,
+    2020
+   ],
+   "r": 0.38,
+   "style": "black",
+   "v": 0.7
+  }
+ ],
+ "leds": [
+  {
+   "at": [
+    900,
+    2020
+   ],
+   "color": [
+    0.3,
+    0.85,
+    1.0
+   ],
+   "strength": 40
+  }
+ ],
+ "footswitches": [
+  [
+   1080,
+   2020,
+   0.95
+  ]
+ ],
+ "jacks": true,
+ "rimcolor": [
+  0.6,
+  0.9,
+  1
+ ]
+}
