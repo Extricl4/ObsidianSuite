@@ -7,7 +7,8 @@
   synth.js   - the SYNTH page (built in script) + plugin hooks (window.obsSynth)
   header.js  - header knobs (TRANSPOSE, WIDTH) and knob wheel / double-click
   studio.js  - STUDIO recorder
-  themes.js  - Obsidian / Matte / Midnight themes
+  scenes.js  - the picture behind the pages for each theme
+  themes.js  - the themes (colours, fonts, details)
 The same file runs in a browser (demo) and inside the plugin, where
 plugin/WebUI/obsidian-bridge.js is injected and connects it to the audio engine.
 """
@@ -110,7 +111,7 @@ h=head+js
 roots=':root{--sh:1;'+''.join('%s:%s;'%(n,v[0]) for n,v in VARS.items())+'}'
 h=h.replace('<style>','<style>'+roots,1)
 vl=json.dumps([[n,v[0],v[1]] for n,v in VARS.items()])
-t=open('themes.js').read().replace('__VARS__',vl)
+t=open('scenes.js').read()+'\n'+open('themes.js').read().replace('__VARS__',vl)
 i=h.rfind('</body>'); h=h[:i]+t+'\n'+h[i:]
 h=re.sub(r'\x00(\d+)\x00',lambda m:DATA[int(m.group(1))],h)
 # the grain texture is a separate file next to the page (the plugin serves it too)

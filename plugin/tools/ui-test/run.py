@@ -381,6 +381,14 @@ async def run(standalone):
         fx_off = await pg.evaluate("getComputedStyle(document.getElementById('themefx')).display")
         sent_fx = await pg.evaluate("window.__mock.log.some(x=>x[0]==='setSetting'&&x[1]==='themeFx'&&x[2]===false)")
         check(band == 'block' and fx == 'block' and 'Uncial' in font and loaded and fx_off == 'none' and sent_fx, f'Norse: rune bands, snow and its own font; moving details switch off ({band}, {fx}->{fx_off}, font loaded {loaded})')
+        sc = await pg.evaluate("[getComputedStyle(document.getElementById('thscene')).display, document.querySelectorAll('#thscene svg *').length, document.documentElement.classList.contains('thstill')]")
+        check(sc[0] == 'block' and sc[1] > 50 and sc[2], f'Norse draws its scene behind the pages ({sc[1]} shapes), and it stops moving with the details off')
+        counts = {}
+        for tid in ids:
+            await pg.evaluate(f"applyTheme('{tid}')")
+            counts[tid] = await pg.evaluate("document.documentElement.classList.contains('thscene') ? document.querySelectorAll('#thscene svg *').length : 0")
+        await pg.evaluate("applyTheme('norse')")
+        check(all(counts[t] > 50 for t in ids if t not in ('obsidian', 'matte')) and counts['obsidian'] == 0 and counts['matte'] == 0, f'every theme but Obsidian and Matte has a scene ({counts})')
         await pg.locator('[aria-label="Moving theme details"]').click(); await pg.locator('.thc[data-t="obsidian"]').click(); await pg.wait_for_timeout(150)
         check(await pg.evaluate("getComputedStyle(document.querySelector('.thband')).display") == 'none', 'back to Obsidian: no bands')
         await pg.locator('.setnav button', has_text='Audio').click()

@@ -16,8 +16,8 @@ function tint(r,g,b,h,s){ const L=lum(r,g,b); return hsl(h,L<.5?s:s*.35,L); }
 /* a dark theme from a hue: backgrounds tinted (darker greys more), text in its own hue */
 function tone(o){ return (r,g,b,role)=>{ const L=lum(r,g,b);
   if(role==='k') return [r,g,b];
-  if(role==='f') return hsl(o.fh??o.h, o.fs??.1, Math.min(.97, L*(o.fl||1)));
-  const s=L<.22?o.s:L<.5?o.s*.6:o.s*.25;
+  if(role==='f') return hsl(o.fh??o.h, Math.min(.6,(o.fs??.1)*1.25), Math.min(.97, L*(o.fl||1)));
+  const s=Math.min(.75,(L<.22?o.s:L<.5?o.s*.6:o.s*.25)*1.4);      /* a little livelier than before */
   return hsl(o.h, s, Math.min(.98, L*(o.bl||1))); }; }
 
 /* ---- fonts ---- */
@@ -32,21 +32,23 @@ const THEMES=[
   {id:'matte', name:'Matte', note:'Light and calm', accent:'#4d5b6b', sh:.28, light:true, fn:(r,g,b,role)=>{ const L=lum(r,g,b);
       let n; if(role==='k') n=.97; else if(role==='f') n=.1+(1-L)*.44; else n=L<.45?.84+.26*L:.82*(1-L)+.05;
       return hsl(40,.06,Math.min(.95,n)); }},
-  {id:'midnight', name:'Midnight', note:'Blue night, aurora', accent:'#7cc4ff', sh:1, aurora:true, fn:(r,g,b)=>tint(r,g,b,220,.32)},
+  {id:'midnight', name:'Midnight', note:'Moon, stars and constellations', accent:'#7cc4ff', sh:1, aurora:true, fn:(r,g,b)=>tint(r,g,b,220,.42), scene:'midnight'},
   {id:'gothic', name:'Gothic', note:'Cathedral black, blood red', accent:'#c4233e', sh:1, fn:tone({h:332,s:.16,bl:.86,fh:12,fs:.1}),
-    font:{logo:'UnifrakturMaguntia', head:'Cormorant Garamond', body:'Cormorant Garamond', w:600, adj:.45, headAdj:.4, logoCase:'Obsidian', logoLs:'.06em'}, fx:'fog', band:'arches'},
+    font:{logo:'UnifrakturMaguntia', head:'Cormorant Garamond', body:'Cormorant Garamond', w:600, adj:.45, headAdj:.4, logoCase:'Obsidian', logoLs:'.06em'}, fx:'fog', band:'arches', scene:'gothic', sc:{frame:'#0a0608', batc:'#050304'}},
   {id:'roman', name:'Roman', note:'Imperial purple and gold', accent:'#d9b45e', sh:1, fn:tone({h:288,s:.2,bl:1.04,fh:44,fs:.3}),
-    font:{logo:'Cinzel', head:'Cinzel', body:'Marcellus', w:500, adj:.5, headAdj:.46, logoLs:'.3em', numBase:true}, fx:'gold', band:'meander'},
+    font:{logo:'Cinzel', head:'Cinzel', body:'Marcellus', w:500, adj:.5, headAdj:.46, logoLs:'.3em', numBase:true}, fx:'gold', band:'meander', scene:'roman', sc:{stone:'#cfc4b8', stone2:'#8f8579', stone3:'#5d544b', gold:'#d9b45e'}},
   {id:'norse', name:'Norse', note:'Frost, runes and aurora', accent:'#7fe0c0', sh:1, aurora:true, fn:tone({h:208,s:.17,bl:.97,fh:195,fs:.12}),
-    font:{logo:'Uncial Antiqua', head:'Marcellus', body:'Marcellus', w:400, adj:.5, logoCase:'Obsidian', logoLs:'.12em', numBase:true}, fx:'snow', band:'runes'},
+    font:{logo:'Uncial Antiqua', head:'Marcellus', body:'Marcellus', w:400, adj:.5, logoCase:'Obsidian', logoLs:'.12em', numBase:true}, fx:'snow', band:'runes', scene:'norse', sc:{rock:'#1d2630', rock2:'#2f3c48', water:'#08111a', far:'#1c3042', mid:'#0e1b27'}},
   {id:'medieval', name:'Medieval', note:'Leather, parchment, torchlight', accent:'#e8a33c', sh:1, fn:tone({h:28,s:.26,bl:1,fh:40,fs:.34}),
-    font:{logo:'MedievalSharp', head:'MedievalSharp', body:'IM Fell English', w:400, adj:.44, headAdj:'none', logoCase:'Obsidian', logoLs:'.1em'}, fx:'torch', band:'braid'},
+    font:{logo:'MedievalSharp', head:'MedievalSharp', body:'IM Fell English', w:400, adj:.44, headAdj:'none', logoCase:'Obsidian', logoLs:'.1em'}, fx:'torch', band:'braid', scene:'medieval', sc:{ban:'#5a1414', gold:'#d7a548'}},
   {id:'neon', name:'Neon', note:'Synthwave grid', accent:'#ff3fb4', sh:1, fn:tone({h:262,s:.42,bl:1.08,fh:288,fs:.22}),
-    font:{logo:'Orbitron', head:'Orbitron', body:'Rajdhani', w:600, adj:.5, headAdj:.42, headLs:'.1em', logoLs:'.28em'}, fx:'grid', band:'neon'},
+    font:{logo:'Orbitron', head:'Orbitron', body:'Rajdhani', w:600, adj:.5, headAdj:.42, headLs:'.1em', logoLs:'.28em'}, fx:'grid', band:'neon', scene:'neon', sc:{palm:'#0a0414', acc2:'#3fd8ff'}},
   {id:'sakura', name:'Sakura', note:'Plum night, falling petals', accent:'#f6a5c0', sh:1, fn:tone({h:334,s:.2,bl:1.04,fh:340,fs:.18}),
-    font:{logo:'Cormorant Garamond', head:'Cormorant Garamond', body:'Cormorant Garamond', w:600, adj:.45, headAdj:.4, logoCase:'Obsidian', logoLs:'.18em'}, fx:'petals', band:'blossom'},
+    font:{logo:'Cormorant Garamond', head:'Cormorant Garamond', body:'Cormorant Garamond', w:600, adj:.45, headAdj:.4, logoCase:'Obsidian', logoLs:'.18em'}, fx:'petals', band:'blossom', scene:'sakura', sc:{wood:'#1c0f14', petal:'#ffc2d6', torii:'#6e1d24'}},
   {id:'inferno', name:'Inferno', note:'Embers and ash', accent:'#ff6a2a', sh:1, fn:tone({h:12,s:.3,bl:.95,fh:28,fs:.16}),
-    font:{logo:'Pirata One', head:'Rajdhani', body:'Rajdhani', w:600, adj:.5, logoCase:'Obsidian', logoLs:'.1em'}, fx:'embers', band:'flame'},
+    font:{logo:'Pirata One', head:'Rajdhani', body:'Rajdhani', w:600, adj:.5, logoCase:'Obsidian', logoLs:'.1em'}, fx:'embers', band:'flame', scene:'inferno', sc:{rock:'#0d0706'}},
+  {id:'arcana', name:'Arcana', note:'Tarot, moon and stars', accent:'#c9a7ff', sh:1, fn:tone({h:266,s:.24,bl:1.02,fh:44,fs:.22}),
+    font:{logo:'Cinzel', head:'Cinzel', body:'Cormorant Garamond', w:600, adj:.47, headAdj:.42, logoLs:'.3em'}, fx:'gold', band:'stars', scene:'arcana', sc:{card:'#120b1e', gold:'#e2c77a'}},
 ];
 
 /* ---- styles: fonts, aurora, bands, fx layer, theme cards ---- */
@@ -65,7 +67,7 @@ html[data-theme="norse"] #aurora i:nth-child(3){background:radial-gradient(close
 .thband{position:absolute;left:0;right:0;height:12px;pointer-events:none;z-index:3;display:none;color:var(--accent);opacity:.55}
 .thband svg{display:block;width:100%;height:100%}
 html.thx .thband{display:block}
-.thgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px 10px;margin-top:10px}
+.thgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px 10px;margin-top:10px}
 .thc{border:none;padding:0;background:none;cursor:pointer;display:flex;flex-direction:column;gap:6px;align-items:stretch;font:inherit;text-align:left;border-radius:12px}
 .thc .sw{position:relative;height:42px;border-radius:10px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
 .thc .sw b{position:absolute;left:10px;bottom:5px;font-size:20px;font-weight:400;line-height:1}
@@ -78,8 +80,16 @@ html.thx .thband{display:block}
 .thc[aria-pressed="true"]:hover .sw{box-shadow:0 0 0 2px var(--accent)}
 @media (prefers-reduced-motion:reduce){#aurora i{animation:none;opacity:.6}}`;
 document.head.appendChild(ast);
+const sst=document.createElement('style'); sst.textContent=window.OBS_SCENE_CSS||''; document.head.appendChild(sst);
 const fontCss=document.createElement('style'); document.head.appendChild(fontCss);
 const app=document.getElementById('app');
+/* the scene sits behind the pages; page backgrounds turn see-through while a theme has one */
+const scene=document.createElement('div'); scene.id='thscene'; scene.setAttribute('aria-hidden','true');
+const pg0=document.querySelector('.page');
+if(pg0){ const host=pg0.parentElement; if(getComputedStyle(host).position==='static') host.style.position='relative'; host.insertBefore(scene,host.firstChild); }
+document.querySelectorAll('.page > div').forEach(d=>{ if(/60% 70% at 50% 8%/.test(d.getAttribute('style')||'')) d.classList.add('pgbg'); });
+function sceneColours(t){ const c=a=>'rgb('+t.fn(a,a,a+1,'b').join(',')+')';
+  return Object.assign({bg:c(12), bg2:c(20), bg3:c(30), sil:c(6), mid:c(16), far:c(26), acc:t.accent, gold:'#d9b45e'}, t.sc||{}); }
 const aur=document.createElement('div'); aur.id='aurora'; aur.setAttribute('aria-hidden','true'); aur.innerHTML='<i></i><i></i><i></i><i></i>'; app.appendChild(aur);
 const fxc=document.createElement('canvas'); fxc.id='themefx'; fxc.setAttribute('aria-hidden','true'); app.appendChild(fxc);
 
@@ -117,6 +127,7 @@ function bandSvg(kind,flip){
   else if(kind==='braid'){ for(let x=0;x<W;x+=14) p+=`<path d="M${x} 3C${x+4} 3 ${x+10} 9 ${x+14} 9M${x} 9C${x+4} 9 ${x+10} 3 ${x+14} 3" fill="none" stroke="currentColor" stroke-width="1.1"/>`; }
   else if(kind==='neon'){ p=`<defs><filter id="ng${flip?1:0}"><feGaussianBlur stdDeviation="1.6"/></filter></defs><path d="M0 6H${W}" stroke="currentColor" stroke-width="3" filter="url(#ng${flip?1:0})"/><path d="M0 6H${W}" stroke="currentColor" stroke-width="1"/>`; for(let x=40;x<W;x+=120) p+=`<path d="M${x} 2V10" stroke="currentColor" stroke-width="1" opacity=".6"/>`; }
   else if(kind==='blossom'){ p=`<path d="M0 6H${W}" stroke="currentColor" stroke-width=".6" opacity=".45"/>`; for(let x=30;x<W;x+=70+((x*7)%40)){ const c=(dx,dy)=>`<ellipse cx="${x+dx}" cy="${6+dy}" rx="2.2" ry="1.2" transform="rotate(${dx*20+dy*30} ${x+dx} ${6+dy})" fill="currentColor"/>`; p+=c(-2.4,0)+c(2.4,0)+c(0,-2.4)+c(-1.6,2)+c(1.6,2)+`<circle cx="${x}" cy="6" r="1" fill="#fff" opacity=".7"/>`; } }
+  else if(kind==='stars'){ p=`<path d="M0 6H${W}" stroke="currentColor" stroke-width=".5" opacity=".4"/>`; for(let x=20,i=0;x<W;x+=46,i++){ const r=i%3?2.6:4.2; p+=`<path d="M${x} ${6-r}Q${x} 6 ${x+r} 6Q${x} 6 ${x} ${6+r}Q${x} 6 ${x-r} 6Q${x} 6 ${x} ${6-r}Z" fill="currentColor" opacity="${i%3?'.7':'1'}"/>`; } }
   else if(kind==='flame'){ let d='M0 12'; for(let x=0;x<=W;x+=10) d+=` Q${x+5} ${(x/10)%3?2:5} ${x+10} 12`; p=`<path d="${d}" fill="currentColor" opacity=".55"/>`; }
   return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"${flip?' style="transform:scaleY(-1)"':''}>${p}</svg>`;
 }
@@ -185,6 +196,7 @@ function fxFrame(now){
 }
 function startFx(kind){
   cancelAnimationFrame(fxRaf); fxRaf=0; fxKind=kind;
+  R.classList.toggle('thstill',!fxOn);
   const run=!!kind&&fxOn&&!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
   fxc.style.display=run?'block':'none';
   if(!run) return;
@@ -197,11 +209,15 @@ let cur=THEMES[0];
 function applyTheme(id,keepAccent){ const t=THEMES.find(x=>x.id===id)||THEMES[0]; cur=t;
   VARS.forEach(([n,rgb,role])=>{ const [r,g,b]=rgb.split(',').map(Number); R.style.setProperty(n,t.fn(r,g,b,role).join(',')); });
   R.style.setProperty('--sh',t.sh); R.style.colorScheme=t.light?'light':'dark'; R.dataset.theme=t.id;
-  aur.style.display=t.aurora?'block':'none'; const gr=$('.grain'); if(gr) gr.style.opacity=t.light?.05:'';
+  aur.style.display=t.aurora?'block':'none'; const gr=$('.grain'); if(gr) gr.style.opacity=t.light?.05:.1;   /* less grain than before */
   setFonts(t);
   logos.forEach(s=>{ s.textContent=t.font&&t.font.logoCase?t.font.logoCase:s.dataset.txt; });
   R.classList.toggle('thx',!!t.band);
   if(t.band){ bandTop.innerHTML=bandSvg(t.band,false); bandBot.innerHTML=bandSvg(t.band,true); requestAnimationFrame(placeBands); }
+  const S=window.OBS_SCENES||{};
+  if(t.scene&&S[t.scene]){ try{ scene.innerHTML='<svg viewBox="0 0 1360 592" preserveAspectRatio="xMidYMid slice">'+S[t.scene](sceneColours(t))+'</svg>'; }catch(e){ scene.innerHTML=''; } }
+  else scene.innerHTML='';
+  R.classList.toggle('thscene',!!scene.innerHTML);
   startFx(t.fx);
   ACC0=t.accent; if(!keepAccent) applyAcc(t.accent);
   $$('.thc').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t===t.id));
