@@ -60,7 +60,7 @@
       t += 1;
       const lvl = 0.25 + 0.2 * Math.sin(t / 7);
       emit('obs:meters', { in: lvl, outL: lvl * 0.9, outR: lvl * 0.85, gate: 1, cpu: 0.06, clip: false,
-        tuner: { hz: 82.41 * Math.pow(2, (Math.sin(t / 15) * 8) / 1200), conf: 0.9, level: lvl }, beat: -1, synth: 0, bpm: 120, busy: false, latencyMs: 0, synNote: -1, synStep: -1, synSrc: 0, ...(window.__mock.synthLive || {}) });
+        tuner: { hz: 82.41 * Math.pow(2, (Math.sin(t / 15) * 8) / 1200), conf: 0.9, level: lvl }, beat: -1, synth: 0, bpm: 120, busy: false, latencyMs: 0, synNote: -1, synStep: -1, synSrc: 0, ...(window.__mock.meterExtra || {}) });
     }, 33);
   }
   window.__JUCE__ = {

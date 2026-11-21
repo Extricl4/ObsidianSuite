@@ -131,12 +131,12 @@ async def run(standalone):
         lit = await pg.evaluate("[...document.querySelectorAll('.sy-st .cell > i')].map(i=>parseFloat(i.style.height)>50?1:0).join('')")
         check(lit == '1000100010001000', f'steps from a loaded preset show in the lane ({lit})')
         # live note + step from the engine
-        await pg.evaluate("window.__mock.synthLive = {synNote:45, synStep:4, synSrc:0, synth:.5}")
+        await pg.evaluate("window.__mock.meterExtra = {synNote:45, synStep:4, synSrc:0, synth:.5}")
         await pg.wait_for_timeout(150)
         note = await pg.evaluate("document.querySelector('.sy-note .n').textContent")
         playing = await pg.evaluate("[...document.querySelectorAll('.sy-st')].findIndex(s=>s.classList.contains('play'))")
         check(note == 'A2' and playing == 4, f'note display and arp lane follow the engine ({note}, step {playing})')
-        await pg.evaluate("window.__mock.synthLive = null")
+        await pg.evaluate("window.__mock.meterExtra = null")
         # AUDITION plays the engine (and switches the synth on)
         await pg.evaluate("window.__mock.log.length=0; window.__mock.engineNotes = true")
         await pg.locator('.sy-play').click(); await pg.wait_for_timeout(200)
@@ -280,6 +280,14 @@ async def run(standalone):
         check(note == 'E', f'tuner shows the note from the engine ({note})')
         check(await pg.evaluate("window.__mock.log.some(x=>x[0]==='tunerOpen'&&x[1]===true)"), 'opening the tuner tells the engine')
         await pg.screenshot(path=str(OUT / 'tuner.png'))
+        # the tuner box must not move when notes change (or when nothing is played)
+        geo = "(()=>{const ov=document.querySelector('.ov[data-ov=tuner]'); const big=[...ov.querySelectorAll('span')].find(s=>s.style.fontSize==='110px'); const box=big.closest('div[style*=\"width: 700px\"]'); const r=e=>{const b=e.getBoundingClientRect(); return [Math.round(b.left*2)/2,Math.round(b.top*2)/2,Math.round(b.width*2)/2,Math.round(b.height*2)/2].join(',');}; return [r(box), r(big), r(big.previousElementSibling), r(big.nextElementSibling), r(big.parentElement.nextElementSibling)].join(' | '); })()"
+        shapes = []
+        for tun in [{'hz': 82.41, 'conf': .9, 'level': .3}, {'hz': 185.0, 'conf': .9, 'level': .3}, {'hz': 0, 'conf': 0, 'level': 0}, {'hz': 466.16 * 0.973, 'conf': .9, 'level': .3}, {'hz': 1046.5, 'conf': .9, 'level': .3}]:
+            await pg.evaluate("window.__mock.meterExtra = {tuner: " + json.dumps(tun) + "}"); await pg.wait_for_timeout(120)
+            shapes.append(await pg.evaluate(geo))
+        await pg.evaluate("window.__mock.meterExtra = null")
+        check(len(set(shapes)) == 1, 'tuner stays still across notes, strings and silence' + ('' if len(set(shapes)) == 1 else ' (' + ' / '.join(sorted(set(shapes))) + ')'))
         await pg.evaluate("closeOv(); setTab('AMP')")
         await pg.screenshot(path=str(OUT / 'main.png'))
 

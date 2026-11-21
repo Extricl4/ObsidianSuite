@@ -392,6 +392,25 @@ function setupTuner() {
   const bars = big ? [...big.parentElement.nextElementSibling.children] : [];
   tunerEls = { ov, big, bars, cents: $$('span', ov).find(s => / cents$/.test(txt(s))), hz: $$('span', ov).find(s => /^\d+\.\d+ Hz$/.test(txt(s))), mini: $('#livemini') };
   bars.forEach(b => b.dataset.h = b.style.height);
+  // Keep everything STILL: fixed widths and heights, so the box never moves when the note changes.
+  if (big) {
+    Object.assign(big.style, { display: 'inline-block', width: '210px', height: '100px', textAlign: 'center', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' });
+    if (big.firstElementChild) Object.assign(big.firstElementChild.style, { display: 'inline-block', width: '0', overflow: 'visible', textAlign: 'left' });
+  }
+  [tunerEls.cents, tunerEls.hz].forEach((e, i) => { if (!e) return;
+    Object.assign(e.style, { display: 'inline-block', width: i ? '96px' : '96px', textAlign: i ? 'left' : 'right', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap', minHeight: '1.3em' }); });
+  if (tunerEls.cents && tunerEls.cents.parentElement) tunerEls.cents.parentElement.style.minHeight = '20px';
+  const box = big && big.closest('div[style*="width: 700px"]');
+  if (box) {
+    const lock = () => { if (ov.style.display === 'block' && box.offsetHeight > 0 && !box.dataset.locked) { box.style.height = box.offsetHeight + 'px'; box.dataset.locked = '1'; } };
+    new MutationObserver(() => requestAnimationFrame(lock)).observe(ov, { attributes: true, attributeFilter: ['style'] });
+  }
+  const mini = tunerEls.mini;
+  if (mini) {
+    const note = mini.querySelector('div > span'); if (note) Object.assign(note.style, { display: 'inline-block', width: '26px', textAlign: 'center' });
+    const sp = mini.querySelectorAll('span'); const last = sp[sp.length - 1];
+    if (last) Object.assign(last.style, { display: 'inline-block', width: '28px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' });
+  }
   // open / close tell the engine (it mutes the output while tuning if you want)
   const _open = window.openOv, _close = window.closeOv;
   window.openOv = function (n) { _open(n); call('tunerOpen', n === 'tuner'); };
@@ -410,8 +429,9 @@ function showTuner(t) {
   if (visible && tunerEls.big) {
     tunerEls.big.firstChild.textContent = name;
     if (tunerEls.big.firstElementChild) tunerEls.big.firstElementChild.textContent = oct;
-    if (tunerEls.cents) tunerEls.cents.textContent = ok ? sgn(cents, 0) + ' cents' : '';
-    if (tunerEls.hz) tunerEls.hz.textContent = ok ? hz.toFixed(2) + ' Hz' : '';
+    // placeholders instead of empty text, so the line keeps its height
+    if (tunerEls.cents) { tunerEls.cents.textContent = ok ? sgn(cents, 0) + ' cents' : '– cents'; tunerEls.cents.style.opacity = ok ? '' : '.35'; }
+    if (tunerEls.hz) { tunerEls.hz.textContent = ok ? hz.toFixed(2) + ' Hz' : '– Hz'; tunerEls.hz.style.opacity = ok ? '' : '.35'; }
     const N = tunerEls.bars.length, mid = (N - 1) / 2, pos = Math.round(mid + clamp(cents / 50, -1, 1) * mid);
     tunerEls.bars.forEach((b, i) => {
       const inTune = ok && Math.abs(cents) <= 2;
