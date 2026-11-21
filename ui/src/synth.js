@@ -132,108 +132,156 @@ const FONT = () => getComputedStyle(SP).fontFamily || 'sans-serif';
 /* ------------------------------------------------------------ styles */
 const css = el('style');
 css.textContent = `
-.sy-root { position: absolute; inset: 0; display: flex; align-items: flex-start; justify-content: center; padding-top: 10px; user-select: none; }
-.sy-panel { width: 1316px; height: 570px; box-sizing: border-box; padding: 16px; border-radius: 20px; position: relative; display: flex; flex-direction: column; gap: 12px;
-  background: linear-gradient(#1a1a1d, #131315); box-shadow: inset 0 1px 0 rgba(255,255,255,.07), inset 0 0 0 1px rgba(255,255,255,.04), 0 24px 48px rgba(0,0,0,.5); }
-.sy-row { display: flex; gap: 14px; flex: none; }
-.sy-row2 { gap: 10px; }
-.sy-card { position: relative; box-sizing: border-box; border-radius: 14px; padding: 11px 13px 12px; display: flex; flex-direction: column; min-width: 0;
-  background: #0e0e10; box-shadow: inset 0 1px 0 rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,255,255,.04); }
-.sy-card.flow::after { content: ''; position: absolute; right: -11px; top: 132px; width: 7px; height: 7px; border-right: 1.5px solid rgba(233,230,223,.28); border-top: 1.5px solid rgba(233,230,223,.28); transform: rotate(45deg); }
-.sy-card > header { display: flex; align-items: center; gap: 8px; height: 22px; margin-bottom: 10px; flex: none; }
-.sy-card h3 { margin: 0; font-size: 10.5px; font-weight: 600; letter-spacing: .24em; color: #e9e6df; white-space: nowrap; }
+.sy-root { position: absolute; inset: 0; display: flex; align-items: flex-start; justify-content: center; padding-top: 8px; user-select: none; }
+/* ---- the device: a brushed obsidian faceplate with an inlaid frame ---- */
+.sy-dev { --h-osc: #3fd0c0; --h-oscb: #6fa8ff; --h-sub: #b48cff; --h-flt: #f2b14c; --h-env: #ff7b8c; --h-mot: #7cc6ff;
+  width: 1320px; height: 572px; box-sizing: border-box; position: relative; border-radius: 22px;
+  background: radial-gradient(90% 60% at 25% 0%, rgba(255,255,255,.07), transparent 60%), repeating-linear-gradient(90deg, rgba(255,255,255,.014) 0 1px, transparent 1px 3px), linear-gradient(172deg, #232327, #141416 55%, #0e0e10);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.13), inset 0 0 0 1px rgba(255,255,255,.05), inset 0 -3px 8px rgba(0,0,0,.6), 0 26px 54px rgba(0,0,0,.55), 0 2px 0 rgba(0,0,0,.8); }
+.sy-dev::before { content: ''; position: absolute; inset: 9px; border-radius: 16px; border: 1px solid var(--accent); opacity: .3; pointer-events: none; }
+.sy-screw { position: absolute; width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #8a8984, #2a2a2c 70%); box-shadow: inset 0 0 0 1px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.08); }
+.sy-screw::after { content: ''; position: absolute; left: 1px; right: 1px; top: 4px; height: 1px; background: rgba(0,0,0,.7); transform: rotate(35deg); }
+.sy-screw.tl { top: 15px; left: 15px; } .sy-screw.tr { top: 15px; right: 15px; } .sy-screw.bl { bottom: 15px; left: 15px; } .sy-screw.br { bottom: 15px; right: 15px; }
+/* ---- top strip: hardware controls ---- */
+.sy-top { position: absolute; left: 40px; right: 40px; top: 20px; height: 128px; display: flex; align-items: flex-start; justify-content: space-between; }
+.sy-hw { display: flex; flex-direction: column; align-items: center; gap: 7px; min-width: 70px; }
+.sy-eng { font-size: 9.5px; font-weight: 600; letter-spacing: .22em; color: #cfccc5; text-shadow: 0 1px 0 rgba(0,0,0,.9); white-space: nowrap; }
+.sy-val { font-size: 11px; color: #e9e6df; font-variant-numeric: tabular-nums; white-space: nowrap; min-height: 14px; }
+.sy-mk { position: relative; width: 66px; height: 66px; cursor: ns-resize; touch-action: none; }
+.sy-mk svg { position: absolute; inset: 0; overflow: visible; }
+.sy-mk svg line { stroke: rgba(233,230,223,.26); stroke-width: 1.6; stroke-linecap: round; }
+.sy-mk svg line.on { stroke: var(--accent); filter: drop-shadow(0 0 2px var(--accent)); }
+.sy-mk .knurl { position: absolute; inset: 9px; border-radius: 50%; background: repeating-conic-gradient(#3c3c42 0deg 4deg, #121214 4deg 8deg); box-shadow: 0 6px 10px rgba(0,0,0,.85), 0 2px 3px rgba(0,0,0,.9); }
+.sy-mk .cap { position: absolute; inset: 14px; border-radius: 50%; background: radial-gradient(circle at 36% 26%, #55555c 0%, #1d1d21 46%, #0b0b0c 100%);
+  box-shadow: 0 0 0 2px #8f8e89, 0 0 0 3px #232326, inset 0 1px 1px rgba(255,255,255,.3), inset 0 -4px 8px rgba(0,0,0,.7); }
+.sy-mk .ptr { position: absolute; inset: 0; }
+.sy-mk .ptr::after { content: ''; position: absolute; left: 50%; top: 3px; width: 3px; height: 12px; margin-left: -1.5px; border-radius: 2px; background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+.sy-mk:hover .cap { box-shadow: 0 0 0 2px #b0afaa, 0 0 0 3px #232326, inset 0 1px 1px rgba(255,255,255,.3), inset 0 -4px 8px rgba(0,0,0,.7); }
+/* selector (chicken-head) knob with its positions around it */
+.sy-sel { position: relative; width: 150px; height: 104px; }
+.sy-sel .dial { position: absolute; left: 50%; top: 40px; width: 48px; height: 48px; margin-left: -24px; border-radius: 50%; cursor: ns-resize; touch-action: none;
+  background: radial-gradient(circle at 38% 30%, #4a4a50, #18181b 60%, #0c0c0d); box-shadow: 0 0 0 2px #8f8e89, 0 0 0 3px #232326, 0 6px 10px rgba(0,0,0,.8); }
+.sy-sel .dial svg { position: absolute; inset: -10px; width: 68px; height: 68px; overflow: visible; transition: transform .12s; }
+.sy-sel .opt { position: absolute; font-size: 8.5px; font-weight: 600; letter-spacing: .1em; color: #6f6f76; cursor: pointer; transform: translate(-50%, -50%); white-space: nowrap; padding: 2px 3px; }
+.sy-sel .opt:hover { color: #e9e6df; }
+.sy-sel .opt.on { color: var(--accent); text-shadow: 0 0 6px var(--accent); }
+/* bat-lever toggle switch */
+.sy-bat { position: relative; width: 34px; height: 54px; cursor: pointer; }
+.sy-bat .nut { position: absolute; left: 6px; top: 16px; width: 22px; height: 22px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #b9b8b2, #5c5c5e 55%, #2a2a2c); box-shadow: 0 3px 5px rgba(0,0,0,.8), inset 0 0 0 2px rgba(0,0,0,.25); }
+.sy-bat .lev { position: absolute; left: 13px; top: 2px; width: 8px; height: 26px; border-radius: 4px 4px 3px 3px; background: linear-gradient(90deg, #6d6c68, #f0eee8 45%, #8d8c87); box-shadow: 0 2px 3px rgba(0,0,0,.7); transform-origin: 50% 25px; transition: transform .12s; }
+.sy-bat.down .lev { transform: rotate(180deg); }
+.sy-bat .t, .sy-bat .b { position: absolute; left: 50%; transform: translateX(-50%); font-size: 8px; font-weight: 600; letter-spacing: .12em; color: #6f6f76; white-space: nowrap; }
+.sy-bat .t { top: -13px; } .sy-bat .b { bottom: -13px; }
+.sy-bat:not(.down) .t, .sy-bat.down .b { color: var(--accent); }
+.sy-lamp { width: 9px; height: 9px; border-radius: 50%; background: #3a1a1a; box-shadow: inset 0 1px 2px rgba(0,0,0,.8); }
+.sy-lamp.on { background: radial-gradient(circle at 40% 35%, #fff, var(--accent) 60%); box-shadow: 0 0 10px var(--accent), 0 0 3px var(--accent); }
+/* LED display */
+.sy-led { position: relative; width: 176px; height: 92px; margin-top: 18px; border-radius: 10px; cursor: pointer; box-sizing: border-box; padding: 8px 12px;
+  background: linear-gradient(#060607, #0b0b0d); box-shadow: inset 0 2px 8px rgba(0,0,0,.95), inset 0 0 0 1px rgba(255,255,255,.04), 0 1px 0 rgba(255,255,255,.08);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.sy-led .n { font-family: 'Orbitron', 'Saira', sans-serif; font-size: 30px; font-weight: 500; color: var(--accent); text-shadow: 0 0 12px var(--accent); line-height: 1; letter-spacing: .04em; }
+.sy-led .n small { font-size: 14px; margin-left: 2px; opacity: .8; }
+.sy-led .s { margin-top: 6px; font-family: 'Orbitron', 'Saira', sans-serif; font-size: 8.5px; letter-spacing: .16em; color: var(--accent); opacity: .65; white-space: nowrap; }
+.sy-led .k { position: absolute; left: 10px; top: 7px; font-size: 7.5px; letter-spacing: .14em; color: #6f6f76; }
+.sy-led .tn { position: absolute; right: 10px; top: 7px; font-size: 7.5px; letter-spacing: .1em; color: #6f6f76; }
+.sy-led .bar { position: absolute; left: 12px; right: 12px; bottom: 7px; height: 2px; border-radius: 1px; background: #19191c; overflow: hidden; }
+.sy-led .bar i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--accent); box-shadow: 0 0 6px var(--accent); transition: width .08s; }
+.sy-led:hover { box-shadow: inset 0 2px 8px rgba(0,0,0,.95), inset 0 0 0 1px rgba(255,255,255,.12), 0 1px 0 rgba(255,255,255,.08); }
+.sy-pop { position: absolute; z-index: 20; top: 128px; left: 50%; transform: translateX(-50%); display: none; flex-direction: column; gap: 12px; padding: 16px 18px; border-radius: 14px;
+  background: linear-gradient(#1e1e22, #141416); box-shadow: inset 0 1px 0 rgba(255,255,255,.08), inset 0 0 0 1px rgba(255,255,255,.06), 0 20px 40px rgba(0,0,0,.7); }
+.sy-pop.show { display: flex; }
+.sy-pop h4 { margin: 0; font-size: 10px; font-weight: 600; letter-spacing: .22em; color: #e9e6df; }
+/* ---- the screen: four sections ---- */
+.sy-screen { position: absolute; left: 28px; right: 28px; top: 160px; height: 312px; border-radius: 14px; display: flex; box-sizing: border-box; padding: 14px 0 12px;
+  background: radial-gradient(120% 90% at 50% 0%, #121215, #08080a 70%); box-shadow: inset 0 3px 12px rgba(0,0,0,.9), inset 0 0 0 1px rgba(255,255,255,.05), 0 1px 0 rgba(255,255,255,.1); transition: opacity .2s, filter .2s; }
+.sy-sec { position: relative; display: flex; flex-direction: column; padding: 0 16px; box-sizing: border-box; min-width: 0; }
+.sy-sec + .sy-sec { box-shadow: -1px 0 0 rgba(255,255,255,.06); }
+.sy-sh { display: flex; align-items: center; gap: 8px; height: 24px; margin-bottom: 8px; flex: none; }
+.sy-sh h3 { margin: 0; font-size: 10.5px; font-weight: 600; letter-spacing: .22em; color: #e9e6df; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
+.sy-sh h3::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--sc); box-shadow: 0 0 8px var(--sc); }
 .sy-sp { flex: 1; }
-.sy-off .sy-body { opacity: .38; filter: grayscale(1); transition: opacity .15s; }
+.sy-off .sy-body { opacity: .35; filter: grayscale(1); }
 .sy-body { display: flex; flex-direction: column; flex: 1; min-height: 0; transition: opacity .15s; }
-.sy-scr { position: relative; flex: none; border-radius: 10px; overflow: hidden; background: #09090a; box-shadow: inset 0 0 0 1px rgba(255,255,255,.05), inset 0 6px 18px rgba(0,0,0,.6); }
-.sy-scr canvas { display: block; width: 100%; height: 100%; }
+.sy-vis { position: relative; flex: none; border-radius: 9px; overflow: hidden; background: #050506; box-shadow: inset 0 0 0 1px rgba(255,255,255,.05), inset 0 4px 12px rgba(0,0,0,.7); }
+.sy-vis canvas { display: block; width: 100%; height: 100%; }
 .sy-knobs { display: flex; justify-content: space-around; align-items: flex-start; flex: none; }
 .sy-lbl { font-size: 8.5px; font-weight: 600; letter-spacing: .2em; color: #6f6f76; white-space: nowrap; }
-/* knob */
+.sy-dev.off .sy-screen { opacity: .4; filter: grayscale(.8); }
+.sy-dev.off .sy-led .n, .sy-dev.off .sy-led .s { opacity: .15; text-shadow: none; }
+/* screen knobs (section colour arcs) */
 .sy-ctl { display: flex; flex-direction: column; align-items: center; min-width: 0; }
 .sy-kn { position: relative; flex: none; cursor: ns-resize; touch-action: none; border-radius: 50%; }
 .sy-kn > i { position: absolute; border-radius: 50%; }
-.sy-kn .a { inset: 0; -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 3.4px), #000 calc(100% - 2.8px), #000 calc(100% - .5px), transparent 100%); mask: radial-gradient(closest-side, transparent calc(100% - 3.4px), #000 calc(100% - 2.8px), #000 calc(100% - .5px), transparent 100%); }
+.sy-kn .a { inset: 0; -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 3.2px), #000 calc(100% - 2.6px), #000 calc(100% - .5px), transparent 100%); mask: radial-gradient(closest-side, transparent calc(100% - 3.2px), #000 calc(100% - 2.6px), #000 calc(100% - .5px), transparent 100%); }
 .sy-kn .c { inset: 16%; background: repeating-conic-gradient(#2e2e33 0deg 3deg, #151517 3deg 6deg); box-shadow: 0 4px 8px rgba(0,0,0,.8), 0 1px 2px rgba(0,0,0,.9); }
 .sy-kn .c > i { position: absolute; inset: 6%; border-radius: 50%; background: radial-gradient(circle at 38% 22%, rgba(255,255,255,.1), transparent 45%), radial-gradient(circle at 50% 15%, #47474d 0%, #212124 55%, #131315 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,.2), inset 0 -3px 6px rgba(0,0,0,.6); }
 .sy-kn .c > i > b { position: absolute; inset: 0; }
 .sy-kn .c > i > b::after { content: ''; position: absolute; left: 50%; top: 7%; width: 2.4px; height: 30%; margin-left: -1.2px; border-radius: 2px; background: #f4f1ea; }
 .sy-kn:hover .c { box-shadow: 0 4px 8px rgba(0,0,0,.8), 0 0 0 1px rgba(255,255,255,.07); }
-.sy-kn.drag .c > i { background: radial-gradient(circle at 38% 22%, rgba(255,255,255,.14), transparent 45%), radial-gradient(circle at 50% 15%, #4f4f55 0%, #252528 55%, #141416 100%); }
-.sy-kl { font-size: 8.5px; font-weight: 600; letter-spacing: .18em; color: #a3a3a8; margin-top: 5px; white-space: nowrap; }
+.sy-kl { font-size: 8.5px; font-weight: 600; letter-spacing: .16em; color: #a3a3a8; margin-top: 5px; white-space: nowrap; }
 .sy-kv { font-size: 10.5px; color: #e9e6df; font-variant-numeric: tabular-nums; white-space: nowrap; margin-top: 2px; }
-/* switches */
+/* small switches */
 .sy-tg { width: 30px; height: 16px; flex: none; border-radius: 9px; border: none; padding: 0; position: relative; cursor: pointer; background: #2a2a2f; box-shadow: inset 0 1px 2px rgba(0,0,0,.6); transition: background .15s; }
 .sy-tg i { position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: #7a7a80; transition: transform .15s, background .15s; }
-.sy-tg.on { background: var(--accent); }
+.sy-tg.on { background: var(--sc, var(--accent)); }
 .sy-tg.on i { transform: translateX(14px); background: #111113; }
-.sy-seg { display: flex; flex: none; gap: 2px; padding: 3px; border-radius: 9px; background: #0a0a0b; box-shadow: inset 0 0 0 1px rgba(255,255,255,.05); }
-.sy-seg button { flex: 1; min-width: 0; height: 24px; padding: 0 5px; border: none; border-radius: 7px; background: none; color: #6f6f76; font: inherit; font-size: 9px; font-weight: 600; letter-spacing: .08em;
+.sy-seg { display: flex; flex: none; gap: 2px; padding: 3px; border-radius: 8px; background: #0e0e10; box-shadow: inset 0 0 0 1px rgba(255,255,255,.05); }
+.sy-seg button { flex: 1; min-width: 0; height: 22px; padding: 0 4px; border: none; border-radius: 6px; background: none; color: #6f6f76; font: inherit; font-size: 8.5px; font-weight: 600; letter-spacing: .06em;
   cursor: pointer; display: flex; align-items: center; justify-content: center; white-space: nowrap; transition: background .12s, color .12s; }
 .sy-seg button:hover { color: #e9e6df; }
-.sy-seg button.on { color: #e9e6df; background: linear-gradient(#36363c, #26262a); box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 1px 2px rgba(0,0,0,.5); }
-.sy-seg.small button { height: 20px; font-size: 8.5px; }
-.sy-chip { height: 22px; padding: 0 9px; flex: none; border-radius: 7px; border: 1px solid rgba(255,255,255,.1); background: none; color: #8d8d93; font: inherit; font-size: 8.5px; font-weight: 600; letter-spacing: .16em; cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 6px; transition: background .12s, color .12s; }
+.sy-seg button.on { color: #e9e6df; background: linear-gradient(#34343a, #25252a); box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 1px 2px rgba(0,0,0,.5), inset 0 -2px 0 var(--sc, var(--accent)); }
+.sy-seg.small button { height: 19px; font-size: 8px; }
+.sy-chip { height: 20px; padding: 0 8px; flex: none; border-radius: 6px; border: 1px solid rgba(255,255,255,.1); background: none; color: #8d8d93; font: inherit; font-size: 8px; font-weight: 600; letter-spacing: .14em; cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
 .sy-chip:hover { color: #e9e6df; border-color: rgba(255,255,255,.18); }
-.sy-chip.on { background: var(--accent); border-color: transparent; color: #111113; }
-.sy-chip svg { width: 12px; height: 12px; }
-.sy-pill { height: 26px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 10px; border-radius: 8px; background: #0a0a0b; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); cursor: ns-resize; touch-action: none; white-space: nowrap; }
+.sy-chip.on { background: var(--sc, var(--accent)); border-color: transparent; color: #111113; }
+.sy-pill { height: 22px; flex: none; display: flex; align-items: center; gap: 7px; padding: 0 9px; border-radius: 7px; background: #0e0e10; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); cursor: ns-resize; touch-action: none; white-space: nowrap; }
 .sy-pill:hover { box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); }
-.sy-pill .l { font-size: 8.5px; font-weight: 600; letter-spacing: .18em; color: #6f6f76; }
-.sy-pill .v { font-size: 10.5px; color: #e9e6df; font-variant-numeric: tabular-nums; }
+.sy-pill .l { font-size: 8px; font-weight: 600; letter-spacing: .16em; color: #6f6f76; }
+.sy-pill .v { font-size: 10px; color: #e9e6df; font-variant-numeric: tabular-nums; }
 .sy-pill.cyc { cursor: pointer; }
-.sy-stepper { height: 26px; display: flex; align-items: center; border-radius: 8px; background: #0a0a0b; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); flex: none; }
-.sy-stepper button { width: 26px; height: 26px; border: none; background: none; color: #8d8d93; font: inherit; font-size: 14px; cursor: pointer; padding: 0; }
-.sy-stepper button:hover { color: #e9e6df; }
-.sy-stepper span { flex: 1; text-align: center; font-size: 10.5px; color: #e9e6df; white-space: nowrap; }
-.sy-stepper span b { font-size: 8.5px; font-weight: 600; letter-spacing: .18em; color: #6f6f76; margin-right: 8px; }
-/* sound tabs */
-.sy-tabs { display: flex; gap: 4px; }
-.sy-tab { height: 24px; padding: 0 10px; border: none; border-radius: 7px; background: none; color: #6f6f76; font: inherit; font-size: 9.5px; font-weight: 600; letter-spacing: .16em; cursor: pointer; display: flex; align-items: center; gap: 7px; white-space: nowrap; }
+.sy-tabs { display: flex; gap: 3px; }
+.sy-tab { height: 22px; padding: 0 9px; border: none; border-radius: 6px; background: none; color: #6f6f76; font: inherit; font-size: 9px; font-weight: 600; letter-spacing: .16em; cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
 .sy-tab:hover { color: #e9e6df; }
-.sy-tab.on { color: #e9e6df; background: #1d1d21; box-shadow: inset 0 0 0 1px rgba(255,255,255,.07); }
+.sy-tab.on { color: #e9e6df; background: #1b1b1f; box-shadow: inset 0 0 0 1px rgba(255,255,255,.07), inset 0 -2px 0 var(--tc); }
 .sy-tab i { width: 6px; height: 6px; border-radius: 50%; background: #3a3a40; }
-.sy-tab i.lit { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
-.sy-tab svg { opacity: .7; }
-/* note display */
-.sy-note { height: 92px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.sy-note .n { font-size: 30px; font-weight: 600; letter-spacing: .02em; color: #e9e6df; line-height: 1; }
-.sy-note .n small { font-size: 14px; font-weight: 500; color: #8d8d93; margin-left: 2px; }
-.sy-note .s { margin-top: 7px; font-size: 8.5px; font-weight: 600; letter-spacing: .22em; color: #6f6f76; }
-.sy-note .bar { position: absolute; left: 14px; right: 14px; bottom: 9px; height: 3px; border-radius: 2px; background: #1b1b1e; overflow: hidden; }
-.sy-note .bar i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--accent); border-radius: 2px; transition: width .08s; }
-.sy-note .tun { position: absolute; right: 8px; top: 7px; font-size: 8.5px; color: #6f6f76; letter-spacing: .08em; cursor: ns-resize; padding: 2px 4px; border-radius: 4px; }
-.sy-note .tun:hover { color: #e9e6df; background: #161618; }
+.sy-tab i.lit { background: var(--tc); box-shadow: 0 0 6px var(--tc); }
 /* arp lane */
-.sy-lane { display: grid; grid-template-columns: repeat(16, 1fr); gap: 4px; height: 86px; flex: none; touch-action: none; }
-.sy-st { position: relative; display: flex; flex-direction: column; gap: 4px; min-width: 0; cursor: pointer; }
-.sy-st .cell { position: relative; flex: 1; border-radius: 5px; background: #19191c; box-shadow: inset 0 0 0 1px rgba(255,255,255,.04); overflow: hidden; }
-.sy-st .cell > i { position: absolute; left: 0; right: 0; bottom: 0; border-radius: 4px; background: linear-gradient(#e9e6df, #b9b5ad); }
-.sy-st .cell > i.dim { background: linear-gradient(#5a5a60, #3e3e44); }
-.sy-st .cell > b { position: absolute; left: 0; right: 0; top: 4px; text-align: center; font-size: 8.5px; font-weight: 600; color: #111113; pointer-events: none; }
+.sy-lane { display: grid; grid-template-columns: repeat(16, 1fr); gap: 3px; height: 62px; flex: none; touch-action: none; }
+.sy-st { position: relative; display: flex; flex-direction: column; gap: 3px; min-width: 0; cursor: pointer; }
+.sy-st .cell { position: relative; flex: 1; border-radius: 4px; background: #17171a; box-shadow: inset 0 0 0 1px rgba(255,255,255,.04); overflow: hidden; }
+.sy-st .cell > i { position: absolute; left: 0; right: 0; bottom: 0; border-radius: 3px; background: linear-gradient(var(--h-mot), #3f7fb8); }
+.sy-st .cell > i.dim { background: linear-gradient(#4a4a50, #333338); }
+.sy-st .cell > b { position: absolute; left: 0; right: 0; top: 3px; text-align: center; font-size: 7.5px; font-weight: 600; color: #08080a; pointer-events: none; }
 .sy-st .cell > b.light { color: #a3a3a8; }
-.sy-st .cell.tie::before { content: ''; position: absolute; left: -6px; top: 50%; width: 10px; height: 3px; margin-top: -1.5px; background: var(--accent); border-radius: 2px; z-index: 1; }
-.sy-st .num { height: 10px; font-size: 8px; color: #6f6f76; text-align: center; }
-.sy-st.out { opacity: .28; }
-.sy-st.play .cell { box-shadow: inset 0 0 0 1px var(--accent), 0 0 10px rgba(255,255,255,.08); }
+.sy-st .cell.tie::before { content: ''; position: absolute; left: -5px; top: 50%; width: 8px; height: 3px; margin-top: -1.5px; background: var(--accent); border-radius: 2px; z-index: 1; }
+.sy-st .num { height: 9px; font-size: 7px; color: #55555b; text-align: center; }
+.sy-st.out { opacity: .25; }
+.sy-st.play .cell { box-shadow: inset 0 0 0 1px #fff, 0 0 10px var(--h-mot); }
 .sy-st.beat .num { color: #a3a3a8; }
-/* small icon buttons */
-.sy-ib { width: 26px; height: 22px; border-radius: 7px; border: 1px solid rgba(255,255,255,.1); background: none; color: #8d8d93; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; flex: none; }
-.sy-ib:hover { color: #e9e6df; }
-.sy-ib:disabled { opacity: .3; cursor: default; }
-.sy-play { height: 30px; padding: 0 14px; border-radius: 9px; border: none; background: linear-gradient(#2c2c31, #1f1f23); color: #e9e6df; font: inherit; font-size: 9.5px; font-weight: 600; letter-spacing: .18em; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 2px 4px rgba(0,0,0,.4); }
-.sy-play.on { background: var(--accent); color: #111113; }
-.sy-play svg { width: 10px; height: 10px; }
+/* bottom band: audition, name badge, dice */
+.sy-bot { position: absolute; left: 40px; right: 40px; bottom: 22px; height: 70px; display: flex; align-items: center; justify-content: space-between; }
+.sy-badge { position: absolute; left: 50%; top: 4px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; pointer-events: none; }
+.sy-badge b { font-family: 'Cinzel', 'Saira', serif; font-size: 30px; font-weight: 700; letter-spacing: .32em; margin-right: -.32em; line-height: 1; color: transparent;
+  background: linear-gradient(180deg, #f4f1ea 0%, #a7a49c 55%, #e9e6df 100%); -webkit-background-clip: text; background-clip: text; filter: drop-shadow(0 2px 0 rgba(0,0,0,.9)); }
+.sy-badge span { margin-top: 6px; font-size: 8.5px; font-weight: 600; letter-spacing: .5em; margin-right: -.5em; color: #8d8d93; }
+.sy-wave { position: absolute; top: 18px; width: 230px; height: 24px; opacity: .45; color: var(--accent); }
+.sy-wave.l { right: calc(50% + 140px); } .sy-wave.r { left: calc(50% + 140px); transform: scaleX(-1); }
+.sy-btn { display: flex; align-items: center; gap: 12px; cursor: pointer; border: none; background: none; padding: 0; font: inherit; color: inherit; }
+.sy-btn .round { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #e9e6df;
+  background: radial-gradient(circle at 38% 30%, #4a4a50, #1a1a1d 62%, #0c0c0d); box-shadow: 0 0 0 2px #8f8e89, 0 0 0 3px #232326, 0 6px 12px rgba(0,0,0,.8), inset 0 1px 1px rgba(255,255,255,.25); transition: box-shadow .15s, color .15s; }
+.sy-btn .round svg { width: 15px; height: 15px; }
+.sy-btn:hover .round { color: var(--accent); }
+.sy-btn.on .round { color: var(--accent); box-shadow: 0 0 0 2px var(--accent), 0 0 0 3px #232326, 0 0 18px var(--accent), inset 0 1px 1px rgba(255,255,255,.25); }
+.sy-btn .tx { display: flex; flex-direction: column; gap: 3px; text-align: left; }
+.sy-btn .tx b { font-size: 10px; font-weight: 600; letter-spacing: .22em; color: #e9e6df; }
+.sy-btn .tx small { font-size: 9px; color: #6f6f76; letter-spacing: .04em; }
+.sy-btn.r { flex-direction: row-reverse; } .sy-btn.r .tx { text-align: right; }
+.sy-undo { width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgba(255,255,255,.12); background: none; color: #8d8d93; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; margin-right: 14px; }
+.sy-undo:disabled { opacity: .25; cursor: default; }
+.sy-undo svg { width: 12px; height: 12px; }
 .sy-hint { font-size: 9px; color: #6f6f76; letter-spacing: .04em; }
-.sy-hint kbd { font: inherit; font-size: 8.5px; padding: 1px 4px; border-radius: 4px; background: #1d1d20; color: #a3a3a8; }
 .sy-flash { animation: syFlash .5s ease-out; }
-.sy-offmask { position: absolute; inset: 0; border-radius: 20px; z-index: 6; display: none; align-items: center; justify-content: center; background: rgba(10,10,11,.55); backdrop-filter: grayscale(.7) blur(1px); -webkit-backdrop-filter: grayscale(.7) blur(1px); }
-.sy-offmask.show { display: flex; }
-.sy-offcard { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 22px 30px; border-radius: 16px; background: linear-gradient(#1d1d21, #141416); box-shadow: inset 0 1px 0 rgba(255,255,255,.08), inset 0 0 0 1px rgba(255,255,255,.06), 0 20px 40px rgba(0,0,0,.6); }
-.sy-offcard b { font-size: 13px; font-weight: 600; letter-spacing: .24em; color: #e9e6df; }
-.sy-offcard span { font-size: 11px; color: #8d8d93; }
-.sy-offcard button { height: 32px; padding: 0 18px; border: none; border-radius: 9px; background: var(--accent); color: #111113; font: inherit; font-size: 10px; font-weight: 600; letter-spacing: .18em; cursor: pointer; }
-@keyframes syFlash { 0% { box-shadow: inset 0 0 0 1px var(--accent), 0 0 24px rgba(255,255,255,.12); } 100% { box-shadow: inset 0 1px 0 rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,255,255,.04); } }
+@keyframes syFlash { 0% { box-shadow: inset 0 3px 12px rgba(0,0,0,.9), inset 0 0 0 1px var(--accent), 0 0 26px rgba(255,255,255,.1); } 100% { box-shadow: inset 0 3px 12px rgba(0,0,0,.9), inset 0 0 0 1px rgba(255,255,255,.05), 0 1px 0 rgba(255,255,255,.1); } }
 `;
 document.head.appendChild(css);
 
@@ -273,8 +321,8 @@ function knob(id, o = {}) {
   const draw = () => {
     const t = toN(id), deg = 270 * t;
     if (bip) { const z = 270 * toN(id, 0), lo = Math.min(deg, z), hi = Math.max(deg, z);
-      a.style.background = 'conic-gradient(from 225deg, #2b2b30 0deg ' + lo + 'deg, var(--accent) ' + lo + 'deg ' + hi + 'deg, #2b2b30 ' + hi + 'deg 270deg, transparent 270deg 360deg)'; }
-    else a.style.background = 'conic-gradient(from 225deg, var(--accent) 0deg ' + deg + 'deg, #2b2b30 ' + deg + 'deg 270deg, transparent 270deg 360deg)';
+      a.style.background = 'conic-gradient(from 225deg, #2b2b30 0deg ' + lo + 'deg, var(--sc, var(--accent)) ' + lo + 'deg ' + hi + 'deg, #2b2b30 ' + hi + 'deg 270deg, transparent 270deg 360deg)'; }
+    else a.style.background = 'conic-gradient(from 225deg, var(--sc, var(--accent)) 0deg ' + deg + 'deg, #2b2b30 ' + deg + 'deg 270deg, transparent 270deg 360deg)';
     r.style.transform = 'rotate(' + (deg - 135) + 'deg)';
     if (kv) kv.textContent = (o.fmt || fmt)(id, S[id]);
   };
@@ -341,15 +389,63 @@ function stepper(id, label, tip) {
   b.addEventListener('wheel', e => { e.preventDefault(); set(id, clamp(Math.round(S[id]) + (e.deltaY < 0 ? 1 : -1), 0, n - 1), 'ui'); }, { passive: false });
   draw(); onChange(i => { if (i === id) draw(); }); return b;
 }
-function card(title, w, h, cls) {
-  const c = el('section', 'sy-card' + (cls ? ' ' + cls : '')); c.style.width = w + 'px'; c.style.height = h + 'px';
-  const hd = el('header'); hd.appendChild(el('h3', null, title)); c.appendChild(hd);
-  const body = el('div', 'sy-body'); c.appendChild(body); c._h = hd; c._b = body; return c;
+/* big machined knob for the faceplate: tick ring lights up to the value */
+function mknob(id, label, o = {}) {
+  const p = P[id], w = el('div', 'sy-hw');
+  w.appendChild(el('span', 'sy-eng', label));
+  const k = el('div', 'sy-mk', '<svg viewBox="0 0 66 66"></svg><i class="knurl"></i><i class="cap"><b class="ptr"></b></i>');
+  k.dataset.param = id; if (o.tip) k.title = o.tip;
+  const svg = k.querySelector('svg'), N = 25;
+  for (let i = 0; i < N; i++) { const a = (135 + 270 * i / (N - 1)) * Math.PI / 180, big = i % 6 === 0;
+    const r0 = big ? 27 : 28.5, r1 = 32; const ln = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    ln.setAttribute('x1', 33 + r0 * Math.cos(a)); ln.setAttribute('y1', 33 + r0 * Math.sin(a)); ln.setAttribute('x2', 33 + r1 * Math.cos(a)); ln.setAttribute('y2', 33 + r1 * Math.sin(a)); svg.appendChild(ln); }
+  const ticks = [...svg.children], ptr = k.querySelector('.ptr'), val = el('span', 'sy-val');
+  const bip = p.min < 0 && p.max > 0;
+  const draw = () => { const t = toN(id), z = bip ? toN(id, 0) : 0;
+    ticks.forEach((ln, i) => { const f = i / (N - 1); ln.classList.toggle('on', bip ? (f >= Math.min(t, z) - .001 && f <= Math.max(t, z) + .001) : f <= t + .001); });
+    ptr.style.transform = 'rotate(' + (270 * t - 135) + 'deg)'; val.textContent = (o.fmt || fmt)(id, S[id]); };
+  draw(); onChange(i => { if (i === id) draw(); });
+  let drag = null;
+  k.addEventListener('pointerdown', e => { if (e.button !== 0) return; e.preventDefault(); k.setPointerCapture(e.pointerId); drag = { y: e.clientY, t: toN(id) }; });
+  k.addEventListener('pointermove', e => { if (!drag) return; const sc = (document.getElementById('app') && document.getElementById('app').getBoundingClientRect().width / 1376) || 1;
+    set(id, toV(id, drag.t + (drag.y - e.clientY) / sc / (e.shiftKey ? 900 : 200)), 'ui'); });
+  k.addEventListener('pointerup', () => { drag = null; }); k.addEventListener('pointercancel', () => { drag = null; });
+  k.addEventListener('dblclick', () => set(id, p.def, 'ui'));
+  k.addEventListener('wheel', e => { e.preventDefault(); set(id, toV(id, toN(id) + (e.deltaY < 0 ? 1 : -1) * (e.shiftKey ? .005 : .02)), 'ui'); }, { passive: false });
+  w.append(k, val); return w;
+}
+/* chunky selector knob with its positions printed around it */
+function sel(id, label, names, o = {}) {
+  const n = names.length, span = o.span || (n > 5 ? 240 : 150), w = el('div', 'sy-hw');
+  w.appendChild(el('span', 'sy-eng', label));
+  const s = el('div', 'sy-sel'); s.dataset.param = id; if (o.tip) s.title = o.tip;
+  const dial = el('div', 'dial', '<svg viewBox="-34 -34 68 68"><path d="M0 -31 C5 -31 7 -20 8 -8 C9 4 6 12 0 12 C-6 12 -9 4 -8 -8 C-7 -20 -5 -31 0 -31 Z" fill="url(#sySelG)" stroke="#8f8e89" stroke-width="1"/><line x1="0" y1="-28" x2="0" y2="-16" stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round"/><circle r="5" fill="#0c0c0d" stroke="#3a3a40"/></svg>');
+  s.appendChild(dial);
+  const angleOf = i => -span / 2 + span * i / Math.max(1, n - 1);
+  const opts = names.map((t, i) => { const a = angleOf(i) * Math.PI / 180, b = el('span', 'opt', t);
+    b.style.left = (75 + Math.sin(a) * 56) + 'px'; b.style.top = (64 - Math.cos(a) * 42) + 'px'; b.onclick = () => set(id, i, 'ui'); s.appendChild(b); return b; });
+  const svg = dial.querySelector('svg');
+  const draw = () => { const i = Math.round(S[id]); svg.style.transform = 'rotate(' + angleOf(i) + 'deg)'; opts.forEach((b, k) => b.classList.toggle('on', k === i)); };
+  draw(); onChange(i => { if (i === id) draw(); });
+  let drag = null;
+  dial.addEventListener('pointerdown', e => { if (e.button !== 0) return; e.preventDefault(); dial.setPointerCapture(e.pointerId); drag = { y: e.clientY, v: Math.round(S[id]) }; });
+  dial.addEventListener('pointermove', e => { if (!drag) return; set(id, clamp(drag.v + Math.round((drag.y - e.clientY) / 22), 0, n - 1), 'ui'); });
+  dial.addEventListener('pointerup', e => { if (drag && Math.abs(drag.y - e.clientY) < 3) set(id, (Math.round(S[id]) + 1) % n, 'ui'); drag = null; });
+  dial.addEventListener('wheel', e => { e.preventDefault(); set(id, clamp(Math.round(S[id]) + (e.deltaY < 0 ? 1 : -1), 0, n - 1), 'ui'); }, { passive: false });
+  w.appendChild(s); return w;
+}
+/* metal bat-lever switch: up = on */
+function bat(get, setter, label, up, down, tip) {
+  const w = el('div', 'sy-hw'); w.appendChild(el('span', 'sy-eng', label));
+  const b = el('div', 'sy-bat', '<span class="t">' + up + '</span><i class="nut"></i><i class="lev"></i><span class="b">' + down + '</span>');
+  b.style.marginTop = '14px'; if (tip) b.title = tip;
+  const draw = () => b.classList.toggle('down', !get());
+  b.addEventListener('click', () => { setter(!get()); draw(); });
+  draw(); w.appendChild(b); w._draw = draw; w._bat = b; return w;
 }
 const spacer = () => el('span', 'sy-sp');
 const gapV = h => { const d = el('div'); d.style.height = h + 'px'; d.style.flex = 'none'; return d; };
 function row(children, style) { const r = el('div'); r.style.cssText = 'display: flex; align-items: center; gap: 8px; flex: none;' + (style || ''); children.forEach(c => c && r.appendChild(c)); return r; }
-function dimWhen(cardEl, id) { const d = () => cardEl.classList.toggle('sy-off', !on(id)); d(); onChange(i => { if (i === id) d(); }); }
 
 /* ------------------------------------------------------------ wave shapes (same maths as the engine) */
 const frac = x => x - Math.floor(x);
@@ -389,66 +485,97 @@ function chordNotes(rootNote) {
   }
 }
 
-/* ============================================================ the page */
+/* ============================================================ the device */
 SP.replaceChildren();
 SP.style.fontFamily = 'inherit';
-const rootEl = el('div', 'sy-root'), panel = el('div', 'sy-panel');
-rootEl.appendChild(panel); SP.appendChild(rootEl);
-const row1 = el('div', 'sy-row'), row2 = el('div', 'sy-row sy-row2');
-panel.append(row1, row2);
+const rootEl = el('div', 'sy-root'), dev = el('div', 'sy-dev'), panel = dev;
+rootEl.appendChild(dev); SP.appendChild(rootEl);
+['tl', 'tr', 'bl', 'br'].forEach(c => dev.appendChild(el('i', 'sy-screw ' + c)));
+dev.insertAdjacentHTML('beforeend', '<svg width="0" height="0" style="position:absolute"><defs><radialGradient id="sySelG" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#5a5a62"/><stop offset=".6" stop-color="#1c1c20"/><stop offset="1" stop-color="#0c0c0d"/></radialGradient></defs></svg>');
 
-/* ---- PLAY ---- */
-const cPlay = card('PLAY', 210, 302, 'flow');
-cPlay._h.append(spacer(), chip('syn.legato', 'LEGATO', 'Legato: new notes glide without restarting the envelopes'), chip('syn.hold', 'HOLD', 'Hold: the last note keeps playing after you stop (a drone to play over)'));
-const noteScr = el('div', 'sy-scr sy-note', '<div class="n">–</div><div class="s">PLAY A NOTE</div><div class="tun" title="Tuning reference. Drag to change, double-click for 440 Hz"></div><div class="bar"><i></i></div>');
-noteScr.style.height = '92px';
-const tunEl = noteScr.querySelector('.tun'); tunEl.dataset.param = 'syn.tune';
-const drawTun = () => { tunEl.textContent = 'A ' + Math.round(S['syn.tune']) + ' Hz'; }; drawTun(); onChange(i => { if (i === 'syn.tune') drawTun(); });
-{ let d = null; tunEl.addEventListener('pointerdown', e => { e.preventDefault(); tunEl.setPointerCapture(e.pointerId); d = { y: e.clientY, v: S['syn.tune'] }; });
-  tunEl.addEventListener('pointermove', e => { if (d) set('syn.tune', Math.round(d.v + (d.y - e.clientY) / 6), 'ui'); });
-  tunEl.addEventListener('pointerup', () => { d = null; }); tunEl.addEventListener('dblclick', () => set('syn.tune', 440, 'ui')); }
-cPlay._b.append(noteScr, gapV(12),
-  (() => { const k = el('div', 'sy-knobs'); k.append(knob('syn.gate', { label: 'THRESH', size: 34, tip: 'How loud the guitar must be before the synth plays' }), knob('syn.sens', { label: 'SENS', size: 34, tip: 'Input sensitivity: how strongly the synth reacts to your playing' }), knob('syn.glide', { label: 'GLIDE', size: 34, tip: 'Slide time between notes' }), knob('syn.dyn', { label: 'DYN', size: 34, tip: 'Dynamics: how much picking harder makes it louder and brighter' })); return k; })(),
-  gapV(12), stepper('syn.chord', 'CHORD', 'Play one note, hear a chord. Triad, 7th and 9th follow the key and scale.'), gapV(8),
-  row([pill('syn.key', 'KEY', { tip: 'Key for chords and the arpeggiator. Click to change, shift-click to go back.' }), pill('syn.scale', 'SCALE', { tip: 'Scale for chords and the arpeggiator' })], 'justify-content: space-between'));
-cPlay._b.lastChild.children[0].style.flex = '0 0 66px'; cPlay._b.lastChild.children[1].style.flex = '1';
-row1.appendChild(cPlay);
+/* ---- top strip: what you reach for while playing ---- */
+const topStrip = el('div', 'sy-top'); dev.appendChild(topStrip);
+let powered = true;
+const powerW = bat(() => powered, v => { setPowerUi(v); if (window.obsSynth && window.obsSynth.powerOut) window.obsSynth.powerOut(v); }, 'POWER', 'ON', 'OFF', 'Synth on / off (also: double-click the SYNTH tab)');
+const lamp = el('i', 'sy-lamp on'); powerW._bat.appendChild(lamp); lamp.style.cssText = 'position: absolute; left: 38px; top: 22px';
+function setPowerUi(v) { powered = !!v; dev.classList.toggle('off', !powered); lamp.classList.toggle('on', powered); powerW._draw(); }
+const led = el('div', 'sy-led', '<span class="k"></span><span class="tn"></span><div class="n">–</div><div class="s">PLAY A NOTE</div><div class="bar"><i></i></div>');
+led.title = 'Click for key, scale, tuning and playing settings';
+const noteScr = led;
+const drawLedInfo = () => { led.querySelector('.k').textContent = fmt('syn.key').toUpperCase() + ' ' + fmt('syn.scale').toUpperCase(); led.querySelector('.tn').textContent = 'A' + Math.round(S['syn.tune']); };
+drawLedInfo(); onChange(i => { if (/^syn\.(key|scale|tune)$/.test(i)) drawLedInfo(); });
+const ledW = el('div', 'sy-hw'); ledW.appendChild(led);
+topStrip.append(powerW,
+  mknob('syn.sens', 'SENSITIVITY', { tip: 'How strongly the synth reacts to your playing' }),
+  mknob('syn.glide', 'GLIDE', { tip: 'Slide time between notes' }),
+  sel('syn.chord', 'CHORD', ['OFF', 'OCT', 'PWR', 'TRIAD', 'SUS', '7TH', '9TH'], { tip: 'Play one note, hear a chord. Triad, 7th and 9th follow the key and scale.' }),
+  bat(() => on('syn.hold'), v => set('syn.hold', v ? 1 : 0, 'ui'), 'HOLD', 'ON', 'OFF', 'The last note keeps playing after you stop (a drone to play over)'),
+  ledW,
+  bat(() => on('syn.post'), v => set('syn.post', v ? 1 : 0, 'ui'), 'AMP', 'AFTER', 'BEFORE', 'Synth after the cab (AFTER) or through the amp (BEFORE)'),
+  sel('syn.char', 'CHARACTER', ['CLEAN', 'ANALOG', '8-BIT', 'VHS'], { span: 180, tip: 'Clean, warm analog drift, chiptune, or wobbly tape' }),
+  mknob('syn.space', 'SPACE', { tip: 'Stereo echoes and room, just for the synth' }),
+  mknob('syn.mix', 'MIX', { tip: 'Guitar and synth blend: 0% guitar only, 100% synth only' }),
+  mknob('syn.level', 'OUTPUT'));
+const holdW = topStrip.children[4], postW = topStrip.children[6];
+onChange(i => { if (i === 'syn.hold') holdW._draw(); if (i === 'syn.post') postW._draw(); });
+/* playing settings, behind the display */
+const pop = el('div', 'sy-pop');
+pop.innerHTML = '<h4>PLAYING</h4>';
+const popRow1 = row([pill('syn.key', 'KEY'), pill('syn.scale', 'SCALE'), pill('syn.tune', 'TUNING', { fmt: () => 'A ' + Math.round(S['syn.tune']) + ' Hz' })]);
+const popRow2 = el('div', 'sy-knobs'); popRow2.style.gap = '18px';
+popRow2.append(knob('syn.gate', { label: 'THRESHOLD', size: 36, tip: 'How loud the guitar must be before the synth plays' }), knob('syn.dyn', { label: 'DYNAMICS', size: 36, tip: 'How much picking harder makes it louder and brighter' }));
+const popRow3 = row([chip('syn.legato', 'LEGATO', 'New notes glide without restarting the envelopes'), el('span', 'sy-hint', 'Notes glide into each other')]);
+pop.append(popRow1, popRow2, popRow3);
+dev.appendChild(pop);
+led.addEventListener('click', e => { e.stopPropagation(); pop.classList.toggle('show'); });
+document.addEventListener('pointerdown', e => { if (pop.classList.contains('show') && !pop.contains(e.target) && !led.contains(e.target)) pop.classList.remove('show'); });
 
-/* ---- SOUND: A / B / SUB tabs ---- */
-const cSnd = card('', 446, 302, 'flow');
+/* ---- the screen ---- */
+const screen = el('div', 'sy-screen'); dev.appendChild(screen);
+function section(title, width, color) {
+  const s = el('section', 'sy-sec'); s.style.width = width + 'px'; s.style.setProperty('--sc', color);
+  const h = el('div', 'sy-sh'); h.appendChild(el('h3', null, title)); s.appendChild(h);
+  const b = el('div', 'sy-body'); s.appendChild(b); s._h = h; s._b = b; screen.appendChild(s); return s;
+}
+function dimWhen(sec, id) { const d = () => sec.classList.toggle('sy-off', !on(id)); d(); onChange(i => { if (i === id) d(); }); }
+
+/* OSCILLATORS: A / B / SUB in one section */
+const cSnd = section('', 384, 'var(--h-osc)');
 cSnd._h.replaceChildren();
 let tab = 0;
 const tabs = el('div', 'sy-tabs');
-const TAB_NAMES = ['OSC A', 'OSC B', 'SUB · NOISE'];
-TAB_NAMES.forEach((n, i) => { const b = el('button', 'sy-tab', '<i></i>' + n); b.onclick = () => showTab(i); tabs.appendChild(b); });
+const TAB_NAMES = ['OSC A', 'OSC B', 'SUB · NOISE'], TAB_COL = ['var(--h-osc)', 'var(--h-oscb)', 'var(--h-sub)'];
+TAB_NAMES.forEach((n, i) => { const b = el('button', 'sy-tab', '<i></i>' + n); b.style.setProperty('--tc', TAB_COL[i]); b.onclick = () => showTab(i); tabs.appendChild(b); });
 const tabRight = el('div'); tabRight.style.cssText = 'display: flex; align-items: center; gap: 8px';
-cSnd._h.append(tabs, spacer(), tabRight);
+cSnd._h.append(tabs, el('span', 'sy-sp'), tabRight);
 const sndBody = cSnd._b;
-const oscViews = ['a', 'b'].map(x => {
+const oscViews = ['a', 'b'].map((x, oi) => {
   const v = el('div'); v.style.cssText = 'display: flex; flex-direction: column; flex: 1';
-  const sc = el('div', 'sy-scr'); sc.style.height = '72px'; const cv = el('canvas'); sc.appendChild(cv);
-  v._cv = cv;
-  v.append(seg('syn.' + x + '.wave', null, { icons: WAVE_IC }), gapV(8), sc, gapV(10));
+  const sc = el('div', 'sy-vis'); sc.style.height = '64px'; const cv = el('canvas'); sc.appendChild(cv); v._cv = cv;
+  v.append(seg('syn.' + x + '.wave', null, { icons: WAVE_IC }), gapV(8), sc, gapV(12));
   const k = el('div', 'sy-knobs');
   k.append(knob('syn.' + x + '.pitch', { label: 'PITCH', tip: 'Pitch in semitones (12 = one octave)' }), knob('syn.' + x + '.fine', { label: 'FINE', tip: 'Fine tune in cents' }),
-    knob('syn.' + x + '.shape', { label: 'SHAPE', tip: 'Saw: adds a second saw for a hollow, brighter tone · Pulse: pulse width · Triangle: wavefolding · Sine: FM growl · Super: side voices' }),
+    knob('syn.' + x + '.shape', { label: 'SHAPE', tip: 'Saw: a second saw for a hollow, brighter tone · Pulse: width · Triangle: wavefolding · Sine: FM growl · Super: side voices' }),
     knob('syn.' + x + '.level', { label: 'LEVEL' }));
-  v.appendChild(k); v.appendChild(gapV(10));
-  const uni = row([el('span', 'sy-lbl', 'UNISON'), seg('syn.' + x + '.voices', null, { small: true, width: 112 }), pill('syn.' + x + '.detune', 'DETUNE', { tip: 'How far the unison voices spread apart' }), pill('syn.' + x + '.width', 'WIDTH', { tip: 'Stereo spread of the unison voices' })], 'justify-content: space-between');
+  v.append(k, gapV(10));
+  const uni = el('div', 'sy-knobs'); uni.style.alignItems = 'center';
+  const useg = seg('syn.' + x + '.voices', null, { small: true, width: 118 });
+  const ucol = el('div'); ucol.style.cssText = 'display: flex; flex-direction: column; align-items: center; gap: 6px'; ucol.append(useg, el('span', 'sy-kl', 'UNISON VOICES'));
+  uni.append(ucol, knob('syn.' + x + '.detune', { label: 'DETUNE', size: 32, tip: 'How far the unison voices spread apart' }), knob('syn.' + x + '.width', { label: 'WIDTH', size: 32, tip: 'Stereo spread of the unison voices' }));
   v.appendChild(uni);
-  const supr = () => { const isSuper = Math.round(S['syn.' + x + '.wave']) === 4; uni.children[1].style.opacity = isSuper ? .35 : ''; uni.children[1].title = isSuper ? 'Super always uses 7 voices' : ''; };
+  const supr = () => { const isSuper = Math.round(S['syn.' + x + '.wave']) === 4; useg.style.opacity = isSuper ? .35 : ''; useg.title = isSuper ? 'Super always uses 7 voices' : ''; };
   supr(); onChange(i => { if (i === 'syn.' + x + '.wave') supr(); });
   return v;
 });
 const subView = (() => {
   const v = el('div'); v.style.cssText = 'display: flex; flex-direction: column; flex: 1';
-  const sc = el('div', 'sy-scr'); sc.style.height = '72px'; const cv = el('canvas'); sc.appendChild(cv); v._cv = cv;
+  const sc = el('div', 'sy-vis'); sc.style.height = '64px'; const cv = el('canvas'); sc.appendChild(cv); v._cv = cv;
   const cols = el('div'); cols.style.cssText = 'display: flex; gap: 12px; flex: 1; margin-top: 12px';
-  const mk = (title, kids) => { const c = el('div'); c.style.cssText = 'flex: 1; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 10px 8px; border-radius: 10px; background: #121214; box-shadow: inset 0 0 0 1px rgba(255,255,255,.035)';
+  const mk = (title, kids) => { const c = el('div'); c.style.cssText = 'flex: 1; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 12px 8px; border-radius: 10px; background: #0e0e10; box-shadow: inset 0 0 0 1px rgba(255,255,255,.04)';
     c.appendChild(el('span', 'sy-lbl', title)); kids.forEach(k => c.appendChild(k)); return c; };
   cols.append(
-    mk('SUB OSCILLATOR', [knob('syn.sub.level', { label: 'LEVEL', tip: 'A clean sub one or two octaves below' }), row([seg('syn.sub.wave', ['SINE', 'SQUARE'], { small: true, width: 104 }), seg('syn.sub.oct', [MINUS + '1 OCT', MINUS + '2 OCT'], { small: true, width: 104 })])]),
-    mk('NOISE', [row([knob('syn.noise.level', { label: 'LEVEL', tip: 'Breath and grit' }), knob('syn.noise.color', { label: 'COLOR' })], 'gap: 18px')]));
+    mk('SUB OSCILLATOR', [knob('syn.sub.level', { label: 'LEVEL', tip: 'A clean sub one or two octaves below' }), row([seg('syn.sub.wave', ['SINE', 'SQUARE'], { small: true, width: 92 }), seg('syn.sub.oct', [MINUS + '1 OCT', MINUS + '2 OCT'], { small: true, width: 92 })])]),
+    mk('NOISE', [row([knob('syn.noise.level', { label: 'LEVEL', tip: 'Breath and grit' }), knob('syn.noise.color', { label: 'COLOR' })], 'gap: 20px')]));
   v.append(sc, cols);
   return v;
 })();
@@ -457,6 +584,7 @@ const aOn = toggle('syn.a.on', 'Oscillator A on'), bOn = toggle('syn.b.on', 'Osc
 function showTab(i) {
   tab = i;
   [...tabs.children].forEach((b, k) => b.classList.toggle('on', k === i));
+  cSnd.style.setProperty('--sc', TAB_COL[i]);
   sndBody.replaceChildren([oscViews[0], oscViews[1], subView][i]);
   tabRight.replaceChildren(...(i === 0 ? [aOn] : i === 1 ? [bSync, bOn] : []));
   cSnd.classList.toggle('sy-off', (i === 0 && !on('syn.a.on')) || (i === 1 && !on('syn.b.on')));
@@ -467,65 +595,88 @@ const tabDots = () => { const d = [...tabs.children].map(b => b.firstChild);
   d[2].classList.toggle('lit', S['syn.sub.level'] > 0 || S['syn.noise.level'] > 0);
   cSnd.classList.toggle('sy-off', (tab === 0 && !on('syn.a.on')) || (tab === 1 && !on('syn.b.on'))); };
 onChange(i => { if (/^syn\.(a|b)\.(on|level)$|^syn\.(sub|noise)\.level$/.test(i)) tabDots(); });
-row1.appendChild(cSnd);
 
-/* ---- FILTER ---- */
-const cFlt = card('FILTER', 350, 302, 'flow');
-cFlt._h.append(spacer(), toggle('syn.flt.on', 'Filter on'));
+/* FILTER */
+const cFlt = section('FILTER', 288, 'var(--h-flt)');
+cFlt._h.append(el('span', 'sy-sp'), toggle('syn.flt.on', 'Filter on'));
 dimWhen(cFlt, 'syn.flt.on');
-const fScr = el('div', 'sy-scr'); fScr.style.height = '96px'; fScr.style.cursor = 'crosshair'; const fCv = el('canvas'); fScr.appendChild(fCv);
-fScr.title = 'Drag: left/right = cutoff, up/down = resonance';
-fScr.dataset.param = 'syn.flt.cutoff';
-cFlt._b.append(seg('syn.flt.type', ['LDR 24', 'LDR 12', 'LP', 'BP', 'HP', 'NOTCH', 'VOWEL']), gapV(8), fScr, gapV(10),
+const fScr = el('div', 'sy-vis'); fScr.style.height = '64px'; fScr.style.cursor = 'crosshair'; const fCv = el('canvas'); fScr.appendChild(fCv);
+fScr.title = 'Drag: left/right = cutoff, up/down = resonance'; fScr.dataset.param = 'syn.flt.cutoff';
+cFlt._b.append(seg('syn.flt.type', ['LDR24', 'LDR12', 'LP', 'BP', 'HP', 'NOTCH', 'VOWEL']), gapV(8), fScr, gapV(12),
   (() => { const k = el('div', 'sy-knobs'); k.style.alignItems = 'flex-end';
-    k.append(knob('syn.flt.cutoff', { label: 'CUTOFF', size: 46, tip: 'Brightness. With VOWEL it moves through A-E-I-O-U' }), knob('syn.flt.res', { label: 'RESONANCE' }), knob('syn.flt.drive', { label: 'DRIVE' }), knob('syn.flt.env', { label: 'ENV', tip: 'How far the filter envelope opens (or closes) the filter' })); return k; })(),
-  gapV(8), row([pill('syn.flt.key', 'KEY TRACK', { tip: 'Higher notes open the filter more' })], 'justify-content: center'));
+    k.append(knob('syn.flt.cutoff', { label: 'CUTOFF', size: 46, tip: 'Brightness. With VOWEL it moves through A-E-I-O-U' }), knob('syn.flt.res', { label: 'RESONANCE' })); return k; })(),
+  gapV(10),
+  (() => { const k = el('div', 'sy-knobs'); k.append(knob('syn.flt.drive', { label: 'DRIVE', size: 32 }), knob('syn.flt.env', { label: 'ENV AMOUNT', size: 32, tip: 'How far the filter envelope opens (or closes) the filter' }), knob('syn.flt.key', { label: 'KEY TRACK', size: 32, tip: 'Higher notes open the filter more' })); return k; })());
 { let d = null;
   const at = e => { const r = fScr.getBoundingClientRect(); return [clamp((e.clientX - r.left) / r.width, 0, 1), clamp(1 - (e.clientY - r.top) / r.height, 0, 1)]; };
   fScr.addEventListener('pointerdown', e => { if (e.button !== 0) return; e.preventDefault(); fScr.setPointerCapture(e.pointerId); d = 1; const [x, y] = at(e); set('syn.flt.cutoff', toV('syn.flt.cutoff', x), 'ui'); set('syn.flt.res', y * 100, 'ui'); });
   fScr.addEventListener('pointermove', e => { if (!d) return; const [x, y] = at(e); set('syn.flt.cutoff', toV('syn.flt.cutoff', x), 'ui'); set('syn.flt.res', clamp((y - .1) / .8, 0, 1) * 100, 'ui'); });
   fScr.addEventListener('pointerup', () => { d = null; }); }
-row1.appendChild(cFlt);
 
-/* ---- ENVELOPE (one graph, AMP / FILTER) ---- */
-const cEnv = card('ENVELOPE', 236, 302);
+/* ENVELOPE: one graph, AMP or FILTER */
+const cEnv = section('ENVELOPE', 248, 'var(--h-env)');
 let envSel = 0;
-const envSeg = el('div', 'sy-seg small'); envSeg.style.width = '112px';
+const envSeg = el('div', 'sy-seg small'); envSeg.style.width = '104px';
 envSeg.innerHTML = '<button class="on">AMP</button><button>FILTER</button>';
-cEnv._h.append(spacer(), envSeg);
-const eScr = el('div', 'sy-scr'); eScr.style.height = '132px'; const eCv = el('canvas'); eScr.appendChild(eCv);
-eScr.title = 'Drag the points';
-const envKnobs = el('div', 'sy-knobs');
-cEnv._b.append(eScr, gapV(12), envKnobs, gapV(6), el('div', 'sy-hint', ''));
-cEnv._b.lastChild.style.textAlign = 'center';
+cEnv._h.append(el('span', 'sy-sp'), envSeg);
+const eScr = el('div', 'sy-vis'); eScr.style.height = '104px'; const eCv = el('canvas'); eScr.appendChild(eCv); eScr.title = 'Drag the points';
+const envKnobs = el('div', 'sy-knobs'), envHint = el('div', 'sy-hint'); envHint.style.textAlign = 'center';
+cEnv._b.append(eScr, gapV(14), envKnobs, gapV(10), envHint);
 const envIds = s => ['att', 'dec', 'sus', 'rel'].map(x => 'syn.env.' + s + '.' + x);
 function buildEnvKnobs() {
   const ids = envIds(envSel ? 'f' : 'a');
-  envKnobs.replaceChildren(...ids.map((id, i) => knob(id, { label: ['ATK', 'DEC', 'SUS', 'REL'][i], size: 32 })));
-  cEnv._b.lastChild.textContent = envSel ? 'SHAPES THE FILTER OVER TIME' : 'SHAPES THE VOLUME OVER TIME';
+  envKnobs.replaceChildren(...ids.map((id, i) => knob(id, { label: ['ATTACK', 'DECAY', 'SUSTAIN', 'RELEASE'][i], size: 34 })));
+  envHint.textContent = envSel ? 'Shapes the filter over each note' : 'Shapes the volume over each note';
   [...envSeg.children].forEach((b, i) => b.classList.toggle('on', i === envSel));
   drawEnv();
 }
 envSeg.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; envSel = [...envSeg.children].indexOf(b); buildEnvKnobs(); });
-row1.appendChild(cEnv);
 
-/* ---- ARPEGGIATOR ---- */
-const cArp = card('ARPEGGIATOR', 652, 222);
-cArp._h.append(toggle('syn.arp.on', 'Arpeggiator on'), spacer(), seg('syn.arp.pattern', null, { icons: ['up', 'down', 'updn', 'shuffle', 'steps'], width: 186 }));
-dimWhen(cArp, 'syn.arp.on');
-const PROPS = [['STEPS', 'on'], ['ACCENT', 'acc'], ['TIE', 'tie'], ['OCTAVE', 'oct'], ['RATCHET', 'ratchet'], ['CHANCE', 'chance'], ['NOTE', 'note']];
+/* MOTION: ARP or LFO */
+const cMot = section('', 344, 'var(--h-mot)');
+cMot._h.replaceChildren();
+let mtab = 0;
+const mtabs = el('div', 'sy-tabs');
+['ARPEGGIATOR', 'LFO'].forEach((n, i) => { const b = el('button', 'sy-tab', '<i></i>' + n); b.style.setProperty('--tc', 'var(--h-mot)'); b.onclick = () => showMot(i); mtabs.appendChild(b); });
+const motRight = el('div'); motRight.style.cssText = 'display: flex; align-items: center; gap: 8px';
+cMot._h.append(mtabs, el('span', 'sy-sp'), motRight);
+/* arp view */
+const arpView = el('div'); arpView.style.cssText = 'display: flex; flex-direction: column; flex: 1';
+const PROPS = [['STEP', 'on'], ['ACC', 'acc'], ['TIE', 'tie'], ['OCT', 'oct'], ['RATCH', 'ratchet'], ['CHANCE', 'chance'], ['NOTE', 'note']];
 let prop = 0;
 const propSeg = el('div', 'sy-seg small');
 propSeg.innerHTML = PROPS.map(([n], i) => '<button' + (i ? '' : ' class="on"') + '>' + n + '</button>').join('');
-propSeg.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; prop = [...propSeg.children].indexOf(b); [...propSeg.children].forEach((x, i) => x.classList.toggle('on', i === prop)); drawLane(); laneHint(); });
+const PROP_TIPS = ['Click or drag across to turn steps on and off', 'Accented steps hit harder and brighter', 'A tied step slides on from the one before', 'Drag up or down: octave for each step', 'Drag up: repeat the note 2, 3 or 4 times in one step', 'Drag: how likely each step is to play', 'Drag: which scale note each step plays (STEPS pattern)'];
+propSeg.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; prop = [...propSeg.children].indexOf(b); [...propSeg.children].forEach((x, i) => x.classList.toggle('on', i === prop)); drawLane(); lane.title = PROP_TIPS[prop]; });
 const lane = el('div', 'sy-lane');
 lane.innerHTML = steps.map((_, i) => '<div class="sy-st' + (i % 4 === 0 ? ' beat' : '') + '" data-i="' + i + '"><div class="cell"><i></i><b></b></div><div class="num">' + (i + 1) + '</div></div>').join('');
-const hint = el('span', 'sy-hint');
-const laneHint = () => { hint.textContent = ['Click or drag across to turn steps on and off', 'Accented steps hit harder and brighter', 'A tied step slides on from the one before', 'Drag up or down: octave for each step', 'Drag up: repeat the note 2, 3 or 4 times in one step', 'Drag: how likely each step is to play', 'Drag: which scale note each step plays (with the STEPS pattern)'][prop]; };
-cArp._b.append(row([propSeg, spacer(), hint]), gapV(8), lane, gapV(10),
-  row([seg('syn.arp.rate', null, { small: true, width: 196 }), el('span', 'sy-lbl', 'OCT'), seg('syn.arp.oct', null, { small: true, width: 84 }), spacer(),
-    pill('syn.arp.len', 'LENGTH', { fmt: id => Math.round(S[id]) }), pill('syn.arp.gate', 'GATE'), pill('syn.arp.swing', 'SWING')]));
-laneHint();
+lane.title = PROP_TIPS[0];
+const arpKnobs = el('div', 'sy-knobs');
+arpKnobs.append(knob('syn.arp.gate', { label: 'GATE', size: 30 }), knob('syn.arp.swing', { label: 'SWING', size: 30 }), knob('syn.arp.len', { label: 'STEPS', size: 30, fmt: id => String(Math.round(S[id])) }),
+  (() => { const c = el('div', 'sy-ctl'); c.append(seg('syn.arp.oct', null, { small: true, width: 76 })); const l = el('span', 'sy-kl', 'OCTAVES'); l.style.marginTop = '8px'; c.append(l); return c; })());
+arpView.append(row([seg('syn.arp.pattern', null, { icons: ['up', 'down', 'updn', 'shuffle', 'steps'], width: 128 }), el('span', 'sy-sp'), seg('syn.arp.rate', ['1/4', '1/8', '1/8T', '1/16', '1/16T', '1/32'], { small: true, width: 176 })], 'gap: 6px'),
+  gapV(8), propSeg, gapV(6), lane, gapV(10), arpKnobs);
+arpView.querySelector('.sy-seg[data-param="syn.arp.rate"]').title = 'Note value of each step';
+/* lfo view */
+const lfoView = el('div'); lfoView.style.cssText = 'display: flex; flex-direction: column; flex: 1';
+const lScr = el('div', 'sy-vis'); lScr.style.height = '48px'; const lCv = el('canvas'); lScr.appendChild(lCv);
+const lRate = knob('syn.lfo.rate', { label: 'RATE', size: 34 }), lDiv = knob('syn.lfo.div', { label: 'RATE', size: 34, tip: 'Rate in note values (synced to the tempo)' });
+const lKnobs = el('div', 'sy-knobs');
+lfoView.append(seg('syn.lfo.shape', null, { icons: ['sine', 'tri', 'saw', 'sq', 'rnd', 'drift'] }), gapV(8), lScr, gapV(12), lKnobs, gapV(12),
+  seg('syn.lfo.target', ['VIBRATO', 'WAH', 'SHAPE', 'TREMOLO', 'PAN'], { small: true }));
+const lK = () => lKnobs.replaceChildren(on('syn.lfo.sync') ? lDiv : lRate, knob('syn.lfo.depth', { label: 'DEPTH', size: 34 }), knob('syn.lfo.fade', { label: 'FADE IN', size: 34, tip: 'The LFO fades in after each new note (delayed vibrato)' }));
+lK(); onChange(i => { if (i === 'syn.lfo.sync') lK(); });
+const arpOnT = toggle('syn.arp.on', 'Arpeggiator on'), lfoSync = chip('syn.lfo.sync', 'SYNC', 'Lock the LFO to the tempo');
+function showMot(i) {
+  mtab = i; [...mtabs.children].forEach((b, k) => b.classList.toggle('on', k === i));
+  cMot._b.replaceChildren(i ? lfoView : arpView); motRight.replaceChildren(i ? lfoSync : arpOnT);
+  cMot.classList.toggle('sy-off', !i && !on('syn.arp.on'));
+  if (i) drawLfo(); else drawLane();
+}
+const motDots = () => { const d = [...mtabs.children].map(b => b.firstChild); d[0].classList.toggle('lit', on('syn.arp.on')); d[1].classList.toggle('lit', S['syn.lfo.depth'] > 0);
+  cMot.classList.toggle('sy-off', mtab === 0 && !on('syn.arp.on')); };
+onChange(i => { if (i === 'syn.arp.on' || i === 'syn.lfo.depth') motDots(); });
+
 function drawLane() {
   const n = Math.round(S['syn.arp.len']);
   [...lane.children].forEach((stEl, i) => {
@@ -569,52 +720,44 @@ function drawLane() {
   lane.addEventListener('pointerup', () => { paint = null; }); lane.addEventListener('pointercancel', () => { paint = null; });
 }
 onChange(i => { if (i === 'syn.arp.len') drawLane(); });
-row2.appendChild(cArp);
 
-/* ---- LFO ---- */
-const cLfo = card('LFO', 300, 222);
-const lRate = knob('syn.lfo.rate', { label: 'RATE', size: 34 }), lDiv = knob('syn.lfo.div', { label: 'RATE', size: 34, tip: 'Rate in note values (synced to the tempo)' });
-cLfo._h.append(spacer(), chip('syn.lfo.sync', 'SYNC', 'Lock the LFO to the tempo'));
-const lScr = el('div', 'sy-scr'); lScr.style.height = '38px'; const lCv = el('canvas'); lScr.appendChild(lCv);
-const lKnobs = el('div', 'sy-knobs');
-cLfo._b.append(seg('syn.lfo.shape', null, { icons: ['sine', 'tri', 'saw', 'sq', 'rnd', 'drift'] }), gapV(7), lScr, gapV(8), lKnobs, gapV(8),
-  seg('syn.lfo.target', ['VIBRATO', 'WAH', 'SHAPE', 'TREMOLO', 'PAN'], { small: true }));
-const lK = () => lKnobs.replaceChildren(on('syn.lfo.sync') ? lDiv : lRate, knob('syn.lfo.depth', { label: 'DEPTH', size: 34 }), knob('syn.lfo.fade', { label: 'FADE IN', size: 34, tip: 'The LFO fades in after each new note (delayed vibrato)' }));
-lK(); onChange(i => { if (i === 'syn.lfo.sync') lK(); });
-row2.appendChild(cLfo);
-
-/* ---- OUTPUT ---- */
-const cOut = card('OUTPUT', 318, 222);
-const dice = el('button', 'sy-chip', IC.dice + 'DICE'); dice.title = 'Roll a new sound. Keeps your mix, level, key and playing settings.';
-const undo = el('button', 'sy-ib', IC.undo); undo.title = 'Undo the last dice roll'; undo.disabled = true;
-cOut._h.append(spacer(), dice, undo);
-const audition = el('button', 'sy-play', IC.play + '<b>AUDITION</b>');
-audition.title = 'Hear the synth without playing (or use keys A to K)';
-cOut._b.append(
-  (() => { const k = el('div', 'sy-knobs'); k.append(knob('syn.level', { label: 'LEVEL' }), knob('syn.mix', { label: 'MIX', tip: 'Guitar and synth blend: 0% guitar only, 100% synth only' }), knob('syn.space', { label: 'SPACE', tip: 'Stereo echoes and room, just for the synth' })); return k; })(),
-  gapV(10), row([el('span', 'sy-lbl', 'CHARACTER'), seg('syn.char', ['CLEAN', 'ANALOG', '8-BIT', 'VHS'], { small: true })], ''), gapV(10),
-  row([el('span', 'sy-lbl', 'AMP'), segBool('syn.post', ['BEFORE', 'AFTER'], 'Does the synth go through the amp (BEFORE) or join after the cab (AFTER)?', 120), spacer(), audition]));
-cOut._b.children[2].children[1].style.flex = '1';
-row2.appendChild(cOut);
+/* ---- bottom band: audition, name badge, dice ---- */
+const bot = el('div', 'sy-bot'); dev.appendChild(bot);
+const audition = el('button', 'sy-btn', '<span class="round">' + IC.play + '</span><span class="tx"><b>AUDITION</b><small>or play keys A–K</small></span>');
+audition.title = 'Hear the synth without playing';
+const waveSvg = '<svg viewBox="0 0 380 24" preserveAspectRatio="none"><path d="' + Array.from({ length: 77 }, (_, i) => (i ? 'L' : 'M') + (i * 5) + ' ' + (12 + Math.sin(i * .42) * 9 * Math.pow(i / 76, 1.6)).toFixed(1)).join(' ') + '" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>';
+const badge = el('div', 'sy-badge', '<b>SIREN</b><span>OBSIDIAN SYNTH</span>');
+const wl = el('div', 'sy-wave l', waveSvg), wr = el('div', 'sy-wave r', waveSvg);
+const diceWrap = el('div'); diceWrap.style.cssText = 'display: flex; align-items: center';
+const undo = el('button', 'sy-undo', IC.undo); undo.title = 'Undo the last dice roll'; undo.disabled = true;
+const dice = el('button', 'sy-btn r', '<span class="round">' + IC.dice + '</span><span class="tx"><b>DICE</b><small>roll a new sound</small></span>');
+dice.title = 'Roll a new sound. Keeps your mix, output, key and playing settings.';
+diceWrap.append(undo, dice);
+bot.append(audition, wl, badge, wr, diceWrap);
 
 /* ------------------------------------------------------------ drawings */
+function hue(name, a = 1) {
+  let c = getComputedStyle(dev).getPropertyValue('--h-' + name).trim() || '#ffffff';
+  return 'rgba(' + [1, 3, 5].map(i => parseInt(c.substr(i, 2), 16)).join(',') + ',' + a + ')';
+}
 function drawScope(cv, which) {
   const [g, w, h] = hidpi(cv); if (!g) return;
+  const H = which === 'b' ? 'oscb' : which === 'sub' ? 'sub' : 'osc';
   g.strokeStyle = tc('e9e6df', .06); g.lineWidth = 1; g.beginPath(); g.moveTo(0, h / 2 + .5); g.lineTo(w, h / 2 + .5); g.stroke();
   const line = (fn, a, lw, glow) => { g.beginPath(); for (let x = 0; x <= w; x++) { const y = h / 2 - fn(x / w) * h * .34; x ? g.lineTo(x, y) : g.moveTo(x, y); }
-    g.strokeStyle = a; g.lineWidth = lw; g.lineJoin = 'round'; g.shadowColor = glow ? accent(.35) : 'transparent'; g.shadowBlur = glow ? 8 : 0; g.stroke(); g.shadowBlur = 0; };
+    g.strokeStyle = a; g.lineWidth = lw; g.lineJoin = 'round'; g.shadowColor = glow ? hue(H, .5) : 'transparent'; g.shadowBlur = glow ? 8 : 0; g.stroke(); g.shadowBlur = 0; };
   if (which === 'sub') {
     const sq = Math.round(S['syn.sub.wave']) === 1, lv = S['syn.sub.level'] / 100, nz = S['syn.noise.level'] / 100;
     let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647 - .5;
-    line(t => { const ph = (t * 1.5) % 1; return (sq ? (ph < .5 ? .8 : -.8) : Math.sin(ph * 2 * Math.PI)) * Math.max(lv, .05) + rnd() * nz * 1.4; }, lv + nz > 0 ? tc('e9e6df', 1) : tc('e9e6df', .25), 1.6, lv + nz > 0);
+    line(t => { const ph = (t * 1.5) % 1; return (sq ? (ph < .5 ? .8 : -.8) : Math.sin(ph * 2 * Math.PI)) * Math.max(lv, .05) + rnd() * nz * 1.4; }, lv + nz > 0 ? hue(H) : tc('e9e6df', .25), 1.8, lv + nz > 0);
     return;
   }
   const x = which, onx = on('syn.' + x + '.on'), wv = Math.round(S['syn.' + x + '.wave']), sh = S['syn.' + x + '.shape'];
   const voices = wv === 4 ? 1 : [1, 3, 5, 7][Math.round(S['syn.' + x + '.voices'])], det = S['syn.' + x + '.detune'];
   for (let v = 0; v < voices; v++) { if (v === voices >> 1) continue; const off = (v - (voices - 1) / 2) * det / 1400;
-    line(t => waveAt(wv, frac(t * 2 * (1 + off) + v * .07), sh), tc('e9e6df', .13), 1, false); }
+    line(t => waveAt(wv, frac(t * 2 * (1 + off) + v * .07), sh), hue(H, .18), 1, false); }
   const sync = x === 'b' && on('syn.b.sync'), ratio = Math.pow(2, (S['syn.b.pitch'] - S['syn.a.pitch']) / 12);
-  line(t => waveAt(wv, sync ? frac(frac(t * 2) * ratio) : frac(t * 2), sh), onx ? tc('e9e6df', 1) : tc('e9e6df', .25), 1.8, onx);
+  line(t => waveAt(wv, sync ? frac(frac(t * 2) * ratio) : frac(t * 2), sh), onx ? hue(H) : tc('e9e6df', .25), 2, onx);
 }
 function drawScopes() { if (tab === 2) drawScope(subView._cv, 'sub'); else drawScope(oscViews[tab]._cv, tab ? 'b' : 'a'); }
 onChange(i => { if (/^syn\.(a|b|sub|noise)\./.test(i)) drawScopes(); });
@@ -641,13 +784,13 @@ function drawFilter() {
   g.beginPath(); g.moveTo(0, db0 + .5); g.lineTo(w, db0 + .5); g.stroke();
   const pts = []; for (let x = 0; x <= w; x += 2) { const db = clamp(20 * Math.log10(Math.max(filterMag(fx(x)), 1e-5)), -36, 18); pts.push([x, db0 - db * scale]); }
   const live = on('syn.flt.on');
-  const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, live ? accent(.16) : tc('e9e6df', .04)); gr.addColorStop(1, accent(0));
+  const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, live ? hue('flt', .22) : tc('e9e6df', .04)); gr.addColorStop(1, hue('flt', 0));
   g.beginPath(); g.moveTo(0, h); pts.forEach(([x, y]) => g.lineTo(x, y)); g.lineTo(w, h); g.closePath(); g.fillStyle = gr; g.fill();
   g.beginPath(); pts.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y));
-  g.strokeStyle = live ? tc('e9e6df', 1) : tc('e9e6df', .3); g.lineWidth = 1.7; g.shadowColor = accent(.3); g.shadowBlur = live ? 8 : 0; g.stroke(); g.shadowBlur = 0;
+  g.strokeStyle = live ? hue('flt') : tc('e9e6df', .3); g.lineWidth = 1.9; g.shadowColor = hue('flt', .5); g.shadowBlur = live ? 8 : 0; g.stroke(); g.shadowBlur = 0;
   const nx = toN('syn.flt.cutoff') * w, ny = h - 8 - (S['syn.flt.res'] / 100 * .8 + .1) * (h - 16);
-  g.fillStyle = accent(1); g.beginPath(); g.arc(nx, clamp(ny, 6, h - 6), 4.5, 0, 7); g.fill();
-  g.strokeStyle = accent(.35); g.beginPath(); g.arc(nx, clamp(ny, 6, h - 6), 9, 0, 7); g.stroke();
+  g.fillStyle = '#ffffff'; g.beginPath(); g.arc(nx, clamp(ny, 6, h - 6), 4, 0, 7); g.fill();
+  g.strokeStyle = hue('flt', .6); g.beginPath(); g.arc(nx, clamp(ny, 6, h - 6), 9, 0, 7); g.stroke();
   g.fillStyle = tc('e9e6df', .3); g.font = '9px ' + FONT();
   [['100', 100], ['1k', 1000], ['10k', 10000]].forEach(([t, f]) => g.fillText(t, Math.log(f / 20) / Math.log(1000) * w + 4, h - 5));
   if (Math.round(S['syn.flt.type']) === 6) {
@@ -672,10 +815,10 @@ function drawEnv() {
   const path = () => { g.beginPath(); g.moveTo(G.pad, G.base); g.bezierCurveTo(G.pad + (G.ax - G.pad) * .4, G.top, G.ax, G.top, G.ax, G.top);
     g.bezierCurveTo(G.ax + (G.dx - G.ax) * .22, G.sy, G.dx, G.sy, G.dx, G.sy); g.lineTo(G.sx, G.sy);
     g.bezierCurveTo(G.sx + (G.rx - G.sx) * .22, G.base, G.rx, G.base, G.rx, G.base); };
-  path(); g.lineTo(G.pad, G.base); const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, accent(.16)); gr.addColorStop(1, accent(0)); g.fillStyle = gr; g.fill();
-  path(); g.strokeStyle = tc('e9e6df', 1); g.lineWidth = 1.7; g.stroke();
+  path(); g.lineTo(G.pad, G.base); const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, hue('env', .24)); gr.addColorStop(1, hue('env', 0)); g.fillStyle = gr; g.fill();
+  path(); g.strokeStyle = hue('env'); g.lineWidth = 1.9; g.shadowColor = hue('env', .5); g.shadowBlur = 8; g.stroke(); g.shadowBlur = 0;
   g.setLineDash([2, 3]); g.strokeStyle = tc('e9e6df', .15); g.beginPath(); g.moveTo(G.sx + .5, G.top); g.lineTo(G.sx + .5, G.base); g.stroke(); g.setLineDash([]);
-  [[G.ax, G.top], [G.dx, G.sy], [G.rx, G.base]].forEach(([x, y], i) => { g.fillStyle = i === envHot ? accent(1) : tc('e9e6df', 1); g.beginPath(); g.arc(x, y, i === envHot ? 4.5 : 3.6, 0, 7); g.fill(); });
+  [[G.ax, G.top], [G.dx, G.sy], [G.rx, G.base]].forEach(([x, y], i) => { g.fillStyle = i === envHot ? hue('env') : '#ffffff'; g.beginPath(); g.arc(x, y, i === envHot ? 4.5 : 3.6, 0, 7); g.fill(); });
   g.fillStyle = tc('e9e6df', .3); g.font = '600 8px ' + FONT(); g.fillText('NOTE OFF', G.sx + 5, 16);
 }
 { let drag = null;
@@ -702,18 +845,18 @@ function drawLfo() {
   const sh = Math.round(S['syn.lfo.shape']), amp = .14 + S['syn.lfo.depth'] / 100 * .26;
   g.strokeStyle = tc('e9e6df', .05); g.beginPath(); g.moveTo(0, h / 2 + .5); g.lineTo(w, h / 2 + .5); g.stroke();
   g.beginPath(); for (let x = 0; x <= w; x++) { const y = h / 2 - lfoVal(sh, (x / w * 2) % 1) * h * amp; x ? g.lineTo(x, y) : g.moveTo(x, y); }
-  g.strokeStyle = S['syn.lfo.depth'] > 0 ? tc('e9e6df', 1) : tc('e9e6df', .3); g.lineWidth = 1.6; g.stroke();
+  g.strokeStyle = S['syn.lfo.depth'] > 0 ? hue('mot') : tc('e9e6df', .3); g.lineWidth = 1.8; g.stroke();
   const ph = ((performance.now() - lfoT0) / 1000 * Math.min(lfoHz(), 8)) % 1, x = ph * w / 2;
-  g.fillStyle = accent(1); g.beginPath(); g.arc(x, h / 2 - lfoVal(sh, ph) * h * amp, 3.2, 0, 7); g.fill();
+  g.fillStyle = '#ffffff'; g.beginPath(); g.arc(x, h / 2 - lfoVal(sh, ph) * h * amp, 3.2, 0, 7); g.fill();
 }
 
 /* everything visible, redrawn when the page shows or the theme changes */
 let lastShown = false;
-function redrawAll() { drawScopes(); drawFilter(); drawEnv(); drawLfo(); drawLane(); }
+function redrawAll() { drawScopes(); drawFilter(); drawEnv(); if (mtab) drawLfo(); drawLane(); }
 (function loop() {
   const shown = SP.style.display !== 'none' && SP.offsetWidth > 0;
   if (shown && !lastShown) redrawAll();
-  if (shown) drawLfo();
+  if (shown && mtab) drawLfo();
   lastShown = shown;
   requestAnimationFrame(loop);
 })();
@@ -767,8 +910,7 @@ function roll() {
   for (const id in v) if (!KEEP.includes(id)) set(id, v[id], 'dice');
   drawLane(); stepsChanged('dice');
   undo.disabled = false;
-  panel.classList.remove('sy-flash'); void panel.offsetWidth;
-  [cSnd, cFlt, cEnv].forEach(c => { c.classList.remove('sy-flash'); void c.offsetWidth; c.classList.add('sy-flash'); });
+  screen.classList.remove('sy-flash'); void screen.offsetWidth; screen.classList.add('sy-flash');
 }
 dice.addEventListener('click', roll);
 undo.addEventListener('click', () => { if (!undoState) return; for (const id in undoState.S) set(id, undoState.S[id], 'dice'); steps = undoState.steps; drawLane(); stepsChanged('dice'); undoState = null; undo.disabled = true; });
@@ -977,6 +1119,7 @@ function startArp() {
 }
 function stopArp() { if (!arp) return; clearTimeout(arp.timer); arp = null; live.step = -1; }
 function press(m, src) {
+  if (!powered) return;
   if (inPlugin()) { held = m; if (window.obsSynth.noteOut) window.obsSynth.noteOut(m, true); return; }
   srcName = src || 'KEYS'; held = m;
   if (on('syn.arp.on')) { live.note = m; live.src = srcName; startArp(); }
@@ -992,7 +1135,7 @@ onChange(id => { if (inPlugin() || !ac) return; if (id === 'syn.arp.on') { if (!
 /* AUDITION: a short riff the way a guitarist would play it */
 let demoT = null;
 function demo(onOff) {
-  audition.classList.toggle('on', onOff); audition.innerHTML = (onOff ? IC.stop : IC.play) + '<b>' + (onOff ? 'STOP' : 'AUDITION') + '</b>';
+  audition.classList.toggle('on', onOff); audition.innerHTML = '<span class="round">' + (onOff ? IC.stop : IC.play) + '</span><span class="tx"><b>' + (onOff ? 'STOP' : 'AUDITION') + '</b><small>' + (onOff ? 'playing a demo riff' : 'or play keys A–K') + '</small></span>';
   if (!onOff) { clearTimeout(demoT); demoT = null; if (held != null) releaseKey(held); if (!inPlugin()) { stopArp(); noteOff(); live.note = null; } return; }
   const riff = [40, 43, 45, 47, 40, 50, 48, 45]; let i = 0;
   const next = () => { const beat = 60 / bpm; if (held != null) releaseKey(held);
@@ -1027,17 +1170,12 @@ window.obsSynth = {
   setBpm(b) { if (b > 20 && b < 400) bpm = b; },
   noteOut: null,              // set by the bridge: (midi, isOn) -> engine
   powerOut: null,             // set by the bridge: turns the synth section on
-  setPower(isOn) { offMask.classList.toggle('show', !isOn); },
+  setPower(isOn) { if (!!isOn !== powered) setPowerUi(isOn); },
   dice: roll,
 };
 
-/* ------------------------------------------------------------ synth on / off (plugin) */
-const offMask = el('div', 'sy-offmask', '<div class="sy-offcard"><b>THE SYNTH IS OFF</b><button>TURN IT ON</button><span>Double-click the SYNTH tab to switch it on or off any time</span></div>');
-panel.appendChild(offMask);
-offMask.querySelector('button').addEventListener('click', () => { if (window.obsSynth.powerOut) window.obsSynth.powerOut(true); });
-
 /* ------------------------------------------------------------ start */
-buildEnvKnobs(); showTab(0); tabDots(); drawLane();
+buildEnvKnobs(); showTab(0); tabDots(); showMot(0); motDots(); drawLane();
 setTimeout(redrawAll, 60);
 })();
 </script>

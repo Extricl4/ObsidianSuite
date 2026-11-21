@@ -85,9 +85,9 @@ const fxc=document.createElement('canvas'); fxc.id='themefx'; fxc.setAttribute('
 
 /* ---- font rules for a theme ---- */
 const LS=['.14','.16','.18','.2','.22','.24','.26','.3'].flatMap(v=>['[style*="letter-spacing: '+v+'em"]','[style*="letter-spacing: 0'+v+'em"]']);
-const HEAD_SEL=[...LS,'.sy-card h3','.sy-kl','.sy-lbl','.sy-chip','.sy-seg button','.sy-tab','.sy-pill .l','.sy-play','.sy-stepper span b',
+const HEAD_SEL=[...LS,'.sy-sh h3','.sy-kl','.sy-lbl','.sy-chip','.sy-seg button','.sy-tab','.sy-pill .l','.sy-btn .tx b','.sy-eng','.sy-sel .opt','.sy-bat span','.sy-pop h4',
   '.obs-tile i','.obs-role','.obs-based','.obs-btn','.obs-crumb span'].map(s=>'#app '+s).join(',');
-const BIG_SEL=['.sy-note .n','.obs-ampname','[style*="font-size: 110px"]'].map(s=>'#app '+s).join(',');
+const BIG_SEL=['.obs-ampname','[style*="font-size: 110px"]'].map(s=>'#app '+s).join(',');
 function setFonts(t){
   const f=t.font;
   if(!f){ fontCss.textContent=''; return; }
@@ -96,9 +96,10 @@ function setFonts(t){
 #app,#app button,#app input,#app textarea{font-family:${q(f.body)}!important;font-size-adjust:${f.adj||'none'}!important;font-synthesis-weight:none}
 ${HEAD_SEL}{font-family:${q(f.head)}!important;font-size-adjust:${f.headAdj||f.adj||'none'}!important;${f.headLs?'letter-spacing:'+f.headLs+'!important;':''}}
 ${BIG_SEL}{font-family:${q(f.logo)}!important;font-size-adjust:none!important}
+#app .sy-badge b{font-family:${q(f.logo)}!important;font-size-adjust:none!important;font-weight:400!important}
 #app .thlogo{font-family:${q(f.logo)}!important;font-size-adjust:none!important;letter-spacing:${f.logoLs||'.3em'}!important;font-weight:400!important}
 #app .thc .sw b{font-size-adjust:none!important}
-${f.numBase?'#app [style*="tabular-nums"],#app .kn-val,#app .sy-kv,#app .sy-pill .v,#app .sy-stepper em{font-family:'+BASE+'!important;font-size-adjust:none!important}':''}`;
+${f.numBase?'#app [style*="tabular-nums"],#app .kn-val,#app .sy-kv,#app .sy-val,#app .sy-pill .v{font-family:'+BASE+'!important;font-size-adjust:none!important}':''}`;
 }
 /* logo text: some fonts read better as "Obsidian" than "OBSIDIAN" */
 const logos=[...app.querySelectorAll('span')].filter(s=>s.textContent.trim()==='OBSIDIAN'&&!s.children.length);
