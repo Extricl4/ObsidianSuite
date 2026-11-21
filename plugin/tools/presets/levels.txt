@@ -48,21 +48,21 @@
   ok   Cathedral Swell                     -35.8 dB  peak -20.8  out   9.8
   ok   Night Drive                         -36.2 dB  peak -22.6  out  10.2
   ok   Frozen Pad                          -33.8 dB  peak -21.2  out   7.8
-  ok   Shoegaze Wall                       -24.6 dB  peak -15.2  out  -1.4
+  ok   Shoegaze Wall                       -24.4 dB  peak -14.0  out  -1.6
   ok   Catacombs                           -35.3 dB  peak -21.2  out   9.3
-  ok   Ambient Slap                        -23.4 dB  peak -11.2  out  -2.6
+  ok   Ambient Slap                        -23.3 dB  peak -11.2  out  -2.7
   ok   Octave Heaven                       -35.6 dB  peak -22.0  out   9.6
   ok   Tremolo Dream                       -37.2 dB  peak -21.3  out  11.2
-  ok   Neon Lead Synth                     -30.4 dB  peak -19.1  out   4.4
-  ok   Arp Machine                         -27.2 dB  peak -13.5  out   1.2
-  ok   Chip Shred                          -23.3 dB  peak -16.8  out  -2.7
-  ok   Wobble Riff                         -24.5 dB  peak -13.0  out  -1.5
-  ok   Synthwave Night                     -17.9 dB  peak  -7.5  out  -8.1
-  ok   Sub Monster                         -22.0 dB  peak -14.6  out  -4.0
-  ok   Talkbox Funk                        -28.9 dB  peak -15.9  out   2.9
-  ok   Upside Down                         -31.5 dB  peak -16.4  out   5.5
-  ok   Haunted Chapel                      -20.4 dB  peak -10.7  out  -5.6
-  ok   Glitch Lab                          -32.4 dB  peak -23.3  out   6.4
+  ok   Neon Lead Synth                     -30.2 dB  peak -19.0  out   4.2
+  ok   Arp Machine                         -27.0 dB  peak -13.0  out   1.0
+  ok   Chip Shred                          -23.4 dB  peak -16.4  out  -2.6
+  ok   Wobble Riff                         -24.1 dB  peak -13.4  out  -1.9
+  ok   Synthwave Night                     -17.4 dB  peak  -6.6  out  -8.6
+  ok   Sub Monster                         -22.0 dB  peak -14.7  out  -4.0
+  ok   Talkbox Funk                        -29.1 dB  peak -15.2  out   3.1
+  ok   Upside Down                         -31.5 dB  peak -17.0  out   5.5
+  ok   Haunted Chapel                      -19.7 dB  peak -10.5  out  -6.3
+  ok   Glitch Lab                          -32.1 dB  peak -23.1  out   6.1
   ok   Laser Room                          -33.5 dB  peak -20.7  out   7.5
   ok   Ring Mod Robot                      -33.5 dB  peak -20.4  out   7.5
   ok   Octave Fuzz                         -21.9 dB  peak -10.7  out  -4.1
@@ -93,24 +93,54 @@
   ok   Hardwired                           -25.1 dB  peak -16.2  out  -0.9
   ok   Lux Aeterna                         -25.8 dB  peak -17.5  out  -0.2
   ok   Kirk Wah Solo                       -28.0 dB  peak -18.9  out   2.0
-  ok   Unholy Confessions                  -29.0 dB  peak -19.3  out   3.0
-  ok   Bat Country                         -25.0 dB  peak -16.0  out  -1.0
-  ok   Beast and the Harlot                -25.8 dB  peak -16.7  out  -0.2
-  ok   City of Evil Lead                   -26.9 dB  peak -17.6  out   0.9
+  ok   Sounding the Seventh Trumpet (Album Rhythm)  -28.6 dB  peak -18.4  out   2.6
+  ok   Sounding the Seventh Trumpet (Album Lead)  -28.5 dB  peak -19.0  out   2.5
+  ok   Waking the Fallen (Album Rhythm)    -29.4 dB  peak -20.3  out   3.4
+  ok   Waking the Fallen (Album Lead)      -28.7 dB  peak -19.1  out   2.7
+  ok   Unholy Confessions                  -29.0 dB  peak -19.2  out   3.0
+  ok   Chapter Four                        -28.5 dB  peak -18.1  out   2.5
+  ok   Second Heartbeat (Solo)             -26.4 dB  peak -16.0  out   0.4
+  ok   City of Evil (Album Rhythm)         -24.9 dB  peak -13.9  out  -1.1
+  ok   City of Evil (Album Lead)           -26.9 dB  peak -17.6  out   0.9
+  ok   Beast and the Harlot                -25.8 dB  peak -16.8  out  -0.2
+  ok   Bat Country                         -24.9 dB  peak -15.9  out  -1.1
+  ok   Blinded in Chains                   -24.0 dB  peak -14.0  out  -2.0
   ok   Seize the Day (Clean)               -25.0 dB  peak -10.2  out  -1.0
   ok   Seize the Day (Solo)                -24.8 dB  peak -15.4  out  -1.2
+  ok   Sidewinder (Solo)                   -25.9 dB  peak -15.3  out  -0.1
+  ok   Self-Titled (Album Rhythm)          -24.8 dB  peak -15.6  out  -1.2
+  ok   Self-Titled (Album Lead)            -26.5 dB  peak -17.5  out   0.5
+  ok   Critical Acclaim                    -25.4 dB  peak -15.7  out  -0.6
+  ok   Almost Easy                         -22.0 dB  peak -11.5  out  -4.0
   ok   Afterlife                           -26.2 dB  peak -17.3  out   0.2
+  ok   Gunslinger                          -35.1 dB  peak -21.5  out   9.1
+  ok   Nightmare (Album Rhythm)            -26.5 dB  peak -13.6  out   0.5
+  ok   Nightmare (Album Lead)              -25.2 dB  peak -16.0  out  -0.8
   ok   Nightmare                           -24.7 dB  peak -15.0  out  -1.3
+  ok   Natural Born Killer                 -29.6 dB  peak -20.5  out   3.6
+  ok   Buried Alive                        -25.8 dB  peak -16.0  out  -0.2
+  ok   Danger Line (Solo)                  -26.1 dB  peak -16.9  out   0.1
   ok   So Far Away (Solo)                  -26.6 dB  peak -16.9  out   0.6
-  ok   Hail to the King                    -24.8 dB  peak -15.9  out  -1.2
+  ok   Hail to the King (Album Rhythm)     -24.4 dB  peak -13.2  out  -1.6
+  ok   Hail to the King (Album Lead)       -27.6 dB  peak -19.0  out   1.6
+  ok   Hail to the King                    -24.8 dB  peak -15.6  out  -1.2
   ok   Shepherd of Fire                    -29.0 dB  peak -19.3  out   3.0
+  ok   This Means War                      -26.5 dB  peak -16.7  out   0.5
+  ok   The Stage (Album Rhythm)            -27.1 dB  peak -18.5  out   1.1
+  ok   The Stage (Album Lead)              -24.7 dB  peak -15.6  out  -1.3
   ok   The Stage                           -25.6 dB  peak -17.5  out  -0.4
-  ok   Cosmic                              -24.2 dB  peak  -9.7  out  -1.8
-  ok   Cosmic (Solo)                       -27.3 dB  peak -16.5  out   1.3
-  ok   G                                   -26.8 dB  peak -15.5  out   0.8
-  ok   (O)rdinary                          -28.3 dB  peak -15.4  out   2.3
+  ok   God Damn                            -24.3 dB  peak -15.6  out  -1.7
+  ok   Angels                              -20.0 dB  peak  -5.3  out  -6.0
+  ok   Exist                               -25.4 dB  peak -15.0  out  -0.6
+  ok   Life Is But a Dream (Album Rhythm)  -29.9 dB  peak -18.4  out   3.9
+  ok   Life Is But a Dream (Album Lead)    -25.1 dB  peak -14.9  out  -0.9
+  ok   Cosmic                              -24.0 dB  peak  -9.4  out  -2.0
+  ok   Cosmic (Solo)                       -27.4 dB  peak -16.4  out   1.4
+  ok   G                                   -26.8 dB  peak -14.9  out   0.8
+  ok   (O)rdinary                          -28.6 dB  peak -16.3  out   2.6
   ok   Nobody                              -29.8 dB  peak -17.7  out   3.8
-  ok   Game Over                           -30.5 dB  peak -21.4  out   4.5
+  ok   Game Over                           -30.5 dB  peak -21.5  out   4.5
+  ok   Mattel                              -28.1 dB  peak -16.4  out   2.1
   ok   Comfortably Numb (Studio Solo)      -28.6 dB  peak -18.6  out   2.6
   ok   Comfortably Numb (Delicate Sound)   -26.8 dB  peak -16.6  out   0.8
   ok   Comfortably Numb (Pulse)            -28.0 dB  peak -18.2  out   2.0
@@ -127,15 +157,15 @@
   ok   Echoes                              -35.6 dB  peak -24.4  out   9.6
   ok   Dogs                                -36.4 dB  peak -26.7  out  10.4
   ok   Run Like Hell                       -26.8 dB  peak -13.2  out   0.8
-  ok   Concealing Fate                     -23.7 dB  peak -14.5  out  -2.3
-  ok   Nocturne                            -23.2 dB  peak -13.9  out  -2.8
+  ok   Concealing Fate                     -23.7 dB  peak -14.6  out  -2.3
+  ok   Nocturne                            -23.1 dB  peak -14.0  out  -2.9
   ok   Of Matter                           -35.6 dB  peak -20.8  out   9.6
   ok   Juno                                -24.8 dB  peak -11.4  out  -1.2
   ok   King                                -23.4 dB  peak -12.3  out  -2.6
   ok   War of Being                        -26.7 dB  peak -16.2  out   0.7
-  ok   Icarus Lives!                       -24.6 dB  peak -14.1  out  -1.4
+  ok   Icarus Lives!                       -24.6 dB  peak -14.0  out  -1.4
   ok   Scarlet                             -25.3 dB  peak -15.8  out  -0.7
-  ok   Marigold                            -26.9 dB  peak -14.9  out   0.9
+  ok   Marigold                            -27.0 dB  peak -15.0  out   1.0
   ok   Blood Eagle                         -23.9 dB  peak -15.2  out  -2.1
   ok   Ji (Solo)                           -25.8 dB  peak -15.8  out  -0.2
   ok   Jetpacks Was Yes!                   -33.0 dB  peak -19.2  out   7.0
@@ -154,9 +184,9 @@
   ok   Eruption                            -16.7 dB  peak  -7.0  out  -9.3
   ok   Ain't Talkin' 'bout Love            -15.9 dB  peak  -6.9  out -10.1
   ok   Unchained                           -16.6 dB  peak  -7.2  out  -9.4
-  ok   Panama                              -15.3 dB  peak  -6.0  out -10.7
+  ok   Panama                              -15.3 dB  peak  -6.1  out -10.7
   ok   Hot for Teacher                     -15.9 dB  peak  -6.9  out -10.1
-  ok   Jump                                -28.2 dB  peak -16.6  out   2.2
+  ok   Jump                                -28.2 dB  peak -17.0  out   2.2
   ok   Judgement Day                       -26.8 dB  peak -17.1  out   0.8
   ok   Cowboys from Hell                   -24.4 dB  peak -12.5  out  -1.6
   ok   Walk                                -23.4 dB  peak -11.5  out  -2.6
@@ -171,22 +201,22 @@
   ok   The Spirit Carries On (Solo)        -27.6 dB  peak -18.7  out   1.6
   ok   Petrucci Clean                      -19.0 dB  peak  -7.0  out  -7.0
   ok   Bleed                               -22.2 dB  peak -11.3  out  -3.8
-  ok   Rational Gaze                       -23.4 dB  peak -12.5  out  -2.6
+  ok   Rational Gaze                       -23.4 dB  peak -12.4  out  -2.6
   ok   Future Breed Machine                -24.2 dB  peak -13.6  out  -1.8
   ok   Thordendal Lead                     -27.9 dB  peak -17.6  out   1.9
-  ok   Flying Whales                       -26.7 dB  peak -18.0  out   0.7
-  ok   Stranded                            -27.6 dB  peak -18.7  out   1.6
+  ok   Flying Whales                       -26.7 dB  peak -18.1  out   0.7
+  ok   Stranded                            -27.6 dB  peak -18.6  out   1.6
   ok   L'Enfant Sauvage                    -28.0 dB  peak -16.3  out   2.0
   ok   Silvera                             -27.8 dB  peak -15.4  out   1.8
   ok   Amazonia (Clean)                    -34.6 dB  peak -20.6  out   8.6
-  ok   Wait and Bleed                      -27.0 dB  peak -15.9  out   1.0
-  ok   Duality                             -27.9 dB  peak -18.1  out   1.9
+  ok   Wait and Bleed                      -27.0 dB  peak -15.8  out   1.0
+  ok   Duality                             -27.9 dB  peak -18.0  out   1.9
   ok   Psychosocial                        -29.3 dB  peak -19.5  out   3.3
   ok   Before I Forget                     -28.0 dB  peak -18.6  out   2.0
   ok   Snuff                               -36.5 dB  peak -23.2  out  10.5
   ok   Raining Blood                       -28.2 dB  peak -18.9  out   2.2
-  ok   Angel of Death                      -28.1 dB  peak -19.0  out   2.1
-  ok   South of Heaven                     -28.7 dB  peak -20.0  out   2.7
+  ok   Angel of Death                      -28.1 dB  peak -19.2  out   2.1
+  ok   South of Heaven                     -28.7 dB  peak -19.9  out   2.7
   ok   Seasons in the Abyss                -29.3 dB  peak -20.4  out   3.3
   ok   Holy Wars... The Punishment Due     -27.7 dB  peak -18.7  out   1.7
   ok   Hangar 18 (Solo)                    -29.2 dB  peak -20.4  out   3.2
@@ -197,16 +227,16 @@
   ok   Paradise City                       -18.4 dB  peak  -9.2  out  -7.6
   ok   November Rain (Solo)                -29.3 dB  peak -20.4  out   3.3
   ok   Knockin' on Heaven's Door (Solo)    -19.3 dB  peak  -9.6  out  -6.7
-  ok   Back in Black                       -17.7 dB  peak  -8.3  out  -8.3
-  ok   Highway to Hell                     -17.8 dB  peak  -8.5  out  -8.2
+  ok   Back in Black                       -17.7 dB  peak  -8.2  out  -8.3
+  ok   Highway to Hell                     -17.8 dB  peak  -8.2  out  -8.2
   ok   Thunderstruck                       -18.7 dB  peak  -9.3  out  -7.3
   ok   T.N.T.                              -17.5 dB  peak  -8.5  out  -8.5
   ok   Whole Lotta Love                    -19.5 dB  peak -10.2  out  -6.5
-  ok   Black Dog                           -18.3 dB  peak  -9.1  out  -7.7
+  ok   Black Dog                           -18.3 dB  peak  -9.2  out  -7.7
   ok   Stairway to Heaven (Solo)           -19.0 dB  peak  -9.9  out  -7.0
   ok   Stairway to Heaven (Intro)          -36.8 dB  peak -24.0  out  10.8
   ok   Kashmir                             -19.3 dB  peak  -9.6  out  -6.7
-  ok   Immigrant Song                      -18.4 dB  peak  -9.3  out  -7.6
+  ok   Immigrant Song                      -18.4 dB  peak  -9.2  out  -7.6
   ok   Purple Haze                         -18.4 dB  peak  -8.4  out  -7.6
   ok   Little Wing                         -33.2 dB  peak -18.3  out   7.2
   ok   Voodoo Child (Slight Return)        -18.1 dB  peak  -8.7  out  -7.9
@@ -225,15 +255,15 @@
   ok   Sunday Bloody Sunday                -29.5 dB  peak -20.1  out   3.5
   ok   Pride (In the Name of Love)         -30.2 dB  peak -19.7  out   4.2
   ok   Smells Like Teen Spirit (Verse)     -34.5 dB  peak -19.3  out   8.5
-  ok   Smells Like Teen Spirit (Chorus)    -18.4 dB  peak  -9.2  out  -7.6
+  ok   Smells Like Teen Spirit (Chorus)    -18.3 dB  peak  -9.3  out  -7.7
   ok   Come as You Are                     -35.0 dB  peak -20.5  out   9.0
   ok   Heart-Shaped Box                    -18.6 dB  peak  -9.9  out  -7.4
   ok   Lithium                             -19.0 dB  peak -10.1  out  -7.0
-  ok   Creep                               -18.3 dB  peak  -9.2  out  -7.7
+  ok   Creep                               -18.3 dB  peak  -9.1  out  -7.7
   ok   Paranoid Android                    -27.6 dB  peak -17.6  out   1.6
   ok   Weird Fishes                        -27.3 dB  peak -16.9  out   1.3
   ok   Just                                -28.5 dB  peak -18.3  out   2.5
-  ok   Everything in Its Right Place       -21.4 dB  peak -10.9  out  -4.6
+  ok   Everything in Its Right Place       -20.7 dB  peak -10.4  out  -5.3
   ok   Sultans of Swing                    -31.8 dB  peak -20.3  out   5.8
   ok   Money for Nothing                   -28.2 dB  peak -20.6  out   2.2
   ok   Brothers in Arms (Solo)             -22.5 dB  peak -12.8  out  -3.5
@@ -254,26 +284,26 @@
   ok   Playing God                         -35.5 dB  peak -23.1  out   9.5
   ok   Ego Death                           -36.0 dB  peak -23.0  out  10.0
   ok   Polyphia Lead                       -27.9 dB  peak -18.1  out   1.9
-  ok   CAFO                                -24.4 dB  peak -16.0  out  -1.6
+  ok   CAFO                                -24.4 dB  peak -15.9  out  -1.6
   ok   Physical Education                  -23.1 dB  peak -13.7  out  -2.9
-  ok   Tempting Time                       -24.6 dB  peak -16.3  out  -1.4
+  ok   Tempting Time                       -24.6 dB  peak -16.2  out  -1.4
   ok   Tosin Clean                         -15.3 dB  peak  -2.1  out -10.7
   ok   Electric Sunrise                    -28.0 dB  peak -18.1  out   2.0
   ok   Handmade Cities                     -25.9 dB  peak -16.0  out  -0.1
   ok   Selenium Forest                     -33.4 dB  peak -17.2  out   7.4
   ok   Every Piece Matters                 -24.3 dB  peak -11.4  out  -1.7
-  ok   Change (In the House of Flies)      -25.7 dB  peak -15.1  out  -0.3
-  ok   My Own Summer (Shove It)            -28.2 dB  peak -18.2  out   2.2
-  ok   Be Quiet and Drive (Far Away)       -26.0 dB  peak -13.9  out   0.0
+  ok   Change (In the House of Flies)      -25.7 dB  peak -15.0  out  -0.3
+  ok   My Own Summer (Shove It)            -28.2 dB  peak -18.4  out   2.2
+  ok   Be Quiet and Drive (Far Away)       -26.0 dB  peak -14.5  out  -0.0
   ok   Diamond Eyes                        -27.5 dB  peak -14.6  out   1.5
-  ok   Chop Suey!                          -27.4 dB  peak -17.9  out   1.4
+  ok   Chop Suey!                          -27.5 dB  peak -18.2  out   1.5
   ok   Toxicity                            -28.6 dB  peak -19.0  out   2.6
-  ok   B.Y.O.B.                            -28.8 dB  peak -18.8  out   2.8
+  ok   B.Y.O.B.                            -28.8 dB  peak -18.7  out   2.8
   ok   Aerials                             -34.5 dB  peak -21.5  out   8.5
   ok   One Step Closer                     -28.1 dB  peak -17.9  out   2.1
   ok   In the End                          -27.3 dB  peak -17.5  out   1.3
-  ok   Numb                                -26.3 dB  peak -13.5  out   0.3
-  ok   Faint                               -28.8 dB  peak -18.7  out   2.8
+  ok   Numb                                -26.4 dB  peak -14.1  out   0.4
+  ok   Faint                               -28.8 dB  peak -18.8  out   2.8
   ok   The Trooper                         -30.1 dB  peak -21.3  out   4.1
   ok   Hallowed Be Thy Name                -29.8 dB  peak -21.1  out   3.8
   ok   Fear of the Dark                    -31.9 dB  peak -21.9  out   5.9
@@ -282,16 +312,16 @@
   ok   Paranoid                            -17.7 dB  peak  -8.6  out  -8.3
   ok   War Pigs                            -18.5 dB  peak  -9.2  out  -7.5
   ok   N.I.B.                              -20.2 dB  peak  -9.6  out  -5.8
-  ok   Tears Don't Fall                    -29.6 dB  peak -20.8  out   3.6
+  ok   Tears Don't Fall                    -29.5 dB  peak -20.5  out   3.5
   ok   Waking the Demon                    -29.8 dB  peak -20.9  out   3.8
-  ok   Scream Aim Fire                     -29.0 dB  peak -20.4  out   3.0
-  ok   Your Betrayal                       -29.7 dB  peak -20.9  out   3.7
+  ok   Scream Aim Fire                     -29.0 dB  peak -20.5  out   3.0
+  ok   Your Betrayal                       -29.7 dB  peak -21.0  out   3.7
   ok   Pull Harder on the Strings of Your Martyr  -29.3 dB  peak -20.1  out   3.3
-  ok   In Waves                            -26.6 dB  peak -15.0  out   0.6
+  ok   In Waves                            -26.6 dB  peak -14.9  out   0.6
   ok   Shogun (Clean)                      -21.9 dB  peak -12.1  out  -4.1
   ok   Down from the Sky                   -29.3 dB  peak -21.1  out   3.3
-  ok   My Curse                            -29.4 dB  peak -20.6  out   3.4
-  ok   The End of Heartache                -29.3 dB  peak -19.5  out   3.3
+  ok   My Curse                            -29.5 dB  peak -20.7  out   3.5
+  ok   The End of Heartache                -29.3 dB  peak -19.6  out   3.3
   ok   Rose of Sharyn                      -30.0 dB  peak -21.6  out   4.0
   ok   Ghost of Perdition                  -29.0 dB  peak -20.7  out   3.0
   ok   Windowpane                          -35.8 dB  peak -22.5  out   9.8
@@ -301,15 +331,15 @@
   ok   Oblivion                            -25.1 dB  peak -16.2  out  -0.9
   ok   The Motherload                      -24.8 dB  peak -16.0  out  -1.2
   ok   Sleeping Giant                      -26.0 dB  peak -16.0  out   0.0
-  ok   Schism                              -30.2 dB  peak -20.0  out   4.2
-  ok   Forty Six & 2                       -30.2 dB  peak -19.3  out   4.2
+  ok   Schism                              -30.1 dB  peak -20.0  out   4.1
+  ok   Forty Six & 2                       -30.2 dB  peak -19.2  out   4.2
   ok   Sober                               -32.8 dB  peak -21.8  out   6.8
   ok   Lateralus                           -30.4 dB  peak -18.1  out   4.4
   ok   Plug In Baby                        -19.6 dB  peak  -9.7  out  -6.4
   ok   Hysteria                            -19.0 dB  peak -10.3  out  -7.0
   ok   Knights of Cydonia                  -20.8 dB  peak -10.4  out  -5.2
   ok   Supermassive Black Hole             -21.4 dB  peak -11.1  out  -4.6
-  ok   Killing in the Name                 -30.2 dB  peak -21.6  out   4.2
+  ok   Killing in the Name                 -30.2 dB  peak -21.7  out   4.2
   ok   Killing in the Name (Solo)          -31.6 dB  peak -21.9  out   5.6
   ok   Bulls on Parade                     -29.1 dB  peak -20.0  out   3.1
   ok   Know Your Enemy                     -31.9 dB  peak -22.1  out   5.9
@@ -318,33 +348,33 @@
   ok   Scar Tissue                         -32.3 dB  peak -20.8  out   6.3
   ok   Can't Stop                          -19.8 dB  peak -11.7  out  -6.2
   ok   Dani California (Solo)              -19.3 dB  peak -10.5  out  -6.7
-  ok   Everlong                            -25.6 dB  peak -14.9  out  -0.4
-  ok   The Pretender                       -23.4 dB  peak -12.0  out  -2.6
-  ok   Best of You                         -25.6 dB  peak -14.8  out  -0.4
+  ok   Everlong                            -25.5 dB  peak -14.4  out  -0.5
+  ok   The Pretender                       -23.4 dB  peak -12.7  out  -2.6
+  ok   Best of You                         -25.6 dB  peak -15.1  out  -0.4
   ok   Learn to Fly                        -23.2 dB  peak -12.6  out  -2.8
-  ok   The Summoning                       -26.5 dB  peak -17.0  out   0.5
-  ok   Alkaline                            -22.1 dB  peak -10.3  out  -3.9
-  ok   Granite                             -23.4 dB  peak -12.4  out  -2.6
-  ok   Vore                                -26.4 dB  peak -13.4  out   0.4
+  ok   The Summoning                       -26.5 dB  peak -16.9  out   0.5
+  ok   Alkaline                            -22.9 dB  peak -10.3  out  -3.1
+  ok   Granite                             -23.4 dB  peak -12.3  out  -2.6
+  ok   Vore                                -26.4 dB  peak -13.2  out   0.4
   ok   Holy Roller                         -23.9 dB  peak -15.0  out  -2.1
   ok   Circle with Me                      -24.2 dB  peak -11.6  out  -1.8
   ok   Constance                           -36.5 dB  peak -22.6  out  10.5
-  ok   Doomsday                            -26.9 dB  peak -14.9  out   0.9
-  ok   Animals                             -28.2 dB  peak -15.8  out   2.2
-  ok   Hereafter                           -22.9 dB  peak -13.4  out  -3.1
-  ok   Shadow Moses                        -27.3 dB  peak -17.7  out   1.3
-  ok   Throne                              -30.7 dB  peak -19.1  out   4.7
-  ok   Can You Feel My Heart               -18.2 dB  peak  -7.7  out  -7.8
-  ok   Square Hammer                       -17.4 dB  peak  -8.5  out  -8.6
+  ok   Doomsday                            -26.9 dB  peak -15.0  out   0.9
+  ok   Animals                             -28.3 dB  peak -14.4  out   2.3
+  ok   Hereafter                           -23.0 dB  peak -14.0  out  -3.0
+  ok   Shadow Moses                        -27.4 dB  peak -17.7  out   1.4
+  ok   Throne                              -30.7 dB  peak -19.7  out   4.7
+  ok   Can You Feel My Heart               -19.5 dB  peak  -8.8  out  -6.5
+  ok   Square Hammer                       -17.9 dB  peak  -8.2  out  -8.1
   ok   Mary on a Cross                     -28.1 dB  peak -19.1  out   2.1
-  ok   Cirice                              -30.7 dB  peak -22.2  out   4.7
+  ok   Cirice                              -30.7 dB  peak -22.1  out   4.7
   ok   Crazy Train                         -17.5 dB  peak  -8.6  out  -8.5
   ok   Mr. Crowley (Solo)                  -18.8 dB  peak  -9.2  out  -7.2
   ok   No More Tears                       -29.3 dB  peak -21.0  out   3.3
   ok   Painkiller                          -27.9 dB  peak -18.9  out   1.9
   ok   Breaking the Law                    -29.1 dB  peak -20.4  out   3.1
-  ok   Electric Eye                        -29.3 dB  peak -21.2  out   3.3
-  ok   Do I Wanna Know?                    -21.8 dB  peak -12.5  out  -4.2
+  ok   Electric Eye                        -29.3 dB  peak -21.1  out   3.3
+  ok   Do I Wanna Know?                    -21.9 dB  peak -12.4  out  -4.1
   ok   R U Mine?                           -20.4 dB  peak  -9.9  out  -5.6
   ok   505                                 -32.6 dB  peak -19.0  out   6.6
   ok   Revolution                          -31.1 dB  peak -20.6  out   5.1
@@ -352,10 +382,10 @@
   ok   Here Comes the Sun                  -33.8 dB  peak -21.6  out   7.8
   ok   Day Tripper                         -28.8 dB  peak -20.0  out   2.8
   ok   Hotel California (Solo)             -21.1 dB  peak -11.7  out  -4.9
-  ok   Life in the Fast Lane               -19.7 dB  peak -10.4  out  -6.3
+  ok   Life in the Fast Lane               -19.7 dB  peak -10.5  out  -6.3
   ok   Europa                              -30.1 dB  peak -20.4  out   4.1
   ok   Black Magic Woman                   -28.1 dB  peak -18.3  out   2.1
   ok   Smooth                              -28.4 dB  peak -19.6  out   2.4
   ok   Still Got the Blues                 -29.2 dB  peak -20.4  out   3.2
   ok   Parisienne Walkways                 -25.5 dB  peak -15.9  out  -0.5
-Wrote 360 presets to /home/claude/obsidiansuite/plugin/Presets
+Wrote 390 presets to /home/claude/obsidiansuite/plugin/Presets

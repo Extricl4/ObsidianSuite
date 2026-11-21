@@ -83,30 +83,96 @@ def make(m):
 
     # =====================================================================================
     a = artist('Avenged Sevenfold')
+    # ---- Sounding the Seventh Trumpet (2001)
+    a("Sounding the Seventh Trumpet (Album Rhythm)", 'Rhythm', "Sounding the Seventh Trumpet (2001) · the raw debut: fizzy, scooped, hardcore-flavoured metalcore", A('talos', Gain=7.5, Treble=6.5, Middle=3.5, Bass=6, Presence=6.5, Master=5, Output=5),
+      eq='scoop', gate=-48, doubler=6, width=115)
+    a("Sounding the Seventh Trumpet (Album Lead)", 'Lead', "Sounding the Seventh Trumpet (2001) · thin, biting melodic leads with a short echo", A('talos', boost='TS808 boost', Gain=6.5, Treble=6.5, Middle=6, Bass=5, Presence=6, Master=5, Output=5),
+      eq='lead', gate=-56, post=[dly(380, 20, 15), room(12)])
+    # ---- Waking the Fallen (2003)
+    a("Waking the Fallen (Album Rhythm)", 'Rhythm', "Waking the Fallen (2003) · boosted, aggressive metalcore chug: tight lows, cutting top", A('kratos', channel='Lead', Lead_pre=6.5, Lead_post=5, Low=5.5, Mid=5, High=6.5, Resonance=6, Presence=6.5),
+      FOURx12, pre=[ts('II', -3, 3)], eq='tight', gate=-48, doubler=7, width=120)
+    a("Waking the Fallen (Album Lead)", 'Lead', "Waking the Fallen (2003) · the twin-lead tone: mids forward, eighth-note ping-pong", A('talos', boost='TS808 boost', Gain=6, Treble=6, Middle=6.5, Bass=4.5, Presence=6, Master=5, Output=5),
+      eq='lead', gate=-58, post=[sdly('1/8', 22, 18), plate(2.2, 14)])
     a("Unholy Confessions", 'Rhythm', "Waking the Fallen (2003) · tight Rectifier metalcore rhythm", A('talos', boost='TS808 boost', Gain=6.5, Treble=6, Middle=4.5, Bass=6, Presence=6, Master=5, Output=5),
       eq='tight', gate=-50, doubler=7, width=120)
-    a("Bat Country", 'Rhythm', "City of Evil (2005) · big Uberschall rhythm", A('nyx', channel='Lead', voice='Basher', Gain=6, Bass=5.5, Middle=5, Treble=6, Presence=6, Depth=5.5, Master=5),
-      eq='modern', gate=-52, doubler=7, width=120)
+    a("Chapter Four", 'Rhythm', "Waking the Fallen (2003) · the stomping, galloping opener", A('talos', boost='TS808 boost', Gain=7, Treble=6, Middle=5, Bass=6, Presence=6.5, Master=5, Output=5),
+      eq='thrash', gate=-48, doubler=7, width=120)
+    a("Second Heartbeat (Solo)", 'Lead', "Waking the Fallen (2003) · the long melodic harmony solo", A('dionysus', channel='Red · lead', voice='711 (br)', Gain=6, Bass=4.5, Middle=6.5, Treble=6, Presence=6, Depth=5, Master=5),
+      eq='lead', gate=-58, post=[dly(440, 28, 20), plate(2.4, 16)])
+    # ---- City of Evil (2005)
+    a("City of Evil (Album Rhythm)", 'Rhythm', "City of Evil (2005) · a huge, saturated wall with a tight bottom, double-tracked", A('nyx', channel='Lead', voice='Darkness', Gain=6.5, Bass=5.5, Middle=5, Treble=6.5, Presence=6, Depth=5.5, Master=5),
+      pre=[ts('II', -3, 3)], eq='modern', gate=-50, doubler=8, width=125)
+    a("City of Evil (Album Lead)", 'Lead', "City of Evil (2005) · fast, neo-classical melodic leads with a ping-pong echo", A('nyx', channel='Lead', voice='Anthem', Gain=6.5, Bass=4.5, Middle=6.5, Treble=6, Presence=6, Depth=5, Master=5),
+      eq='lead', gate=-58, post=[sdly('1/8.', 25, 18), plate(2.2, 14)])
     a("Beast and the Harlot", 'Rhythm', "City of Evil (2005) · galloping, saturated and huge", A('erebus', Gain=6.5, Bass=5.5, Middle=5.5, Treble=6, Presence=6, Depth=5.5, Master=5),
       FOURx12, eq='tight', gate=-50, doubler=7)
-    a("City of Evil Lead", 'Lead', "City of Evil (2005) · fast melodic leads with a ping-pong echo", A('nyx', channel='Lead', voice='Anthem', Gain=6.5, Bass=4.5, Middle=6.5, Treble=6, Presence=6, Depth=5, Master=5),
-      eq='lead', gate=-58, post=[sdly('1/8.', 25, 18), plate(2.2, 14)])
+    a("Bat Country", 'Rhythm', "City of Evil (2005) · big Uberschall rhythm", A('nyx', channel='Lead', voice='Basher', Gain=6, Bass=5.5, Middle=5, Treble=6, Presence=6, Depth=5.5, Master=5),
+      eq='modern', gate=-52, doubler=7, width=120)
+    a("Blinded in Chains", 'Rhythm', "City of Evil (2005) · fast, thrashy riffing with a bright edge", A('nyx', channel='Lead', voice='Striptaser', Gain=6.5, Bass=5, Middle=5, Treble=6.5, Presence=6.5, Depth=5, Master=5),
+      eq='thrash', gate=-48, doubler=7, width=120)
     a("Seize the Day (Clean)", 'Clean', "City of Evil (2005) · the clean ballad picking with chorus", A('strix', channel='Clean', voice='Clean USA', Gain=4, Bass=5, Middle=5, Treble=6, Presence=5.5, Resonance=5, Master=5),
       pre=[comp(-26, 3, 5)], post=[chorus(0.5, 35, 30), dly(450, 25, 14), hall(2.8, 18)])
     a("Seize the Day (Solo)", 'Lead', "City of Evil (2005) · the emotional ballad solo", A('strix', channel='Lead', voice='Lead 2', Gain=5.5, Bass=4.5, Middle=6.5, Treble=6, Presence=6, Resonance=5, Master=5),
       eq='lead', gate=-60, post=[dly(480, 32, 22), hall(3, 18)])
+    a("Sidewinder (Solo)", 'Lead', "City of Evil (2005) · the bluesy, wah-tinged epic solo", A('strix', channel='Lead', voice='Lead 2', Gain=6, Bass=4.5, Middle=6.5, Treble=6, Presence=6, Resonance=5, Master=5),
+      pre=[wah('Envelope', 5.5, 6.5, 6.5)], eq='lead', gate=-58, post=[dly(460, 28, 20), plate(2.4, 16)])
+    # ---- Avenged Sevenfold (2007)
+    a("Self-Titled (Album Rhythm)", 'Rhythm', "Avenged Sevenfold (2007) · glossy, mid-forward hard-rock-meets-metal rhythm, double-tracked", A('nyx', channel='Lead', voice='Glazed', Gain=5.5, Bass=5, Middle=6, Treble=6, Presence=6, Depth=5, Master=5),
+      eq='modern', gate=-52, doubler=8, width=125)
+    a("Self-Titled (Album Lead)", 'Lead', "Avenged Sevenfold (2007) · smooth, singing lead with a dotted-eighth echo", A('nyx', channel='Lead', voice='Holly Rocks', Gain=6.5, Bass=4.5, Middle=6.5, Treble=6, Presence=6, Depth=5, Master=5),
+      eq='lead', gate=-58, post=[sdly('1/8.', 28, 20), plate(2.4, 16)])
+    a("Critical Acclaim", 'Rhythm', "Avenged Sevenfold (2007) · the heavy, chugging verses", A('erebus', Gain=7, Bass=6, Middle=5, Treble=6, Presence=6, Depth=6, Master=5),
+      FOURx12, eq='tight', gate=-50, doubler=7, width=120)
+    a("Almost Easy", 'Rhythm', "Avenged Sevenfold (2007) · punchy, driving rock riffs with big mids", A('lamia', channel='HBE', Gain=6.5, Bass=5, Middle=6, Treble=6.5, Presence=6, Resonance=5.5, Master=5),
+      FOURx12, eq='mid', gate=-52, doubler=7, width=120)
     a("Afterlife", 'Lead', "Avenged Sevenfold (2007) · soaring lead with dotted-eighth echoes", A('nyx', channel='Lead', voice='Blue Lights', Gain=6.5, Bass=4.5, Middle=6.5, Treble=6, Presence=6, Depth=5, Master=5),
       eq='lead', gate=-58, post=[sdly('1/8.', 30, 20), plate(2.4, 16)])
+    a("Gunslinger", 'Acoustic', "Avenged Sevenfold (2007) · the acoustic ballad strumming", A('orpheus', take='Take 1', Gain=4, Bass=4.5, Middle=5, Treble=6, Body=5.5, Reverb=1.5, Volume=5),
+      pre=[comp(-24, 3, 5)], post=[room(10)])
+    # ---- Nightmare (2010)
+    a("Nightmare (Album Rhythm)", 'Rhythm', "Nightmare (2010) · darker and thicker: saturated, heavy low mids", A('typhon', channel='Red', Gain=6, Volume=5, Low=6, Mid=5.5, High=6, Presence=6, Resonance=6.5),
+      eq='modern', gate=-50, doubler=8, width=125)
+    a("Nightmare (Album Lead)", 'Lead', "Nightmare (2010) · thick, emotional lead with long echoes", A('strix', channel='Lead', voice='Lead 2', Gain=6, Bass=5, Middle=6.5, Treble=5.5, Presence=6, Resonance=5.5, Master=5),
+      eq='lead', gate=-58, post=[sdly('1/4', 30, 20), hall(3, 18)])
     a("Nightmare", 'Rhythm', "Nightmare (2010) · dark, heavy and wide", A('erebus', Gain=7, Bass=6, Middle=5, Treble=6, Presence=6, Depth=6, Master=5),
       FOURx12, eq='modern', gate=-50, doubler=8, width=125)
+    a("Natural Born Killer", 'Rhythm', "Nightmare (2010) · the fastest, thrashiest song on the album", A('kratos', channel='Lead', Lead_pre=7, Lead_post=5, Low=5, Mid=5.5, High=6.5, Resonance=5.5, Presence=6.5),
+      FOURx12, pre=[ts('II', -3, 3)], eq='thrash', gate=-48, doubler=7, width=120)
+    a("Buried Alive", 'Rhythm', "Nightmare (2010) · the slow, crushing second half", A('erebus', Gain=7, Bass=6.5, Middle=5.5, Treble=5.5, Presence=5.5, Depth=6.5, Master=5),
+      FOURx12, eq='tight', gate=-50, doubler=8, width=125)
+    a("Danger Line (Solo)", 'Lead', "Nightmare (2010) · the soaring, emotional solo", A('strix', channel='Lead', voice='Lead 1', Gain=6, Bass=4.5, Middle=6.5, Treble=6, Presence=6, Resonance=5, Master=5),
+      eq='lead', gate=-58, post=[dly(500, 32, 22), hall(3, 20)])
     a("So Far Away (Solo)", 'Lead', "Nightmare (2010) · the tribute solo: warm, slow, singing", A('strix', channel='Lead', voice='Lead 1', Gain=5.5, Bass=5, Middle=6.5, Treble=5.5, Presence=5.5, Resonance=5, Master=5),
       eq='lead', gate=-60, post=[dly(520, 35, 22, 'Tape'), hall(3.2, 20)])
+    # ---- Hail to the King (2013)
+    a("Hail to the King (Album Rhythm)", 'Rhythm', "Hail to the King (2013) · classic-metal crunch: less gain, big mids, room to breathe", A('lamia', channel='BE', Gain=6, Bass=5, Middle=6.5, Treble=6, Presence=6, Resonance=5, Master=5),
+      FOURx12, eq='mid', gate=-52, doubler=7, width=120)
+    a("Hail to the King (Album Lead)", 'Lead', "Hail to the King (2013) · bluesy classic-rock lead, a little wah in the attack", A('chrysaor', Gain=7.5, Bass=4.5, Middle=7, Treble=6, Presence=6, Master=5),
+      FOURx12, pre=[sd1('D I', -6, 5), wah('Envelope', 4.5, 5, 6)], eq='lead', gate=-58, post=[dly(440, 25, 18), plate(2, 14)])
     a("Hail to the King", 'Rhythm', "Hail to the King (2013) · classic-metal mids on Syn's own amp", A('strix', channel='Lead', voice='Lead 1', Gain=6, Bass=5, Middle=6.5, Treble=6, Presence=6, Resonance=5, Master=5),
       eq='mid', gate=-52, doubler=7, width=120)
     a("Shepherd of Fire", 'Rhythm', "Hail to the King (2013) · slow, heavy, stomping", A('talos', Gain=6.5, Treble=5.5, Middle=5.5, Bass=6.5, Presence=5.5, Master=5, Output=5),
       eq='tight', gate=-50, doubler=8)
+    a("This Means War", 'Rhythm', "Hail to the King (2013) · the slow, crushing stomp", A('achlys', channel='Lead', voice='Lead harmonics + EQ', Gain=7, Treble=6, Bass=6, Middle=5, Presence=6, Lead_drive=6.5, Master=5),
+      FOURx12, eq=[1, 2, 0, -3, -2, 0, 1.5, 0, -1.5], gate=-50, doubler=8, width=125)
+    # ---- The Stage (2016)
+    a("The Stage (Album Rhythm)", 'Rhythm', "The Stage (2016) · modern and articulate, for odd-time prog riffs", A('moirai', channel='Red · lead', Gain=5.5, Volume=5, Low=5, Mid=5.5, High=6, Presence=6, Resonance=5.5),
+      pre=[ts('II', -3, 3)], eq='tight', gate=-48, doubler=7, width=120)
+    a("The Stage (Album Lead)", 'Lead', "The Stage (2016) · fluid, compressed shred lead with a stereo echo", A('strix', channel='Lead', voice='Lead 2', Gain=6.5, Bass=4.5, Middle=6.5, Treble=6, Presence=6, Resonance=5, Master=5),
+      pre=[comp(-26, 3, 5, 50)], eq='lead', gate=-58, post=[sdly('1/8.', 30, 20), hall(3, 18)])
     a("The Stage", 'Rhythm', "The Stage (2016) · modern prog rhythm, tight and punchy", A('umbra', channel='Channel 3', mode='Mark IIC+', Gain=6, Treble=6.5, Middle=5, Bass=4.5, Presence=6, Master=5, Output=5),
       eq='tight', gate=-50, doubler=7)
+    a("God Damn", 'Rhythm', "The Stage (2016) · fast, aggressive and dry", A('umbra', channel='Channel 3', mode='Extreme', Gain=6.5, Treble=6.5, Middle=5, Bass=5, Presence=6, Master=5, Output=5),
+      eq='thrash', gate=-48, doubler=6, width=120)
+    a("Angels", 'Clean', "The Stage (2016) · the clean ballad: chorus, echo and a long reverb", A('strix', channel='Clean', voice='Clean UK', Gain=4, Bass=5, Middle=5, Treble=6, Presence=5.5, Resonance=5, Master=5),
+      pre=[comp(-26, 3, 5)], post=[chorus(0.45, 30, 28), dly(480, 28, 16), hall(3.6, 24)], width=125)
+    a("Exist", 'Ambient', "The Stage (2016) · the 15-minute epic's spacey lead with a shimmer", A('strix', channel='Lead', voice='Lead 2', Gain=5.5, Bass=4.5, Middle=6, Treble=6, Presence=5.5, Resonance=5, Master=5),
+      eq='lead', gate=-60, post=[dly(560, 40, 24), hall(4.5, 26)], sfx=[shimmer(7, 30, 22)], width=130)
+    # ---- Life Is But a Dream... (2023)
+    a("Life Is But a Dream (Album Rhythm)", 'Rhythm', "Life Is But a Dream... (2023) · thick, modern and a little unhinged", A('vulcan', channel='Ch 3 · mega', voice='Potty Time', Gain=6, Low=6, Mid=5, High=5.5, Presence=5.5, Depth=6, Master=5),
+      FOURx12, eq='tight', gate=-50, doubler=7, width=120)
+    a("Life Is But a Dream (Album Lead)", 'Lead', "Life Is But a Dream... (2023) · wide, glossy modern lead with a shimmer tail", A('strix', channel='Lead', voice='Lead 2', Gain=5.5, Bass=4.5, Middle=6.5, Treble=6, Presence=6, Resonance=5, Master=5),
+      eq='lead', gate=-60, post=[sdly('1/8.', 30, 20), shimmer(6, 25, 20)], width=125)
     a("Cosmic", 'Synth', "Life Is But a Dream... (2023) · clean guitar with a spacey synth arpeggio behind it", A('strix', channel='Clean', voice='Clean UK', Gain=4, Bass=5, Middle=5, Treble=6, Presence=5.5, Resonance=5, Master=5),
       synth=S('Cosmic Arp', mix=45), post=[chorus(0.4, 30, 25), sdly('1/8.', 30, 18), hall(4, 26)], width=130)
     a("Cosmic (Solo)", 'Lead', "Life Is But a Dream... (2023) · the huge outro lead, a supersaw doubling it", A('strix', channel='Lead', voice='Lead 2', Gain=5.5, Bass=4.5, Middle=6.5, Treble=6, Presence=6, Resonance=5, Master=5),
@@ -119,6 +185,8 @@ def make(m):
       FOURx12, pre=[fx('richter', Dry=100, Sub_1=35, Sub_2=0, Low_Pass=250, Drive=2)], eq='tight', gate=-50, doubler=7)
     a("Game Over", 'Rhythm', "Life Is But a Dream... (2023) · twitchy prog riffs with a phaser", A('kratos', channel='Lead', Lead_pre=6, Lead_post=5, Low=5.5, Mid=5.5, High=6, Resonance=5.5, Presence=6),
       FOURx12, pre=[phaser(0.5, 45, 25, '6', 35)], eq='tight', gate=-50, doubler=7)
+    a("Mattel", 'Rhythm', "Life Is But a Dream... (2023) · jarring stop-start riffs with a swirling flanger", A('vulcan', channel='Ch 3 · mega', voice='III Gain FAT', Gain=6, Low=5.5, Mid=5.5, High=6, Presence=6, Depth=5.5, Master=5),
+      FOURx12, eq='tight', gate=-48, doubler=7, post=[flanger(0.2, 40, 35, 1.8, 25)])
 
     # =====================================================================================
     a = artist('Pink Floyd')
