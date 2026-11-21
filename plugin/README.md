@@ -62,6 +62,33 @@ The amp chooser keeps them in the **OBSIDIAN AMPS** folder.
 | VH-4 | Diezel VH4 (channel 3) | high gain |
 | OBSIDIAN CORE | Obsidian original | modern high gain |
 
+## The capture amps (the amp pack)
+
+The 30 finished amps from the visuals chat (`visuals/finished/`) are in the plugin, in the **CAPTURE AMPS** folder
+of the amp chooser, each with its real face: the layer renders (face on / off, a pointer per knob, a sprite per lit
+LED), so knobs turn, buttons and LEDs work, the lamp is the power switch, and Moirai / Typhon change colour with the
+channel.
+
+* **Sound.** Each amp is many NAM captures of the real amp (433 in all). `Content/Amps/<key>.json` ("map") says which
+  capture plays for every knob and button setting. The engine (`Source/DSP/CaptureAmp.h`) compiles that map and
+  plays it: a knob that steps through captures (gain steps, Umbra's Middle, the grid of Chrysaor and Kratos) blends
+  the two nearest captures; Astraea plays the two captures closest to your Volume / Treble / Bass / Tone Cut;
+  Eos's SOLO knob picks the Comfortably Numb rigs. Every capture of the amp is loaded when you choose it, so
+  turning knobs never waits for a file.
+* **The other knobs.** Gain, Bass, Middle, Treble, Presence, Depth / Resonance and Master are the plugin's AMP
+  parameters (automation, MIDI learn, presets). Where a knob picks captures, it does that; otherwise Bass / Middle /
+  Treble / Presence / Depth are a tone stack after the capture and Master is the level. Extra knobs: Volume /
+  Output / Level (trims), Tight, Air, Body, Reverb, Speed + Intensity (Melinoe's tremolo), Persephone's chorus
+  (CHORUS button + Speed / Depth), Kratos's CRUNCH (more drive) and BRIGHT. Amps whose channels keep their own
+  knobs (Moirai, Typhon, Umbra, Lamia...) swap them with the channel, also when a DAW automates the channel.
+* **Cab in the capture.** Captures that already contain a cab (marked "rig") bypass the CAB section while they play.
+* **Level.** When an amp loads, its default capture plays a fixed test riff and the amp is trimmed so every amp
+  plays about as loud as the in-house amps (the self-test measures them: −32.7 to −25.5 dB, in-house −29.5).
+* **Files.** `Content/Amps/*.json` (the wiring, from `visuals/finished/export_amps.py`), `Content/Captures/Amps/`
+  (the captures), `Content/Faces/` (positions + images, from `tools/faces/build_faces.py`). The installer's pack
+  option installs them in `Documents\Obsidian Amp Suite` (Amps and Faces are always updated); the release zip has
+  them under `Content`.
+
 ## The synth
 
 Played by the guitar (pitch tracking, bends come through) or by MIDI notes from a keyboard or the DAW.
@@ -97,7 +124,8 @@ animation off. To add a theme, add one entry to `THEMES` in `ui/src/themes.js`.
 Presets\    your presets (.obsidian, plain JSON; share them as files)
 Captures\   .nam files (amps and pedals)
 IRs\        cab impulse responses (.wav)
-Amps\       one .json per amp you want in the ADD AMP list
+Amps\       one .json per amp you want in the ADD AMP list (the amp pack's 30 amps are here too)
+Faces\      the amp pack's amp faces (positions + images)
 Cabs\       one .json per cab you want in the ADD CAB list
 Captures\Pedals\<Pedal>\   the pedal pack's captures (Chiron, Emperor, Graven, Maw, XXXIII, Helios, Aeon)
 IRs\Pedals\<Pedal>\        the pedal pack's reverb IRs (Crypt, Ossuary, Halcyon)
@@ -186,7 +214,8 @@ the file into `Presets\` (rename `.obsidian` to `.json`).
 
 * `"Obsidian Amp Suite.exe" --selftest report.txt` renders every pedal in every slot with random settings,
   every sample rate and buffer size, checks transpose pitch accuracy, the synth, presets, DAW state and
-  CPU. Add `--nam file.nam` to test a capture, and `--packs` to play every file of the installed pedal pack.
+  CPU. Add `--nam file.nam` to test a capture, and `--packs` to play every file of the installed pedal and amp
+  pack (every capture amp: all its captures load, the gain is swept, every button is pressed, level and CPU).
   The GitHub build runs it on every push.
 * `python plugin/tools/ui-test/run.py` runs the real UI in headless Chrome against a fake engine and clicks
   through every page (screenshots in `tools/ui-test/out`). Refresh its data with
@@ -198,7 +227,7 @@ the file into `Presets\` (rename `.obsidian` to `.json`).
 
 * **STUDIO** (the mini recorder) is shown only in the standalone app, and recording there is still the
   demo. The engine side (recording the DI and re-amping takes) is the next step.
-* Amp and pedal **graphics**: the AMP page shows a plain panel (with each amp's own slight tint) until the
-  amps from the visuals chat are added. Their knobs map to the same parameters.
+* **Pedal graphics**: pedals still show as plain cards; their faces come next.
+* The in-house amps show a plain panel (with each amp's own slight tint); only the capture amps have faces.
 
 Licences of the libraries used: [LICENSES.md](LICENSES.md).

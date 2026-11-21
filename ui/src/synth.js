@@ -166,15 +166,30 @@ css.textContent = `
 .sy-sel .opt:hover { color: #e9e6df; }
 .sy-sel .opt.on { color: var(--accent); text-shadow: 0 0 6px var(--accent); }
 /* bat-lever toggle switch */
-.sy-bat { position: relative; width: 34px; height: 54px; cursor: pointer; }
-.sy-bat .nut { position: absolute; left: 6px; top: 16px; width: 22px; height: 22px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #b9b8b2, #5c5c5e 55%, #2a2a2c); box-shadow: 0 3px 5px rgba(0,0,0,.8), inset 0 0 0 2px rgba(0,0,0,.25); }
-.sy-bat .lev { position: absolute; left: 13px; top: 2px; width: 8px; height: 26px; border-radius: 4px 4px 3px 3px; background: linear-gradient(90deg, #6d6c68, #f0eee8 45%, #8d8c87); box-shadow: 0 2px 3px rgba(0,0,0,.7); transform-origin: 50% 25px; transition: transform .12s; }
-.sy-bat.down .lev { transform: rotate(180deg); }
-.sy-bat .t, .sy-bat .b { position: absolute; left: 50%; transform: translateX(-50%); font-size: 8px; font-weight: 600; letter-spacing: .12em; color: #6f6f76; white-space: nowrap; }
-.sy-bat .t { top: -13px; } .sy-bat .b { bottom: -13px; }
-.sy-bat:not(.down) .t, .sy-bat.down .b { color: var(--accent); }
-.sy-lamp { width: 9px; height: 9px; border-radius: 50%; background: #3a1a1a; box-shadow: inset 0 1px 2px rgba(0,0,0,.8); }
-.sy-lamp.on { background: radial-gradient(circle at 40% 35%, #fff, var(--accent) 60%); box-shadow: 0 0 10px var(--accent), 0 0 3px var(--accent); }
+.sy-pb { position: relative; width: 54px; height: 54px; margin-top: 4px; border: none; padding: 0; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle, #050506 58%, #1d1d20 61%, #57565a 66%, #1b1b1e 71%, #2c2c30 100%);
+  box-shadow: 0 1px 0 rgba(255,255,255,.1), 0 3px 6px rgba(0,0,0,.7), inset 0 2px 3px rgba(0,0,0,.8); transition: box-shadow .2s; }
+.sy-pb .cap { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #b9b6ae; transition: transform .08s, box-shadow .15s, color .2s;
+  background: radial-gradient(circle at 38% 26%, #6b6a6f 0%, #2c2c30 46%, #141416 100%);
+  box-shadow: 0 5px 7px rgba(0,0,0,.85), 0 1px 1px rgba(0,0,0,.9), inset 0 1.5px 1px rgba(255,255,255,.4), inset 0 -4px 6px rgba(0,0,0,.55), inset 0 0 0 1px rgba(0,0,0,.5); }
+.sy-pb .cap svg { width: 17px; height: 17px; filter: drop-shadow(0 1px 0 rgba(0,0,0,.8)); }
+.sy-pb:hover .cap { color: #f1eee7; }
+.sy-pb:active .cap { transform: translateY(2px) scale(.97); box-shadow: 0 2px 3px rgba(0,0,0,.85), inset 0 1.5px 1px rgba(255,255,255,.3), inset 0 -2px 4px rgba(0,0,0,.6); }
+.sy-pb.on { box-shadow: 0 1px 0 rgba(255,255,255,.1), 0 3px 6px rgba(0,0,0,.7), inset 0 2px 3px rgba(0,0,0,.8), 0 0 18px color-mix(in srgb, var(--accent) 45%, transparent);
+  background: radial-gradient(circle, #050506 58%, var(--accent) 61%, color-mix(in srgb, var(--accent) 55%, #000) 66%, #1b1b1e 71%, #2c2c30 100%); }
+.sy-pb.on .cap { color: var(--accent); transform: translateY(1px); box-shadow: 0 3px 5px rgba(0,0,0,.85), inset 0 1.5px 1px rgba(255,255,255,.4), inset 0 -4px 6px rgba(0,0,0,.55), inset 0 0 12px color-mix(in srgb, var(--accent) 30%, transparent); }
+.sy-pb.on .cap svg { filter: drop-shadow(0 0 4px var(--accent)); }
+.sy-pbv { font-size: 9px; font-weight: 600; letter-spacing: .18em; color: #6f6f76; }
+.sy-pbv.on { color: var(--accent); text-shadow: 0 0 8px color-mix(in srgb, var(--accent) 60%, transparent); }
+/* two latching buttons (AMP: AFTER / BEFORE) */
+.sy-pair { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.sy-key { position: relative; width: 78px; height: 24px; border: none; padding: 0 0 0 20px; border-radius: 6px; cursor: pointer; font: inherit; font-size: 8.5px; font-weight: 600; letter-spacing: .16em; color: #8d8d93; text-align: left;
+  background: linear-gradient(#3a3a3f, #1f1f23 55%, #18181b); box-shadow: 0 3px 5px rgba(0,0,0,.75), 0 1px 0 rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.22), inset 0 -2px 3px rgba(0,0,0,.4), 0 0 0 1px #0a0a0b; transition: transform .08s, box-shadow .12s, color .15s; }
+.sy-key::before { content: ''; position: absolute; left: 8px; top: 9px; width: 6px; height: 6px; border-radius: 50%; background: #2a1e1e; box-shadow: inset 0 1px 1px rgba(0,0,0,.8); }
+.sy-key:hover { color: #e9e6df; }
+.sy-key:active { transform: translateY(1px); }
+.sy-key.on { color: #f1eee7; transform: translateY(1px); background: linear-gradient(#2e2e33, #1a1a1d 60%, #141416); box-shadow: 0 1px 2px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,255,255,.14), inset 0 2px 4px rgba(0,0,0,.5), 0 0 0 1px #0a0a0b; }
+.sy-key.on::before { background: radial-gradient(circle at 40% 35%, #fff, var(--accent) 60%); box-shadow: 0 0 8px var(--accent), 0 0 2px var(--accent); }
 /* LED display */
 .sy-led { position: relative; width: 176px; height: 92px; margin-top: 18px; border-radius: 10px; cursor: pointer; box-sizing: border-box; padding: 8px 12px;
   background: linear-gradient(#060607, #0b0b0d); box-shadow: inset 0 2px 8px rgba(0,0,0,.95), inset 0 0 0 1px rgba(255,255,255,.04), 0 1px 0 rgba(255,255,255,.08);
@@ -192,10 +207,13 @@ css.textContent = `
 .sy-pop.show { display: flex; }
 .sy-pop h4 { margin: 0; font-size: 10px; font-weight: 600; letter-spacing: .22em; color: #e9e6df; }
 /* ---- the screen: four sections ---- */
-.sy-screen { position: absolute; left: 28px; right: 28px; top: 160px; height: 312px; border-radius: 14px; display: flex; box-sizing: border-box; padding: 14px 0 12px;
+.sy-screen { position: absolute; left: 22px; right: 22px; top: 158px; height: 316px; border-radius: 16px; display: flex; gap: 8px; box-sizing: border-box; padding: 8px;
   background: radial-gradient(120% 90% at 50% 0%, #121215, #08080a 70%); box-shadow: inset 0 3px 12px rgba(0,0,0,.9), inset 0 0 0 1px rgba(255,255,255,.05), 0 1px 0 rgba(255,255,255,.1); transition: opacity .2s, filter .2s; }
-.sy-sec { position: relative; display: flex; flex-direction: column; padding: 0 16px; box-sizing: border-box; min-width: 0; }
-.sy-sec + .sy-sec { box-shadow: -1px 0 0 rgba(255,255,255,.06); }
+.sy-sec { position: relative; display: flex; flex-direction: column; padding: 10px 14px 10px; box-sizing: border-box; min-width: 0; border-radius: 12px;
+  background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.012) 40%, rgba(0,0,0,.12)), #0d0d10;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.12), inset 0 0 0 1px rgba(255,255,255,.08), inset 0 -1px 0 rgba(0,0,0,.6), 0 3px 8px rgba(0,0,0,.65), 0 0 0 1px rgba(0,0,0,.7); }
+.sy-sec::before { content: ''; position: absolute; left: 14px; right: 14px; top: 0; height: 2px; border-radius: 0 0 2px 2px; background: var(--sc); opacity: .85; box-shadow: 0 0 10px var(--sc), 0 0 2px var(--sc); }
+.sy-sec::after { content: ''; position: absolute; inset: 0; border-radius: 12px; pointer-events: none; background: radial-gradient(70% 40% at 50% 0%, color-mix(in srgb, var(--sc) 9%, transparent), transparent 75%); }
 .sy-sh { display: flex; align-items: center; gap: 8px; height: 24px; margin-bottom: 8px; flex: none; }
 .sy-sh h3 { margin: 0; font-size: 10.5px; font-weight: 600; letter-spacing: .22em; color: #e9e6df; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
 .sy-sh h3::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--sc); box-shadow: 0 0 8px var(--sc); }
@@ -221,10 +239,15 @@ css.textContent = `
 .sy-kl { font-size: 8.5px; font-weight: 600; letter-spacing: .16em; color: #a3a3a8; margin-top: 5px; white-space: nowrap; }
 .sy-kv { font-size: 10.5px; color: #e9e6df; font-variant-numeric: tabular-nums; white-space: nowrap; margin-top: 2px; }
 /* small switches */
-.sy-tg { width: 30px; height: 16px; flex: none; border-radius: 9px; border: none; padding: 0; position: relative; cursor: pointer; background: #2a2a2f; box-shadow: inset 0 1px 2px rgba(0,0,0,.6); transition: background .15s; }
-.sy-tg i { position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: #7a7a80; transition: transform .15s, background .15s; }
-.sy-tg.on { background: var(--sc, var(--accent)); }
-.sy-tg.on i { transform: translateX(14px); background: #111113; }
+.sy-tg { position: relative; width: 44px; height: 22px; flex: none; border: none; padding: 0 0 0 14px; border-radius: 6px; cursor: pointer; font: inherit; font-size: 8px; font-weight: 600; letter-spacing: .16em; color: #7a7a80;
+  background: linear-gradient(#36363b, #1d1d21 55%, #161619); box-shadow: 0 3px 4px rgba(0,0,0,.75), inset 0 1px 0 rgba(255,255,255,.2), inset 0 -2px 3px rgba(0,0,0,.4), 0 0 0 1px #08080a; transition: transform .08s, box-shadow .12s, color .15s; }
+.sy-tg::after { content: 'ON'; }
+.sy-tg i { position: absolute; left: 7px; top: 8px; width: 6px; height: 6px; border-radius: 50%; background: #26262a; box-shadow: inset 0 1px 1px rgba(0,0,0,.8); transition: background .15s, box-shadow .15s; }
+.sy-tg:hover { color: #e9e6df; }
+.sy-tg:active { transform: translateY(1px); }
+.sy-tg.on { color: #f1eee7; transform: translateY(1px); background: linear-gradient(#2c2c31, #19191c 60%, #131315);
+  box-shadow: 0 1px 2px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,255,255,.12), inset 0 2px 4px rgba(0,0,0,.5), 0 0 0 1px color-mix(in srgb, var(--sc, var(--accent)) 50%, #08080a), 0 0 10px color-mix(in srgb, var(--sc, var(--accent)) 25%, transparent); }
+.sy-tg.on i { background: radial-gradient(circle at 40% 35%, #fff, var(--sc, var(--accent)) 60%); box-shadow: 0 0 7px var(--sc, var(--accent)); }
 .sy-seg { display: flex; flex: none; gap: 2px; padding: 3px; border-radius: 8px; background: #0e0e10; box-shadow: inset 0 0 0 1px rgba(255,255,255,.05); }
 .sy-seg button { flex: 1; min-width: 0; height: 22px; padding: 0 4px; border: none; border-radius: 6px; background: none; color: #6f6f76; font: inherit; font-size: 8.5px; font-weight: 600; letter-spacing: .06em;
   cursor: pointer; display: flex; align-items: center; justify-content: center; white-space: nowrap; transition: background .12s, color .12s; }
@@ -434,14 +457,23 @@ function sel(id, label, names, o = {}) {
   dial.addEventListener('wheel', e => { e.preventDefault(); set(id, clamp(Math.round(S[id]) + (e.deltaY < 0 ? 1 : -1), 0, n - 1), 'ui'); }, { passive: false });
   w.appendChild(s); return w;
 }
-/* metal bat-lever switch: up = on */
-function bat(get, setter, label, up, down, tip) {
+/* round latching push button with a lit ring (POWER, HOLD) */
+function pushBtn(get, setter, label, icon, onText, offText, tip) {
   const w = el('div', 'sy-hw'); w.appendChild(el('span', 'sy-eng', label));
-  const b = el('div', 'sy-bat', '<span class="t">' + up + '</span><i class="nut"></i><i class="lev"></i><span class="b">' + down + '</span>');
-  b.style.marginTop = '14px'; if (tip) b.title = tip;
-  const draw = () => b.classList.toggle('down', !get());
+  const b = el('button', 'sy-pb', '<span class="cap">' + icon + '</span>'); if (tip) b.title = tip; b.setAttribute('aria-label', label);
+  const v = el('span', 'sy-pbv');
+  const draw = () => { const o = !!get(); b.classList.toggle('on', o); v.classList.toggle('on', o); v.textContent = o ? onText : offText; };
   b.addEventListener('click', () => { setter(!get()); draw(); });
-  draw(); w.appendChild(b); w._draw = draw; w._bat = b; return w;
+  draw(); w.append(b, v); w._draw = draw; w._btn = b; return w;
+}
+/* two latching buttons, one lit (AMP: AFTER / BEFORE) */
+function pairBtn(id, label, opts, tip) {
+  const w = el('div', 'sy-hw'); w.appendChild(el('span', 'sy-eng', label));
+  const pr = el('div', 'sy-pair'); if (tip) pr.title = tip;
+  const bs = opts.map(([t, val]) => { const b = el('button', 'sy-key', t); b.dataset.param = id; b.onclick = () => set(id, val, 'ui'); pr.appendChild(b); return b; });
+  const draw = () => bs.forEach((b, i) => b.classList.toggle('on', Math.round(S[id]) === opts[i][1]));
+  draw(); onChange(i => { if (i === id) draw(); });
+  w.appendChild(pr); w._draw = draw; return w;
 }
 const spacer = () => el('span', 'sy-sp');
 const gapV = h => { const d = el('div'); d.style.height = h + 'px'; d.style.flex = 'none'; return d; };
@@ -496,9 +528,10 @@ dev.insertAdjacentHTML('beforeend', '<svg width="0" height="0" style="position:a
 /* ---- top strip: what you reach for while playing ---- */
 const topStrip = el('div', 'sy-top'); dev.appendChild(topStrip);
 let powered = true;
-const powerW = bat(() => powered, v => { setPowerUi(v); if (window.obsSynth && window.obsSynth.powerOut) window.obsSynth.powerOut(v); }, 'POWER', 'ON', 'OFF', 'Synth on / off (also: double-click the SYNTH tab)');
-const lamp = el('i', 'sy-lamp on'); powerW._bat.appendChild(lamp); lamp.style.cssText = 'position: absolute; left: 38px; top: 22px';
-function setPowerUi(v) { powered = !!v; dev.classList.toggle('off', !powered); lamp.classList.toggle('on', powered); powerW._draw(); }
+const PWR_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/></svg>';
+const HOLD_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 7c-3.3 0-5 2.2-5 5s1.7 5 5 5c4 0 6-10 10-10 2.6 0 4 2.2 4 5s-1.4 5-4 5c-4 0-6-10-10-10z" transform="translate(-1 0)"/></svg>';
+const powerW = pushBtn(() => powered, v => { setPowerUi(v); if (window.obsSynth && window.obsSynth.powerOut) window.obsSynth.powerOut(v); }, 'POWER', PWR_IC, 'ON', 'OFF', 'Synth on / off (also: double-click the SYNTH tab)');
+function setPowerUi(v) { powered = !!v; dev.classList.toggle('off', !powered); powerW._draw(); }
 const led = el('div', 'sy-led', '<span class="k"></span><span class="tn"></span><div class="n">–</div><div class="s">PLAY A NOTE</div><div class="bar"><i></i></div>');
 led.title = 'Click for key, scale, tuning and playing settings';
 const noteScr = led;
@@ -509,9 +542,9 @@ topStrip.append(powerW,
   mknob('syn.sens', 'SENSITIVITY', { tip: 'How strongly the synth reacts to your playing' }),
   mknob('syn.glide', 'GLIDE', { tip: 'Slide time between notes' }),
   sel('syn.chord', 'CHORD', ['OFF', 'OCT', 'PWR', 'TRIAD', 'SUS', '7TH', '9TH'], { tip: 'Play one note, hear a chord. Triad, 7th and 9th follow the key and scale.' }),
-  bat(() => on('syn.hold'), v => set('syn.hold', v ? 1 : 0, 'ui'), 'HOLD', 'ON', 'OFF', 'The last note keeps playing after you stop (a drone to play over)'),
+  pushBtn(() => on('syn.hold'), v => set('syn.hold', v ? 1 : 0, 'ui'), 'HOLD', HOLD_IC, 'ON', 'OFF', 'The last note keeps playing after you stop (a drone to play over)'),
   ledW,
-  bat(() => on('syn.post'), v => set('syn.post', v ? 1 : 0, 'ui'), 'AMP', 'AFTER', 'BEFORE', 'Synth after the cab (AFTER) or through the amp (BEFORE)'),
+  pairBtn('syn.post', 'AMP', [['AFTER', 1], ['BEFORE', 0]], 'AFTER: the synth joins after the cab · BEFORE: it plays through the amp'),
   sel('syn.char', 'CHARACTER', ['CLEAN', 'ANALOG', '8-BIT', 'VHS'], { span: 180, tip: 'Clean, warm analog drift, chiptune, or wobbly tape' }),
   mknob('syn.space', 'SPACE', { tip: 'Stereo echoes and room, just for the synth' }),
   mknob('syn.mix', 'MIX', { tip: 'Guitar and synth blend: 0% guitar only, 100% synth only' }),
@@ -540,7 +573,7 @@ function section(title, width, color) {
 function dimWhen(sec, id) { const d = () => sec.classList.toggle('sy-off', !on(id)); d(); onChange(i => { if (i === id) d(); }); }
 
 /* OSCILLATORS: A / B / SUB in one section */
-const cSnd = section('', 384, 'var(--h-osc)');
+const cSnd = section('', 378, 'var(--h-osc)');
 cSnd._h.replaceChildren();
 let tab = 0;
 const tabs = el('div', 'sy-tabs');
@@ -597,7 +630,7 @@ const tabDots = () => { const d = [...tabs.children].map(b => b.firstChild);
 onChange(i => { if (/^syn\.(a|b)\.(on|level)$|^syn\.(sub|noise)\.level$/.test(i)) tabDots(); });
 
 /* FILTER */
-const cFlt = section('FILTER', 288, 'var(--h-flt)');
+const cFlt = section('FILTER', 282, 'var(--h-flt)');
 cFlt._h.append(el('span', 'sy-sp'), toggle('syn.flt.on', 'Filter on'));
 dimWhen(cFlt, 'syn.flt.on');
 const fScr = el('div', 'sy-vis'); fScr.style.height = '64px'; fScr.style.cursor = 'crosshair'; const fCv = el('canvas'); fScr.appendChild(fCv);
@@ -614,7 +647,7 @@ cFlt._b.append(seg('syn.flt.type', ['LDR24', 'LDR12', 'LP', 'BP', 'HP', 'NOTCH',
   fScr.addEventListener('pointerup', () => { d = null; }); }
 
 /* ENVELOPE: one graph, AMP or FILTER */
-const cEnv = section('ENVELOPE', 248, 'var(--h-env)');
+const cEnv = section('ENVELOPE', 240, 'var(--h-env)');
 let envSel = 0;
 const envSeg = el('div', 'sy-seg small'); envSeg.style.width = '104px';
 envSeg.innerHTML = '<button class="on">AMP</button><button>FILTER</button>';
@@ -633,7 +666,7 @@ function buildEnvKnobs() {
 envSeg.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; envSel = [...envSeg.children].indexOf(b); buildEnvKnobs(); });
 
 /* MOTION: ARP or LFO */
-const cMot = section('', 344, 'var(--h-mot)');
+const cMot = section('', 336, 'var(--h-mot)');
 cMot._h.replaceChildren();
 let mtab = 0;
 const mtabs = el('div', 'sy-tabs');
@@ -654,7 +687,7 @@ lane.title = PROP_TIPS[0];
 const arpKnobs = el('div', 'sy-knobs');
 arpKnobs.append(knob('syn.arp.gate', { label: 'GATE', size: 30 }), knob('syn.arp.swing', { label: 'SWING', size: 30 }), knob('syn.arp.len', { label: 'STEPS', size: 30, fmt: id => String(Math.round(S[id])) }),
   (() => { const c = el('div', 'sy-ctl'); c.append(seg('syn.arp.oct', null, { small: true, width: 76 })); const l = el('span', 'sy-kl', 'OCTAVES'); l.style.marginTop = '8px'; c.append(l); return c; })());
-arpView.append(row([seg('syn.arp.pattern', null, { icons: ['up', 'down', 'updn', 'shuffle', 'steps'], width: 128 }), el('span', 'sy-sp'), seg('syn.arp.rate', ['1/4', '1/8', '1/8T', '1/16', '1/16T', '1/32'], { small: true, width: 176 })], 'gap: 6px'),
+arpView.append(row([seg('syn.arp.pattern', null, { icons: ['up', 'down', 'updn', 'shuffle', 'steps'], width: 124 }), el('span', 'sy-sp'), seg('syn.arp.rate', ['1/4', '1/8', '1/8T', '1/16', '1/16T', '1/32'], { small: true, width: 176 })], 'gap: 6px'),
   gapV(8), propSeg, gapV(6), lane, gapV(10), arpKnobs);
 arpView.querySelector('.sy-seg[data-param="syn.arp.rate"]').title = 'Note value of each step';
 /* lfo view */

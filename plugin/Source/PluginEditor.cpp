@@ -52,6 +52,9 @@ ObsidianEditor::ObsidianEditor (ObsidianProcessor& p)
             if (auto r = provide (name))
                 dir.getChildFile (name.endsWithIgnoreCase (".woff2") ? "fonts/" + name : name).replaceWithData (r->data.data(), r->data.size());
         }
+        // amp faces come from the amp pack (Documents/<product>/Faces)
+        const auto faces = Rig::contentFolder().getChildFile ("Faces");
+        if (faces.isDirectory()) { dir.getChildFile ("faces").deleteRecursively(); faces.createSymbolicLink (dir.getChildFile ("faces"), true); }
         web->goToURL (juce::URL (dir.getChildFile ("obsidian-demo.html")).toString (false));
        #elif JUCE_WEB_BROWSER_RESOURCE_PROVIDER_AVAILABLE
         web->goToURL (WBC::getResourceProviderRoot());
@@ -141,6 +144,15 @@ std::optional<juce::WebBrowserComponent::Resource> ObsidianEditor::provide (cons
 
     juce::MemoryBlock mb;
     bool found = false;
+    // amp faces (images of the amp pack's amps): Documents\<product>\Faces\img\<file>
+    if (path.startsWith ("faces/"))
+    {
+        const auto rel = path.fromFirstOccurrenceOf ("faces/", false, false);
+        if (rel.contains ("..") || rel.containsChar ('\\') || rel.containsChar (':')) return std::nullopt;
+        const auto f = Rig::contentFolder().getChildFile ("Faces").getChildFile (rel);
+        if (! f.existsAsFile() || ! f.loadFileAsData (mb)) return std::nullopt;
+        return juce::WebBrowserComponent::Resource { bytes (mb.getData(), mb.getSize()), mimeFor (name) };
+    }
     if (auto dev = devFolder(); dev != juce::File())
     {
         auto f = dev.getChildFile (path);

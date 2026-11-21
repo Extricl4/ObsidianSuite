@@ -29,6 +29,12 @@ def build_page(standalone):
         shutil.copy(f, OUT / f.name)
     state = json.loads((HERE / 'state.json').read_text(encoding='utf-8'))
     state['standalone'] = standalone
+    # three amps from the amp pack, with their faces (images served from Content/Faces like the plugin does)
+    state['amps'] += [capture_entry(k) for k in ('umbra', 'moirai', 'kratos')]
+    faces = OUT / 'faces'
+    if faces.is_symlink() or faces.exists():
+        faces.unlink() if faces.is_symlink() else shutil.rmtree(faces)
+    faces.symlink_to(CONTENT / 'Faces', target_is_directory=True)
     if standalone:
         state['audio'] = {'standalone': True, 'types': ['ASIO', 'Windows Audio', 'DirectSound'], 'type': 'ASIO',
             'inputDevices': ['Focusrite USB ASIO'], 'outputDevices': ['Focusrite USB ASIO'], 'inputDevice': 'Focusrite USB ASIO', 'outputDevice': 'Focusrite USB ASIO',
@@ -37,6 +43,42 @@ def build_page(standalone):
             'sampleRate': 48000, 'bufferSize': 128, 'bitDepth': 24, 'inputLatencyMs': 3.2, 'outputLatencyMs': 3.9, 'hasControlPanel': True, 'cpu': 0.05,
             'midiInputs': [{'name': 'USB MIDI Pedal', 'id': 'usb1', 'enabled': True}]}
     return state
+
+CONTENT = PLUGIN / 'Content'
+PARAM_OF = {'gain': 'amp.gain', 'bass': 'amp.bass', 'mid': 'amp.mid', 'treble': 'amp.treble', 'presence': 'amp.presence', 'depth': 'amp.depth', 'master': 'amp.master'}
+
+def capture_entry(key):
+    """A capture amp as Rig::ampLibrary() lists it (roles as in CaptureAmp.h assignRoles, simplified)."""
+    amp = json.loads((CONTENT / 'Amps' / (key + '.json')).read_text(encoding='utf-8'))
+    face = json.loads((CONTENT / 'Faces' / (key + '.json')).read_text(encoding='utf-8'))
+    m = amp['map']; labels = [l.lower() for l in m['knobs']]
+    has_master = 'master' in labels; taken = has_master; knobs = []
+    sel = m.get('selector', {}).get('knob', -1)
+    for j, l in enumerate(labels):
+        r = 'plain'
+        if j == m['gainKnob']: r = 'gain'
+        elif j == sel: r = 'selector'
+        elif l in ('bass', 'low'): r = 'bass'
+        elif l in ('middle', 'mid'): r = 'mid'
+        elif l in ('treble', 'high'): r = 'treble'
+        elif l == 'presence': r = 'presence'
+        elif l in ('depth', 'resonance'): r = 'depth'
+        elif l == 'master': r = 'master'
+        elif l in ('volume', 'output', 'level'):
+            if not taken: r = 'master'; taken = True
+            else: r = 'level'
+        fk = face['knobs'][j]
+        knobs.append({'label': m['knobs'][j], 'role': r, 'param': PARAM_OF.get(r, ''), 'def': fk['v'], 'steps': fk.get('steps', 0)})
+    bank = []
+    def add(f):
+        if f and f not in bank: bank.append(f)
+    for v in m['settings'].values():
+        for f in v['files']:
+            for x in (f if isinstance(f, list) else [f]): add(x)
+    for f in m.get('selector', {}).get('files', []): add(f)
+    return {'key': key, 'name': amp['name'], 'type': 'capture', 'role': amp.get('role', ''), 'description': amp.get('description', ''), 'basedOn': amp.get('basedOn', ''),
+            'folder': 'CAPTURE AMPS', 'builtIn': False, 'channels': len(m['buttons'][0]['names']) if m['buttons'] and m['buttons'][0].get('names') else 1,
+            'knobs': knobs, 'bank': [Path(b).stem for b in bank], 'face': face}
 
 class Checks:
     def __init__(self): self.n = 0; self.bad = []
@@ -107,9 +149,9 @@ async def run(standalone):
         check(not bad and not extra, f'synth page and engine agree on all {len(defs)} synth parameters' + (f' (mismatch: {bad[:6]} extra: {extra[:6]})' if bad or extra else ''))
         shown = await pg.evaluate("document.querySelector('.sy-dev').classList.contains('off')")
         await pg.evaluate("window.__mock.log.length=0")
-        await pg.locator('.sy-bat').first.click(); await pg.wait_for_timeout(400)
+        await pg.locator('.sy-pb').first.click(); await pg.wait_for_timeout(400)
         hidden = not await pg.evaluate("document.querySelector('.sy-dev').classList.contains('off')")
-        check(shown and hidden and await pg.evaluate("window.__mock.sent('synth.on')") == 1, 'synth page shows when the synth is off, and the POWER switch turns it on')
+        check(shown and hidden and await pg.evaluate("window.__mock.sent('synth.on')") == 1, 'synth page shows when the synth is off, and the POWER button turns it on')
         await pg.evaluate("window.__mock.log.length=0")
         await pg.locator('.sy-seg[data-param="syn.a.wave"] button[data-i="1"]').click(); await pg.wait_for_timeout(120)
         v = await pg.evaluate("window.__mock.sent('syn.a.wave')")
@@ -215,7 +257,7 @@ async def run(standalone):
         await pg.locator('.obs-ampchange').click(); await pg.wait_for_timeout(150)
         inhouse = [a for a in state['amps'] if a.get('folder') == 'OBSIDIAN AMPS']
         top = await pg.locator('.obs-tile[data-amp]:visible').count()
-        check(await pg.locator('.obs-ampfolder[data-amp-folder="OBSIDIAN AMPS"]:visible').count() == 1 and top == len(state['amps']) - len(inhouse),
+        check(await pg.locator('.obs-ampfolder[data-amp-folder="OBSIDIAN AMPS"]:visible').count() == 1 and top == len([a for a in state['amps'] if not a.get('folder')]),
               f'amp chooser: in-house amps sit in an OBSIDIAN AMPS folder ({top} loose)')
         await pg.screenshot(path=str(OUT / 'amp-library.png'))
         await pg.locator('.obs-ampfolder[data-amp-folder="OBSIDIAN AMPS"]:visible').click(); await pg.wait_for_timeout(150)
@@ -223,11 +265,11 @@ async def run(standalone):
         check(inside == len(inhouse) == 9, f'OBSIDIAN AMPS folder opens with all {inside} amps')
         await pg.screenshot(path=str(OUT / 'amp-folder.png'))
         await pg.locator('.obs-crumb-back:visible').click(); await pg.wait_for_timeout(150)
-        check(await pg.locator('.obs-ampfolder:visible').count() == 1, 'back button returns to all amps')
+        check(await pg.locator('.obs-ampfolder:visible').count() == 2, 'back button returns to all amps (two folders)')
         await pg.locator('.pop:visible input').fill('jcm'); await pg.wait_for_timeout(150)
         check(await pg.locator('.obs-tile[data-amp]:visible').count() == 1, 'search finds amps inside folders (jcm)')
         await pg.locator('.pop:visible input').fill(''); await pg.wait_for_timeout(100)
-        await pg.locator('.obs-ampfolder:visible').click(); await pg.wait_for_timeout(150)
+        await pg.locator('.obs-ampfolder[data-amp-folder="OBSIDIAN AMPS"]:visible').click(); await pg.wait_for_timeout(150)
         await pg.locator('.obs-tile[data-amp="brit800"]:visible').click(); await pg.wait_for_timeout(250)
         check(await pg.evaluate("window.__mock.log.some(x=>x[0]==='setAmp'&&x[1]==='brit800')"), 'choosing BRIT 800 in the amp list')
         check('JCM800' in await pg.evaluate("document.querySelector('.obs-amp .obs-based').textContent"), 'panel switches to BRIT 800')
@@ -238,6 +280,63 @@ async def run(standalone):
         chans = await pg.locator('.obs-chan').count()
         check(chans == 4, f'NAM amp shows 4 capture channels ({chans})')
         await pg.screenshot(path=str(OUT / 'amp-nam.png'))
+
+        # ---- capture amps: the real faces
+        await pg.locator('.obs-ampchange').click(); await pg.wait_for_timeout(150)
+        await pg.locator('.obs-ampfolder[data-amp-folder="CAPTURE AMPS"]:visible').click(); await pg.wait_for_timeout(300)
+        pics = await pg.evaluate("[...document.querySelectorAll('.obs-tile[data-amp] .obs-tilepic')].filter(e=>e.offsetParent).length")
+        check(pics == 3, f'CAPTURE AMPS folder shows each amp with a picture of its face ({pics})')
+        await pg.screenshot(path=str(OUT / 'amp-capture-folder.png'))
+        await pg.locator('.obs-tile[data-amp="umbra"]:visible').click(); await pg.wait_for_timeout(600)
+        loaded = await pg.evaluate("[...document.querySelectorAll('.obs-face img')].filter(i=>i.complete&&i.naturalWidth>0).length")
+        total = await pg.evaluate("document.querySelectorAll('.obs-face img').length")
+        check(await pg.locator('.obs-face:visible').count() == 1 and loaded == total and total > 10, f'UMBRA shows its real face ({loaded}/{total} layers loaded)')
+        await pg.evaluate("window.__mock.log.length=0")
+        k = pg.locator('.obs-face .ff-hot[data-k="0"]'); box = await k.bounding_box()
+        await pg.mouse.move(box['x'] + box['width'] / 2, box['y'] + box['height'] / 2); await pg.mouse.down()
+        await pg.mouse.move(box['x'] + box['width'] / 2, box['y'] - 30, steps=5); await pg.mouse.up(); await pg.wait_for_timeout(150)
+        cmds = await pg.evaluate("window.__mock.log.map(x=>x[0]+':'+(x[1]||''))")
+        check('beginGesture:amp.gain' in cmds and 'setParam:amp.gain' in cmds, 'dragging the Gain knob on the face moves amp.gain (with a gesture)')
+        rot = await pg.evaluate("document.querySelector('.obs-face .ff-ptr[data-k=\"0\"][data-v=\"on\"]').style.transform")
+        check('rotate' in rot, f'its pointer turns ({rot})')
+        await pg.evaluate("window.__mock.log.length=0")
+        k = pg.locator('.obs-face .ff-hot[data-k="6"]'); box = await k.bounding_box()
+        await pg.mouse.move(box['x'] + box['width'] / 2, box['y'] + box['height'] / 2); await pg.mouse.down()
+        await pg.mouse.move(box['x'] + box['width'] / 2, box['y'] - 20, steps=4); await pg.mouse.up(); await pg.wait_for_timeout(150)
+        check(await pg.evaluate("window.__mock.log.some(x=>x[0]==='ampKnob'&&x[1]===6)"), 'the Output knob (not a plugin knob) goes to the amp (ampKnob)')
+        await pg.evaluate("window.__mock.log.length=0")
+        leds0 = await pg.evaluate("[...document.querySelectorAll('.obs-face .ff-led')].filter(i=>i.style.opacity==='1').map(i=>i.dataset.l).join(',')")
+        await pg.locator('.obs-face .ff-btn[data-b="channel"]').click(); await pg.wait_for_timeout(200)
+        leds1 = await pg.evaluate("[...document.querySelectorAll('.obs-face .ff-led')].filter(i=>i.style.opacity==='1').map(i=>i.dataset.l).join(',')")
+        check(await pg.evaluate("window.__mock.log.some(x=>x[0]==='ampDim'&&x[1]===0)") and leds0 != leds1, f'CHANNEL button switches the channel and its LED ({leds0} -> {leds1})')
+        await pg.locator('.obs-face .ff-btn[data-b="mode"]').click(); await pg.wait_for_timeout(200)
+        check(await pg.evaluate("window.__mock.log.some(x=>x[0]==='ampDim'&&x[1]===1)"), 'MODE button switches the mode')
+        await pg.evaluate("window.__mock.meterExtra = {ampA: 3, ampB: 4, ampF: .4, cabIn: false}"); await pg.wait_for_timeout(300)
+        rd = await pg.evaluate("document.querySelector('.obs-faceread').textContent")
+        check('Blending' in rd and '60%' in rd and '40%' in rd, f'readout says which captures play ({rd[:90]})')
+        await pg.screenshot(path=str(OUT / 'amp-face.png'))
+        await pg.evaluate("window.__mock.log.length=0")
+        await pg.locator('.obs-face .ff-pw').click(); await pg.wait_for_timeout(300)
+        offop = await pg.evaluate("document.querySelector('.obs-face .ff-base.on[data-s=\"0\"]').style.opacity")
+        check(await pg.evaluate("window.__mock.sent('amp.on')") == 0 and offop == '0', 'the power lamp switches the amp off (amp.on = 0, face goes dark)')
+        await pg.locator('.obs-face .ff-pw').click(); await pg.wait_for_timeout(200)
+        await pg.evaluate("window.__mock.meterExtra = null")
+        await pg.locator('.obs-fchange').click(); await pg.wait_for_timeout(150)
+        await pg.locator('.obs-ampfolder[data-amp-folder="CAPTURE AMPS"]:visible').click(); await pg.wait_for_timeout(200)
+        await pg.locator('.obs-tile[data-amp="moirai"]:visible').click(); await pg.wait_for_timeout(600)
+        skin0 = await pg.evaluate("[...document.querySelectorAll('.obs-face .ff-base.off')].findIndex(i=>i.style.opacity==='1')")
+        await pg.locator('.obs-face .ff-btn[data-b="ch1"]').click(); await pg.wait_for_timeout(250)
+        skin1 = await pg.evaluate("[...document.querySelectorAll('.obs-face .ff-base.off')].findIndex(i=>i.style.opacity==='1')")
+        check(skin0 == 2 and skin1 == 0, f'MOIRAI changes colour with the channel (red -> green: skin {skin0} -> {skin1})')
+        await pg.screenshot(path=str(OUT / 'amp-face-moirai.png'))
+        await pg.locator('.obs-fchange').click(); await pg.wait_for_timeout(150)
+        await pg.locator('.obs-ampfolder[data-amp-folder="CAPTURE AMPS"]:visible').click(); await pg.wait_for_timeout(200)
+        await pg.locator('.obs-tile[data-amp="kratos"]:visible').click(); await pg.wait_for_timeout(600)
+        await pg.evaluate("window.__mock.log.length=0")
+        await pg.locator('.obs-face .ff-btn[data-b="crunch"]').click(); await pg.wait_for_timeout(200)
+        lit = await pg.evaluate("document.querySelector('.obs-face .ff-led[data-l=\"crunch_led\"]').style.opacity")
+        check(await pg.evaluate("window.__mock.log.some(x=>x[0]==='ampSwitch'&&x[1]===0&&x[2]===true)") and lit == '1', 'KRATOS: the CRUNCH switch toggles and lights')
+        await pg.screenshot(path=str(OUT / 'amp-face-kratos.png'))
         await pg.evaluate("setTab('CAB')"); await pg.wait_for_timeout(150)
         await pg.screenshot(path=str(OUT / 'cab.png'))
         txtpos = await pg.evaluate("document.querySelector('[data-param=\"cab.a.level\"]').parentElement.querySelector('.kn-val').textContent")

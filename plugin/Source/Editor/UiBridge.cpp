@@ -168,6 +168,10 @@ void UiBridge::buildCommands()
     c["getRig"]       = [this] (const juce::Array<juce::var>&, Completion d) { d (proc.rig().toJson()); };
     c["libraries"]    = [this] (const juce::Array<juce::var>&, Completion d) { d (obj ({ { "amps", Rig::ampLibrary() }, { "cabs", Rig::cabLibrary() }, { "modules", modulesJson() } })); };
     c["setAmp"]       = [this] (const juce::Array<juce::var>& a, Completion d) { proc.rig().setAmp (argStr (a, 0)); d (proc.rig().toJson()); };
+    // capture amps: the amp's own buttons, knobs that aren't plugin parameters, switches
+    c["ampDim"]       = [this] (const juce::Array<juce::var>& a, Completion d) { proc.rig().setAmpDim (argInt (a, 0), argInt (a, 1)); proc.presetManager().markDirty(); d (proc.rig().toJson()); };
+    c["ampKnob"]      = [this] (const juce::Array<juce::var>& a, Completion d) { proc.rig().setAmpKnob (argInt (a, 0), argF (a, 1)); proc.presetManager().markDirty(); d (true); };
+    c["ampSwitch"]    = [this] (const juce::Array<juce::var>& a, Completion d) { proc.rig().setAmpSwitch (argInt (a, 0), a.size() > 1 && (bool) a[1]); proc.presetManager().markDirty(); d (proc.rig().toJson()); };
     c["clearCapture"] = [this] (const juce::Array<juce::var>& a, Completion d) { proc.rig().clearCapture (argInt (a, 0)); d (true); };
     c["loadCapture"]  = [this] (const juce::Array<juce::var>& a, Completion d)
     {
@@ -366,6 +370,7 @@ void UiBridge::timerCallback()
         { "cpu", e.cpuLoad() }, { "clip", e.takeClip() }, { "tuner", tuner }, { "beat", e.metronomeBeat() },
         { "synth", e.synthActivity() }, { "bpm", e.effectiveBpm() }, { "busy", proc.rig().isBusy() },
         { "synNote", e.synthNote() }, { "synStep", e.synthStep() }, { "synSrc", e.synthSource() },
+        { "ampA", e.amp().playingA() }, { "ampB", e.amp().playingB() }, { "ampF", e.amp().playingBlend() }, { "cabIn", e.amp().cabInside() },
         { "latencyMs", proc.getSampleRate() > 0 ? proc.getLatencySamples() * 1000.0 / proc.getSampleRate() : 0.0 } }));
 
     // Device info changes slowly; refresh it now and then for the settings page.

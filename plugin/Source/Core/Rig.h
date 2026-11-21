@@ -44,6 +44,18 @@ public:
     void setAmp (const juce::String& libraryKey);
     void loadCapture (int channel, const juce::File& file);
     void clearCapture (int channel);
+    /** Capture amps (the amp pack): a button on the amp's face, a face knob that isn't a plugin
+        parameter (0..1), a switch. Buttons the amp keeps per channel are stored per channel. */
+    void setAmpDim (int dim, int value);
+    void setAmpKnob (int knob, float value);
+    void setAmpSwitch (int index, bool on);
+    /** The amp file of a capture amp (Documents\Obsidian Amp Suite\Amps\<key>.json), or void. */
+    static juce::var readAmpFile (const juce::String& key);
+    static juce::var readFaceFile (const juce::String& key);
+    static juce::var readJson (const juce::File& f);          // JSON file, tolerant of "" keys
+    /** Loads every capture of a capture amp (call off the audio thread; the Rig's loader and the self-test use it). */
+    struct CaptureAmpFiles { std::unique_ptr<dsp::CaptureAmp> amp; juce::StringArray missing, broken; };
+    static CaptureAmpFiles loadCaptureAmp (std::shared_ptr<const dsp::CaptureAmpMap> map, const juce::String& key, double rate, int block);
     // ---- cab -------------------------------------------------------------------------
     void setCab (const juce::String& libraryKey);
     void loadIr (int mic, const juce::File& file);   // mic: 0 = A, 1 = B, 2 = both
@@ -87,6 +99,9 @@ private:
     void applyCab();
     void applySlot (int rack, int slot);
     void startCaptureLoad (int channel, const juce::File& f, bool notifyOk);
+    void startCaptureAmpLoad (const juce::String& key);
+    void pushFaceState();
+    void captureAmpChannelTick();
     void startModuleFileLoad (int rack, int slot, const juce::File& f);
     void startPackLoad (int rack, int slot);
     juce::ValueTree slotTree (int rack, int slot);
@@ -99,6 +114,9 @@ private:
     std::shared_ptr<std::atomic<bool>> alive = std::make_shared<std::atomic<bool>> (true);
     std::atomic<int> pending { 0 };
     int generation[4] {};
+    std::shared_ptr<const dsp::CaptureAmpMap> ampMap;    // the capture amp in the AMP slot (message thread)
+    juce::String ampMapKey, loadingAmpKey;
+    int lastAmpChannel = -1;
     juce::String shownFile[kNumRacks][kSlotsPerRack];   // what each pack pedal showed last (UI refresh when it changes)
     juce::ListenerList<Listener> listeners;
 };

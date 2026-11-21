@@ -567,6 +567,89 @@ int runSelfTest (const juce::StringArray& args)
         else r.info ("(installed pack not played: pass --packs to play every file in Documents/" OBSIDIAN_PRODUCT_NAME ")");
     }
 
+    // ---------------------------------------------------------------- 7b. capture amps
+    r.head ("Capture amps (the amp pack: every knob and button picks real captures)");
+    {
+        auto ampFiles = Rig::contentFolder().getChildFile ("Amps").findChildFiles (juce::File::findFiles, false, "*.json");
+        ampFiles.sort();
+        int wired = 0;
+        for (auto& f : ampFiles)
+        {
+            const auto v = Rig::readJson (f);
+            if (! v["map"].isObject()) continue;
+            const auto key = f.getFileNameWithoutExtension();
+            juce::String err;
+            auto m = dsp::CaptureAmpMap::compile (v["map"], Rig::readFaceFile (key), err);
+            if (m == nullptr) { r.fail (key + ": the wiring doesn't compile (" + err + ")"); continue; }
+            ++wired;
+            const int nk = (int) m->roles.size(), nb = m->bank.size();
+            int combos = 1; for (auto& d : m->dims) combos *= d.count;
+            bool ok = Rig::readFaceFile (key).isObject();
+            std::set<int> picked;
+            for (int c = 0; c < combos; ++c)
+            {
+                int dv[dsp::CaptureAmpMap::kMaxDims] {};
+                for (int i = (int) m->dims.size() - 1, rem = c; i >= 0; --i) { dv[i] = rem % m->dims[(size_t) i].count; rem /= m->dims[(size_t) i].count; }
+                for (int j0 = 0; j0 < nk; ++j0)
+                    for (int s = 0; s <= 20; ++s)
+                    {
+                        float k[dsp::CaptureAmpMap::kMaxKnobs] {};
+                        for (int j = 0; j < nk; ++j) k[j] = m->defaults[(size_t) j];
+                        k[j0] = (float) s / 20.f;
+                        if (j0 != m->selKnob && m->selKnob >= 0) k[m->selKnob] = 0.f;
+                        const auto pk = m->resolve (k, dv);
+                        ok = ok && juce::isPositiveAndBelow (pk.a, nb) && (pk.b == -1 || juce::isPositiveAndBelow (pk.b, nb)) && pk.f >= 0.f && pk.f <= 1.f;
+                        picked.insert (pk.a); if (pk.b >= 0) picked.insert (pk.b);
+                    }
+            }
+            juce::StringArray idle;
+            uint32_t picks = 0; for (auto& st : m->settings) picks |= st.selects;
+            for (int j = 0; j < nk; ++j)
+                if (m->roles[(size_t) j] == dsp::KnobRole::Plain && ! (picks & (1u << j))) idle.add (m->knobLabels[j]);
+            r.check (ok && idle.isEmpty(), key + ": " + juce::String (nb) + " captures, " + juce::String ((int) m->settings.size()) + " settings, "
+                     + juce::String (combos) + " button combinations" + (idle.isEmpty() ? juce::String() : "; knobs that do nothing: " + idle.joinIntoString (", "))
+                     + ((int) picked.size() < nb ? " (" + juce::String (nb - (int) picked.size()) + " captures only reachable by moving several knobs)" : juce::String()));
+
+            // --packs: play it (every capture loaded, the gain swept, every button)
+            if (packs)
+            {
+                auto files = Rig::loadCaptureAmp (m, key, SR, BLOCK);
+                const int present = nb - files.missing.size();
+                const bool installed = files.missing.isEmpty() && files.broken.isEmpty();
+                r.check (installed, key + ": " + juce::String (present) + " of " + juce::String (nb) + " captures installed and readable"
+                         + (files.broken.isEmpty() ? juce::String() : " (broken: " + files.broken.joinIntoString ("; ") + ")"));
+                if (! installed) continue;
+                p.engine().amp().captureSlot().set (std::move (files.amp));     // installed first, so setAmp doesn't start its own load
+                p.rig().setAmp (key);
+                auto st = render (p, SR, BLOCK, 1.2, riff);
+                const float lvl = juce::Decibels::gainToDecibels (st.rms);
+                bool fine = st.finite && st.rms > 0.0005f && st.peak <= 2.f;
+                float lo = lvl, hi = lvl; double cpu = st.avgLoad;
+                for (float gv : { 0.f, 2.5f, 5.f, 7.5f, 10.f })
+                {
+                    setReal (p, "amp.gain", gv);
+                    auto s2 = render (p, SR, BLOCK, 0.4, riff);
+                    fine = fine && s2.finite && s2.peak <= 2.f && s2.rms > 0.0002f;
+                    lo = juce::jmin (lo, juce::Decibels::gainToDecibels (s2.rms)); hi = juce::jmax (hi, juce::Decibels::gainToDecibels (s2.rms)); cpu = juce::jmax (cpu, s2.avgLoad);
+                }
+                for (size_t i = 0; i < m->dims.size(); ++i)
+                    for (int dvv = 0; dvv < m->dims[i].count; ++dvv)
+                    {
+                        p.rig().setAmpDim ((int) i, dvv);
+                        auto s3 = render (p, SR, BLOCK, 0.3, riff);
+                        fine = fine && s3.finite && s3.peak <= 2.f;
+                        cpu = juce::jmax (cpu, s3.avgLoad);
+                    }
+                r.check (fine && lvl > -40.f && lvl < -4.f, key + ": plays cleanly, level " + juce::String (lvl, 1) + " dB at its default settings (gain sweep "
+                         + juce::String (lo, 1) + " to " + juce::String (hi, 1) + " dB), worst cpu " + juce::String (cpu * 100, 2) + "%");
+            }
+        }
+        if (wired == 0) r.info ("(no amp pack in Documents/" OBSIDIAN_PRODUCT_NAME "/Amps: skipped)");
+        else if (! packs) r.info ("(amp pack not played: pass --packs to load and play every capture amp)");
+        p.rig().setAmp ("core");
+        p.presetManager().loadInit();
+    }
+
     // ---------------------------------------------------------------- 8. presets
     r.head ("Presets and DAW state");
     {

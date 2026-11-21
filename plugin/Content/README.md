@@ -48,9 +48,9 @@ Each `Amps\<key>.json` has:
   `rig: true` means the cab is inside that capture, so the cab section should be bypassed.
 - Regenerate with `python3 visuals/finished/export_amps.py`. It also checks every file is here.
 
-The installer's pack option already copies `Captures\Amps` (it copies everything under `Content`), but the
-release zip only carries `Captures` and `IRs` (`.github/workflows/plugin.yml`), so `Amps\*.json` still has to be
-copied into `Documents\Obsidian Amp Suite\Amps` by hand until the Program chat adds it there.
+The installer's pack option installs `Captures\Amps`, `Amps\*.json` and `Faces\` (the amp faces the plugin draws,
+made by `plugin/tools/faces/build_faces.py` from `visuals/finished/site`), and the release zip carries them under
+`Content`. The plugin reads the "map" itself (`plugin/Source/DSP/CaptureAmp.h`).
 
 ## Amp credits
 

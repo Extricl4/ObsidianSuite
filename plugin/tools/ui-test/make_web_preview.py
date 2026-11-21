@@ -20,6 +20,9 @@ WEB = HERE / 'web'
 def main():
     state = run.build_page(standalone=True)
     state['presets'] = []                       # the real app ships with no presets
+    # every amp of the amp pack, with its face
+    state['amps'] = [a for a in state['amps'] if a.get('type') != 'capture']
+    state['amps'] += [run.capture_entry(f.stem) for f in sorted((run.CONTENT / 'Amps').glob('*.json'))]
     WEB.mkdir(exist_ok=True)
     html = (run.UI / 'obsidian-demo.html').read_text(encoding='utf-8')
     mock = (HERE / 'mock-native.js').read_text(encoding='utf-8')
@@ -34,6 +37,8 @@ def main():
     (WEB / 'index.html').write_text(html, encoding='utf-8')
     shutil.copy(run.UI / 'grain.png', WEB / 'grain.png')
     shutil.copytree(run.UI / 'fonts', WEB / 'fonts', dirs_exist_ok=True)
+    if (WEB / 'faces').is_symlink(): (WEB / 'faces').unlink()
+    shutil.copytree(run.CONTENT / 'Faces' / 'img', WEB / 'faces' / 'img', dirs_exist_ok=True)
     print('wrote', WEB / 'index.html', round(len(html) / 1024), 'KB')
 
 

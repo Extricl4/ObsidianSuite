@@ -38,7 +38,27 @@
     getRig: () => S.rig,
     setModule: (r, s, k) => setModule(r, s, k),
     moveModule: (r, a, b) => { const slots = S.rig.racks[r]; const [x] = slots.splice(a, 1); slots.splice(b, 0, x); later('obs:rig', S.rig, 10); return S.rig; },
-    setAmp: key => { const a = (S.amps || []).find(x => x.key === key); S.rig.amp = key === 'none' || !a ? { key: 'none', type: 'none', name: '', channels: [] } : { key, type: a.type, name: a.name, channels: [0, 1, 2, 3].map(() => ({ file: '', name: '', loaded: false })) }; later('obs:rig', S.rig, 10); return S.rig; },
+    setAmp: key => {
+      const a = (S.amps || []).find(x => x.key === key);
+      S.rig.amp = key === 'none' || !a ? { key: 'none', type: 'none', name: '', channels: [] } : { key, type: a.type, name: a.name, channels: [0, 1, 2, 3].map(() => ({ file: '', name: '', loaded: false })) };
+      if (a && a.type === 'capture') {            // like Rig::setAmp: the amp's defaults, buttons at their start
+        const F = a.face, d0 = (F.dims[0] || {}).start || 0, vals = {};
+        S.rig.amp.face = { dims: F.dims.map(d => [0, 1, 2, 3].map(c => !d.per || c === d0 ? (d.start || 0) : 0)), knobs: a.knobs.map(k => k.def), switches: (F.switches || []).map(() => false), loaded: true, ok: true };
+        a.knobs.forEach(k => { if (k.param) vals[k.param] = k.def; });
+        vals['amp.channel'] = (F.dims[0] && F.dims[0].id === 'channel' ? d0 : 0) / 3;
+        Object.assign(params, vals); later('obs:params', vals, 15);
+      }
+      later('obs:rig', S.rig, 10); return S.rig;
+    },
+    ampDim: (i, v) => {
+      const f = S.rig.amp.face; if (!f) return S.rig;
+      const ch = Math.round((params['amp.channel'] || 0) * 3);
+      if (i === 0 && (S.amps.find(x => x.key === S.rig.amp.key).face.dims[0] || {}).id === 'channel') { params['amp.channel'] = v / 3; later('obs:params', { 'amp.channel': v / 3 }, 10); }
+      else f.dims[i][ch] = v;
+      return S.rig;
+    },
+    ampKnob: (j, v) => { if (S.rig.amp.face) S.rig.amp.face.knobs[j] = v; return true; },
+    ampSwitch: (i, on) => { if (S.rig.amp.face) S.rig.amp.face.switches[i] = !!on; return S.rig; },
     setCab: key => { const c = (S.cabs || []).find(x => x.key === key) || {}; S.rig.cab = { key, name: c.name || key, irA: '', irB: '', irAName: '', irBName: '' }; later('obs:rig', S.rig, 10); return S.rig; },
     presetList: () => S.presets,
     presetLoad: id => { const p = S.presets.find(x => x.id === id); if (!p) return false; S.preset = Object.assign({}, S.preset, { id: p.id, name: p.name, category: p.category, factory: p.factory, dirty: false }); later('obs:preset', S.preset, 10); return true; },
@@ -60,7 +80,7 @@
       t += 1;
       const lvl = 0.25 + 0.2 * Math.sin(t / 7);
       emit('obs:meters', { in: lvl, outL: lvl * 0.9, outR: lvl * 0.85, gate: 1, cpu: 0.06, clip: false,
-        tuner: { hz: 82.41 * Math.pow(2, (Math.sin(t / 15) * 8) / 1200), conf: 0.9, level: lvl }, beat: -1, synth: 0, bpm: 120, busy: false, latencyMs: 0, synNote: -1, synStep: -1, synSrc: 0, ...(window.__mock.meterExtra || {}) });
+        tuner: { hz: 82.41 * Math.pow(2, (Math.sin(t / 15) * 8) / 1200), conf: 0.9, level: lvl }, beat: -1, synth: 0, bpm: 120, busy: false, latencyMs: 0, synNote: -1, synStep: -1, synSrc: 0, ...(S.rig.amp && S.rig.amp.type === 'capture' ? { ampA: 0, ampB: -1, ampF: 0, cabIn: false } : {}), ...(window.__mock.meterExtra || {}) });
     }, 33);
   }
   window.__JUCE__ = {

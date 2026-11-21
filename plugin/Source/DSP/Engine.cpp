@@ -39,6 +39,7 @@ void Engine::prepare (double sampleRate, int block)
     // Re-prepare loaded captures for this rate.
     for (int c = 0; c < AmpSection::kChannels; ++c)
         if (auto* e = ampSection.channelSlot (c).get()) e->prepare (sr, maxBlock);
+    if (auto* ca = ampSection.captureSlot().get()) for (auto& e : ca->engines) if (e) e->prepare (sr, maxBlock);
     inGainSm.reset (sr, 30.f, 1.f); outGainSm.reset (sr, 30.f, 1.f); tunerMute.reset (sr, 40.f, 1.f);
     mono.assign ((size_t) maxBlock, 0.f); scratchR.assign ((size_t) maxBlock, 0.f); synthL.assign ((size_t) maxBlock, 0.f); synthR.assign ((size_t) maxBlock, 0.f);
     prepared = true;
@@ -163,7 +164,8 @@ void Engine::process (juce::AudioBuffer<float>& buffer, int numIn, const HostInf
             mp[m] = { (int) v (s.model), v (s.pos), v (s.dist), v (s.level), v (s.pan), v (s.solo) > 0.5f, v (s.mute) > 0.5f, v (s.phase) > 0.5f };
         }
         float* outR = R != nullptr ? R : scratchR.data();   // mono output: render R into scratch and fold at the end
-        cabSection.process (x, L, outR, n, mp[0], mp[1], v (p.cabLc), v (p.cabHc), v (p.cabOn) > 0.5f);
+        // capture amps whose captures already contain a cab bypass the cab section
+        cabSection.process (x, L, outR, n, mp[0], mp[1], v (p.cabLc), v (p.cabHc), v (p.cabOn) > 0.5f && ! ampSection.cabInside());
 
         // ---- synth post-amp ----------------------------------------------------------------
         if (synthOn && synthPost)

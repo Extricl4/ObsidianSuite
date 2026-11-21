@@ -378,6 +378,7 @@ function showMeters(m) {
   }
   if (cpuSpan) cpuSpan.textContent = 'CPU ' + Math.round(clamp(m.cpu * 100, 0, 999)) + '%';
   showTuner(m.tuner || {});
+  safe('face meters', () => faceMeters(m));
   if (m.beat !== undefined && m.beat >= 0) flashBeat(m.beat);
   const busy = $('.obs-busy-global'); if (busy) busy.style.display = m.busy ? '' : 'none';
 }
@@ -950,7 +951,8 @@ function renderLib(p) {
         return '<button class="obs-tile obs-ampfolder' + (here ? ' has' : '') + '" data-amp-folder="' + esc(f) + '"><i>' + inF.length + ' AMPS</i><b>' + esc(f) + '</b><small>' + esc(here ? 'Playing now: ' + here.name : sub) + '</small></button>';
       }).join('');
     }
-    p._grid.innerHTML = head + list.map(a => '<button class="obs-tile' + (a.key === cur ? ' on' : '') + '" data-amp="' + esc(a.key) + '" title="' + esc(a.description) + '"><i>' + esc(a.role || a.type) + '</i><b>' + esc(a.name) + '</b><small>' + esc(a.basedOn ? (/^Obsidian original/i.test(a.basedOn) ? a.basedOn : 'Based on ' + a.basedOn) : a.description) + '</small></button>').join('') + (list.length || (!folder && !flat && head) ? '' : '<div class="obs-empty">No amps match.</div>');
+    const pic = a => a.face && a.face.skins ? '<span class="obs-tilepic" style="background-image:url(\'faces/img/' + esc(a.face.skins[a.face.dims && a.face.dims[0] && a.face.dims[0].skin ? Math.min(a.face.skins.length - 1, a.face.dims[0].start || 0) : 0].id) + '_on.jpg\')"></span>' : '';
+    p._grid.innerHTML = head + list.map(a => '<button class="obs-tile' + (a.key === cur ? ' on' : '') + (a.face ? ' haspic' : '') + '" data-amp="' + esc(a.key) + '" title="' + esc(a.description) + '">' + pic(a) + '<i>' + esc(a.role || a.type) + '</i><b>' + esc(a.name) + '</b><small>' + esc(a.basedOn ? (/^Obsidian original/i.test(a.basedOn) ? a.basedOn : 'Based on ' + a.basedOn) : a.description) + '</small></button>').join('') + (list.length || (!folder && !flat && head) ? '' : '<div class="obs-empty">No amps match.</div>');
   } else {
     const cur = rig && rig.cab ? rig.cab.key : '';
     const list = CABS.filter(c => (filter === 'ALL' || (c.size || '').replace('x', '×') === filter) && (!q || (c.name + ' ' + (c.size || '')).toLowerCase().includes(q)));
@@ -982,8 +984,9 @@ function renderAmp() {
   const a = rig.amp || {}, has = a.key && a.key !== 'none';
   ampUi.panel.classList.toggle('obs-hidden', !has);
   [...ampUi.box.children].forEach(c => { if (c !== ampUi.panel) c.classList.toggle('obs-hidden', has); });
-  if (!has) return;
+  if (!has) { safe('face', () => renderFace({}, null)); return; }
   const info = AMPS.find(x => x.key === a.key) || {};
+  safe('face', () => renderFace(a, info));
   $('.obs-ampname', ampUi.panel).textContent = a.name || info.name || 'Amp';
   $('.obs-role', ampUi.panel).textContent = info.role || (a.type === 'nam' ? 'Capture' : 'Built in');
   const based = $('.obs-based', ampUi.panel);
@@ -1003,6 +1006,200 @@ function renderAmp() {
     if (c) return call('clearCapture', +c.dataset.clear);
     if (ch) { ampUi.panel.dataset.ch = ch.dataset.ch; renderAmp(); queueScan(); }
   };
+}
+/* ============================================================== capture amp faces
+   The amp pack's amps (Documents\Obsidian Amp Suite\Amps + \Faces) show their real face: the layer
+   renders from visuals/finished (face on / off, one pointer sprite per knob, one sprite per lit LED).
+   Knobs that are plugin parameters (gain, bass, middle...) move those parameters (automation, MIDI
+   learn and presets follow); the other knobs go to the Rig (ampKnob), buttons pick channels and modes
+   (ampDim), switches toggle (ampSwitch), and the amp's lamp is the AMP section's on / off. */
+const faceUi = { key: '', info: null, stage: null, box: null, read: null, meters: {}, sendT: {}, readHtml: '' };
+const FACE_MAX_W = 1160, FACE_MAX_H = 428;
+function stdKnob(id) { return ampUi.panel ? $$('.obs-knobs .kn', ampUi.panel).find(k => k.dataset.param === id) : null; }
+function faceCh() { return Math.round(clamp(vals['amp.channel'] || 0, 0, 1) * 3); }
+function faceOn() { return !(typeof bypassed !== 'undefined' && bypassed.has('AMP')); }
+function faceState() { return (rig && rig.amp && rig.amp.face) || {}; }
+function faceKnobVal(j) {
+  const k = faceUi.info.knobs[j];
+  if (k.param) { const n = vals[k.param]; return n === undefined ? k.def : clamp(toReal(k.param, n) / 10, 0, 1); }
+  const f = faceState(), v = f.knobs ? f.knobs[j] : undefined;
+  return v === undefined || v === null ? k.def : +v;
+}
+function faceDimVal(i) {
+  const d = faceUi.info.face.dims[i];
+  if (i === 0 && d.id === 'channel') return faceCh();
+  const f = faceState(), per = f.dims && f.dims[i];
+  return per ? (+per[faceCh()] || 0) : (d.start || 0);
+}
+function faceDimCount(i) {
+  const F = faceUi.info.face, d = F.dims[i];
+  if (d.names) return d.names.length;
+  const ch = String(faceDimVal(0));
+  return Math.max(1, new Set(Object.keys(F.caps).filter(k => k.split('|')[0] === ch).map(k => k.split('|')[i])).size);
+}
+function faceCap() { const F = faceUi.info.face, k = F.dims.map((d, i) => faceDimVal(i)).join('|'); return F.caps[k] || F.caps[k || '_'] || {}; }
+function faceDimName(i) { const d = faceUi.info.face.dims[i]; return d.names ? (d.names[faceDimVal(i)] || '') : (faceCap().name || ''); }
+function faceBtnLabel(id) {
+  const F = faceUi.info.face, w = (F.switches || []).find(w => w.button === id);
+  if (w) return w.label;
+  const d = F.dims.find(d => d.button === id || (d.buttons || []).includes(id));
+  return d ? (d.buttons ? d.names[d.buttons.indexOf(id)] : d.id[0].toUpperCase() + d.id.slice(1)) : id;
+}
+function faceThrottle(key, fn) {
+  const t = faceUi.sendT[key] || (faceUi.sendT[key] = { last: 0, timer: 0 }), now = performance.now();
+  clearTimeout(t.timer);
+  if (now - t.last > 30) { t.last = now; fn(); } else t.timer = setTimeout(() => { t.last = performance.now(); fn(); }, 30);
+}
+function faceSetKnob(j, v) {
+  const k = faceUi.info.knobs[j];
+  v = clamp(v, 0, 1); if (k.steps > 1) v = Math.round(v * (k.steps - 1)) / (k.steps - 1);
+  if (k.param) {
+    const el = stdKnob(k.param), n = clamp(toNorm(k.param, v * 10), 0, 1);
+    if (el) { setKnob(el, n); if (window.knobHook) window.knobHook(el, n); }
+    vals[k.param] = n;
+    queueScan();
+  } else {
+    const f = faceState(); if (f.knobs) f.knobs[j] = v;
+    faceThrottle('k' + j, () => call('ampKnob', j, v));
+  }
+  drawFace();
+}
+function facePress(id) {
+  const F = faceUi.info.face, f = faceState();
+  const si = (F.switches || []).findIndex(w => w.button === id);
+  if (si >= 0) {
+    const on = !(f.switches && f.switches[si]); if (f.switches) f.switches[si] = on;
+    call('ampSwitch', si, on).then(r => r && applyRig(r)); drawFace(); return;
+  }
+  const i = F.dims.findIndex(d => d.button === id || (d.buttons || []).includes(id));
+  if (i < 0) return;
+  const d = F.dims[i], v = d.buttons ? d.buttons.indexOf(id) : (faceDimVal(i) + 1) % faceDimCount(i);
+  if (i === 0 && d.id === 'channel') { vals['amp.channel'] = v / 3; last['amp.channel'] = v / 3; ampUi.panel.dataset.ch = v; }
+  else if (f.dims && f.dims[i]) { if (d.per) f.dims[i][faceCh()] = v; else f.dims[i] = f.dims[i].map(() => v); }
+  call('ampDim', i, v).then(r => r && applyRig(r));
+  drawFace();
+}
+function facePower() {
+  if (typeof bypassed === 'undefined') return;
+  if (bypassed.has('AMP')) bypassed.delete('AMP'); else bypassed.add('AMP');
+  if (typeof styleTabs === 'function') styleTabs();
+  queueScan(); drawFace(true);
+}
+function faceTip(j) {
+  const F = faceUi.info.face, k = F.knobs[j], tip = $('.ff-tip', faceUi.stage), v = faceKnobVal(j);
+  tip.textContent = k.stepNames ? k.label + ' · ' + k.stepNames[Math.round(v * (k.steps - 1))] : k.label + '  ' + (v * 10).toFixed(1);
+  tip.style.left = (k.c[0] / F.W * 100) + '%'; tip.style.top = ((k.c[1] - k.r) / F.H * 100) + '%';
+  tip.classList.add('on');
+}
+function buildFace() {
+  const I = faceUi.info, F = I.face, W = F.W, H = F.H, pc = (v, t) => (v / t * 100).toFixed(4) + '%';
+  const st = faceUi.stage, nd = ' alt="" draggable="false"';
+  let h = '';
+  F.skins.forEach((sk, i) => { h += '<img class="ff-base off" data-s="' + i + '" src="faces/img/' + sk.id + '_off.jpg"' + nd + '><img class="ff-base on" data-s="' + i + '" src="faces/img/' + sk.id + '_on.jpg"' + nd + '>'; });
+  F.skins.forEach((sk, i) => F.knobs.forEach((k, j) => {
+    const [x, y, w, hh] = k.b, pos = 'left:' + pc(x, W) + ';top:' + pc(y, H) + ';width:' + pc(w, W) + ';height:' + pc(hh, H) + ';transform-origin:' + k.o[0] + '% ' + k.o[1] + '%';
+    h += '<img class="ff-ptr" data-s="' + i + '" data-k="' + j + '" data-v="on" src="faces/img/' + sk.id + '_k' + j + '.png" style="' + pos + '"' + nd + '>';
+    if (sk.ptrOff) h += '<img class="ff-ptr" data-s="' + i + '" data-k="' + j + '" data-v="off" src="faces/img/' + sk.id + '_k' + j + 'o.png" style="' + pos + '"' + nd + '>';
+  }));
+  for (const id in F.leds) { const [x, y, w, hh] = F.leds[id]; h += '<img class="ff-led" data-l="' + esc(id) + '" src="faces/img/' + F.key + '_led_' + id + '.png" style="left:' + pc(x, W) + ';top:' + pc(y, H) + ';width:' + pc(w, W) + ';height:' + pc(hh, H) + '"' + nd + '>'; }
+  F.knobs.forEach((k, j) => { const r = k.r * 1.15; h += '<button class="ff-hot" data-k="' + j + '" aria-label="' + esc(k.label) + '" style="left:' + pc(k.c[0] - r, W) + ';top:' + pc(k.c[1] - r, H) + ';width:' + pc(2 * r, W) + ';height:' + pc(2 * r, H) + '"></button>'; });
+  for (const id in F.buttons) { const [x, y, w, hh] = F.buttons[id]; h += '<button class="ff-hot ff-btn" data-b="' + esc(id) + '" title="' + esc(faceBtnLabel(id)) + '" style="left:' + pc(x - 6, W) + ';top:' + pc(y - 6, H) + ';width:' + pc(w + 12, W) + ';height:' + pc(hh + 12, H) + '"></button>'; }
+  const [px, py, pr] = F.power, R = pr * 1.25;
+  h += '<button class="ff-hot ff-pw" title="Power: the AMP section on / off" style="left:' + pc(px - R, W) + ';top:' + pc(py - R, H) + ';width:' + pc(2 * R, W) + ';height:' + pc(2 * R, H) + '"></button><div class="ff-tip"></div>';
+  st.innerHTML = h;
+  const sc = Math.min(FACE_MAX_W / W, FACE_MAX_H / H);
+  st.style.width = Math.round(W * sc) + 'px'; st.style.height = Math.round(H * sc) + 'px';
+  $$('.ff-hot[data-k]', st).forEach(b => {
+    const j = +b.dataset.k; let y0 = 0, v0 = 0, pid = null;
+    b.title = F.knobs[j].label + (I.knobs[j] && I.knobs[j].param ? '' : '') + ' · drag up or down, double-click to reset';
+    b.addEventListener('pointerdown', e => { if (e.button !== 0) return; pid = e.pointerId; b.setPointerCapture(pid); y0 = e.clientY; v0 = faceKnobVal(j); st.classList.add('drag'); faceTip(j); e.preventDefault(); });
+    b.addEventListener('pointermove', e => { if (pid !== e.pointerId) return; faceSetKnob(j, v0 + (y0 - e.clientY) / (e.shiftKey ? 900 : 260)); faceTip(j); });
+    const end = e => { if (pid !== e.pointerId) return; pid = null; st.classList.remove('drag'); $('.ff-tip', st).classList.remove('on'); };
+    b.addEventListener('pointerup', end); b.addEventListener('pointercancel', end);
+    b.addEventListener('wheel', e => { e.preventDefault(); const ns = I.knobs[j].steps; faceSetKnob(j, faceKnobVal(j) - Math.sign(e.deltaY) * (ns > 1 ? 1 / (ns - 1) : .02)); faceTip(j);
+      clearTimeout(faceUi.tipT); faceUi.tipT = setTimeout(() => $('.ff-tip', st).classList.remove('on'), 700); }, { passive: false });
+    b.addEventListener('dblclick', () => faceSetKnob(j, I.knobs[j].def));
+  });
+  $$('.ff-btn', st).forEach(b => b.addEventListener('click', e => { e.stopPropagation(); facePress(b.dataset.b); }));
+  $('.ff-pw', st).addEventListener('click', e => { e.stopPropagation(); facePower(); });
+}
+function drawFace(pwr) {
+  const st = faceUi.stage; if (!st || !faceUi.info || !rig) return;
+  const F = faceUi.info.face, on = faceOn();
+  const sk = F.dims[0] && F.dims[0].skin ? clamp(faceDimVal(0), 0, F.skins.length - 1) : 0;
+  $$('.ff-base', st).forEach(im => {
+    const mine = +im.dataset.s === sk, isOn = im.classList.contains('on');
+    im.style.transition = isOn && pwr ? (on ? 'opacity 1.7s cubic-bezier(.6,0,.3,1)' : 'opacity .7s ease-out') : 'opacity .4s ease';
+    im.style.opacity = mine ? (isOn ? (on ? 1 : 0) : 1) : 0;
+  });
+  const off = F.skins[sk].ptrOff;
+  $$('.ff-ptr', st).forEach(im => {
+    const mine = +im.dataset.s === sk;
+    im.style.transform = 'rotate(' + ((faceKnobVal(+im.dataset.k) - .5) * 270).toFixed(2) + 'deg)';
+    im.style.opacity = !mine ? 0 : (!off ? 1 : ((im.dataset.v === 'on') === on ? 1 : 0));
+  });
+  const lit = new Set(), f = faceState();
+  F.dims.forEach((d, i) => ((d.leds || [])[faceDimVal(i)] || []).forEach(l => lit.add(l)));
+  (F.switches || []).forEach((w, i) => { if (f.switches && f.switches[i]) lit.add(w.led); });
+  $$('.ff-led', st).forEach(im => { im.style.opacity = on && lit.has(im.dataset.l) ? 1 : 0; });
+  faceReadout();
+}
+function faceReadout() {
+  const el = faceUi.read; if (!el || !faceUi.info) return;
+  const I = faceUi.info, F = I.face, f = faceState(), m = faceUi.meters;
+  let ch = F.dims.length ? F.dims.map((d, i) => (d.id === 'boost' && d.names && faceDimVal(i) === 0) ? '' : faceDimName(i)).filter(Boolean).join(' · ') : 'Single channel';
+  if (F.sel) { const si = Math.round(faceKnobVal(F.sel.knob) * (F.sel.names.length - 1)); if (si > 0) ch = F.sel.label + ' · ' + F.sel.names[si]; }
+  (F.switches || []).forEach((w, i) => { if (f.switches && f.switches[i]) ch += ' · ' + w.label; });
+  const nm = i => (I.bank || [])[i] || '?';
+  let cap;
+  if (!faceOn()) cap = 'The amp is off (click its power lamp or double-click the AMP tab)';
+  else if (f.ok === false) cap = 'Its amp file is missing: install the amp pack';
+  else if (!f.loaded) cap = 'Loading ' + (I.bank || []).length + ' captures…';
+  else if (m.ampA == null || m.ampA < 0) cap = '';
+  else cap = m.ampB >= 0 && m.ampF > .03 ? 'Blending ' + nm(m.ampA) + '  ' + Math.round((1 - m.ampF) * 100) + '%  ·  ' + nm(m.ampB) + '  ' + Math.round(m.ampF * 100) + '%' : 'Playing ' + nm(m.ampA);
+  const html = '<b>' + esc(ch) + '</b><span>' + esc(cap) + '</span>' + (m.cabIn && faceOn() && f.loaded ? '<em>THE CAB IS IN THIS CAPTURE · CAB SECTION BYPASSED</em>' : '');
+  if (html !== faceUi.readHtml) { faceUi.readHtml = html; el.innerHTML = html; }
+}
+function faceMeters(m) {
+  const fm = faceUi.meters;
+  if (fm.ampA === m.ampA && fm.ampB === m.ampB && Math.abs((fm.ampF || 0) - (m.ampF || 0)) < .01 && fm.cabIn === m.cabIn) return;
+  fm.ampA = m.ampA; fm.ampB = m.ampB; fm.ampF = m.ampF; fm.cabIn = m.cabIn;
+  if (faceUi.info) faceReadout();
+}
+/** Called from renderAmp: shows the face for a capture amp, the plain panel for everything else. */
+function renderFace(a, info) {
+  const p = ampUi.panel, isFace = a.type === 'capture' && info && info.face && info.knobs;
+  p.classList.toggle('face', !!isFace);
+  if (!faceUi.box) {
+    faceUi.box = document.createElement('div'); faceUi.box.className = 'obs-facewrap';
+    faceUi.box.innerHTML = '<div class="obs-face"></div><div class="obs-facebar"><div class="obs-faceinfo"><i></i><div class="obs-faceread"></div></div>'
+      + '<button class="obs-btn obs-fchange">CHANGE AMP</button><button class="obs-btn obs-fremove">REMOVE</button></div>';
+    p.appendChild(faceUi.box);
+    faceUi.stage = $('.obs-face', faceUi.box); faceUi.read = $('.obs-faceread', faceUi.box);
+    $('.obs-fchange', faceUi.box).onclick = e => { e.stopPropagation(); ampUi.addBtn.click(); };
+    $('.obs-fremove', faceUi.box).onclick = e => { e.stopPropagation(); call('setAmp', 'none').then(r => r && applyRig(r)); };
+    setInterval(() => { if (faceUi.info && p.offsetParent && !p.classList.contains('obs-hidden')) drawFace(); }, 120);
+  }
+  faceUi.box.classList.toggle('obs-hidden', !isFace);
+  if (!isFace) { faceUi.info = null; faceUi.key = ''; placeCab(false); return; }
+  faceUi.info = info;
+  if (faceUi.key !== a.key) { faceUi.key = a.key; faceUi.readHtml = ''; buildFace(); }
+  $('.obs-faceinfo i', faceUi.box).textContent = (info.face.name || info.name || '').toUpperCase() + '  ·  ' + (info.basedOn ? 'BASED ON ' + info.basedOn.toUpperCase() : 'CAPTURE AMP');
+  $('.obs-faceinfo i', faceUi.box).title = info.description || '';
+  drawFace();
+  placeCab(true);
+}
+/** The cab sits under the amp: move it down while a (taller) amp face is shown. */
+function placeCab(face) {
+  const c = ampUi.cabBtn && ampUi.cabBtn.parentElement; if (!c) return;
+  if (c._top === undefined) c._top = c.style.top;
+  if (!face) { c.style.top = c._top; return; }
+  requestAnimationFrame(() => {
+    const box = ampUi.box, b = box.getBoundingClientRect(), pr = ampUi.panel.getBoundingClientRect(), par = c.offsetParent || c.parentElement;
+    const sc = b.width / (box.offsetWidth || b.width) || 1;
+    const bottom = (pr.bottom - par.getBoundingClientRect().top) / sc;
+    c.style.top = Math.max(parseFloat(c._top) || 0, Math.round(bottom + 18)) + 'px';
+  });
 }
 function renderCab() {
   if (!rig) return;

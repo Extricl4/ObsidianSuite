@@ -69,7 +69,8 @@ void repairRig (juce::ValueTree& rig)
 juce::var readJsonFile (const juce::File& f)
 {
     juce::var v;
-    if (juce::JSON::parse (f.loadFileAsString(), v).wasOk()) return v;
+    // amp files use "" as the key of a single-setting amp; JUCE can't hold an empty property name, so it becomes "_"
+    if (juce::JSON::parse (f.loadFileAsString().replace ("\"\":", "\"_\":"), v).wasOk()) return v;
     return {};
 }
 } // namespace
@@ -130,8 +131,28 @@ void Rig::applyAmp()
 {
     auto amp = rig.getChildWithName ("AMP");
     const auto type = amp["type"].toString();
-    engine.amp().setType (type == "nam" ? AmpSection::Nam : type == "none" ? AmpSection::None : AmpSection::Model);
-    if (type != "nam" && type != "none")
+    engine.amp().setType (type == "nam" ? AmpSection::Nam : type == "none" ? AmpSection::None : type == "capture" ? AmpSection::Capture : AmpSection::Model);
+    if (type == "capture")
+    {
+        const auto key = amp["key"].toString();
+        if (ampMapKey != key || ampMap == nullptr)
+        {
+            juce::String err;
+            ampMap = CaptureAmpMap::compile (readAmpFile (key)["map"], readFaceFile (key), err);
+            ampMapKey = ampMap != nullptr ? key : juce::String();
+            if (ampMap == nullptr) message (amp["name"].toString() + ": " + (err.isEmpty() ? "its amp file isn't installed (Documents\Obsidian Amp Suite\Amps)" : err), true);
+        }
+        lastAmpChannel = -1;
+        pushFaceState();
+        auto* cur = engine.amp().captureSlot().get();
+        if (ampMap != nullptr && (cur == nullptr || cur->key != key) && loadingAmpKey != key) startCaptureAmpLoad (key);
+    }
+    else
+    {
+        ampMap = nullptr; ampMapKey = {}; loadingAmpKey = {};
+        engine.amp().captureSlot().set (nullptr);                 // frees the pack amp's captures
+    }
+    if (type != "nam" && type != "none" && type != "capture")
     {
         // in-house amp ("core" was the only one in the first builds)
         const int idx = obs::amp::findModel (amp["key"].toString().toRawUTF8());
@@ -165,8 +186,39 @@ void Rig::setAmp (const juce::String& key)
     const auto entry = findInLibrary (ampLibrary(), key);
     if (entry.isVoid()) { message ("Unknown amp: " + key, true); return; }
     amp.setProperty ("key", key, nullptr).setProperty ("type", entry["type"], nullptr).setProperty ("name", entry["name"], nullptr);
+    // capture amps start like the real amp: its default knobs, buttons and channel
+    for (int i = amp.getNumProperties(); --i >= 0;)
+    {
+        const auto n = amp.getPropertyName (i).toString();
+        if (n.startsWith ("fd") || n.startsWith ("fx") || n.startsWith ("fs") || n.startsWith ("fk")) amp.removeProperty (n, nullptr);
+    }
+    if (entry["type"].toString() == "capture")
+    {
+        juce::String err;
+        auto m = CaptureAmpMap::compile (readAmpFile (key)["map"], readFaceFile (key), err);
+        if (m != nullptr)
+        {
+            const int d0start = m->dims.empty() ? 0 : m->dims[0].start;
+            for (size_t i = 0; i < m->dims.size(); ++i)
+            {
+                juce::StringArray per;
+                for (int c = 0; c < AmpSection::kChannels; ++c) per.add (juce::String (! m->dims[i].per || c == d0start ? m->dims[i].start : 0));
+                amp.setProperty ("fd" + juce::String ((int) i), per.joinIntoString (","), nullptr);
+            }
+            for (int j = 0; j < (int) m->roles.size(); ++j)
+            {
+                const juce::String pid = CaptureAmpMap::paramFor (m->roles[(size_t) j]);
+                const float def = m->defaults[(size_t) j];
+                if (pid.isNotEmpty()) { if (auto* p = state.getParameter (pid)) p->setValueNotifyingHost (p->convertTo0to1 (def * 10.f)); }
+                else amp.setProperty ("fx" + juce::String (j), def, nullptr);
+            }
+            if (auto* p = state.getParameter ("amp.channel")) p->setValueNotifyingHost (p->convertTo0to1 ((float) (m->firstDimIsChannel ? d0start : 0)));
+            ampMap = m; ampMapKey = key;
+        }
+        for (int c = 0; c < AmpSection::kChannels; ++c) amp.setProperty ("ch" + juce::String (c), "", nullptr);
+    }
     // Library amps bring their own captures (one per channel).
-    if (auto* caps = entry["captures"].getArray())
+    else if (auto* caps = entry["captures"].getArray())
         for (int c = 0; c < AmpSection::kChannels; ++c)
             amp.setProperty ("ch" + juce::String (c), c < caps->size() ? (*caps)[c].toString() : juce::String(), nullptr);
     else if (entry["type"].toString() != "nam")
@@ -218,6 +270,164 @@ void Rig::startCaptureLoad (int channel, const juce::File& f, bool notifyOk)
             engine.amp().channelSlot (channel).set (std::move (*box));
             if (notifyOk)
                 message ("Loaded " + name + (std::abs (trained - engine.currentSampleRate()) > 1 ? "  (trained at " + juce::String ((int) trained) + " Hz, resampled)" : juce::String()), false);
+            notifyChanged();
+        });
+    });
+}
+
+// ------------------------------------------------------------------------- capture amps
+juce::var Rig::readJson (const juce::File& f) { return readJsonFile (f); }
+
+juce::var Rig::readAmpFile (const juce::String& key)
+{
+    if (key.isEmpty() || key.containsAnyOf ("/\\:.")) return {};
+    return readJsonFile (contentFolder().getChildFile ("Amps").getChildFile (key + ".json"));
+}
+juce::var Rig::readFaceFile (const juce::String& key)
+{
+    if (key.isEmpty() || key.containsAnyOf ("/\\:.")) return {};
+    return readJsonFile (contentFolder().getChildFile ("Faces").getChildFile (key + ".json"));
+}
+
+/** Rig tree -> the amp section's face state (buttons per channel, extra knobs, switches). */
+void Rig::pushFaceState()
+{
+    if (ampMap == nullptr) return;
+    auto amp = rig.getChildWithName ("AMP");
+    auto& a = engine.amp();
+    for (size_t i = 0; i < ampMap->dims.size(); ++i)
+    {
+        auto vals = juce::StringArray::fromTokens (amp["fd" + juce::String ((int) i)].toString(), ",", "");
+        for (int c = 0; c < AmpSection::kChannels; ++c)
+            a.setFaceDim ((int) i, c, juce::jlimit (0, ampMap->dims[i].count - 1, c < vals.size() ? vals[c].getIntValue() : ampMap->dims[i].start));
+    }
+    for (int j = 0; j < (int) ampMap->roles.size(); ++j)
+        a.setFaceKnob (j, (float) (double) amp.getProperty ("fx" + juce::String (j), ampMap->defaults[(size_t) j]));
+    for (int i = 0; i < ampMap->switchIds.size(); ++i)
+        a.setFaceSwitch (i, (bool) amp.getProperty ("fs" + juce::String (i), false));
+}
+
+void Rig::setAmpDim (int dim, int value)
+{
+    if (ampMap == nullptr || ! juce::isPositiveAndBelow (dim, (int) ampMap->dims.size())) return;
+    value = juce::jlimit (0, ampMap->dims[(size_t) dim].count - 1, value);
+    if (dim == 0 && ampMap->firstDimIsChannel)
+    {
+        if (auto* p = state.getParameter ("amp.channel")) p->setValueNotifyingHost (p->convertTo0to1 ((float) value));
+        captureAmpChannelTick();                 // swap the per-channel knobs now, not on the next timer tick
+        notifyChanged();
+        return;
+    }
+    auto amp = rig.getChildWithName ("AMP");
+    const auto id = "fd" + juce::String (dim);
+    auto vals = juce::StringArray::fromTokens (amp[id].toString(), ",", "");
+    while (vals.size() < AmpSection::kChannels) vals.add ("0");
+    const int ch = juce::jlimit (0, AmpSection::kChannels - 1, (int) std::round (state.getRawParameterValue ("amp.channel")->load()));
+    for (int c = 0; c < AmpSection::kChannels; ++c)
+        if (! ampMap->dims[(size_t) dim].per || c == ch) vals.set (c, juce::String (value));
+    amp.setProperty (id, vals.joinIntoString (","), nullptr);
+    pushFaceState();
+    notifyChanged();
+}
+
+void Rig::setAmpKnob (int knob, float value)
+{
+    if (ampMap == nullptr || ! juce::isPositiveAndBelow (knob, (int) ampMap->roles.size())) return;
+    rig.getChildWithName ("AMP").setProperty ("fx" + juce::String (knob), juce::jlimit (0.f, 1.f, value), nullptr);
+    engine.amp().setFaceKnob (knob, value);
+}
+
+void Rig::setAmpSwitch (int index, bool on)
+{
+    if (ampMap == nullptr || ! juce::isPositiveAndBelow (index, ampMap->switchIds.size())) return;
+    rig.getChildWithName ("AMP").setProperty ("fs" + juce::String (index), on, nullptr);
+    engine.amp().setFaceSwitch (index, on);
+    notifyChanged();
+}
+
+/** Amps that keep knobs per channel (Moirai, Umbra...): when the channel changes, put the old channel's
+    knobs away and bring the new channel's back. Runs on the timer too, so DAW automation of the channel works. */
+void Rig::captureAmpChannelTick()
+{
+    if (ampMap == nullptr || ampMap->dims.empty() || ampMap->dims[0].perKnobs.empty()) return;
+    const int ch = juce::jlimit (0, AmpSection::kChannels - 1, (int) std::round (state.getRawParameterValue ("amp.channel")->load()));
+    if (ch == lastAmpChannel) return;
+    auto amp = rig.getChildWithName ("AMP");
+    const auto& knobs = ampMap->dims[0].perKnobs;
+    auto knobValue = [&] (int j) -> float
+    {
+        const juce::String pid = CaptureAmpMap::paramFor (ampMap->roles[(size_t) j]);
+        if (pid.isNotEmpty()) return state.getRawParameterValue (pid)->load() * 0.1f;
+        return (float) (double) amp.getProperty ("fx" + juce::String (j), ampMap->defaults[(size_t) j]);
+    };
+    if (lastAmpChannel >= 0)
+    {
+        juce::StringArray v;
+        for (int j : knobs) v.add (juce::String (knobValue (j), 4));
+        amp.setProperty ("fk" + juce::String (lastAmpChannel), v.joinIntoString (","), nullptr);
+        const auto saved = juce::StringArray::fromTokens (amp["fk" + juce::String (ch)].toString(), ",", "");
+        for (size_t i = 0; i < knobs.size(); ++i)
+        {
+            const int j = knobs[i];
+            const float val = (int) i < saved.size() ? saved[(int) i].getFloatValue() : ampMap->defaults[(size_t) j];
+            const juce::String pid = CaptureAmpMap::paramFor (ampMap->roles[(size_t) j]);
+            if (pid.isNotEmpty()) { if (auto* p = state.getParameter (pid)) p->setValueNotifyingHost (p->convertTo0to1 (val * 10.f)); }
+            else { amp.setProperty ("fx" + juce::String (j), val, nullptr); engine.amp().setFaceKnob (j, val); }
+        }
+    }
+    lastAmpChannel = ch;
+}
+
+Rig::CaptureAmpFiles Rig::loadCaptureAmp (std::shared_ptr<const CaptureAmpMap> map, const juce::String& key, double rate, int block)
+{
+    CaptureAmpFiles res;
+    res.amp = std::make_unique<CaptureAmp>();
+    res.amp->map = map; res.amp->key = key;
+    const auto dir = contentFolder().getChildFile ("Captures");
+    for (auto& rel : map->bank)
+    {
+        const auto f = dir.getChildFile (rel);
+        if (! f.existsAsFile()) { res.missing.add (f.getFileName()); res.amp->engines.push_back (nullptr); continue; }
+        juce::String err;
+        auto e = NamEngine::load (f, rate, block, err);
+        if (e == nullptr) res.broken.add (f.getFileName() + ": " + err);
+        res.amp->engines.push_back (std::move (e));
+    }
+    res.amp->levelMatch (rate, block);
+    return res;
+}
+
+void Rig::startCaptureAmpLoad (const juce::String& key)
+{
+    auto map = ampMap;
+    if (map == nullptr) return;
+    loadingAmpKey = key;
+    const double rate = engine.currentSampleRate();
+    const int block = engine.currentBlockSize();
+    const auto name = rig.getChildWithName ("AMP")["name"].toString();
+    ++pending;
+    auto token = alive;
+    loader.addJob ([this, token, key, map, rate, block, name]
+    {
+        auto files = loadCaptureAmp (map, key, rate, block);
+        auto ca = std::make_shared<std::unique_ptr<CaptureAmp>> (std::move (files.amp));
+        const auto missing = files.missing, broken = files.broken;
+        juce::MessageManager::callAsync ([this, token, key, ca, rate, missing, broken, name, total = map->bank.size()]
+        {
+            if (! token->load()) return;
+            --pending;
+            if (loadingAmpKey == key) loadingAmpKey = {};
+            auto amp = rig.getChildWithName ("AMP");
+            if (amp["type"].toString() != "capture" || amp["key"].toString() != key) return;   // the amp changed meanwhile
+            if (engine.currentSampleRate() != rate)
+                for (auto& e : (*ca)->engines) if (e) e->prepare (engine.currentSampleRate(), engine.currentBlockSize());
+            engine.amp().captureSlot().set (std::move (*ca));
+            if (missing.size() == total)
+                message (name + ": its captures aren't installed. Put the Obsidian amp pack in " + contentFolder().getChildFile ("Captures").getFullPathName(), true);
+            else if (! missing.isEmpty())
+                message (name + ": " + juce::String (missing.size()) + " of " + juce::String (total) + " captures missing", true);
+            else message ("Loaded " + name + " (" + juce::String (total) + " captures)", false);
+            for (auto& b : broken) message (name + ": " + b, true);
             notifyChanged();
         });
     });
@@ -538,6 +748,37 @@ juce::var Rig::ampLibrary()
             }
         o->setProperty ("builtIn", false);
         if (v["folder"].toString().isEmpty()) o->setProperty ("folder", "CAPTURE AMPS");   // the amp pack and amps you add
+        if (v["map"].isObject())
+        {
+            // a capture amp: its knobs and buttons pick the captures (CaptureAmp.h). The UI gets the face and
+            // what each knob does, not the wiring itself.
+            const auto face = readJsonFile (contentFolder().getChildFile ("Faces").getChildFile (f.getFileNameWithoutExtension() + ".json"));
+            juce::String err;
+            if (auto m = CaptureAmpMap::compile (v["map"], face, err))
+            {
+                o->setProperty ("type", "capture");
+                juce::Array<juce::var> knobs;
+                for (int j = 0; j < (int) m->roles.size(); ++j)
+                {
+                    auto k = new juce::DynamicObject();
+                    k->setProperty ("label", m->knobLabels[j]);
+                    k->setProperty ("role", CaptureAmpMap::roleName (m->roles[(size_t) j]));
+                    k->setProperty ("param", CaptureAmpMap::paramFor (m->roles[(size_t) j]));
+                    k->setProperty ("def", m->defaults[(size_t) j]);
+                    k->setProperty ("steps", m->steps[(size_t) j]);
+                    knobs.add (juce::var (k));
+                }
+                o->setProperty ("knobs", knobs);
+                juce::Array<juce::var> bank;
+                for (auto& b : m->bank) bank.add (b.fromLastOccurrenceOf ("/", false, false).upToLastOccurrenceOf (".", false, false));
+                o->setProperty ("bank", bank);
+                o->setProperty ("channels", m->dims.empty() ? 1 : m->dims[0].count);
+                if (face.isObject()) o->setProperty ("face", face);
+            }
+            else o->setProperty ("error", err);
+            o->removeProperty ("map");
+            o->removeProperty ("captures");
+        }
         list.add (v);
     }
     return list;
@@ -591,6 +832,28 @@ juce::var Rig::toJson() const
         chans.add (juce::var (ch));
     }
     a->setProperty ("channels", chans);
+    if (amp["type"].toString() == "capture")
+    {
+        auto f = new juce::DynamicObject();
+        juce::Array<juce::var> dims, knobs, sws;
+        if (ampMap != nullptr)
+        {
+            for (size_t i = 0; i < ampMap->dims.size(); ++i)
+            {
+                juce::Array<juce::var> per;
+                auto vals = juce::StringArray::fromTokens (amp["fd" + juce::String ((int) i)].toString(), ",", "");
+                for (int c = 0; c < AmpSection::kChannels; ++c) per.add (c < vals.size() ? vals[c].getIntValue() : 0);
+                dims.add (per);
+            }
+            for (int j = 0; j < (int) ampMap->roles.size(); ++j) knobs.add ((double) amp.getProperty ("fx" + juce::String (j), ampMap->defaults[(size_t) j]));
+            for (int i = 0; i < ampMap->switchIds.size(); ++i) sws.add ((bool) amp.getProperty ("fs" + juce::String (i), false));
+        }
+        f->setProperty ("dims", dims); f->setProperty ("knobs", knobs); f->setProperty ("switches", sws);
+        auto* ca = const_cast<Engine&> (engine).amp().captureSlot().get();
+        f->setProperty ("loaded", ca != nullptr && ca->key == amp["key"].toString());
+        f->setProperty ("ok", ampMap != nullptr);
+        a->setProperty ("face", juce::var (f));
+    }
     o->setProperty ("amp", juce::var (a));
 
     auto cab = rig.getChildWithName ("CAB");
@@ -632,6 +895,7 @@ juce::var Rig::toJson() const
 void Rig::timerCallback()
 {
     engine.collectGarbage (false);
+    captureAmpChannelTick();
     bool changed = false;
     for (int r = 0; r < kNumRacks; ++r)                         // IR pedals rebuild their IR here (never on the audio thread)
         for (int s = 0; s < kSlotsPerRack; ++s)
