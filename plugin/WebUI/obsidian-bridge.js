@@ -227,10 +227,16 @@ function setupBindings() {
     // arpeggiator steps travel with the rig (presets), not as parameters
     if (S.onSteps) S.onSteps(from => { if (applying) return; const list = S.getSteps(); call('setSynthSteps', list); if (rig) { rig.misc = rig.misc || {}; rig.misc.synSteps = list.join(','); } });
     // AUDITION / computer keys play the real engine; the synth tab must be on to hear it
+    const power = on => { vals['synth.on'] = on ? 1 : 0; last['synth.on'] = vals['synth.on']; call('setParam', 'synth.on', on ? 1 : 0);
+      if (on) bypassed.delete('SYNTH'); else bypassed.add('SYNTH'); if (typeof styleTabs === 'function') styleTabs(); if (S.setPower) S.setPower(on); };
+    S.powerOut = on => power(on);
     S.noteOut = (note, isOn) => {
-      if (isOn && (vals['synth.on'] || 0) < .5) { vals['synth.on'] = 1; call('setParam', 'synth.on', 1); bypassed.delete('SYNTH'); if (typeof styleTabs === 'function') styleTabs(); say('Synth switched on'); }
+      if (isOn && (vals['synth.on'] || 0) < .5) { power(true); say('Synth switched on'); }
       call('synthNote', note, !!isOn);
     };
+    // show "the synth is off" on its page whenever the section is bypassed
+    const showPower = () => { if (S.setPower) S.setPower((vals['synth.on'] || 0) >= .5); };
+    showPower(); setInterval(showPower, 300);
   });
 
   /* ---- cab page ---- */

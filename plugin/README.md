@@ -1,13 +1,13 @@
-# Obsidian Suite: the plugin
+# Obsidian Amp Suite: the plugin
 
-The real Obsidian Suite as a **VST3** and a **standalone app** (Windows, ASIO), built with JUCE.
+The real Obsidian Amp Suite as a **VST3** and a **standalone app** (Windows, ASIO), built with JUCE.
 The interface is the same page as the browser demo (`ui/obsidian-demo.html`). Inside the plugin it is
 connected to the audio engine by `WebUI/obsidian-bridge.js`.
 
 ## Get it
 
 * **Easiest:** open the repo's **Actions** tab → *Plugin (Windows)* → the newest green run → download
-  **ObsidianSuite-…-Windows** (installer `.exe` + zip). Every push to `plugin/` or `ui/` builds a new one.
+  **ObsidianAmpSuite-…-Windows** (installer `.exe` + zip). Every push to `plugin/` or `ui/` builds a new one.
   Tags like `v0.3.0` also publish a GitHub release.
 * **Build it yourself:** install Visual Studio 2022 ("Desktop development with C++"), CMake and Git, then run
   `plugin\build_windows.bat`. The first build downloads JUCE, NAM and the other libraries (about 10 minutes).
@@ -23,16 +23,17 @@ If an ASIO driver is installed the app picks it by itself on the first start. In
 | Part | Where |
 |---|---|
 | Signal chain: input → gate → transpose → synth (pre) → pedals → amp → cab → EQ → FX → special FX → doubler → width → output | `Source/DSP/Engine.cpp` |
-| Amps: built-in *Obsidian Core* (no files needed), *NAM Loader* (up to 4 `.nam` captures) | `Source/DSP/AmpSection.h`, `NamEngine.*` |
+| Amps: 9 in-house amps in the **OBSIDIAN AMPS** folder (modelled circuit by circuit, see below), *NAM Loader* (up to 4 `.nam` captures) | `Source/DSP/AmpModels.h`, `AmpSection.h`, `NamEngine.*` |
 | Cab: two mics (model, position, distance, level, pan, solo/mute/phase), IR loading, built-in cabs | `Source/DSP/CabSection.h` |
 | 30 pedals / effects (drive, fuzz, boost, comp, wah, whammy, octave, harmonizer, sub, delay, reverb, shimmer, swell, freeze, tape stop, looper, glitch, chorus, flanger, phaser, tremolo, vibrato/rotary, ring mod, bitcrusher, filters, limiter) | `Source/DSP/Modules/*.cpp` |
 | 9 pack pedals with their own captures / IRs (Chiron, Emperor, Graven, Maw, XXXIII, Helios, Aeon; Ossuary, Halcyon) plus Crypt's six RV-6 modes | `Source/DSP/Modules/PackModules.cpp`, `IrCore.h` |
 | Transpose: **Live** (instant) and **HQ** (studio quality, latency reported to the DAW) | `Source/DSP/Sections.h`, `PitchShifter.h` |
-| Guitar synth: tracking, 2 oscillators + unison, ladder filter, arpeggiator | `Source/DSP/GuitarSynth.h` |
+| Synth, played by the guitar or MIDI (see below) | `Source/DSP/GuitarSynth.h`, parameters in `SynthDefs.h`, page in `ui/src/synth.js` |
+| Themes: colours, fonts, bands and moving details | `ui/src/themes.js`, fonts in `ui/fonts` (OFL) |
 | Parameters (one list: DAW automation, presets and UI all use it) | `Source/Core/Params.cpp` |
-| Presets (factory = `Presets/*.json`, yours = `Documents\Obsidian Amp Suite\Presets\*.obsidian`) | `Source/Core/PresetManager.*` |
+| Presets (yours: `Documents\Obsidian Amp Suite\Presets\*.obsidian`; factory presets go in `Presets/*.json`, none yet) | `Source/Core/PresetManager.*` |
 | Amp / cab / pedal choices, loading files in the background | `Source/Core/Rig.*` |
-| Your settings (theme, folders, MIDI, audio options) | `Source/Core/AppSettings.h` → `%APPDATA%\Obsidian Suite\settings.xml` |
+| Your settings (theme, folders, MIDI, audio options) | `Source/Core/AppSettings.h` → `%APPDATA%\Obsidian Amp Suite\settings.xml` |
 | MIDI learn / CC mapping / program change | `Source/Core/MidiMapper.*` |
 | UI ↔ engine bridge (all commands in one table) | `Source/Editor/UiBridge.cpp`, `WebUI/obsidian-bridge.js` |
 | Standalone app (audio device settings live in the UI) | `Source/Standalone/StandaloneApp.cpp` |
@@ -41,6 +42,52 @@ If an ASIO driver is installed the app picks it by itself on the first start. In
 background thread and are swapped in without a click; every output is checked for NaN/Inf and runaway
 level; broken or missing files show a message and the old sound keeps playing; old presets and DAW
 projects keep loading when parameters are added or removed.
+
+## The in-house amps
+
+No files needed: each one is modelled stage by stage (the real tone stack's component values, cascaded
+triode stages with their cathode and coupling filters, cathode follower, power amp with sag,
+presence/depth in the feedback loop, output transformer), oversampled 4x. All are level-matched.
+The amp chooser keeps them in the **OBSIDIAN AMPS** folder.
+
+| Amp | Based on | Role |
+|---|---|---|
+| GLASS 65 | Fender '65 Twin Reverb | clean |
+| TOP 30 | Vox AC30 Top Boost | clean, crunch |
+| PLEXI 68 | Marshall 1959 Super Lead (jumped) | crunch |
+| BRIT 800 | Marshall JCM800 2203 | crunch, high gain |
+| SLO 100 | Soldano SLO-100 (overdrive channel) | high gain, lead |
+| STYX 51 | Peavey 5150 / EVH 5150 (lead channel) | high gain |
+| RECTO | Mesa/Boogie Dual Rectifier (modern) | high gain |
+| VH-4 | Diezel VH4 (channel 3) | high gain |
+| OBSIDIAN CORE | Obsidian original | modern high gain |
+
+## The synth
+
+Played by the guitar (pitch tracking, bends come through) or by MIDI notes from a keyboard or the DAW.
+On the SYNTH page, **AUDITION** and the computer keys A–K play it too.
+
+* **Play**: threshold, sensitivity, glide, dynamics, LEGATO, **HOLD** (the last note drones on),
+  **CHORD** (one note plays octaves, power chord, sus, or a triad / 7th / 9th in your key and scale)
+* **Sound**: oscillators A and B (saw, pulse, triangle, sine, super) with shape, 1–7 voice unison,
+  detune and stereo width; B can hard-sync to A; sub oscillator; coloured noise. Oscillators and filter
+  run at twice the sample rate.
+* **Filter**: ladder 24 / 12 dB, lowpass, bandpass, highpass, notch, **vowel** (A-E-I-O-U formants),
+  drive, envelope amount, key tracking. Drag the curve to set cutoff and resonance.
+* **Envelopes** (amp and filter, one graph), **LFO** (6 shapes, tempo sync, fade in; vibrato, wah, shape,
+  tremolo or pan)
+* **Arpeggiator**: 16 steps, each with on, accent, tie, octave, ratchet (2–4 repeats) and chance; up,
+  down, up-down, random or **steps** (each step picks a scale note); swing; tempo from the DAW or the app.
+  The steps are saved with the preset.
+* **Output**: level, mix, space (stereo echoes), **character** (clean, analog, 8-bit, VHS), before or after the amp
+* **DICE** rolls a whole new sound (keeps mix, level, key and your playing settings), with undo.
+
+## Themes
+
+Settings → Interface → Theme: Obsidian, Matte, Midnight, Gothic, Roman, Norse, Medieval, Neon, Sakura and
+Inferno. Themes change the colours, accent and fonts, and add a decorative band and a moving layer (fog,
+gold dust, snow and aurora, torchlight, synthwave grid, petals, embers). **Moving details** switches the
+animation off. To add a theme, add one entry to `THEMES` in `ui/src/themes.js`.
 
 ## Your files: `Documents\Obsidian Amp Suite`
 
@@ -130,26 +177,28 @@ variable `OBSIDIAN_UI_DEV`) to your `ui` folder and reopen the plugin window. Fi
 built-in copies (copy `WebUI/obsidian-bridge.js` in too if you're editing the bridge).
 
 **Factory presets**: change the sounds in `writeFactoryPresets()` (`Source/Tests/SelfTest.cpp`) and run
-`"Obsidian Suite.exe" --write-factory-presets plugin\Presets`, or save a preset in the plugin and copy
+`"Obsidian Amp Suite.exe" --write-factory-presets plugin\Presets`, or save a preset in the plugin and copy
 the file into `Presets\` (rename `.obsidian` to `.json`).
 
 **Version**: change `VERSION`.
 
 ## Tests
 
-* `"Obsidian Suite.exe" --selftest report.txt` renders every pedal in every slot with random settings,
+* `"Obsidian Amp Suite.exe" --selftest report.txt` renders every pedal in every slot with random settings,
   every sample rate and buffer size, checks transpose pitch accuracy, the synth, presets, DAW state and
   CPU. Add `--nam file.nam` to test a capture, and `--packs` to play every file of the installed pedal pack.
   The GitHub build runs it on every push.
 * `python plugin/tools/ui-test/run.py` runs the real UI in headless Chrome against a fake engine and clicks
   through every page (screenshots in `tools/ui-test/out`). Refresh its data with
-  `"Obsidian Suite.exe" --dump-ui-state plugin/tools/ui-test/state.json`.
+  `"Obsidian Amp Suite.exe" --dump-ui-state plugin/tools/ui-test/state.json`.
+* `"Obsidian Amp Suite.exe" --render-synth <folder>` renders synth patches to WAV; `python plugin/tools/amp-lab/synthcheck.py <folder>`
+  measures their level, DC and aliasing. `plugin/tools/amp-lab` also has the amp measurement tools (`amplab.cpp`, `level.cpp`).
 
 ## Not done yet
 
 * **STUDIO** (the mini recorder) is shown only in the standalone app, and recording there is still the
   demo. The engine side (recording the DI and re-amping takes) is the next step.
-* Amp and pedal **graphics**: the AMP page shows a clean generic panel until the amps from the visuals
-  chat are added. Their knobs map to the same parameters.
+* Amp and pedal **graphics**: the AMP page shows a plain panel (with each amp's own slight tint) until the
+  amps from the visuals chat are added. Their knobs map to the same parameters.
 
 Licences of the libraries used: [LICENSES.md](LICENSES.md).

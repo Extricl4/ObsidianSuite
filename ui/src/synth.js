@@ -15,7 +15,7 @@ const SP = document.querySelector('.page[data-page="SYNTH"]'); if (!SP) return;
 const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
 const MINUS = '−';
-const sg = (v, d = 0) => (v > 0 ? '+' : v < 0 ? MINUS : '') + Math.abs(v).toFixed(d);
+const sg = (v, d = 0) => { const r = +(+v).toFixed(d); return (r > 0 ? '+' : r < 0 ? MINUS : '') + Math.abs(r).toFixed(d); };
 const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
 
 /* ------------------------------------------------------------ parameters */
@@ -227,6 +227,12 @@ css.textContent = `
 .sy-hint { font-size: 9px; color: #6f6f76; letter-spacing: .04em; }
 .sy-hint kbd { font: inherit; font-size: 8.5px; padding: 1px 4px; border-radius: 4px; background: #1d1d20; color: #a3a3a8; }
 .sy-flash { animation: syFlash .5s ease-out; }
+.sy-offmask { position: absolute; inset: 0; border-radius: 20px; z-index: 6; display: none; align-items: center; justify-content: center; background: rgba(10,10,11,.55); backdrop-filter: grayscale(.7) blur(1px); -webkit-backdrop-filter: grayscale(.7) blur(1px); }
+.sy-offmask.show { display: flex; }
+.sy-offcard { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 22px 30px; border-radius: 16px; background: linear-gradient(#1d1d21, #141416); box-shadow: inset 0 1px 0 rgba(255,255,255,.08), inset 0 0 0 1px rgba(255,255,255,.06), 0 20px 40px rgba(0,0,0,.6); }
+.sy-offcard b { font-size: 13px; font-weight: 600; letter-spacing: .24em; color: #e9e6df; }
+.sy-offcard span { font-size: 11px; color: #8d8d93; }
+.sy-offcard button { height: 32px; padding: 0 18px; border: none; border-radius: 9px; background: var(--accent); color: #111113; font: inherit; font-size: 10px; font-weight: 600; letter-spacing: .18em; cursor: pointer; }
 @keyframes syFlash { 0% { box-shadow: inset 0 0 0 1px var(--accent), 0 0 24px rgba(255,255,255,.12); } 100% { box-shadow: inset 0 1px 0 rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,255,255,.04); } }
 `;
 document.head.appendChild(css);
@@ -1020,8 +1026,15 @@ window.obsSynth = {
   live(l) { window.__obsSynthLive = true; if (!l) return; showNote(l.note >= 0 ? l.note : null, l.src, l.level); showStep(on('syn.arp.on') ? l.step : -1); },
   setBpm(b) { if (b > 20 && b < 400) bpm = b; },
   noteOut: null,              // set by the bridge: (midi, isOn) -> engine
+  powerOut: null,             // set by the bridge: turns the synth section on
+  setPower(isOn) { offMask.classList.toggle('show', !isOn); },
   dice: roll,
 };
+
+/* ------------------------------------------------------------ synth on / off (plugin) */
+const offMask = el('div', 'sy-offmask', '<div class="sy-offcard"><b>THE SYNTH IS OFF</b><button>TURN IT ON</button><span>Double-click the SYNTH tab to switch it on or off any time</span></div>');
+panel.appendChild(offMask);
+offMask.querySelector('button').addEventListener('click', () => { if (window.obsSynth.powerOut) window.obsSynth.powerOut(true); });
 
 /* ------------------------------------------------------------ start */
 buildEnvKnobs(); showTab(0); tabDots(); drawLane();
