@@ -6,6 +6,7 @@ name: Plugin (Windows)
 
 on:
   push:
+    branches: [ main ]
     paths: [ 'plugin/**', 'ui/**', '.github/workflows/plugin.yml' ]
     tags: [ 'v*' ]
   workflow_dispatch:
