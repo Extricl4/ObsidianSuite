@@ -1,6 +1,6 @@
 @echo off
 rem =========================================================================
-rem  Builds Obsidian Suite (VST3 + standalone) on your own Windows PC.
+rem  Builds Obsidian Amp Suite (VST3 + standalone) on your own Windows PC.
 rem  Needs: Visual Studio 2022 (with "Desktop development with C++"), CMake,
 rem  Git. Run from this folder:   build_windows.bat
 rem  Result: build\ObsidianSuite_artefacts\Release\VST3 and \Standalone
@@ -21,10 +21,10 @@ cmake --build build --config Release --parallel --target ObsidianSuite_VST3 Obsi
 
 echo.
 echo Running the self-test...
-start /wait "" "build\ObsidianSuite_artefacts\Release\Standalone\Obsidian Suite.exe" --selftest build\selftest.txt
+start /wait "" "build\ObsidianSuite_artefacts\Release\Standalone\Obsidian Amp Suite.exe" --selftest build\selftest.txt
 type build\selftest.txt
 echo.
-echo Done. Copy "build\ObsidianSuite_artefacts\Release\VST3\Obsidian Suite.vst3"
+echo Done. Copy "build\ObsidianSuite_artefacts\Release\VST3\Obsidian Amp Suite.vst3"
 echo to "C:\Program Files\Common Files\VST3" (or use the installer from GitHub).
 exit /b 0
 

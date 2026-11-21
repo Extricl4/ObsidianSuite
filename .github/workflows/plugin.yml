@@ -1,4 +1,4 @@
-# Builds the Obsidian Suite plugin for Windows on every change to plugin/ or ui/,
+# Builds the Obsidian Amp Suite plugin for Windows on every change to plugin/ or ui/,
 # runs its self-test, and uploads the VST3, the standalone app and an installer.
 # Download them from the run's "Artifacts" box (Actions tab).
 # Push a tag like v0.2.0 to publish them as a GitHub release.
@@ -46,7 +46,7 @@ jobs:
       - name: Self-test
         shell: pwsh
         run: |
-          $exe = "build\ObsidianSuite_artefacts\Release\Standalone\Obsidian Suite.exe"
+          $exe = "build\ObsidianSuite_artefacts\Release\Standalone\Obsidian Amp Suite.exe"
           $p = Start-Process -FilePath $exe -ArgumentList '--selftest','selftest.txt' -Wait -PassThru -NoNewWindow
           if (Test-Path selftest.txt) { Get-Content selftest.txt }
           if ($p.ExitCode -ne 0) { if (Test-Path selftest.txt) { ./plugin/tools/ci-report.ps1 selftest.txt } ; exit 1 }
@@ -55,11 +55,11 @@ jobs:
         shell: pwsh
         run: |
           $v = (Get-Content plugin\VERSION).Trim()
-          New-Item -ItemType Directory -Force dist\ObsidianSuite | Out-Null
-          Copy-Item -Recurse "build\ObsidianSuite_artefacts\Release\VST3\Obsidian Suite.vst3" "dist\ObsidianSuite\"
-          Copy-Item "build\ObsidianSuite_artefacts\Release\Standalone\Obsidian Suite.exe" "dist\ObsidianSuite\"
-          Copy-Item plugin\README.md, plugin\LICENSES.md, selftest.txt "dist\ObsidianSuite\"
-          Compress-Archive -Path dist\ObsidianSuite\* -DestinationPath "dist\ObsidianSuite-$v-Windows.zip" -Force
+          New-Item -ItemType Directory -Force dist\ObsidianAmpSuite | Out-Null
+          Copy-Item -Recurse "build\ObsidianSuite_artefacts\Release\VST3\Obsidian Amp Suite.vst3" "dist\ObsidianAmpSuite\"
+          Copy-Item "build\ObsidianSuite_artefacts\Release\Standalone\Obsidian Amp Suite.exe" "dist\ObsidianAmpSuite\"
+          Copy-Item plugin\README.md, plugin\LICENSES.md, selftest.txt "dist\ObsidianAmpSuite\"
+          Compress-Archive -Path dist\ObsidianAmpSuite\* -DestinationPath "dist\ObsidianAmpSuite-$v-Windows.zip" -Force
           echo "OBS_VERSION=$v" >> $env:GITHUB_ENV
 
       - name: Installer
@@ -67,11 +67,11 @@ jobs:
         shell: pwsh
         run: |
           if (-not (Get-Command iscc -ErrorAction SilentlyContinue)) { choco install innosetup -y --no-progress | Out-Null; $env:Path += ";C:\Program Files (x86)\Inno Setup 6" }
-          iscc /DAppVersion=$env:OBS_VERSION /DSourceDir="$pwd\dist\ObsidianSuite" /O"$pwd\dist" plugin\installer\ObsidianSuite.iss
+          iscc /DAppVersion=$env:OBS_VERSION /DSourceDir="$pwd\dist\ObsidianAmpSuite" /O"$pwd\dist" plugin\installer\ObsidianSuite.iss
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ObsidianSuite-${{ env.OBS_VERSION }}-Windows
+          name: ObsidianAmpSuite-${{ env.OBS_VERSION }}-Windows
           path: |
             dist/*.zip
             dist/*.exe

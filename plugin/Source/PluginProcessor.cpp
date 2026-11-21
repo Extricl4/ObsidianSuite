@@ -38,9 +38,7 @@ void ObsidianProcessor::loadStartupSound()
 {
     const auto last = appSettings->get ("lastPreset").toString();
     if ((bool) appSettings->get ("openLastPreset") && last.isNotEmpty() && presets->load (last)) return;
-    // otherwise the first factory preset ("Tight Wall")
-    for (auto& p : presets->list()) if (p.factory && p.name == "Tight Wall") { presets->load (p.id); return; }
-    if (! presets->list().isEmpty()) presets->load (presets->list()[0].id);
+    // otherwise the clean default sound (Default preset)
 }
 
 void ObsidianProcessor::applySettings()

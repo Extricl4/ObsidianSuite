@@ -65,12 +65,14 @@
 /* ---- amp panel ------------------------------------------------------------------ */
 .obs-amp { position: relative; width: 1160px; height: 372px; box-sizing: border-box; border-radius: 18px; padding: 22px 30px;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
-  background: radial-gradient(120% 90% at 50% 0%, rgba(255,255,255,.06), rgba(255,255,255,.012) 70%);
+  background: radial-gradient(120% 90% at 50% 0%, rgba(255,255,255,.06), rgba(255,255,255,.012) 70%) var(--amp-tint, transparent);
+  transition: background-color .35s ease;
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.08), inset 0 1px 0 rgba(255,255,255,.08), 0 24px 48px rgba(0,0,0,calc(.45*var(--sh))); }
 .obs-amp .obs-knobs { padding: 14px 26px 10px; border-radius: 14px; background: rgba(0,0,0,calc(.18*var(--sh))); box-shadow: inset 0 1px 0 rgba(255,255,255,.05); }
 .obs-amp .obs-plate { display: flex; align-items: center; gap: 16px; }
 .obs-amp .obs-ampname { font-size: 22px; font-weight: 600; letter-spacing: .34em; text-transform: uppercase; }
 .obs-amp .obs-role { font-size: 10px; letter-spacing: .22em; color: var(--accent); text-transform: uppercase; }
+.obs-amp .obs-based { margin-top: -12px; font-size: 10px; letter-spacing: .2em; color: rgba(233,230,223,.5); text-transform: uppercase; cursor: default; }
 .obs-amp .obs-chans { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
 .obs-chan { height: 32px; display: flex; align-items: center; gap: 8px; padding: 0 6px 0 12px; border-radius: 9px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.1);
   font-size: 11px; color: rgb(var(--cf_a3a3a8)); max-width: 260px; }

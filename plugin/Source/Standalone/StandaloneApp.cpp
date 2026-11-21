@@ -1,9 +1,9 @@
 // =============================================================================
-//  The standalone "Obsidian Suite.exe": our own app window around the plugin.
+//  The standalone "Obsidian Amp Suite.exe": our own app window around the plugin.
 //   * no JUCE "Options" bar: audio/MIDI settings live in Obsidian's Settings
 //   * input is never muted (it's a guitar amp)
 //   * first launch: picks ASIO if a driver is installed (e.g. Focusrite USB ASIO)
-//   * "Obsidian Suite.exe --selftest report.txt" runs the offline test suite
+//   * "Obsidian Amp Suite.exe --selftest report.txt" runs the offline test suite
 // =============================================================================
 #include <juce_audio_plugin_client/juce_audio_plugin_client.h>
 
@@ -23,7 +23,7 @@ class MainWindow : public juce::DocumentWindow
 {
 public:
     MainWindow (juce::StandalonePluginHolder& h, juce::PropertySet* props)
-        : DocumentWindow ("Obsidian Suite", juce::Colour (0xff0c0c0d), DocumentWindow::allButtons), holder (h), settings (props)
+        : DocumentWindow (OBSIDIAN_PRODUCT_NAME, juce::Colour (0xff0c0c0d), DocumentWindow::allButtons), holder (h), settings (props)
     {
         setUsingNativeTitleBar (true);
         if (auto* p = holder.processor.get())
@@ -65,12 +65,12 @@ public:
         juce::PropertiesFile::Options o;
         o.applicationName = "standalone";
         o.filenameSuffix = ".settings";
-        o.folderName = "Obsidian Suite";
+        o.folderName = OBSIDIAN_PRODUCT_NAME;
         o.osxLibrarySubFolder = "Application Support";
         props.setStorageParameters (o);
     }
 
-    const juce::String getApplicationName() override       { return "Obsidian Suite"; }
+    const juce::String getApplicationName() override       { return OBSIDIAN_PRODUCT_NAME; }
     const juce::String getApplicationVersion() override    { return OBSIDIAN_VERSION_STRING; }
     bool moreThanOneInstanceAllowed() override             { return false; }
     void anotherInstanceStarted (const juce::String&) override { if (window != nullptr) window->toFront (true); }

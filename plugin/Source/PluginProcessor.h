@@ -26,7 +26,7 @@ public:
     juce::AudioProcessorEditor* createEditor() override;
     bool hasEditor() const override                 { return true; }
 
-    const juce::String getName() const override     { return "Obsidian Suite"; }
+    const juce::String getName() const override     { return OBSIDIAN_PRODUCT_NAME; }
     bool acceptsMidi() const override               { return true; }
     bool producesMidi() const override              { return false; }
     bool isMidiEffect() const override              { return false; }

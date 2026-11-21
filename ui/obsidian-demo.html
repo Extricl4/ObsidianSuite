@@ -785,7 +785,7 @@ ov.innerHTML=`<div style="position: absolute; inset: 0; background: rgba(var(--c
    <button class="st-tb" data-a="start" aria-label="Back to start" title="Back to start (Home)">${I.start}</button>
    <button class="st-tb" data-a="stop" aria-label="Stop" title="Stop">${I.stop}</button>
    <button class="st-tb big" data-a="play" aria-label="Play" title="Play / pause (Space)">${I.play}</button>
-   <button class="st-tb big rec" data-a="rec" aria-label="Record" title="Record onto the armed track (R). In this demo a take is a placeholder until the plugin build.">${I.rec}</button>
+   <button class="st-tb big rec" data-a="rec" aria-label="Record" title="Record onto the armed track (R)">${I.rec}</button>
    <span class="st-tsep"></span>
    <button class="st-tb tg" data-a="loop" aria-label="Loop" title="Loop the marked bars (L)">${I.loop}</button>
    <button class="st-tb tg" data-a="click" aria-label="Click" title="Metronome click while playing">${I.click}</button>
@@ -817,13 +817,12 @@ try{ TTIP.STUDIO='Tiny recorder: record takes, move them around, loop and play b
 let ppb=16, snap=1;
 const SNAPS=[[0,'OFF'],[1,'ON']];   /* ON snaps takes to the beat grid */
 const mkT=(name,ico,ci)=>({name,ico,c:TCOL[ci%TCOL.length],vol:.8,pan:0,m:false,s:false,arm:false,mon:false,r:false,w:false,st:false});
-let tracks=[mkT('Guitar L','guitar',0),mkT('Guitar R','guitar',1),mkT('Lead','lead',2),mkT('Synth','synth',3),mkT('Bass DI','mic',4)]; tracks[0].arm=true; tracks[0].pan=-.6; tracks[1].pan=.6; tracks[3].st=true;
+let tracks=[mkT('Track 1','guitar',0)]; tracks[0].arm=true;   /* starts empty: one armed track */
 let clips=[], selClip=null, selTrack=0, nid=1;
 let pos=0, playing=false, recording=false, loopOn=false, clickOn=false, countIn=false, loopS=0, loopE=16;
 let liveClip=null, t0=0, p0=0, raf=0, lastBeat=-1, counting=false;
 const mkPeaks=(n,seed)=>{ let s=seed*9301+49297, v=.5; const out=[]; for(let i=0;i<n;i++){ s=(s*9301+49297)%233280; const r=s/233280; v=Math.max(.08,Math.min(1,v*.82+r*.36)); out.push(Math.min(1,v+((i%8===0)?.35:0))); } return out; };
 function addClip(track,start,len,name,peaks){ const c={id:nid++,track,start,len,off:0,name,peaks:peaks||mkPeaks(Math.ceil(len*8)+8,nid*7)}; clips.push(c); return c; }
-addClip(0,0,16,'RIFF IDEA'); addClip(1,0,16,'RIFF DOUBLE'); addClip(2,16,8,'LEAD TAKE'); addClip(3,8,16,'PAD');
 
 /* ---------- helpers ---------- */
 const audible=t=>{ const anyS=tracks.some(x=>x.s); return !tracks[t].m && (!anyS||tracks[t].s); };
@@ -882,7 +881,7 @@ function render(){
   hlist.scrollTop=scroller.scrollTop;
   drawOvw(); drawPH(); tools(); }
 function drawOvw(){ if(!ovw) return; const W=ovw.clientWidth||900, H=50, n=tracks.length, rowH=Math.min(10,(H-12)/n);
-  let h='<small>OVERVIEW · DEMO TAKES ARE PLACEHOLDERS UNTIL THE PLUGIN BUILD</small>'; clips.forEach(c=>{ h+='<b style="left:'+(c.start/TOTAL*W).toFixed(1)+'px;width:'+Math.max(2,c.len/TOTAL*W).toFixed(1)+'px;top:'+(6+c.track*rowH).toFixed(1)+'px;height:'+(rowH-2).toFixed(1)+'px;background:'+(c===liveClip?'#ff4d4d':tracks[c.track].c)+(audible(c.track)?'':';opacity:.2')+'"></b>'; });
+  let h='<small>OVERVIEW</small>'; clips.forEach(c=>{ h+='<b style="left:'+(c.start/TOTAL*W).toFixed(1)+'px;width:'+Math.max(2,c.len/TOTAL*W).toFixed(1)+'px;top:'+(6+c.track*rowH).toFixed(1)+'px;height:'+(rowH-2).toFixed(1)+'px;background:'+(c===liveClip?'#ff4d4d':tracks[c.track].c)+(audible(c.track)?'':';opacity:.2')+'"></b>'; });
   const vw=scroller.clientWidth/(TOTAL*ppb)*W, vx=scroller.scrollLeft/(TOTAL*ppb)*W;
   h+='<div class="view" style="left:'+vx.toFixed(1)+'px;width:'+Math.min(W,vw).toFixed(1)+'px"></div><div class="oph" style="left:'+(pos/TOTAL*W).toFixed(1)+'px"></div>';
   ovw.innerHTML=h; }

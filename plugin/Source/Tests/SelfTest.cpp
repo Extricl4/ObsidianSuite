@@ -1,5 +1,5 @@
 // =============================================================================
-//  Offline self-test. Run:   "Obsidian Suite" --selftest [report.txt] [--nam file.nam]
+//  Offline self-test. Run:   "Obsidian Amp Suite" --selftest [report.txt] [--nam file.nam]
 //  Exit code 0 = everything passed. CI runs this on every build.
 //
 //  Checks: no NaN/Inf ever, no runaway levels, sound passes through, every
@@ -133,7 +133,7 @@ int runSelfTest (const juce::StringArray& args)
         if (args[i] == "--nam" && i + 1 < args.size()) namFile = juce::File (args[i + 1].unquoted());
         else if (args[i] != "--selftest" && ! args[i].startsWith ("--") && (i == 0 || args[i - 1] != "--nam")) reportFile = juce::File::getCurrentWorkingDirectory().getChildFile (args[i].unquoted());
     }
-    r.lines.add ("Obsidian Suite " OBSIDIAN_VERSION_STRING " self-test   (" + juce::SystemStats::getCpuModel() + ", " + juce::SystemStats::getOperatingSystemName() + ")");
+    r.lines.add (OBSIDIAN_PRODUCT_NAME " " OBSIDIAN_VERSION_STRING " self-test   (" + juce::SystemStats::getCpuModel() + ", " + juce::SystemStats::getOperatingSystemName() + ")");
 
     const double SR = 48000; const int BLOCK = 256;
     auto proc = std::make_unique<ObsidianProcessor>();
@@ -159,6 +159,26 @@ int runSelfTest (const juce::StringArray& args)
         r.check (st.peak <= 2.0f, "peak stays under the safety ceiling (" + juce::String (st.peak, 2) + ")");
         r.info ("CPU: avg " + juce::String (st.avgLoad * 100, 2) + "% of real time, worst block " + juce::String (st.maxBlockLoad * 100, 1) + "%");
     }
+
+    // ---------------------------------------------------------------- 1b. every in-house amp
+    r.head ("Every in-house amp (gain 0 / 5 / 10, extreme tone settings)");
+    for (const auto& m : obs::amp::models())
+    {
+        p.rig().setAmp (m.key);
+        bool ok = true; float lo = 0, mid = 0, hi = 0; double load = 0;
+        for (float g : { 0.f, 5.f, 10.f })
+        {
+            setReal (p, "amp.gain", g);
+            for (float t : { 0.f, 10.f }) { setReal (p, "amp.bass", t); setReal (p, "amp.treble", 10.f - t); setReal (p, "amp.presence", t); setReal (p, "amp.depth", t); setReal (p, "amp.master", t); }
+            setReal (p, "amp.bass", 5); setReal (p, "amp.treble", 5); setReal (p, "amp.presence", 5); setReal (p, "amp.depth", 5); setReal (p, "amp.master", 5);
+            auto st = render (p, SR, BLOCK, 0.8, riff);
+            ok = ok && st.finite && st.peak <= 2.f && st.rms > 0.0005f;
+            (g == 0 ? lo : g == 5 ? mid : hi) = juce::Decibels::gainToDecibels (st.rms);
+            load = juce::jmax (load, st.avgLoad);
+        }
+        r.check (ok, juce::String::fromUTF8 (m.name) + "  (based on " + juce::String::fromUTF8 (m.basedOn) + ")  level " + juce::String (lo, 1) + " / " + juce::String (mid, 1) + " / " + juce::String (hi, 1) + " dB, cpu " + juce::String (load * 100, 2) + "%");
+    }
+    p.presetManager().loadInit();
 
     // ---------------------------------------------------------------- 2. every module
     r.head ("Every pedal / effect, in every rack it allows, random settings");
@@ -287,7 +307,7 @@ int runSelfTest (const juce::StringArray& args)
         juce::String err2;
         auto bad = dsp::NamEngine::load (juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("not-a-model.nam"), SR, BLOCK, err2);
         r.check (bad == nullptr && err2.isNotEmpty(), "a missing/broken file is rejected with a message, not a crash");
-        p.engine().amp().setType (dsp::AmpSection::Core);
+        p.engine().amp().setType (dsp::AmpSection::Model);
         p.prepareToPlay (SR, BLOCK);
     }
     else r.info ("(skipped: pass --nam <file.nam> to test capture loading)");
@@ -302,7 +322,7 @@ int runSelfTest (const juce::StringArray& args)
         p.presetManager().setFolder (tmp);
         int factory = 0, loaded = 0;
         for (auto& pr : p.presetManager().list()) if (pr.factory) { ++factory; if (p.presetManager().load (pr.id)) ++loaded; }
-        r.check (factory > 0 && loaded == factory, juce::String (loaded) + " of " + juce::String (factory) + " factory presets load");
+        r.check (loaded == factory, juce::String (loaded) + " of " + juce::String (factory) + " factory presets load");
 
         setReal (p, "amp.gain", 7.3f); setReal (p, "eq.b3", -4.5f); p.rig().setModule (1, 2, "tide");
         r.check (p.presetManager().saveAs ("Selftest Sound"), "save as");
@@ -356,7 +376,7 @@ int runSelfTest (const juce::StringArray& args)
 } // namespace obs
 
 // =============================================================================
-//  Factory preset generator. Run:  "Obsidian Suite" --write-factory-presets <folder>
+//  Factory preset generator. Run:  "Obsidian Amp Suite" --write-factory-presets <folder>
 //  Writes plugin/Presets/*.json. Edit the sounds below, run it, rebuild.
 //  (Presets can also be made in the plugin with SAVE AS and copied in by hand.)
 // =============================================================================

@@ -116,7 +116,7 @@ juce::var PresetManager::captureCurrent (const juce::String& name, const juce::S
     o->setProperty ("version", 1);
     o->setProperty ("name", name);
     o->setProperty ("category", category);
-    o->setProperty ("app", "Obsidian Suite " OBSIDIAN_VERSION_STRING);
+    o->setProperty ("app", OBSIDIAN_PRODUCT_NAME " " OBSIDIAN_VERSION_STRING);
     auto pv = new juce::DynamicObject();
     for (auto& d : paramDefs())
         if (auto* prm = dynamic_cast<juce::RangedAudioParameter*> (state.getParameter (d.id)))

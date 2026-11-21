@@ -1,7 +1,7 @@
 #pragma once
 // =============================================================================
 //  PresetManager: factory presets (built in) + your presets (.obsidian files in
-//  Documents\Obsidian Suite\Presets, or the folder chosen in Settings).
+//  Documents\Obsidian Amp Suite\Presets, or the folder chosen in Settings).
 //
 //  A preset file is readable JSON:
 //    { "format": "obsidian-preset", "version": 1, "name": "...", "category": "...",

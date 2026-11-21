@@ -2,7 +2,7 @@
 // =============================================================================
 //  AppSettings: things that belong to YOU, not to a preset (theme, preset
 //  folder, MIDI mappings, audio options...). Stored in
-//    Windows: %APPDATA%\Obsidian Suite\settings.xml
+//    Windows: %APPDATA%\Obsidian Amp Suite\settings.xml
 //  and shared by every Obsidian instance (VST3 and standalone).
 //  Adding a setting: give it a default in defaults() and read/write it with
 //  get()/set(). The UI sees every key automatically.
@@ -19,7 +19,7 @@ public:
         juce::PropertiesFile::Options o;
         o.applicationName = "settings";
         o.filenameSuffix = ".xml";
-        o.folderName = "Obsidian Suite";
+        o.folderName = OBSIDIAN_PRODUCT_NAME;
         o.osxLibrarySubFolder = "Application Support";
         o.storageFormat = juce::PropertiesFile::storeAsXML;
         o.millisecondsBeforeSaving = 500;
@@ -30,13 +30,13 @@ public:
 
     static juce::File dataFolder()
     {
-        auto f = juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory).getChildFile ("Obsidian Suite");
+        auto f = juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory).getChildFile (OBSIDIAN_PRODUCT_NAME);
         f.createDirectory();
         return f;
     }
     static juce::File defaultPresetFolder()
     {
-        return juce::File::getSpecialLocation (juce::File::userDocumentsDirectory).getChildFile ("Obsidian Suite").getChildFile ("Presets");
+        return juce::File::getSpecialLocation (juce::File::userDocumentsDirectory).getChildFile (OBSIDIAN_PRODUCT_NAME).getChildFile ("Presets");
     }
 
     static const juce::NamedValueSet& defaults()

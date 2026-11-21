@@ -9,7 +9,7 @@
 //
 //  Libraries (what ADD AMP / ADD CAB list):
 //    built-in : Obsidian Core amp, NAM Loader amp, three generated cabs
-//    yours    : JSON files in  Documents\Obsidian Suite\Amps  and  ...\Cabs
+//    yours    : JSON files in  Documents\Obsidian Amp Suite\Amps  and  ...\Cabs
 //               (see Content/README.md for the format)
 // =============================================================================
 #include <juce_audio_processors/juce_audio_processors.h>
@@ -54,7 +54,7 @@ public:
     juce::var toJson() const;                       // for the UI
     static juce::var ampLibrary();
     static juce::var cabLibrary();
-    static juce::File contentFolder();              // Documents\Obsidian Suite
+    static juce::File contentFolder();              // Documents\Obsidian Amp Suite
 
     void addListener (Listener* l)                  { listeners.add (l); }
     void removeListener (Listener* l)               { listeners.remove (l); }

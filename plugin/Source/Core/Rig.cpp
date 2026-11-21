@@ -12,7 +12,7 @@ juce::ValueTree makeDefaultRig()
 {
     juce::ValueTree rig ("RIG");
     juce::ValueTree amp ("AMP");
-    amp.setProperty ("key", "core", nullptr).setProperty ("type", "core", nullptr).setProperty ("name", "Obsidian Core", nullptr);
+    amp.setProperty ("key", "core", nullptr).setProperty ("type", "model", nullptr).setProperty ("name", "OBSIDIAN CORE", nullptr);
     for (int c = 0; c < AmpSection::kChannels; ++c) amp.setProperty ("ch" + juce::String (c), "", nullptr);
     rig.appendChild (amp, nullptr);
     juce::ValueTree cab ("CAB");
@@ -87,7 +87,15 @@ Rig::~Rig()
 
 juce::File Rig::contentFolder()
 {
-    auto f = juce::File::getSpecialLocation (juce::File::userDocumentsDirectory).getChildFile ("Obsidian Suite");
+    const auto docs = juce::File::getSpecialLocation (juce::File::userDocumentsDirectory);
+    auto f = docs.getChildFile (OBSIDIAN_PRODUCT_NAME);
+    static bool migrated = false;      // the first builds used "Documents\Obsidian Suite": bring its files along once
+    if (! migrated)
+    {
+        migrated = true;
+        const auto old = docs.getChildFile ("Obsidian Suite");
+        if (! f.exists() && old.isDirectory()) old.copyDirectoryTo (f);
+    }
     for (auto sub : { "Presets", "Amps", "Cabs", "Captures", "IRs" }) f.getChildFile (sub).createDirectory();
     return f;
 }
@@ -119,7 +127,13 @@ void Rig::applyAmp()
 {
     auto amp = rig.getChildWithName ("AMP");
     const auto type = amp["type"].toString();
-    engine.amp().setType (type == "nam" ? AmpSection::Nam : type == "none" ? AmpSection::None : AmpSection::Core);
+    engine.amp().setType (type == "nam" ? AmpSection::Nam : type == "none" ? AmpSection::None : AmpSection::Model);
+    if (type != "nam" && type != "none")
+    {
+        // in-house amp ("core" was the only one in the first builds)
+        const int idx = obs::amp::findModel (amp["key"].toString().toRawUTF8());
+        engine.amp().setModel (idx >= 0 ? idx : obs::amp::findModel ("core"));
+    }
     for (int c = 0; c < AmpSection::kChannels; ++c)
     {
         const juce::String path = amp["ch" + juce::String (c)].toString();
@@ -397,7 +411,13 @@ juce::var Rig::ampLibrary()
         o->setProperty ("role", role); o->setProperty ("description", desc); o->setProperty ("channels", channels); o->setProperty ("builtIn", true);
         list.add (juce::var (o));
     };
-    add ("core", "Obsidian Core", "core", "high gain", "Built-in high-gain amp. No files needed.", 1);
+    for (const auto& m : obs::amp::models())
+    {
+        add (m.key, juce::String::fromUTF8 (m.name), "model", juce::String::fromUTF8 (m.role), juce::String::fromUTF8 (m.description), 1);
+        auto* o = list.getReference (list.size() - 1).getDynamicObject();
+        o->setProperty ("basedOn", juce::String::fromUTF8 (m.basedOn));
+        o->setProperty ("tint", juce::String::toHexString ((int) m.tint).paddedLeft ('0', 6));
+    }
     add ("nam-loader", "NAM Loader", "nam", "capture", "Load your own .nam captures, one per channel.", 4);
 
     // Your amps: Documents\Obsidian Suite\Amps\*.json

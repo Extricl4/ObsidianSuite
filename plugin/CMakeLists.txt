@@ -1,5 +1,5 @@
 # =============================================================================
-#  Obsidian Suite: amp sim plugin (VST3 + Standalone)
+#  Obsidian Amp Suite: amp sim plugin (VST3 + Standalone)
 #
 #  Build (Windows, from this folder):
 #     cmake -B build -A x64      (uses the newest Visual Studio installed)
@@ -62,7 +62,7 @@ juce_add_plugin(ObsidianSuite
     VERSION                     ${OBSIDIAN_VERSION}
     COMPANY_NAME                "Emil"
     COMPANY_WEBSITE             "https://github.com/Extricl4/ObsidianSuite"
-    PRODUCT_NAME                "Obsidian Suite"
+    PRODUCT_NAME                "Obsidian Amp Suite"
     BUNDLE_ID                   "com.emil.obsidiansuite"
     PLUGIN_MANUFACTURER_CODE    Emil
     PLUGIN_CODE                 Obsd
@@ -111,6 +111,7 @@ target_compile_definitions(ObsidianSuite
         JUCE_STANDALONE_FILTER_WINDOW_USE_KIOSK_MODE=0
         JUCE_MODAL_LOOPS_PERMITTED=0
         JUCE_STRICT_REFCOUNTEDPOINTER=1
+        OBSIDIAN_PRODUCT_NAME="Obsidian Amp Suite"
         OBSIDIAN_VERSION_STRING="${OBSIDIAN_VERSION}")
 
 if(WIN32)
@@ -148,6 +149,6 @@ if(MSVC)
     target_compile_options(ObsidianSuite PRIVATE /wd4244 /wd4267 /wd4305 /wd4100)
 endif()
 
-# The offline self-test lives inside the standalone app:  "Obsidian Suite" --selftest <report.txt>
+# The offline self-test lives inside the standalone app:  "Obsidian Amp Suite" --selftest <report.txt>
 # It renders audio through the full engine with every module and random settings and
 # fails on NaN/Inf, runaway levels or CPU spikes. CI runs it on every build.

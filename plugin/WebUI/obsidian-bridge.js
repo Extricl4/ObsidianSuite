@@ -836,7 +836,7 @@ function setupAmpCab(st) {
     const grid = $$('div', p).find(d => /grid-template-columns: repeat\(3/.test(d.getAttribute('style') || ''));
     if (grid) { grid.className = 'obs-grid'; grid.removeAttribute('style'); }
     const note = $$('span', p).find(s => /will show up here/.test(txt(s)));
-    if (note) note.textContent = title === 'CHOOSE AMP' ? 'Your own amps: put .nam captures in Documents\\Obsidian Suite\\Captures, or describe an amp in …\\Amps (see the README).' : 'Your own cabs: IR files (.wav) in Documents\\Obsidian Suite\\IRs, or click LOAD IR on the CAB page.';
+    if (note) note.textContent = title === 'CHOOSE AMP' ? 'Your own amps: put .nam captures in Documents\\Obsidian Amp Suite\\Captures, or describe an amp in …\\Amps (see the README).' : 'Your own cabs: IR files (.wav) in Documents\\Obsidian Amp Suite\\IRs, or click LOAD IR on the CAB page.';
     p._grid = grid; p._kind = title === 'CHOOSE AMP' ? 'amp' : 'cab';
     const search = $('input', p); if (search) search.addEventListener('input', () => renderLib(p));
     p.addEventListener('click', () => setTimeout(() => renderLib(p), 0));
@@ -883,7 +883,7 @@ function renderLib(p) {
     const cur = rig && rig.amp ? rig.amp.key : '';
     const roles = { 'CLEAN': /clean/i, 'CRUNCH': /crunch/i, 'HIGH GAIN': /high|lead|metal/i };
     const list = AMPS.filter(a => (filter === 'ALL' || (roles[filter] && roles[filter].test(a.role + ' ' + a.description))) && (!q || (a.name + ' ' + a.role + ' ' + a.description).toLowerCase().includes(q)));
-    p._grid.innerHTML = list.map(a => '<button class="obs-tile' + (a.key === cur ? ' on' : '') + '" data-amp="' + esc(a.key) + '" title="' + esc(a.description) + '"><i>' + esc(a.role || a.type) + '</i><b>' + esc(a.name) + '</b><small>' + esc(a.description) + '</small></button>').join('') || '<div class="obs-empty">No amps match.</div>';
+    p._grid.innerHTML = list.map(a => '<button class="obs-tile' + (a.key === cur ? ' on' : '') + '" data-amp="' + esc(a.key) + '" title="' + esc(a.description) + '"><i>' + esc(a.role || a.type) + '</i><b>' + esc(a.name) + '</b><small>' + esc(a.basedOn ? 'Based on ' + a.basedOn : a.description) + '</small></button>').join('') || '<div class="obs-empty">No amps match.</div>';
   } else {
     const cur = rig && rig.cab ? rig.cab.key : '';
     const list = CABS.filter(c => (filter === 'ALL' || (c.size || '').replace('x', '×') === filter) && (!q || (c.name + ' ' + (c.size || '')).toLowerCase().includes(q)));
@@ -894,6 +894,7 @@ const AMP_KNOBS = [['amp.gain', 'GAIN'], ['amp.bass', 'BASS'], ['amp.mid', 'MIDD
 function buildAmpPanel() {
   const p = ampUi.panel;
   p.innerHTML = '<div class="obs-plate"><span class="obs-role"></span><span class="obs-ampname"></span><span class="obs-busy" style="display:none">LOADING…</span></div>'
+    + '<div class="obs-based"></div>'
     + '<div class="obs-knobs" style="display:flex;gap:4px;justify-content:center"></div>'
     + '<div class="obs-chans"></div>'
     + '<div style="display:flex;gap:10px"><button class="obs-btn obs-ampchange">CHANGE AMP</button><button class="obs-btn obs-ampremove">REMOVE</button></div>';
@@ -918,6 +919,10 @@ function renderAmp() {
   const info = AMPS.find(x => x.key === a.key) || {};
   $('.obs-ampname', ampUi.panel).textContent = a.name || info.name || 'Amp';
   $('.obs-role', ampUi.panel).textContent = info.role || (a.type === 'nam' ? 'Capture' : 'Built in');
+  const based = $('.obs-based', ampUi.panel);
+  based.textContent = info.basedOn ? 'BASED ON  ' + info.basedOn : (a.type === 'nam' ? 'NAM CAPTURES · KNOBS ARE AN EQ AFTER THE CAPTURE' : '');
+  based.title = info.description || '';
+  ampUi.panel.style.setProperty('--amp-tint', info.tint ? '#' + info.tint : 'transparent');
   $('.obs-busy', ampUi.panel).style.display = rig.busy ? '' : 'none';
   const chans = $('.obs-chans', ampUi.panel);
   const isNam = a.type === 'nam';
