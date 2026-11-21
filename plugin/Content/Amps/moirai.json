@@ -1,0 +1,115 @@
+{
+ "key": "moirai",
+ "name": "MOIRAI",
+ "type": "nam",
+ "role": "high gain",
+ "folder": "CAPTURE AMPS",
+ "basedOn": "EVH 5150 III 50W Ivory",
+ "description": "The three colour amps became one head. Like the real 5150 III, it has three channels, and each channel button also changes the board colour: green is the Nemesis look, blue is Styx and red is Hades. Each channel remembers its own Gain, Volume and EQ, the same as the per-channel controls on the real amp.",
+ "pack": "EVH 5150iii Ivory FULL Pack",
+ "madeBy": "ampspedalspickups",
+ "files": 28,
+ "kind": "Amp only",
+ "captures": [
+  "Amps/Moirai/APP-5153-Ivory-Green-V.nam",
+  "Amps/Moirai/APP-5153-Ivory-Blue-VI.nam",
+  "Amps/Moirai/APP-5153-Ivory-Red-VI.nam"
+ ],
+ "channelNames": [
+  "Green · clean",
+  "Blue · crunch",
+  "Red · lead"
+ ],
+ "map": {
+  "knobs": [
+   "Gain",
+   "Volume",
+   "Low",
+   "Mid",
+   "High",
+   "Presence",
+   "Resonance"
+  ],
+  "gainKnob": 0,
+  "buttons": [
+   {
+    "id": "channel",
+    "names": [
+     "Green · clean",
+     "Blue · crunch",
+     "Red · lead"
+    ],
+    "buttons": [
+     "ch1",
+     "ch2",
+     "ch3"
+    ],
+    "leds": [
+     [
+      "ch1_led"
+     ],
+     [
+      "ch2_led"
+     ],
+     [
+      "ch3_led"
+     ]
+    ],
+    "skin": true,
+    "perknobs": [
+     0,
+     1,
+     2,
+     3,
+     4
+    ],
+    "start": 2
+   }
+  ],
+  "settings": {
+   "0": {
+    "by": "gain",
+    "files": [
+     "Amps/Moirai/APP-5153-Ivory-Green-I.nam",
+     "Amps/Moirai/APP-5153-Ivory-Green-II.nam",
+     "Amps/Moirai/APP-5153-Ivory-Green-III.nam",
+     "Amps/Moirai/APP-5153-Ivory-Green-IV.nam",
+     "Amps/Moirai/APP-5153-Ivory-Green-V.nam",
+     "Amps/Moirai/APP-5153-Ivory-Green-VI.nam",
+     "Amps/Moirai/APP-5153-Ivory-Green-VII.nam",
+     "Amps/Moirai/APP-5153-Ivory-Green-VIII.nam"
+    ]
+   },
+   "1": {
+    "by": "gain",
+    "files": [
+     "Amps/Moirai/APP-5153-Ivory-Blue-I.nam",
+     "Amps/Moirai/APP-5153-Ivory-Blue-II.nam",
+     "Amps/Moirai/APP-5153-Ivory-Blue-III.nam",
+     "Amps/Moirai/APP-5153-Ivory-Blue-IV.nam",
+     "Amps/Moirai/APP-5153-Ivory-Blue-V.nam",
+     "Amps/Moirai/APP-5153-Ivory-Blue-VI.nam",
+     "Amps/Moirai/APP-5153-Ivory-Blue-VII.nam",
+     "Amps/Moirai/APP-5153-Ivory-Blue-VIII.nam",
+     "Amps/Moirai/APP-5153-Ivory-Blue-VIIII.nam",
+     "Amps/Moirai/APP-5153-Ivory-Blue-X.nam"
+    ]
+   },
+   "2": {
+    "by": "gain",
+    "files": [
+     "Amps/Moirai/APP-5153-Ivory-Red-I.nam",
+     "Amps/Moirai/APP-5153-Ivory-Red-II.nam",
+     "Amps/Moirai/APP-5153-Ivory-Red-III.nam",
+     "Amps/Moirai/APP-5153-Ivory-Red-IV.nam",
+     "Amps/Moirai/APP-5153-Ivory-Red-V.nam",
+     "Amps/Moirai/APP-5153-Ivory-Red-VI.nam",
+     "Amps/Moirai/APP-5153-Ivory-Red-VII.nam",
+     "Amps/Moirai/APP-5153-Ivory-Red-VIII.nam",
+     "Amps/Moirai/APP-5153-Ivory-Red-VIIII.nam",
+     "Amps/Moirai/APP-5153-Ivory-Red-X.nam"
+    ]
+   }
+  }
+ }
+}

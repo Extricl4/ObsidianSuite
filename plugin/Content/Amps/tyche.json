@@ -1,0 +1,39 @@
+{
+ "key": "tyche",
+ "name": "TYCHE",
+ "type": "nam",
+ "role": "crunch",
+ "folder": "CAPTURE AMPS",
+ "basedOn": "Marshall JMP-50 Lead (1969 Plexi)",
+ "description": "Tyche is now a 1969 Marshall JMP-50 Plexi: the classic cranked rock crunch. The pack is one capture, so the old Standby switch is gone and the violet lamp is the power switch.",
+ "pack": "Marshall JMP-50 Lead 1969 Plexi A2",
+ "madeBy": "amalgamaudio",
+ "files": 1,
+ "kind": "Full rig (cab in the capture)",
+ "captures": [
+  "Amps/Tyche/MRSH JM50LD I Crunch2 FAT CAB.nam"
+ ],
+ "channelNames": [],
+ "map": {
+  "knobs": [
+   "Gain",
+   "Treble",
+   "Middle",
+   "Bass",
+   "Presence",
+   "Volume",
+   "Master"
+  ],
+  "gainKnob": 0,
+  "buttons": [],
+  "settings": {
+   "": {
+    "by": "one",
+    "rig": true,
+    "files": [
+     "Amps/Tyche/MRSH JM50LD I Crunch2 FAT CAB.nam"
+    ]
+   }
+  }
+ }
+}

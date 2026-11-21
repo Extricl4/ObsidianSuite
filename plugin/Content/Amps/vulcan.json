@@ -1,0 +1,275 @@
+{
+ "key": "vulcan",
+ "name": "VULCAN",
+ "type": "nam",
+ "role": "high gain",
+ "folder": "CAPTURE AMPS",
+ "basedOn": "Diezel VH4",
+ "description": "Yes, they can be combined. NAM files can't be merged into one model, but they can share one amp, each covering what it does best. Vulcan is now a 4-channel VH4: the accurate amp-only Deathblossom captures cover channels 2 and 4 (with gain steps and TS808), Amalgam's cab-free channel III covers 3, and 2dor's pack fills channel 1 and adds two extra voices.",
+ "pack": "Diezel VH4 (three packs merged)",
+ "madeBy": "deathblossomaudio · amalgamaudio · 2dor",
+ "files": 44,
+ "kind": "Mostly amp only (two voices full rig)",
+ "captures": [
+  "Amps/Vulcan/[AMP] DiZLVH4-CH1 Breakup - BLEND #1.nam",
+  "Amps/Vulcan/Diezel CH 2 Crunch 2.nam",
+  "Amps/Vulcan/DZL V4 III Gain FAT CAB FREE.nam",
+  "Amps/Vulcan/Diezel CH 4 Rhythm 2.nam"
+ ],
+ "channelNames": [
+  "Ch 1 · clean",
+  "Ch 2 · crunch",
+  "Ch 3 · mega",
+  "Ch 4 · lead"
+ ],
+ "map": {
+  "knobs": [
+   "Gain",
+   "Low",
+   "Mid",
+   "High",
+   "Presence",
+   "Depth",
+   "Master"
+  ],
+  "gainKnob": 0,
+  "buttons": [
+   {
+    "id": "channel",
+    "names": [
+     "Ch 1 · clean",
+     "Ch 2 · crunch",
+     "Ch 3 · mega",
+     "Ch 4 · lead"
+    ],
+    "button": "channel",
+    "leds": [
+     [
+      "ch1"
+     ],
+     [
+      "ch2"
+     ],
+     [
+      "ch3"
+     ],
+     [
+      "ch4"
+     ]
+    ],
+    "perknobs": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "start": 2
+   },
+   {
+    "id": "voice",
+    "button": "voice",
+    "leds": [
+     [
+      "vo1"
+     ],
+     [
+      "vo2"
+     ],
+     [
+      "vo3"
+     ]
+    ],
+    "per": "channel"
+   },
+   {
+    "id": "boost",
+    "names": [
+     "No boost",
+     "TS808"
+    ],
+    "button": "boost",
+    "leds": [
+     [],
+     [
+      "bo1"
+     ]
+    ]
+   }
+  ],
+  "settings": {
+   "0|0|0": {
+    "name": "Breakup",
+    "by": "one",
+    "rig": true,
+    "files": [
+     "Amps/Vulcan/[AMP] DiZLVH4-CH1 Breakup - BLEND #1.nam"
+    ],
+    "spare": [
+     "Amps/Vulcan/[AMP] DiZLVH4-CH1 Breakup - BLEND #2.nam",
+     "Amps/Vulcan/[AMP] DiZLVH4-CH1 Breakup - BLEND #3.nam",
+     "Amps/Vulcan/[AMP] DiZLVH4-CH1 Breakup - SM57.nam",
+     "Amps/Vulcan/[AMP] DiZLVH4-CH1 Breakup - SM58.nam"
+    ]
+   },
+   "1|0|0": {
+    "name": "Crunch",
+    "by": "gain",
+    "files": [
+     "Amps/Vulcan/Diezel CH 2 Crunch 1.nam",
+     "Amps/Vulcan/Diezel CH 2 Crunch 2.nam",
+     "Amps/Vulcan/Diezel CH 2 Crunch 3.nam"
+    ]
+   },
+   "2|0|0": {
+    "name": "III Gain FAT",
+    "by": "one",
+    "files": [
+     "Amps/Vulcan/DZL V4 III Gain FAT CAB FREE.nam"
+    ]
+   },
+   "2|1|0": {
+    "name": "Physics",
+    "by": "one",
+    "rig": true,
+    "files": [
+     "Amps/Vulcan/[AMP] DiZLVH4-CH3 Physics - BLEND #1.nam"
+    ],
+    "spare": [
+     "Amps/Vulcan/[AMP] DiZLVH4-CH3 Physics - BLEND #2.nam",
+     "Amps/Vulcan/[AMP] DiZLVH4-CH3 Physics - BLEND #3.nam",
+     "Amps/Vulcan/[AMP] DiZLVH4-CH3 Physics - SM57.nam",
+     "Amps/Vulcan/[AMP] DiZLVH4-CH3 Physics - SM58.nam"
+    ]
+   },
+   "2|2|0": {
+    "name": "Potty Time",
+    "by": "one",
+    "rig": true,
+    "files": [
+     "Amps/Vulcan/[AMP] DiZLVH4-CH3 Potty Time - BLEND #1.nam"
+    ],
+    "spare": [
+     "Amps/Vulcan/[AMP] DiZLVH4-CH3 Potty Time - BLEND #2.nam",
+     "Amps/Vulcan/[AMP] DiZLVH4-CH3 Potty Time - BLEND #3.nam",
+     "Amps/Vulcan/[AMP] DiZLVH4-CH3 Potty Time - SM57.nam",
+     "Amps/Vulcan/[AMP] DiZLVH4-CH3 Potty Time - SM58.nam"
+    ]
+   },
+   "3|1|0": {
+    "name": "Lead the Way",
+    "by": "one",
+    "rig": true,
+    "files": [
+     "Amps/Vulcan/[AMP] DiZLVH4-CH4 Lead the Way - BLEND #1.nam"
+    ],
+    "spare": [
+     "Amps/Vulcan/[AMP] DiZLVH4-CH4 Lead the Way - BLEND #2.nam",
+     "Amps/Vulcan/[AMP] DiZLVH4-CH4 Lead the Way - BLEND #3.nam",
+     "Amps/Vulcan/[AMP] DiZLVH4-CH4 Lead the Way - SM57.nam",
+     "Amps/Vulcan/[AMP] DiZLVH4-CH4 Lead the Way - SM58.nam"
+    ]
+   },
+   "0|0|1": {
+    "name": "Breakup",
+    "by": "one",
+    "rig": true,
+    "hide": true,
+    "note": "no boosted capture for this voice",
+    "files": [
+     "Amps/Vulcan/[AMP] DiZLVH4-CH1 Breakup - BLEND #1.nam"
+    ],
+    "spare": [
+     "Amps/Vulcan/[AMP] DiZLVH4-CH1 Breakup - BLEND #2.nam",
+     "Amps/Vulcan/[AMP] DiZLVH4-CH1 Breakup - BLEND #3.nam",
+     "Amps/Vulcan/[AMP] DiZLVH4-CH1 Breakup - SM57.nam",
+     "Amps/Vulcan/[AMP] DiZLVH4-CH1 Breakup - SM58.nam"
+    ]
+   },
+   "1|0|1": {
+    "name": "Crunch",
+    "by": "gain",
+    "hide": true,
+    "note": "no boosted capture for this voice",
+    "files": [
+     "Amps/Vulcan/Diezel CH 2 Crunch 1.nam",
+     "Amps/Vulcan/Diezel CH 2 Crunch 2.nam",
+     "Amps/Vulcan/Diezel CH 2 Crunch 3.nam"
+    ]
+   },
+   "2|0|1": {
+    "name": "III Gain FAT",
+    "by": "one",
+    "hide": true,
+    "note": "no boosted capture for this voice",
+    "files": [
+     "Amps/Vulcan/DZL V4 III Gain FAT CAB FREE.nam"
+    ]
+   },
+   "2|1|1": {
+    "name": "Physics",
+    "by": "one",
+    "rig": true,
+    "hide": true,
+    "note": "no boosted capture for this voice",
+    "files": [
+     "Amps/Vulcan/[AMP] DiZLVH4-CH3 Physics - BLEND #1.nam"
+    ],
+    "spare": [
+     "Amps/Vulcan/[AMP] DiZLVH4-CH3 Physics - BLEND #2.nam",
+     "Amps/Vulcan/[AMP] DiZLVH4-CH3 Physics - BLEND #3.nam",
+     "Amps/Vulcan/[AMP] DiZLVH4-CH3 Physics - SM57.nam",
+     "Amps/Vulcan/[AMP] DiZLVH4-CH3 Physics - SM58.nam"
+    ]
+   },
+   "2|2|1": {
+    "name": "Potty Time",
+    "by": "one",
+    "rig": true,
+    "hide": true,
+    "note": "no boosted capture for this voice",
+    "files": [
+     "Amps/Vulcan/[AMP] DiZLVH4-CH3 Potty Time - BLEND #1.nam"
+    ],
+    "spare": [
+     "Amps/Vulcan/[AMP] DiZLVH4-CH3 Potty Time - BLEND #2.nam",
+     "Amps/Vulcan/[AMP] DiZLVH4-CH3 Potty Time - BLEND #3.nam",
+     "Amps/Vulcan/[AMP] DiZLVH4-CH3 Potty Time - SM57.nam",
+     "Amps/Vulcan/[AMP] DiZLVH4-CH3 Potty Time - SM58.nam"
+    ]
+   },
+   "3|1|1": {
+    "name": "Lead the Way",
+    "by": "one",
+    "rig": true,
+    "hide": true,
+    "note": "no boosted capture for this voice",
+    "files": [
+     "Amps/Vulcan/[AMP] DiZLVH4-CH4 Lead the Way - BLEND #1.nam"
+    ],
+    "spare": [
+     "Amps/Vulcan/[AMP] DiZLVH4-CH4 Lead the Way - BLEND #2.nam",
+     "Amps/Vulcan/[AMP] DiZLVH4-CH4 Lead the Way - BLEND #3.nam",
+     "Amps/Vulcan/[AMP] DiZLVH4-CH4 Lead the Way - SM57.nam",
+     "Amps/Vulcan/[AMP] DiZLVH4-CH4 Lead the Way - SM58.nam"
+    ]
+   },
+   "3|0|0": {
+    "name": "Rhythm",
+    "by": "gain",
+    "files": [
+     "Amps/Vulcan/Diezel CH 4 Rhythm 1.nam",
+     "Amps/Vulcan/Diezel CH 4 Rhythm 2.nam",
+     "Amps/Vulcan/Diezel CH 4 Rhythm 3.nam"
+    ]
+   },
+   "3|0|1": {
+    "name": "Rhythm",
+    "by": "gain",
+    "files": [
+     "Amps/Vulcan/Diezel CH 4 Rhythm TS808 1.nam",
+     "Amps/Vulcan/Diezel CH 4 Rhythm TS808 2.nam"
+    ]
+   }
+  }
+ }
+}

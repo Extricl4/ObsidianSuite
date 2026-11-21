@@ -1,0 +1,39 @@
+{
+ "key": "hecate",
+ "name": "HECATE",
+ "type": "nam",
+ "role": "high gain",
+ "folder": "CAPTURE AMPS",
+ "basedOn": "EVH 5150",
+ "description": "Hecate runs the EVH 5150 capture. It's one high-gain sound with the cab built in, so there's nothing to switch between: the two old toggles are gone and the purple lamp is the power switch. The panel is labelled like the 5150: Gain, Volume, Low, Mid, High, Presence, Resonance.",
+ "pack": "EVH 5150",
+ "madeBy": "rusen",
+ "files": 1,
+ "kind": "Full rig (cab in the capture)",
+ "captures": [
+  "Amps/Hecate/EVH 5150.nam"
+ ],
+ "channelNames": [],
+ "map": {
+  "knobs": [
+   "Gain",
+   "Volume",
+   "Low",
+   "Mid",
+   "High",
+   "Presence",
+   "Resonance"
+  ],
+  "gainKnob": 0,
+  "buttons": [],
+  "settings": {
+   "": {
+    "by": "one",
+    "rig": true,
+    "files": [
+     "Amps/Hecate/EVH 5150.nam"
+    ]
+   }
+  }
+ }
+}

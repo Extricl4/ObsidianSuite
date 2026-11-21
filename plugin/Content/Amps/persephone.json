@@ -1,0 +1,128 @@
+{
+ "key": "persephone",
+ "name": "PERSEPHONE",
+ "type": "nam",
+ "role": "clean",
+ "folder": "CAPTURE AMPS",
+ "basedOn": "Roland JC-120 Jazz Chorus",
+ "description": "Persephone is the super-clean one: a Roland JC-120, the solid-state Jazz Chorus. It stays glassy and clangy at any volume, which is the piezo/neck-single-coil sparkle you were after. I used the autoguitarrig pack, the better of your two: it's amp only and gives you Clean, Bright and Warm versions, while the other pack is one full-rig capture.",
+ "pack": "Roland JC120 Jazz Chorus",
+ "madeBy": "autoguitarrig",
+ "files": 7,
+ "kind": "Amp only",
+ "captures": [
+  "Amps/Persephone/Roland JC120_BRIGHT.nam",
+  "Amps/Persephone/Roland JC120_Stereo_BRIGHT.nam"
+ ],
+ "channelNames": [
+  "Ch I",
+  "Ch II"
+ ],
+ "map": {
+  "knobs": [
+   "Volume",
+   "Treble",
+   "Middle",
+   "Bass",
+   "Reverb",
+   "Speed",
+   "Depth"
+  ],
+  "gainKnob": 0,
+  "buttons": [
+   {
+    "id": "channel",
+    "names": [
+     "Ch I",
+     "Ch II"
+    ],
+    "button": "channel",
+    "leds": [
+     [
+      "ch1"
+     ],
+     [
+      "ch2"
+     ]
+    ],
+    "perknobs": [
+     0,
+     1,
+     2,
+     3
+    ]
+   },
+   {
+    "id": "voice",
+    "names": [
+     "Clean",
+     "Bright",
+     "Warm"
+    ],
+    "button": "voice",
+    "leds": [
+     [
+      "vo1"
+     ],
+     [
+      "vo2"
+     ],
+     [
+      "vo3"
+     ]
+    ],
+    "start": 1
+   }
+  ],
+  "settings": {
+   "0|0": {
+    "by": "one",
+    "files": [
+     "Amps/Persephone/Roland JC120_CLEAN.nam"
+    ]
+   },
+   "0|1": {
+    "by": "one",
+    "files": [
+     "Amps/Persephone/Roland JC120_BRIGHT.nam"
+    ]
+   },
+   "0|2": {
+    "by": "one",
+    "files": [
+     "Amps/Persephone/Roland JC120_WARM.nam"
+    ]
+   },
+   "1|0": {
+    "by": "one",
+    "files": [
+     "Amps/Persephone/Roland JC120_Stereo_CLEAN.nam"
+    ]
+   },
+   "1|1": {
+    "by": "one",
+    "files": [
+     "Amps/Persephone/Roland JC120_Stereo_BRIGHT.nam"
+    ]
+   },
+   "1|2": {
+    "by": "one",
+    "files": [
+     "Amps/Persephone/Roland JC120_Stereo_WARM.nam"
+    ],
+    "spare": [
+     "Amps/Persephone/JazzChorus120.nam"
+    ]
+   }
+  },
+  "switches": [
+   {
+    "id": "chorus",
+    "button": "chorus",
+    "led": "chorus_led",
+    "label": "Chorus",
+    "does": "the JC stereo chorus, run by the plugin with Speed and Depth"
+   }
+  ]
+ }
+}

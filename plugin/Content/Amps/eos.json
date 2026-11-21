@@ -1,0 +1,232 @@
+{
+ "key": "eos",
+ "name": "EOS",
+ "type": "nam",
+ "role": "clean · lead",
+ "folder": "CAPTURE AMPS",
+ "basedOn": "Hiwatt DR103, plus the Comfortably Numb solo tones",
+ "description": "Eos got a full makeover and two packs mixed into one head. Underneath is the Hiwatt DR103: CHANNEL picks Normal, Brilliant or Linked (both inputs jumped, the classic Hiwatt trick), and Volume steps through the real captures on each one. DRIVE adds the pack's pedal captures. The ivory SOLO selector is the second pack: turn it away from OFF and it clicks through seven Comfortably Numb solo tones (Studio, DSOT, Pulse, RTN, Gdansk, Pompeii, Rome), which take over until you turn it back to OFF.",
+ "pack": "Hiwatt Custom 100 DR103 1974 + Pink Floyd Comfortably Numb Tone Collection",
+ "madeBy": "daweed, frank67",
+ "files": 20,
+ "kind": "Amp only (Hiwatt) and full rig (solo tones)",
+ "captures": [
+  "Amps/Eos/Hiwatt DR 103 VOL8.nam",
+  "Amps/Eos/Hiwatt DR 103 VOL3 Bright.nam",
+  "Amps/Eos/Hiwatt DR 103 crunch Bridged.nam"
+ ],
+ "channelNames": [
+  "Normal",
+  "Brilliant",
+  "Linked"
+ ],
+ "map": {
+  "knobs": [
+   "Volume",
+   "Bass",
+   "Treble",
+   "Middle",
+   "Presence",
+   "Master",
+   "Solo"
+  ],
+  "gainKnob": 0,
+  "buttons": [
+   {
+    "id": "channel",
+    "names": [
+     "Normal",
+     "Brilliant",
+     "Linked"
+    ],
+    "buttons": [
+     "ch1",
+     "ch2",
+     "ch3"
+    ],
+    "leds": [
+     [
+      "ch1_led"
+     ],
+     [
+      "ch2_led"
+     ],
+     [
+      "ch3_led"
+     ]
+    ],
+    "perknobs": [
+     0
+    ]
+   },
+   {
+    "id": "boost",
+    "names": [
+     "Off",
+     "Klon pushed",
+     "Klon drive",
+     "TS808 + Klon"
+    ],
+    "button": "drive",
+    "leds": [
+     [],
+     [
+      "dr1"
+     ],
+     [
+      "dr2"
+     ],
+     [
+      "dr3"
+     ]
+    ]
+   }
+  ],
+  "settings": {
+   "0|0": {
+    "by": "gain",
+    "files": [
+     "Amps/Eos/Hiwatt DR 103 VOL3.nam",
+     "Amps/Eos/Hiwatt DR 103 VOL5.nam",
+     "Amps/Eos/Hiwatt DR 103 VOL8.nam",
+     "Amps/Eos/Hiwatt DR 103 Crancked.nam"
+    ]
+   },
+   "1|0": {
+    "by": "gain",
+    "files": [
+     "Amps/Eos/Hiwatt DR 103 clean bright.nam",
+     "Amps/Eos/Hiwatt DR 103 VOL3 Bright.nam",
+     "Amps/Eos/Hiwatt DR103 Vol8 Bright.nam"
+    ]
+   },
+   "2|0": {
+    "by": "gain",
+    "files": [
+     "Amps/Eos/Hiwatt DR 103 Edgy Bridged.nam",
+     "Amps/Eos/Hiwatt DR 103 crunch Bridged.nam",
+     "Amps/Eos/Hiwatt DR103 Bridged.nam"
+    ]
+   },
+   "0|1": {
+    "by": "one",
+    "label": "Drive I · Klon pushed",
+    "hide": false,
+    "note": "the drive captures were made at one amp setting, so CHANNEL does not change them",
+    "files": [
+     "Amps/Eos/Hiwatt DR 103 Archer Klon Pushed.nam"
+    ]
+   },
+   "1|1": {
+    "by": "one",
+    "label": "Drive I · Klon pushed",
+    "hide": true,
+    "note": "the drive captures were made at one amp setting, so CHANNEL does not change them",
+    "files": [
+     "Amps/Eos/Hiwatt DR 103 Archer Klon Pushed.nam"
+    ]
+   },
+   "2|1": {
+    "by": "one",
+    "label": "Drive I · Klon pushed",
+    "hide": true,
+    "note": "the drive captures were made at one amp setting, so CHANNEL does not change them",
+    "files": [
+     "Amps/Eos/Hiwatt DR 103 Archer Klon Pushed.nam"
+    ]
+   },
+   "0|2": {
+    "by": "one",
+    "label": "Drive II · Klon drive",
+    "hide": false,
+    "note": "the drive captures were made at one amp setting, so CHANNEL does not change them",
+    "files": [
+     "Amps/Eos/Hiwatt DR 103 Archer Klon drive.nam"
+    ]
+   },
+   "1|2": {
+    "by": "one",
+    "label": "Drive II · Klon drive",
+    "hide": true,
+    "note": "the drive captures were made at one amp setting, so CHANNEL does not change them",
+    "files": [
+     "Amps/Eos/Hiwatt DR 103 Archer Klon drive.nam"
+    ]
+   },
+   "2|2": {
+    "by": "one",
+    "label": "Drive II · Klon drive",
+    "hide": true,
+    "note": "the drive captures were made at one amp setting, so CHANNEL does not change them",
+    "files": [
+     "Amps/Eos/Hiwatt DR 103 Archer Klon drive.nam"
+    ]
+   },
+   "0|3": {
+    "by": "one",
+    "label": "Drive III · TS808 + Klon",
+    "hide": false,
+    "note": "the drive captures were made at one amp setting, so CHANNEL does not change them",
+    "files": [
+     "Amps/Eos/Hiwatt DR 103 TS808_Archer Klon high gain.nam"
+    ]
+   },
+   "1|3": {
+    "by": "one",
+    "label": "Drive III · TS808 + Klon",
+    "hide": true,
+    "note": "the drive captures were made at one amp setting, so CHANNEL does not change them",
+    "files": [
+     "Amps/Eos/Hiwatt DR 103 TS808_Archer Klon high gain.nam"
+    ]
+   },
+   "2|3": {
+    "by": "one",
+    "label": "Drive III · TS808 + Klon",
+    "hide": true,
+    "note": "the drive captures were made at one amp setting, so CHANNEL does not change them",
+    "files": [
+     "Amps/Eos/Hiwatt DR 103 TS808_Archer Klon high gain.nam"
+    ]
+   }
+  },
+  "steps": {
+   "6": [
+    "OFF",
+    "STUDIO",
+    "DSOT",
+    "PULSE",
+    "RTN",
+    "GDANSK",
+    "POMPEII",
+    "ROME"
+   ]
+  },
+  "selector": {
+   "knob": 6,
+   "label": "Solo",
+   "names": [
+    "OFF",
+    "STUDIO",
+    "DSOT",
+    "PULSE",
+    "RTN",
+    "GDANSK",
+    "POMPEII",
+    "ROME"
+   ],
+   "files": [
+    null,
+    "Amps/Eos/Comfortably-Numb-STUDIO-Dry.nam",
+    "Amps/Eos/Comfortably-Numb-DSOT-Dry.nam",
+    "Amps/Eos/Comfortably-Numb-PULSE-Dry.nam",
+    "Amps/Eos/Comfortably-Numb-RTN-Dry.nam",
+    "Amps/Eos/Comfortably-Numb-GDANSK-Dry.nam",
+    "Amps/Eos/Comfortably-Numb-POMPEI-Dry.nam",
+    "Amps/Eos/Comfortably-Numb-ROME-Drywav.nam"
+   ],
+   "rig": true,
+   "note": "Comfortably Numb solo tone; channel and drive are bypassed"
+  }
+ }
+}

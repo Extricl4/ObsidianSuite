@@ -1,0 +1,65 @@
+{
+ "key": "orpheus",
+ "name": "ORPHEUS",
+ "type": "nam",
+ "role": "acoustic",
+ "folder": "CAPTURE AMPS",
+ "basedOn": "Acoustic simulator",
+ "description": "Orpheus is new, named after the musician of Greek myth. It's a clean, modern acoustic-style amp: matte white body and panel, a front of light matte oak slats, white knobs with bronze caps, and a soft warm-white light. The lamp is the power switch, and TAKE flips between the two captures in the pack.",
+ "pack": "Acoustic Sim",
+ "madeBy": "gloo",
+ "files": 2,
+ "kind": "Capture of an acoustic-sim box (no cab)",
+ "captures": [
+  "Amps/Orpheus/Acoustic Sim (Take 1).nam",
+  "Amps/Orpheus/Acoustic Sim (Take 2).nam"
+ ],
+ "channelNames": [
+  "Take 1",
+  "Take 2"
+ ],
+ "map": {
+  "knobs": [
+   "Gain",
+   "Bass",
+   "Middle",
+   "Treble",
+   "Body",
+   "Reverb",
+   "Volume"
+  ],
+  "gainKnob": 0,
+  "buttons": [
+   {
+    "id": "take",
+    "names": [
+     "Take 1",
+     "Take 2"
+    ],
+    "button": "take",
+    "leds": [
+     [
+      "tk1"
+     ],
+     [
+      "tk2"
+     ]
+    ]
+   }
+  ],
+  "settings": {
+   "0": {
+    "by": "one",
+    "files": [
+     "Amps/Orpheus/Acoustic Sim (Take 1).nam"
+    ]
+   },
+   "1": {
+    "by": "one",
+    "files": [
+     "Amps/Orpheus/Acoustic Sim (Take 2).nam"
+    ]
+   }
+  }
+ }
+}

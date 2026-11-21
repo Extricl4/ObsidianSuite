@@ -1,0 +1,151 @@
+{
+ "key": "dionysus",
+ "name": "DIONYSUS",
+ "type": "nam",
+ "role": "clean · lead",
+ "folder": "CAPTURE AMPS",
+ "basedOn": "Bogner Ecstasy 101B",
+ "description": "Dionysus, the god of ecstasy, is the Bogner Ecstasy 101B. Oxblood leather and a sculpted bronze frieze: a grapevine with domed grape clusters, veined leaves and curling tendrils grows out of a beaded DIONYSUS cartouche over a pierced diamond trellis, with the tubes glowing warm through it. Like the real Ecstasy it has green, blue and red channel buttons, and VOICE steps through the versions of each channel in the pack.",
+ "pack": "Bogner Ecstasy 101B Archive",
+ "madeBy": "Kenji Suzuki",
+ "files": 8,
+ "kind": "Full rig (cab in the capture)",
+ "captures": [
+  "Amps/Dionysus/SC-XTC-101B-Green-Normal.nam",
+  "Amps/Dionysus/Ecstasy 101B Blue.nam",
+  "Amps/Dionysus/Bog_HG_Red_711_br.nam"
+ ],
+ "channelNames": [
+  "Green · clean",
+  "Blue · crunch",
+  "Red · lead"
+ ],
+ "map": {
+  "knobs": [
+   "Gain",
+   "Bass",
+   "Middle",
+   "Treble",
+   "Presence",
+   "Depth",
+   "Master"
+  ],
+  "gainKnob": 0,
+  "buttons": [
+   {
+    "id": "channel",
+    "names": [
+     "Green · clean",
+     "Blue · crunch",
+     "Red · lead"
+    ],
+    "buttons": [
+     "ch1",
+     "ch2",
+     "ch3"
+    ],
+    "leds": [
+     [
+      "ch1_led"
+     ],
+     [
+      "ch2_led"
+     ],
+     [
+      "ch3_led"
+     ]
+    ],
+    "perknobs": [
+     0,
+     1,
+     2,
+     3,
+     6
+    ],
+    "start": 2
+   },
+   {
+    "id": "voice",
+    "button": "voice",
+    "leds": [
+     [
+      "vo1"
+     ],
+     [
+      "vo2"
+     ],
+     [
+      "vo3"
+     ]
+    ],
+    "per": "channel"
+   }
+  ],
+  "settings": {
+   "0|0": {
+    "name": "Normal",
+    "by": "one",
+    "rig": true,
+    "files": [
+     "Amps/Dionysus/SC-XTC-101B-Green-Normal.nam"
+    ]
+   },
+   "0|1": {
+    "name": "Bright",
+    "by": "one",
+    "rig": true,
+    "files": [
+     "Amps/Dionysus/SC-XTC-101B-Green-Bright.nam"
+    ]
+   },
+   "0|2": {
+    "name": "Warm",
+    "by": "one",
+    "rig": true,
+    "files": [
+     "Amps/Dionysus/SC-XTC-101B-Green-Warm.nam"
+    ]
+   },
+   "1|0": {
+    "name": "Plain",
+    "by": "one",
+    "rig": true,
+    "files": [
+     "Amps/Dionysus/Ecstasy 101B Blue.nam"
+    ]
+   },
+   "1|1": {
+    "name": "Protein OD",
+    "by": "one",
+    "rig": true,
+    "files": [
+     "Amps/Dionysus/Ecstasy Blue #U2014 Protein OD.nam"
+    ]
+   },
+   "1|2": {
+    "name": "Fat + Protein OD",
+    "by": "one",
+    "rig": true,
+    "files": [
+     "Amps/Dionysus/Ecstasy Blue Fat #U2014 Protein OD.nam"
+    ]
+   },
+   "2|0": {
+    "name": "711 (br)",
+    "by": "one",
+    "rig": true,
+    "files": [
+     "Amps/Dionysus/Bog_HG_Red_711_br.nam"
+    ]
+   },
+   "2|1": {
+    "name": "711 retake",
+    "by": "one",
+    "rig": true,
+    "files": [
+     "Amps/Dionysus/Bog_HG_Red_711_retake.nam"
+    ]
+   }
+  }
+ }
+}

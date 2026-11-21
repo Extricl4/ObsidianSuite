@@ -1,0 +1,157 @@
+{
+ "key": "achlys",
+ "name": "ACHLYS",
+ "type": "nam",
+ "role": "high gain",
+ "folder": "CAPTURE AMPS",
+ "basedOn": "Mesa/Boogie Mark IV",
+ "description": "Achlys is new: a blacked-out Mark IV-style head in smooth matte black. It has black-on-black cloth, black knobs, grey print and only a faint cold-white light. CHANNEL picks R1, R2 or Lead, like the Mark IV's three channels, and VOICE steps through the captures in that channel (2, 2 and 5).",
+ "pack": "Mesa Boogie Mark IV pack",
+ "madeBy": "petrc",
+ "files": 9,
+ "kind": "Amp only",
+ "captures": [
+  "Amps/Achlys/MB Mark IV - Bright Clean.nam",
+  "Amps/Achlys/MB Mark IV - Ch2 Rhythm.nam",
+  "Amps/Achlys/MB Mark IV - Ch3 Lead Midgain + no EQ.nam"
+ ],
+ "channelNames": [
+  "R1 · clean",
+  "R2 · rhythm",
+  "Lead"
+ ],
+ "map": {
+  "knobs": [
+   "Gain",
+   "Treble",
+   "Bass",
+   "Middle",
+   "Presence",
+   "Lead drive",
+   "Master"
+  ],
+  "gainKnob": 0,
+  "buttons": [
+   {
+    "id": "channel",
+    "names": [
+     "R1 · clean",
+     "R2 · rhythm",
+     "Lead"
+    ],
+    "button": "channel",
+    "leds": [
+     [
+      "ch1"
+     ],
+     [
+      "ch2"
+     ],
+     [
+      "ch3"
+     ]
+    ],
+    "perknobs": [
+     0,
+     1,
+     2,
+     3,
+     6
+    ],
+    "start": 2
+   },
+   {
+    "id": "voice",
+    "button": "voice",
+    "leds": [
+     [
+      "vo1"
+     ],
+     [
+      "vo2"
+     ],
+     [
+      "vo3"
+     ],
+     [
+      "vo4"
+     ],
+     [
+      "vo5"
+     ]
+    ],
+    "per": "channel"
+   }
+  ],
+  "settings": {
+   "0|0": {
+    "name": "Bright clean",
+    "by": "one",
+    "files": [
+     "Amps/Achlys/MB Mark IV - Bright Clean.nam"
+    ]
+   },
+   "0|1": {
+    "name": "Fat clean",
+    "by": "one",
+    "files": [
+     "Amps/Achlys/MB Mark IV - Fat Clean.nam"
+    ]
+   },
+   "1|0": {
+    "name": "Rhythm",
+    "by": "one",
+    "files": [
+     "Amps/Achlys/MB Mark IV - Ch2 Rhythm.nam"
+    ]
+   },
+   "1|1": {
+    "name": "Rhythm + Fortin 808",
+    "by": "one",
+    "files": [
+     "Amps/Achlys/MB Mark IV - Ch2 Rhythm + Fortin 808.nam"
+    ]
+   },
+   "2|0": {
+    "name": "Lead midgain",
+    "by": "one",
+    "knob": 5,
+    "files": [
+     "Amps/Achlys/MB Mark IV - Ch3 Lead Midgain + no EQ.nam"
+    ]
+   },
+   "2|1": {
+    "name": "Lead midgain + EQ",
+    "by": "one",
+    "knob": 5,
+    "files": [
+     "Amps/Achlys/MB Mark IV - Ch3 Lead Midgain + EQ.nam"
+    ]
+   },
+   "2|2": {
+    "name": "Lead harmonics + EQ",
+    "by": "one",
+    "knob": 5,
+    "files": [
+     "Amps/Achlys/MB Mark IV - Ch3 Lead Harmonics + EQ.nam"
+    ]
+   },
+   "2|3": {
+    "name": "Harmonics, presence pulled",
+    "by": "one",
+    "knob": 5,
+    "files": [
+     "Amps/Achlys/MB Mark IV - Ch3 Lead Harmonics + EQ + Presence Pulled.nam"
+    ]
+   },
+   "2|4": {
+    "name": "Lead + Fortin Blade",
+    "by": "one",
+    "knob": 5,
+    "files": [
+     "Amps/Achlys/MB Mark IV - Ch3 Lead + Fortin Blade.nam"
+    ]
+   }
+  }
+ }
+}

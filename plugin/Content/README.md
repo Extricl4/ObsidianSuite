@@ -28,3 +28,63 @@ These files were made by other people and downloaded by Emil for his own rig. Al
 | Crypt | 6 IRs | Boss RV-6 reverb modes | (from Emil's download "Boss_RV-6") |
 | Ossuary | 9 IRs | The Green-Wood Cemetery Catacombs | (from Emil's download "The_Green-Wood_Cemetery_Catacombs") |
 | Halcyon | 2 IRs | Delay And Reverb Ambient Shoegaze Machine | Tone Charm Audio (free pack) |
+
+# Obsidian amp pack
+
+The captures the finished amps play (the amps on the finished-amps page, `visuals/finished/`).
+
+```
+Captures\Amps\<Amp>\*.nam   one folder per amp (Moirai, Umbra, ... Dionysus)
+Amps\<key>.json              one file per amp, in the format the ADD AMP list reads
+```
+
+Each `Amps\<key>.json` has:
+- `captures`: one default file per channel (CH 1–4), so the amp works in today's plugin.
+- `map`: the full wiring from the finished-amps page. `buttons` are the amp's buttons (channel, mic, voice,
+  boost...), `settings` says which files each button combination plays and how (`gain`: the gain knob steps
+  and blends through the files in order; `one`: a single capture, gain drives it; `mid`: the middle knob
+  blends; `grid`: two knobs blend a grid; `near`: the files were captured at real knob settings (`at`, with
+  `axes` naming the knobs and `w` their weights) and the closest one plays). `selector` is Eos's SOLO switch.
+  `rig: true` means the cab is inside that capture, so the cab section should be bypassed.
+- Regenerate with `python3 visuals/finished/export_amps.py`. It also checks every file is here.
+
+The installer's pack option already copies `Captures\Amps` (it copies everything under `Content`), but the
+release zip only carries `Captures` and `IRs` (`.github/workflows/plugin.yml`), so `Amps\*.json` still has to be
+copied into `Documents\Obsidian Amp Suite\Amps` by hand until the Program chat adds it there.
+
+## Amp credits
+
+These files were made by other people and downloaded by Emil for his own rig. All rights stay with their creators.
+
+| Amp | Files | Pack | Made by |
+|---|---|---|---|
+| Moirai | 28 captures | EVH 5150iii Ivory FULL Pack | ampspedalspickups |
+| Umbra | 37 captures | Mesa Boogie - Mark V [18dBu] | kenazmusic |
+| Citadel | 10 captures | Mesa Boogie Mark IIC+ | siamsiamguite |
+| Ares | 8 captures | ENGL Powerball II, Grossmann Fatbox, Celestion Raven | kaidownguitar |
+| Strix | 6 captures | Hellwin 100W 'Synyster Settings' | gtrjeremy |
+| Nihil | 3 captures | FORTIN MESHUGGAH + SUNN MODEL T + FRIEDMAN BUTTERSLAX | nosatec |
+| Talos | 5 captures | MESA DUAL RECTIFIER 2025 | deathblossomaudio |
+| Achlys | 9 captures | Mesa Boogie Mark IV pack | petrc |
+| Lyssa | 5 captures | PEAVEY  INVECTIVE | valdir0545 |
+| Belial | 2 captures | REAL Olas Randall Satan 50 | olaenglund |
+| Melinoe | 3 captures | Fender Super Reverb 1977 | tone3000 |
+| Nyx | 16 captures | Bogner Uberschall | 2dor |
+| Chrysaor | 30 captures | Marshall JCM 800 2203 | arthm |
+| Eris | 19 captures | Mesa Boogie JP-2C Pack | emilrohbe |
+| Kratos | 30 captures | 6505 Gain Range Pack (High Gain) | ampspedalspickups |
+| Vulcan | 29 captures | Diezel VH4 (three packs merged) | deathblossomaudio · amalgamaudio · 2dor |
+| Moros | 3 captures | Omega Granophyre | tonecast |
+| Niflheim | 9 captures | REVV GENERATOR 120 RED MKIII | deathblossomaudio |
+| Persephone | 7 captures | Roland JC120 Jazz Chorus | autoguitarrig |
+| Hyperion | 17 captures | Dumble ODS 102 Ford Hyper Accuracy | slamminmofo |
+| Hecate | 1 captures | EVH 5150 | rusen |
+| Typhon | 3 captures | 5150 Stealth 100w Mesa OS Full Rig - Blue, Red and Green | jpisoutoftune |
+| Tyche | 1 captures | Marshall JMP-50 Lead 1969 Plexi A2 | amalgamaudio |
+| Thanatos | 1 captures | Soldano SLO-100 - Drive | amalgamaudio |
+| Orpheus | 2 captures | Acoustic Sim | gloo |
+| Lamia | 24 captures | Friedman BE100 Deluxe | 2dor |
+| Astraea | 96 captures | VOX AC30 CH Hyper Accuracy | slamminmofo |
+| Eos | 20 captures | Hiwatt Custom 100 DR103 1974 + Pink Floyd Comfortably Numb Tone Collection | daweed, frank67 |
+| Erebus | 1 captures | Bogner Uberschall MKII Ultra High Gain | amalgamaudio |
+| Dionysus | 8 captures | Bogner Ecstasy 101B Archive | Kenji Suzuki |

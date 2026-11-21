@@ -1,0 +1,39 @@
+{
+ "key": "erebus",
+ "name": "EREBUS",
+ "type": "nam",
+ "role": "high gain",
+ "folder": "CAPTURE AMPS",
+ "basedOn": "Bogner Überschall MKII Ultra",
+ "description": "Erebus is Nyx's premium big brother, named after Nyx's partner in the myths. It keeps the black slot grille and coloured tubes, but goes upmarket: gloss black-chrome, chrome corners, pointed hex slots, a floating black-chrome EREBUS badge, a violet light line, a chrome lip and knobs with glowing violet pointers.",
+ "pack": "Bogner Uberschall MKII Ultra High Gain",
+ "madeBy": "amalgamaudio",
+ "files": 1,
+ "kind": "Full rig (cab in the capture)",
+ "captures": [
+  "Amps/Erebus/BOG UU II Gain BAL CAB.nam"
+ ],
+ "channelNames": [],
+ "map": {
+  "knobs": [
+   "Gain",
+   "Bass",
+   "Middle",
+   "Treble",
+   "Presence",
+   "Depth",
+   "Master"
+  ],
+  "gainKnob": 0,
+  "buttons": [],
+  "settings": {
+   "": {
+    "by": "one",
+    "rig": true,
+    "files": [
+     "Amps/Erebus/BOG UU II Gain BAL CAB.nam"
+    ]
+   }
+  }
+ }
+}

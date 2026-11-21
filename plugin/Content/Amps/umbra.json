@@ -1,0 +1,187 @@
+{
+ "key": "umbra",
+ "name": "UMBRA",
+ "type": "nam",
+ "role": "high gain",
+ "folder": "CAPTURE AMPS",
+ "basedOn": "Mesa/Boogie Mark V",
+ "description": "Umbra is now a full Mark V: three channels, each with three modes, just like the real amp. CHANNEL picks 1, 2 or 3 and MODE picks that channel's voicing. Each channel remembers its own mode and knob settings.",
+ "pack": "Mesa Boogie - Mark V [18dBu]",
+ "madeBy": "kenazmusic",
+ "files": 37,
+ "kind": "Amp only",
+ "captures": [
+  "Amps/Umbra/Mesa Boogie - Mark V (Ch 1 Fat) CLN SC [18dBu].nam",
+  "Amps/Umbra/Mesa Boogie - Mark V (Ch 2 Cru) LG [18dBu].nam",
+  "Amps/Umbra/Mesa Boogie - Mark V (Ch 3 MK-IIC+) HG bal [18dBu].nam"
+ ],
+ "channelNames": [
+  "Channel 1",
+  "Channel 2",
+  "Channel 3"
+ ],
+ "map": {
+  "knobs": [
+   "Gain",
+   "Treble",
+   "Middle",
+   "Bass",
+   "Presence",
+   "Master",
+   "Output"
+  ],
+  "gainKnob": 0,
+  "buttons": [
+   {
+    "id": "channel",
+    "names": [
+     "Channel 1",
+     "Channel 2",
+     "Channel 3"
+    ],
+    "button": "channel",
+    "leds": [
+     [
+      "ch1"
+     ],
+     [
+      "ch2"
+     ],
+     [
+      "ch3"
+     ]
+    ],
+    "perknobs": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "start": 2
+   },
+   {
+    "id": "mode",
+    "button": "mode",
+    "leds": [
+     [
+      "md1"
+     ],
+     [
+      "md2"
+     ],
+     [
+      "md3"
+     ]
+    ],
+    "per": "channel",
+    "start": 1
+   }
+  ],
+  "settings": {
+   "0|0": {
+    "name": "Clean",
+    "by": "one",
+    "files": [
+     "Amps/Umbra/Mesa Boogie - Mark V (Ch 1 Clean) CLN [18dBu].nam"
+    ]
+   },
+   "0|1": {
+    "name": "Fat",
+    "by": "one",
+    "files": [
+     "Amps/Umbra/Mesa Boogie - Mark V (Ch 1 Fat) CLN SC [18dBu].nam"
+    ]
+   },
+   "0|2": {
+    "name": "Tweed",
+    "by": "gain",
+    "files": [
+     "Amps/Umbra/Mesa Boogie - Mark V (Ch 1 Tweed) EOB [18dBu].nam",
+     "Amps/Umbra/Mesa Boogie - Mark V (Ch 1 Tweed) LG [18dBu].nam"
+    ],
+    "spare": [
+     "Amps/Umbra/Mesa Boogie - Mark V (Ch 1 Tweed) EOB SC [18dBu].nam"
+    ]
+   },
+   "1|0": {
+    "name": "Edge",
+    "by": "gain",
+    "files": [
+     "Amps/Umbra/Mesa Boogie - Mark V (Ch 2 Edge) EOB [18dBu].nam",
+     "Amps/Umbra/Mesa Boogie - Mark V (Ch 2 Edge) LG [18dBu].nam",
+     "Amps/Umbra/Mesa Boogie - Mark V (Ch 2 Edge) MG [18dBu].nam"
+    ]
+   },
+   "1|1": {
+    "name": "Crunch",
+    "by": "gain",
+    "files": [
+     "Amps/Umbra/Mesa Boogie - Mark V (Ch 2 Cru) EOB [18dBu].nam",
+     "Amps/Umbra/Mesa Boogie - Mark V (Ch 2 Cru) LG [18dBu].nam",
+     "Amps/Umbra/Mesa Boogie - Mark V (Ch 2 Cru) MG [18dBu].nam"
+    ]
+   },
+   "1|2": {
+    "name": "Mark I",
+    "by": "gain",
+    "files": [
+     "Amps/Umbra/Mesa Boogie - Mark V (Ch 2 MK-I) LG [18dBu].nam",
+     "Amps/Umbra/Mesa Boogie - Mark V (Ch 2 MK-I) MG [18dBu].nam",
+     "Amps/Umbra/Mesa Boogie - Mark V (Ch 2 MK-I) HG [18dBu].nam"
+    ],
+    "spare": [
+     "Amps/Umbra/Mesa Boogie - Mark V (Ch 2 MK-I 808) HG [18dBu].nam",
+     "Amps/Umbra/Mesa Boogie - Mark V (Ch 2 MK-I TS9) HG [18dBu].nam",
+     "Amps/Umbra/Mesa Boogie - Mark V (Ch 2 MK-I SD1) HG [18dBu].nam"
+    ]
+   },
+   "2|0": {
+    "name": "Extreme",
+    "by": "mid",
+    "files": [
+     "Amps/Umbra/Mesa Boogie - Mark V (Ch 3 Ext) HG scoop [18dBu].nam",
+     "Amps/Umbra/Mesa Boogie - Mark V (Ch 3 Ext) HG bal [18dBu].nam",
+     "Amps/Umbra/Mesa Boogie - Mark V (Ch 3 Ext) HG mids [18dBu].nam"
+    ],
+    "spare": [
+     "Amps/Umbra/Mesa Boogie - Mark V (Ch 3 Ext) Black Metal I [18dBu].nam",
+     "Amps/Umbra/Mesa Boogie - Mark V (Ch 3 Ext) Black Metal II [18dBu].nam",
+     "Amps/Umbra/Mesa Boogie - Mark V (Ch 3 Ext 808) HG [18dBu].nam",
+     "Amps/Umbra/Mesa Boogie - Mark V (Ch 3 Ext TS9) HG [18dBu].nam",
+     "Amps/Umbra/Mesa Boogie - Mark V (Ch 3 Ext SD1) HG [18dBu].nam"
+    ]
+   },
+   "2|1": {
+    "name": "Mark IIC+",
+    "by": "mid",
+    "files": [
+     "Amps/Umbra/Mesa Boogie - Mark V (Ch 3 MK-IIC+) HG scoop [18dBu].nam",
+     "Amps/Umbra/Mesa Boogie - Mark V (Ch 3 MK-IIC+) HG bal [18dBu].nam",
+     "Amps/Umbra/Mesa Boogie - Mark V (Ch 3 MK-IIC+) HG mids [18dBu].nam"
+    ],
+    "spare": [
+     "Amps/Umbra/Mesa Boogie - Mark V (Ch 3 MK-IIC+ 808) HG [18dBu].nam",
+     "Amps/Umbra/Mesa Boogie - Mark V (Ch 3 MK-IIC+ TS9) HG [18dBu].nam",
+     "Amps/Umbra/Mesa Boogie - Mark V (Ch 3 MK-IIC+ SD1) HG [18dBu].nam"
+    ]
+   },
+   "2|2": {
+    "name": "Mark IV",
+    "by": "mid",
+    "files": [
+     "Amps/Umbra/Mesa Boogie - Mark V (Ch 3 MK-IV) HG scoop [18dBu].nam",
+     "Amps/Umbra/Mesa Boogie - Mark V (Ch 3 MK-IV) HG bal [18dBu].nam",
+     "Amps/Umbra/Mesa Boogie - Mark V (Ch 3 MK-IV) HG mids [18dBu].nam"
+    ],
+    "spare": [
+     "Amps/Umbra/Mesa Boogie - Mark V (Ch 3 MK-IV 808) HG [18dBu].nam",
+     "Amps/Umbra/Mesa Boogie - Mark V (Ch 3 MK-IV TS9) HG [18dBu].nam",
+     "Amps/Umbra/Mesa Boogie - Mark V (Ch 3 MK-IV SD1) HG [18dBu].nam"
+    ]
+   }
+  },
+  "mid": 2
+ }
+}

@@ -1,0 +1,65 @@
+{
+ "key": "belial",
+ "name": "BELIAL",
+ "type": "nam",
+ "role": "high gain",
+ "folder": "CAPTURE AMPS",
+ "basedOn": "Randall Satan",
+ "description": "Belial is new, blacked out in the spirit of the Satan: thin black grille bars run across the whole front, with red-hot tubes and red light glowing between them. A black-chrome gothic \"Belial\" script floats in front of the bars. It runs the Satan 50 captures made by Ola Englund, who designed the real amp.",
+ "pack": "REAL Olas Randall Satan 50",
+ "madeBy": "olaenglund",
+ "files": 2,
+ "kind": "Full rig (cab in the capture)",
+ "captures": [
+  "Amps/Belial/Randall SATAN 50 Mic Center.nam",
+  "Amps/Belial/Randall SATAN 50 Mic Off Center.nam"
+ ],
+ "channelNames": [
+  "Mic centre",
+  "Mic off centre"
+ ],
+ "map": {
+  "knobs": [
+   "Gain",
+   "Bass",
+   "Middle",
+   "Treble",
+   "Presence",
+   "Depth",
+   "Master"
+  ],
+  "gainKnob": 0,
+  "buttons": [
+   {
+    "id": "mic",
+    "names": [
+     "Mic centre",
+     "Mic off centre"
+    ],
+    "button": "mic",
+    "leds": [
+     [
+      "mic1"
+     ],
+     [
+      "mic2"
+     ]
+    ]
+   }
+  ],
+  "settings": {
+   "0": {
+    "by": "one",
+    "files": [
+     "Amps/Belial/Randall SATAN 50 Mic Center.nam"
+    ]
+   },
+   "1": {
+    "by": "one",
+    "files": [
+     "Amps/Belial/Randall SATAN 50 Mic Off Center.nam"
+    ]
+   }
+  }
+ }
+}

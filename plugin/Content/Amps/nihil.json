@@ -1,0 +1,77 @@
+{
+ "key": "nihil",
+ "name": "NIHIL",
+ "type": "nam",
+ "role": "high gain",
+ "folder": "CAPTURE AMPS",
+ "basedOn": "Fortin Meshuggah / Sunn Model T",
+ "description": "Nihil runs the Fortin Meshuggah pack. The pack has three sounds rather than three channels: the Fortin, a Sunn Model T pushed by a Friedman Butterslax, and a blend of the two. The AMP button steps through them (F, S, B), and the old OFF/STBY toggles are gone. The green lamp is the power switch.",
+ "pack": "FORTIN MESHUGGAH + SUNN MODEL T + FRIEDMAN BUTTERSLAX",
+ "madeBy": "nosatec",
+ "files": 3,
+ "kind": "Full rig (cab in the capture)",
+ "captures": [
+  "Amps/Nihil/FORTIN MESHUGGAH.nam",
+  "Amps/Nihil/BUTTERSLAX + MODEL T.nam",
+  "Amps/Nihil/BLEND.nam"
+ ],
+ "channelNames": [
+  "Fortin Meshuggah",
+  "Sunn Model T + Butterslax",
+  "Blend of both"
+ ],
+ "map": {
+  "knobs": [
+   "Master",
+   "Presence",
+   "Bass",
+   "Middle",
+   "Treble",
+   "Drive",
+   "Gain"
+  ],
+  "gainKnob": 6,
+  "buttons": [
+   {
+    "id": "amp",
+    "names": [
+     "Fortin Meshuggah",
+     "Sunn Model T + Butterslax",
+     "Blend of both"
+    ],
+    "button": "amp",
+    "leds": [
+     [
+      "amp1"
+     ],
+     [
+      "amp2"
+     ],
+     [
+      "amp3"
+     ]
+    ]
+   }
+  ],
+  "settings": {
+   "0": {
+    "by": "one",
+    "files": [
+     "Amps/Nihil/FORTIN MESHUGGAH.nam"
+    ]
+   },
+   "1": {
+    "by": "one",
+    "files": [
+     "Amps/Nihil/BUTTERSLAX + MODEL T.nam"
+    ]
+   },
+   "2": {
+    "by": "one",
+    "files": [
+     "Amps/Nihil/BLEND.nam"
+    ]
+   }
+  }
+ }
+}

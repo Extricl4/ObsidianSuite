@@ -1,0 +1,75 @@
+{
+ "key": "citadel",
+ "name": "CITADEL",
+ "type": "nam",
+ "role": "lead",
+ "folder": "CAPTURE AMPS",
+ "basedOn": "Mesa/Boogie Mark IIC+",
+ "description": "Citadel is the Mark IIC+. Like the real amp it has a Rhythm and a Lead mode, and the LEAD button switches between them (the red light is the lead lamp).",
+ "pack": "Mesa Boogie Mark IIC+",
+ "madeBy": "siamsiamguite",
+ "files": 20,
+ "kind": "Amp only",
+ "captures": [
+  "Amps/Citadel/Mesa Boogie Mark IIC+ Clean.nam",
+  "Amps/Citadel/Mesa Boogie Mark IIC+ Fat Gain.nam"
+ ],
+ "channelNames": [
+  "Rhythm",
+  "Lead"
+ ],
+ "map": {
+  "knobs": [
+   "Volume",
+   "Treble",
+   "Bass",
+   "Middle",
+   "Presence",
+   "Lead drive",
+   "Master"
+  ],
+  "gainKnob": 0,
+  "buttons": [
+   {
+    "id": "lead",
+    "names": [
+     "Rhythm",
+     "Lead"
+    ],
+    "button": "lead",
+    "leds": [
+     [],
+     [
+      "lead_led"
+     ]
+    ],
+    "start": 1
+   }
+  ],
+  "settings": {
+   "0": {
+    "by": "gain",
+    "files": [
+     "Amps/Citadel/Mesa Boogie Mark IIC+ Compressed Clean.nam",
+     "Amps/Citadel/Mesa Boogie Mark IIC+ 80's Clean.nam",
+     "Amps/Citadel/Mesa Boogie Mark IIC+ Clean.nam",
+     "Amps/Citadel/Mesa Boogie Mark IIC+ Marshall Coil.nam"
+    ]
+   },
+   "1": {
+    "by": "gain",
+    "knob": 5,
+    "files": [
+     "Amps/Citadel/Mesa Boogie Mark IIC+ Single Coil.nam",
+     "Amps/Citadel/Mesa Boogie Mark IIC+ Rock.nam",
+     "Amps/Citadel/Mesa Boogie Mark IIC+ Fat Gain.nam",
+     "Amps/Citadel/Mesa Boogie Mark IIC+ Solo.nam",
+     "Amps/Citadel/Mesa Boogie IIC+ Deth Lead.nam"
+    ],
+    "spare": [
+     "Amps/Citadel/Mesa Boogie IIC+ Architects.nam"
+    ]
+   }
+  }
+ }
+}

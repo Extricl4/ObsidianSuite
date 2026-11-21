@@ -1,0 +1,102 @@
+{
+ "key": "niflheim",
+ "name": "NIFLHEIM",
+ "type": "nam",
+ "role": "high gain",
+ "folder": "CAPTURE AMPS",
+ "basedOn": "Revv Generator 120 MkIII (red channel)",
+ "description": "Niflheim runs the Revv Generator 120 MkIII red channel. MODE switches between the crunch and rhythm sets the pack was captured in, and BOOST (OD) switches to the rhythm capture made with a Plumes overdrive in front. The old Standby switch is gone, the ice-blue lamp is the power switch, and Frost is now Volume.",
+ "pack": "REVV GENERATOR 120 RED MKIII",
+ "madeBy": "deathblossomaudio",
+ "files": 9,
+ "kind": "Amp only",
+ "captures": [
+  "Amps/Niflheim/REVV120 RED - CRUNCH 2.nam",
+  "Amps/Niflheim/REVV120 RED - RHYTHM 3.nam"
+ ],
+ "channelNames": [
+  "Crunch",
+  "Rhythm"
+ ],
+ "map": {
+  "knobs": [
+   "Gain",
+   "Bass",
+   "Middle",
+   "Treble",
+   "Presence",
+   "Volume",
+   "Master"
+  ],
+  "gainKnob": 0,
+  "buttons": [
+   {
+    "id": "mode",
+    "names": [
+     "Crunch",
+     "Rhythm"
+    ],
+    "button": "mode",
+    "leds": [
+     [
+      "md1"
+     ],
+     [
+      "md2"
+     ]
+    ],
+    "start": 1
+   },
+   {
+    "id": "boost",
+    "names": [
+     "No boost",
+     "Plumes OD"
+    ],
+    "button": "boost",
+    "leds": [
+     [],
+     [
+      "bo1"
+     ]
+    ]
+   }
+  ],
+  "settings": {
+   "0|0": {
+    "by": "gain",
+    "files": [
+     "Amps/Niflheim/REVV120 RED - CRUNCH 1.nam",
+     "Amps/Niflheim/REVV120 RED - CRUNCH 2.nam",
+     "Amps/Niflheim/REVV120 RED - CRUNCH 3.nam"
+    ]
+   },
+   "0|1": {
+    "by": "gain",
+    "hide": true,
+    "note": "no boosted crunch capture",
+    "files": [
+     "Amps/Niflheim/REVV120 RED - CRUNCH 1.nam",
+     "Amps/Niflheim/REVV120 RED - CRUNCH 2.nam",
+     "Amps/Niflheim/REVV120 RED - CRUNCH 3.nam"
+    ]
+   },
+   "1|0": {
+    "by": "gain",
+    "files": [
+     "Amps/Niflheim/REVV120 RED - RHYTHM 1.nam",
+     "Amps/Niflheim/REVV120 RED - RHYTHM 2.nam",
+     "Amps/Niflheim/REVV120 RED - RHYTHM 3.nam",
+     "Amps/Niflheim/REVV120 RED - RHYTHM 4.nam",
+     "Amps/Niflheim/REVV120 RED - RHYTHM 5.nam"
+    ]
+   },
+   "1|1": {
+    "by": "one",
+    "files": [
+     "Amps/Niflheim/REVV120 RED - RHYTHM 6 PLUMES OD.nam"
+    ]
+   }
+  }
+ }
+}

@@ -1,0 +1,76 @@
+{
+ "key": "moros",
+ "name": "MOROS",
+ "type": "nam",
+ "role": "high gain",
+ "folder": "CAPTURE AMPS",
+ "basedOn": "Omega Ampworks Granophyre",
+ "description": "Moros runs the Granophyre. The pack is one channel captured three ways: the head on its own, with an Idiot Box Blower Box in front, and with a Plumes (mode 2) in front. The old VOICE switch is now a BOOST button that steps through those (BB = Blower Box, PL = Plumes), the HIGH/LOW and ACTIVE switches are gone, and the blue lamp is the power switch.",
+ "pack": "Omega Granophyre",
+ "madeBy": "tonecast",
+ "files": 3,
+ "kind": "Amp only",
+ "captures": [
+  "Amps/Moros/Omega Granophyre Amp Head.nam",
+  "Amps/Moros/Omega Granophyre + Idiot Box FX Blower Box.nam",
+  "Amps/Moros/Omega Granophyre + Plumes M2.nam"
+ ],
+ "channelNames": [
+  "Amp only",
+  "Blower Box",
+  "Plumes M2"
+ ],
+ "map": {
+  "knobs": [
+   "Gain",
+   "Bass",
+   "Mid",
+   "Treble",
+   "Level",
+   "Master",
+   "Tight",
+   "Air"
+  ],
+  "gainKnob": 0,
+  "buttons": [
+   {
+    "id": "boost",
+    "names": [
+     "Amp only",
+     "Blower Box",
+     "Plumes M2"
+    ],
+    "button": "boost",
+    "leds": [
+     [],
+     [
+      "bo1"
+     ],
+     [
+      "bo2"
+     ]
+    ]
+   }
+  ],
+  "settings": {
+   "0": {
+    "by": "one",
+    "files": [
+     "Amps/Moros/Omega Granophyre Amp Head.nam"
+    ]
+   },
+   "1": {
+    "by": "one",
+    "files": [
+     "Amps/Moros/Omega Granophyre + Idiot Box FX Blower Box.nam"
+    ]
+   },
+   "2": {
+    "by": "one",
+    "files": [
+     "Amps/Moros/Omega Granophyre + Plumes M2.nam"
+    ]
+   }
+  }
+ }
+}

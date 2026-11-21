@@ -1,0 +1,195 @@
+{
+ "key": "lamia",
+ "name": "LAMIA",
+ "type": "nam",
+ "role": "high gain",
+ "folder": "CAPTURE AMPS",
+ "basedOn": "Friedman BE-100 Deluxe",
+ "description": "Lamia keeps her gothic cathedral look and is now a Friedman BE-100 Deluxe. Four CHANNEL buttons pick Clean, BE and HBE like the real amp, plus EL34, the one capture the pack marks as [POW] instead of [AMP]. These are full-rig captures, so the MIC button picks how the cab was recorded: SM57, SM58 or a blend of the two.",
+ "pack": "Friedman BE100 Deluxe",
+ "madeBy": "2dor",
+ "files": 24,
+ "kind": "Full rig (cab in the capture)",
+ "captures": [
+  "Amps/Lamia/[AMP] BE100DLX-CLN Rock #01 - BLEND.nam",
+  "Amps/Lamia/[AMP] BE100DLX-BE Eddie #01 - BLEND.nam",
+  "Amps/Lamia/[AMP] BE100DLX-HBE Tallica - BLEND.nam",
+  "Amps/Lamia/[POW] BE100DLX EL34 Juice #28 - BLEND.nam"
+ ],
+ "channelNames": [
+  "Clean",
+  "BE",
+  "HBE",
+  "EL34"
+ ],
+ "map": {
+  "knobs": [
+   "Gain",
+   "Bass",
+   "Middle",
+   "Treble",
+   "Presence",
+   "Resonance",
+   "Master"
+  ],
+  "gainKnob": 0,
+  "buttons": [
+   {
+    "id": "channel",
+    "names": [
+     "Clean",
+     "BE",
+     "HBE",
+     "EL34"
+    ],
+    "buttons": [
+     "ch1",
+     "ch2",
+     "ch3",
+     "ch4"
+    ],
+    "leds": [
+     [
+      "ch1"
+     ],
+     [
+      "ch2"
+     ],
+     [
+      "ch3"
+     ],
+     [
+      "ch4"
+     ]
+    ],
+    "perknobs": [
+     0,
+     1,
+     2,
+     3,
+     6
+    ],
+    "start": 1
+   },
+   {
+    "id": "mic",
+    "names": [
+     "SM57",
+     "SM58",
+     "Mic blend"
+    ],
+    "button": "mic",
+    "leds": [
+     [
+      "mic1"
+     ],
+     [
+      "mic2"
+     ],
+     [
+      "mic3"
+     ]
+    ],
+    "start": 2
+   }
+  ],
+  "settings": {
+   "0|0": {
+    "by": "gain",
+    "rig": true,
+    "files": [
+     "Amps/Lamia/[AMP] BE100DLX-CLN Tender Clean - SM57.nam",
+     "Amps/Lamia/[AMP] BE100DLX-CLN Rock #01 - SM57.nam"
+    ]
+   },
+   "0|1": {
+    "by": "gain",
+    "rig": true,
+    "files": [
+     "Amps/Lamia/[AMP] BE100DLX-CLN Tender Clean - SM58.nam",
+     "Amps/Lamia/[AMP] BE100DLX-CLN Rock #01 - SM58.nam"
+    ]
+   },
+   "0|2": {
+    "by": "gain",
+    "rig": true,
+    "files": [
+     "Amps/Lamia/[AMP] BE100DLX-CLN Tender Clean - BLEND.nam",
+     "Amps/Lamia/[AMP] BE100DLX-CLN Rock #01 - BLEND.nam"
+    ]
+   },
+   "1|0": {
+    "by": "gain",
+    "rig": true,
+    "files": [
+     "Amps/Lamia/[AMP] BE100DLX-BE Man in the Cogs #01 - SM57.nam",
+     "Amps/Lamia/[AMP] BE100DLX-BE Eddie #01 - SM57.nam",
+     "Amps/Lamia/[AMP] BE100DLX-BE TEST - SM57.nam"
+    ]
+   },
+   "1|1": {
+    "by": "gain",
+    "rig": true,
+    "files": [
+     "Amps/Lamia/[AMP] BE100DLX-BE Man in the Cogs #01 - SM58.nam",
+     "Amps/Lamia/[AMP] BE100DLX-BE Eddie #01 - SM58.nam",
+     "Amps/Lamia/[AMP] BE100DLX-BE TEST - SM58.nam"
+    ]
+   },
+   "1|2": {
+    "by": "gain",
+    "rig": true,
+    "files": [
+     "Amps/Lamia/[AMP] BE100DLX-BE Man in the Cogs #01 - BLEND.nam",
+     "Amps/Lamia/[AMP] BE100DLX-BE Eddie #01 - BLEND.nam",
+     "Amps/Lamia/[AMP] BE100DLX-BE TEST - BLEND.nam"
+    ]
+   },
+   "2|0": {
+    "by": "gain",
+    "rig": true,
+    "files": [
+     "Amps/Lamia/[AMP] BE100DLX-HBE Mammoth - SM57.nam",
+     "Amps/Lamia/[AMP] BE100DLX-HBE Tallica - SM57.nam"
+    ]
+   },
+   "2|1": {
+    "by": "gain",
+    "rig": true,
+    "files": [
+     "Amps/Lamia/[AMP] BE100DLX-HBE Mammoth - SM58.nam",
+     "Amps/Lamia/[AMP] BE100DLX-HBE Tallica - SM58.nam"
+    ]
+   },
+   "2|2": {
+    "by": "gain",
+    "rig": true,
+    "files": [
+     "Amps/Lamia/[AMP] BE100DLX-HBE Mammoth - BLEND.nam",
+     "Amps/Lamia/[AMP] BE100DLX-HBE Tallica - BLEND.nam"
+    ]
+   },
+   "3|0": {
+    "by": "one",
+    "rig": true,
+    "files": [
+     "Amps/Lamia/[POW] BE100DLX EL34 Juice #28 - SM57.nam"
+    ]
+   },
+   "3|1": {
+    "by": "one",
+    "rig": true,
+    "files": [
+     "Amps/Lamia/[POW] BE100DLX EL34 Juice #28 - SM58.nam"
+    ]
+   },
+   "3|2": {
+    "by": "one",
+    "rig": true,
+    "files": [
+     "Amps/Lamia/[POW] BE100DLX EL34 Juice #28 - BLEND.nam"
+    ]
+   }
+  }
+ }
+}

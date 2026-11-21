@@ -1,0 +1,39 @@
+{
+ "key": "thanatos",
+ "name": "THANATOS",
+ "type": "nam",
+ "role": "lead",
+ "folder": "CAPTURE AMPS",
+ "basedOn": "Soldano SLO-100 (overdrive channel)",
+ "description": "Thanatos is now a Soldano SLO-100, the overdrive channel: the smooth, singing lead sound. It's one capture, so the Standby switch is gone and the cyan lamp is the power switch.",
+ "pack": "Soldano SLO-100 - Drive",
+ "madeBy": "amalgamaudio",
+ "files": 1,
+ "kind": "Full rig (cab in the capture)",
+ "captures": [
+  "Amps/Thanatos/SLDN SL100 NR Drive WRM5 CAB.nam"
+ ],
+ "channelNames": [],
+ "map": {
+  "knobs": [
+   "Preamp",
+   "Bass",
+   "Middle",
+   "Treble",
+   "Presence",
+   "Depth",
+   "Master"
+  ],
+  "gainKnob": 0,
+  "buttons": [],
+  "settings": {
+   "": {
+    "by": "one",
+    "rig": true,
+    "files": [
+     "Amps/Thanatos/SLDN SL100 NR Drive WRM5 CAB.nam"
+    ]
+   }
+  }
+ }
+}

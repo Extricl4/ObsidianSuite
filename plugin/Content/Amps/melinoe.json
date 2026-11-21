@@ -1,0 +1,78 @@
+{
+ "key": "melinoe",
+ "name": "MELINOE",
+ "type": "nam",
+ "role": "clean",
+ "folder": "CAPTURE AMPS",
+ "basedOn": "Fender Super Reverb ('77)",
+ "description": "Melinoe is now a Fender Super Reverb: the 4x10 clean combo, captured with the EQ flat at volume 3. The knobs are labelled like the real amp's vibrato channel (Volume, Treble, Bass, Middle, Reverb, Speed, Intensity), and the old STBY switch became a MIC button for the three versions in the pack.",
+ "pack": "Fender Super Reverb 1977",
+ "madeBy": "tone3000",
+ "files": 3,
+ "kind": "Full rig (cab in the capture)",
+ "captures": [
+  "Amps/Melinoe/Fender Super Reverb_ EQ Flat, Volume 3, sm57.nam",
+  "Amps/Melinoe/Fender Super Reverb_ EQ Flat, Volume 3, AKG 414.nam",
+  "Amps/Melinoe/Fender Super Reverb_ EQ Flat, Volume 3, sm57 and AKG 414.nam"
+ ],
+ "channelNames": [
+  "SM57",
+  "AKG 414",
+  "SM57 + 414"
+ ],
+ "map": {
+  "knobs": [
+   "Volume",
+   "Treble",
+   "Bass",
+   "Middle",
+   "Reverb",
+   "Speed",
+   "Intensity"
+  ],
+  "gainKnob": 0,
+  "buttons": [
+   {
+    "id": "mic",
+    "names": [
+     "SM57",
+     "AKG 414",
+     "SM57 + 414"
+    ],
+    "button": "mic",
+    "leds": [
+     [
+      "mic1"
+     ],
+     [
+      "mic2"
+     ],
+     [
+      "mic3"
+     ]
+    ],
+    "start": 2
+   }
+  ],
+  "settings": {
+   "0": {
+    "by": "one",
+    "files": [
+     "Amps/Melinoe/Fender Super Reverb_ EQ Flat, Volume 3, sm57.nam"
+    ]
+   },
+   "1": {
+    "by": "one",
+    "files": [
+     "Amps/Melinoe/Fender Super Reverb_ EQ Flat, Volume 3, AKG 414.nam"
+    ]
+   },
+   "2": {
+    "by": "one",
+    "files": [
+     "Amps/Melinoe/Fender Super Reverb_ EQ Flat, Volume 3, sm57 and AKG 414.nam"
+    ]
+   }
+  }
+ }
+}

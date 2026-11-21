@@ -1,0 +1,80 @@
+{
+ "key": "chrysaor",
+ "name": "CHRYSAOR",
+ "type": "nam",
+ "role": "crunch · rhythm",
+ "folder": "CAPTURE AMPS",
+ "basedOn": "Marshall JCM800 2203",
+ "description": "Chrysaor is new, named after the golden-sword son of Medusa. It's gold and black like a Marshall, in the same family as Melinoe, Hyperion and the tarot amps: black lacquer with gold baroque scrollwork, and a winged sword in a laurel wreath under a crown. Below that is a brushed-gold control panel with the 2203's six knobs in their real order, the inputs on the right, and the power lamp on the left.",
+ "pack": "Marshall JCM 800 2203",
+ "madeBy": "arthm",
+ "files": 30,
+ "kind": "Amp only",
+ "captures": [
+  "Amps/Chrysaor/JCM800 2203 - P5 B5 M5 T5 MV6 G6 - AZG - 700.nam"
+ ],
+ "channelNames": [],
+ "map": {
+  "knobs": [
+   "Presence",
+   "Bass",
+   "Middle",
+   "Treble",
+   "Master",
+   "Gain"
+  ],
+  "gainKnob": 5,
+  "buttons": [],
+  "settings": {
+   "": {
+    "by": "grid",
+    "rowKnob": 4,
+    "colKnob": 5,
+    "rowNames": [
+     "Master 5",
+     "Master 6",
+     "Master 7"
+    ],
+    "files": [
+     [
+      "Amps/Chrysaor/JCM800 2203 - P5 B5 M5 T5 MV5 G1 - AZG - 700.nam",
+      "Amps/Chrysaor/JCM800 2203 - P5 B5 M5 T5 MV5 G2 - AZG - 700.nam",
+      "Amps/Chrysaor/JCM800 2203 - P5 B5 M5 T5 MV5 G3 - AZG - 700.nam",
+      "Amps/Chrysaor/JCM800 2203 - P5 B5 M5 T5 MV5 G4 - AZG - 700.nam",
+      "Amps/Chrysaor/JCM800 2203 - P5 B5 M5 T5 MV5 G5 - AZG - 700.nam",
+      "Amps/Chrysaor/JCM800 2203 - P5 B5 M5 T5 MV5 G6 - AZG - 700.nam",
+      "Amps/Chrysaor/JCM800 2203 - P5 B5 M5 T5 MV5 G7 - AZG - 700.nam",
+      "Amps/Chrysaor/JCM800 2203 - P5 B5 M5 T5 MV5 G8 - AZG - 700.nam",
+      "Amps/Chrysaor/JCM800 2203 - P5 B5 M5 T5 MV5 G9 - AZG - 700.nam",
+      "Amps/Chrysaor/JCM800 2203 - P5 B5 M5 T5 MV5 G10 - AZG - 700.nam"
+     ],
+     [
+      "Amps/Chrysaor/JCM800 2203 - P5 B5 M5 T5 MV6 G1 - AZG - 700.nam",
+      "Amps/Chrysaor/JCM800 2203 - P5 B5 M5 T5 MV6 G2 - AZG - 700.nam",
+      "Amps/Chrysaor/JCM800 2203 - P5 B5 M5 T5 MV6 G3 - AZG - 700.nam",
+      "Amps/Chrysaor/JCM800 2203 - P5 B5 M5 T5 MV6 G4 - AZG - 700.nam",
+      "Amps/Chrysaor/JCM800 2203 - P5 B5 M5 T5 MV6 G5 - AZG - 700.nam",
+      "Amps/Chrysaor/JCM800 2203 - P5 B5 M5 T5 MV6 G6 - AZG - 700.nam",
+      "Amps/Chrysaor/JCM800 2203 - P5 B5 M5 T5 MV6 G7 - AZG - 700.nam",
+      "Amps/Chrysaor/JCM800 2203 - P5 B5 M5 T5 MV6 G8 - AZG - 700.nam",
+      "Amps/Chrysaor/JCM800 2203 - P5 B5 M5 T5 MV6 G9 - AZG - 700.nam",
+      "Amps/Chrysaor/JCM800 2203 - P5 B5 M5 T5 MV6 G10 - AZG - 700.nam"
+     ],
+     [
+      "Amps/Chrysaor/JCM800 2203 - P5 B5 M5 T5 MV7 G1 - AZG - 700.nam",
+      "Amps/Chrysaor/JCM800 2203 - P5 B5 M5 T5 MV7 G2 - AZG - 700.nam",
+      "Amps/Chrysaor/JCM800 2203 - P5 B5 M5 T5 MV7 G3 - AZG - 700.nam",
+      "Amps/Chrysaor/JCM800 2203 - P5 B5 M5 T5 MV7 G4 - AZG - 700.nam",
+      "Amps/Chrysaor/JCM800 2203 - P5 B5 M5 T5 MV7 G5 - AZG - 700.nam",
+      "Amps/Chrysaor/JCM800 2203 - P5 B5 M5 T5 MV7 G6 - AZG - 700.nam",
+      "Amps/Chrysaor/JCM800 2203 - P5 B5 M5 T5 MV7 G7 - AZG - 700.nam",
+      "Amps/Chrysaor/JCM800 2203 - P5 B5 M5 T5 MV7 G8 - AZG - 700.nam",
+      "Amps/Chrysaor/JCM800 2203 - P5 B5 M5 T5 MV7 G9 - AZG - 700.nam",
+      "Amps/Chrysaor/JCM800 2203 - P5 B5 M5 T5 MV7 G10 - AZG - 700.nam"
+     ]
+    ]
+   }
+  },
+  "master": 4
+ }
+}

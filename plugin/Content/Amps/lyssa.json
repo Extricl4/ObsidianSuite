@@ -1,0 +1,112 @@
+{
+ "key": "lyssa",
+ "name": "LYSSA",
+ "type": "nam",
+ "role": "high gain",
+ "folder": "CAPTURE AMPS",
+ "basedOn": "Peavey Invective 120",
+ "description": "Lyssa is new, inspired by the Invective: a modern gunmetal head with slanted vents raked toward a raised centre diamond, and violet tube glow behind the vents. CHANNEL switches Rhythm and Lead, and VOICE picks the capture inside each: plain, Riff 1 or Riff 2 on rhythm, Solo with or without the pedal on lead.",
+ "pack": "PEAVEY  INVECTIVE",
+ "madeBy": "valdir0545",
+ "files": 5,
+ "kind": "Full rig (cab in the capture)",
+ "captures": [
+  "Amps/Lyssa/Invec. Riff 1   P.d.+Amp+Cab.nam",
+  "Amps/Lyssa/Invec.  SOLO   P.D.+Amp+Cab.nam"
+ ],
+ "channelNames": [
+  "Rhythm",
+  "Lead"
+ ],
+ "map": {
+  "knobs": [
+   "Gain",
+   "Low",
+   "Mid",
+   "High",
+   "Presence",
+   "Resonance",
+   "Volume"
+  ],
+  "gainKnob": 0,
+  "buttons": [
+   {
+    "id": "channel",
+    "names": [
+     "Rhythm",
+     "Lead"
+    ],
+    "button": "channel",
+    "leds": [
+     [
+      "ch1"
+     ],
+     [
+      "ch2"
+     ]
+    ],
+    "perknobs": [
+     0,
+     1,
+     2,
+     3,
+     6
+    ]
+   },
+   {
+    "id": "voice",
+    "button": "voice",
+    "leds": [
+     [
+      "vo1"
+     ],
+     [
+      "vo2"
+     ],
+     [
+      "vo3"
+     ]
+    ],
+    "per": "channel",
+    "start": 1
+   }
+  ],
+  "settings": {
+   "0|0": {
+    "name": "Rhythm",
+    "by": "one",
+    "files": [
+     "Amps/Lyssa/Invec.  Amp+Cab.nam"
+    ]
+   },
+   "0|1": {
+    "name": "Riff 1 + pedal",
+    "by": "one",
+    "files": [
+     "Amps/Lyssa/Invec. Riff 1   P.d.+Amp+Cab.nam"
+    ]
+   },
+   "0|2": {
+    "name": "Riff 2 + pedal",
+    "by": "one",
+    "files": [
+     "Amps/Lyssa/Invec. Riff 2   P.d.+Amp+Cab.nam"
+    ]
+   },
+   "1|0": {
+    "name": "Solo",
+    "by": "one",
+    "files": [
+     "Amps/Lyssa/Invec.  SOLO   Amp+Cab.nam"
+    ]
+   },
+   "1|1": {
+    "name": "Solo + pedal",
+    "by": "one",
+    "files": [
+     "Amps/Lyssa/Invec.  SOLO   P.D.+Amp+Cab.nam"
+    ]
+   }
+  }
+ }
+}

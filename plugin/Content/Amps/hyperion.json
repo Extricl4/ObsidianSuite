@@ -1,0 +1,197 @@
+{
+ "key": "hyperion",
+ "name": "HYPERION",
+ "type": "nam",
+ "role": "clean · lead",
+ "folder": "CAPTURE AMPS",
+ "basedOn": "Dumble Overdrive Special 102 (\"Ford\")",
+ "description": "Hyperion is now a Dumble Overdrive Special, the Robben Ford 102. The pack is huge (83 captures, all amp only), so I kept the best: 6 cleans and 11 overdrive voices, picked for accuracy and so each one sounds different. CHANNEL switches Clean and Overdrive, and VOICE steps through the settings on that channel. The readout shows the name.",
+ "pack": "Dumble ODS 102 Ford Hyper Accuracy",
+ "madeBy": "slamminmofo",
+ "files": 83,
+ "kind": "Amp only",
+ "captures": [
+  "Amps/Hyperion/SLAMMIN_DUMBLE_FORD_CLN_KLEAN_S.nam",
+  "Amps/Hyperion/SLAMMIN_DUMBLE_FORD_OD_FORD_S.nam"
+ ],
+ "channelNames": [
+  "Clean",
+  "Overdrive"
+ ],
+ "map": {
+  "knobs": [
+   "Volume",
+   "Treble",
+   "Middle",
+   "Bass",
+   "Presence",
+   "Drive",
+   "Master"
+  ],
+  "gainKnob": 0,
+  "buttons": [
+   {
+    "id": "channel",
+    "names": [
+     "Clean",
+     "Overdrive"
+    ],
+    "button": "channel",
+    "leds": [
+     [
+      "ch1"
+     ],
+     [
+      "ch2"
+     ]
+    ],
+    "perknobs": [
+     0,
+     1,
+     2,
+     3,
+     6
+    ],
+    "start": 1
+   },
+   {
+    "id": "voice",
+    "button": "voice",
+    "leds": [],
+    "per": "channel"
+   }
+  ],
+  "settings": {
+   "0|0": {
+    "name": "Klean",
+    "by": "one",
+    "files": [
+     "Amps/Hyperion/SLAMMIN_DUMBLE_FORD_CLN_KLEAN_S.nam"
+    ]
+   },
+   "0|1": {
+    "name": "Warm",
+    "by": "one",
+    "files": [
+     "Amps/Hyperion/SLAMMIN_DUMBLE_FORD_CLN_WARM_S.nam"
+    ]
+   },
+   "0|2": {
+    "name": "Balanced",
+    "by": "one",
+    "files": [
+     "Amps/Hyperion/SLAMMIN_DUMBLE_FORD_CLN_BALANCED_S.nam"
+    ]
+   },
+   "0|3": {
+    "name": "Scoop",
+    "by": "one",
+    "files": [
+     "Amps/Hyperion/SLAMMIN_DUMBLE_FORD_CLN_SCOOP_S.nam"
+    ]
+   },
+   "0|4": {
+    "name": "Fordish",
+    "by": "one",
+    "files": [
+     "Amps/Hyperion/SLAMMIN_DUMBLE_FORD_CLN_FORDISH_S.nam"
+    ]
+   },
+   "0|5": {
+    "name": "Carltonish",
+    "by": "one",
+    "files": [
+     "Amps/Hyperion/SLAMMIN_DUMBLE_FORD_CLN_CARLTONISH_2_S.nam"
+    ]
+   },
+   "1|0": {
+    "name": "Ford",
+    "by": "one",
+    "knob": 5,
+    "files": [
+     "Amps/Hyperion/SLAMMIN_DUMBLE_FORD_OD_FORD_S.nam"
+    ]
+   },
+   "1|1": {
+    "name": "Ford 2",
+    "by": "one",
+    "knob": 5,
+    "files": [
+     "Amps/Hyperion/SLAMMIN_DUMBLE_FORD_OD_FORD_2_S.nam"
+    ]
+   },
+   "1|2": {
+    "name": "Carlton",
+    "by": "one",
+    "knob": 5,
+    "files": [
+     "Amps/Hyperion/SLAMMIN_DUMBLE_FORD_OD_CARLTON_4_S.nam"
+    ]
+   },
+   "1|3": {
+    "name": "Hermans",
+    "by": "one",
+    "knob": 5,
+    "files": [
+     "Amps/Hyperion/SLAMMIN_DUMBLE_FORD_OD_HERMANS_S.nam"
+    ]
+   },
+   "1|4": {
+    "name": "Smooth",
+    "by": "one",
+    "knob": 5,
+    "files": [
+     "Amps/Hyperion/SLAMMIN_DUMBLE_FORD_OD_SMOOTH_S.nam"
+    ]
+   },
+   "1|5": {
+    "name": "Open (Larry)",
+    "by": "one",
+    "knob": 5,
+    "files": [
+     "Amps/Hyperion/SLAMMIN_DUMBLE_FORD_OD_OPEN_LARRY_S.nam"
+    ]
+   },
+   "1|6": {
+    "name": "PAB clear drive",
+    "by": "one",
+    "knob": 5,
+    "files": [
+     "Amps/Hyperion/SLAMMIN_DUMBLE_FORD_OD_PAB_CLEAR_DRIVE_XS.nam"
+    ]
+   },
+   "1|7": {
+    "name": "PAB Mick",
+    "by": "one",
+    "knob": 5,
+    "files": [
+     "Amps/Hyperion/SLAMMIN_DUMBLE_FORD_OD_PAB_MICK_XS.nam"
+    ]
+   },
+   "1|8": {
+    "name": "PAB crunch",
+    "by": "one",
+    "knob": 5,
+    "files": [
+     "Amps/Hyperion/SLAMMIN_DUMBLE_FORD_OD_PAB_CRUNCH_XS.nam"
+    ]
+   },
+   "1|9": {
+    "name": "PAB thick",
+    "by": "one",
+    "knob": 5,
+    "files": [
+     "Amps/Hyperion/SLAMMIN_DUMBLE_FORD_OD_PAB_THICK_XS.nam"
+    ]
+   },
+   "1|10": {
+    "name": "PAB high gain",
+    "by": "one",
+    "knob": 5,
+    "files": [
+     "Amps/Hyperion/SLAMMIN_DUMBLE_FORD_OD_PAB_HIGAIN_XS.nam"
+    ]
+   }
+  }
+ }
+}

@@ -1,0 +1,66 @@
+{
+ "key": "talos",
+ "name": "TALOS",
+ "type": "nam",
+ "role": "high gain",
+ "folder": "CAPTURE AMPS",
+ "basedOn": "Mesa/Boogie Dual Rectifier",
+ "description": "Talos is new: a hot-rod head with an aluminium diamond-plate front, rivets, a chrome exhaust grille with the power tubes glowing behind it, and flames licking out of both ends. It runs the Dual Rectifier 2025 pack. The four rhythm captures rise in gain, and the fifth was captured with a TS808 in front, so that one sits behind the BOOST button.",
+ "pack": "MESA DUAL RECTIFIER 2025",
+ "madeBy": "deathblossomaudio",
+ "files": 5,
+ "kind": "Amp only",
+ "captures": [
+  "Amps/Talos/3. MESA DUAL RECTIFIER 2025 _ RHYTHM #3.nam",
+  "Amps/Talos/5. MESA DUAL RECTIFIER 2025 _ TS808 BOOST _ RHYTHM #5.nam"
+ ],
+ "channelNames": [
+  "Boost off",
+  "TS808 boost"
+ ],
+ "map": {
+  "knobs": [
+   "Gain",
+   "Treble",
+   "Middle",
+   "Bass",
+   "Presence",
+   "Master",
+   "Output"
+  ],
+  "gainKnob": 0,
+  "buttons": [
+   {
+    "id": "boost",
+    "names": [
+     "Boost off",
+     "TS808 boost"
+    ],
+    "button": "boost",
+    "leds": [
+     [],
+     [
+      "boost_led"
+     ]
+    ]
+   }
+  ],
+  "settings": {
+   "0": {
+    "by": "gain",
+    "files": [
+     "Amps/Talos/1. MESA DUAL RECTIFIER 2025 _ CRUNCH _ RHYTHM #1.nam",
+     "Amps/Talos/2. MESA DUAL RECTIFIER 2025 _ RHYTHM #2.nam",
+     "Amps/Talos/3. MESA DUAL RECTIFIER 2025 _ RHYTHM #3.nam",
+     "Amps/Talos/4. MESA DUAL RECTIFIER 2025 _ RHYTHM #4.nam"
+    ]
+   },
+   "1": {
+    "by": "one",
+    "files": [
+     "Amps/Talos/5. MESA DUAL RECTIFIER 2025 _ TS808 BOOST _ RHYTHM #5.nam"
+    ]
+   }
+  }
+ }
+}

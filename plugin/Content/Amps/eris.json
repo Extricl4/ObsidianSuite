@@ -1,0 +1,280 @@
+{
+ "key": "eris",
+ "name": "ERIS",
+ "type": "nam",
+ "role": "high gain",
+ "folder": "CAPTURE AMPS",
+ "basedOn": "Mesa/Boogie JP-2C (John Petrucci)",
+ "description": "Eris is new: a compact, matte-black head shaped like the JP-2C. The cabinet's top front is cut away at a steep slant (about 55 degrees), and that slanted face is one sheet of black mesh framed by the cabinet edges, so the frame slants with it. Below it is a short, flat control panel with a solid-state look: no tubes, tick-mark dials, a thin teal light. CHANNEL picks the three JP-2C channels, VOICE steps through the captured settings on that channel, and BOOST adds the TS808 or Shred versions.",
+ "pack": "Mesa Boogie JP-2C Pack",
+ "madeBy": "emilrohbe",
+ "files": 26,
+ "kind": "Amp only",
+ "captures": [
+  "Amps/Eris/JP2C Capture 17 Clean CH1 G10 T6 M1 B4 P6 - Emil Rohbe.nam",
+  "Amps/Eris/JP2C Capture 13 JP RHY CH2 G8 T6 M4 B3 P6 - Emil Rohbe.nam",
+  "Amps/Eris/JP2C Capture 1 CH3 G8 T7 M4 B2 P4 - Emil Rohbe.nam"
+ ],
+ "channelNames": [
+  "Ch 1 · clean",
+  "Ch 2 · crunch",
+  "Ch 3 · lead"
+ ],
+ "map": {
+  "knobs": [
+   "Gain",
+   "Treble",
+   "Middle",
+   "Bass",
+   "Presence",
+   "Master",
+   "Output"
+  ],
+  "gainKnob": 0,
+  "buttons": [
+   {
+    "id": "channel",
+    "names": [
+     "Ch 1 · clean",
+     "Ch 2 · crunch",
+     "Ch 3 · lead"
+    ],
+    "button": "channel",
+    "leds": [
+     [
+      "ch1"
+     ],
+     [
+      "ch2"
+     ],
+     [
+      "ch3"
+     ]
+    ],
+    "perknobs": [
+     0,
+     1,
+     2,
+     3,
+     5
+    ],
+    "start": 2
+   },
+   {
+    "id": "voice",
+    "button": "voice",
+    "leds": [
+     [
+      "vo1"
+     ],
+     [
+      "vo2"
+     ],
+     [
+      "vo3"
+     ],
+     [
+      "vo4"
+     ],
+     [
+      "vo5"
+     ]
+    ],
+    "per": "channel"
+   },
+   {
+    "id": "boost",
+    "names": [
+     "No boost",
+     "TS808",
+     "Shred"
+    ],
+    "button": "boost",
+    "leds": [
+     [],
+     [
+      "bo1"
+     ],
+     [
+      "bo2"
+     ]
+    ]
+   }
+  ],
+  "settings": {
+   "0|0|0": {
+    "name": "Clean",
+    "by": "gain",
+    "files": [
+     "Amps/Eris/JP2C Capture 16 Clean CH1 G6 T6 M1 B4 P6 - Emil Rohbe.nam",
+     "Amps/Eris/JP2C Capture 17 Clean CH1 G10 T6 M1 B4 P6 - Emil Rohbe.nam"
+    ]
+   },
+   "1|0|0": {
+    "name": "JP rhythm",
+    "by": "one",
+    "files": [
+     "Amps/Eris/JP2C Capture 13 JP RHY CH2 G8 T6 M4 B3 P6 - Emil Rohbe.nam"
+    ]
+   },
+   "2|0|0": {
+    "name": "Lead",
+    "by": "gain",
+    "files": [
+     "Amps/Eris/JP2C Capture 2 CH3 G6 T7 M4 B2 P4 - Emil Rohbe.nam",
+     "Amps/Eris/JP2C Capture 1 CH3 G8 T7 M4 B2 P4 - Emil Rohbe.nam",
+     "Amps/Eris/JP2C Capture 3 CH3 G10 T7 M4 B2 P4 - Emil Rohbe.nam"
+    ],
+    "spare": [
+     "Amps/Eris/JP2C Capture 5 CH3 G8 T7 M4 B2 P6 - Emil Rohbe.nam",
+     "Amps/Eris/JP2C Capture 7 CH3 G8 T7 M4 B2 P4 EQ Less Bass - Emil Rohbe.nam"
+    ]
+   },
+   "2|1|0": {
+    "name": "Scooped lead",
+    "by": "gain",
+    "files": [
+     "Amps/Eris/JP2C Capture 8 CH3 G8 T7 M2 B2 P5 - Emil Rohbe.nam",
+     "Amps/Eris/JP2C Capture 9 CH3 G10 T7 M2 B2 P5 - Emil Rohbe.nam"
+    ]
+   },
+   "2|2|0": {
+    "name": "JP lead",
+    "by": "one",
+    "files": [
+     "Amps/Eris/JP2C Capture 12 JP Lead CH3 G9 T6 M3 B3 P6 - Emil Rohbe.nam"
+    ]
+   },
+   "2|3|0": {
+    "name": "Ultimate lead",
+    "by": "one",
+    "files": [
+     "Amps/Eris/JP2C Capture 18 Ultimate Lead - Emil Rohbe.nam"
+    ]
+   },
+   "2|4|0": {
+    "name": "Petrucci lead",
+    "by": "one",
+    "files": [
+     "Amps/Eris/JP2C Capture 19 Petrucci Lead Current settings - Emil Rohbe.nam"
+    ]
+   },
+   "0|0|1": {
+    "name": "Clean",
+    "by": "gain",
+    "hide": true,
+    "note": "no boosted capture",
+    "files": [
+     "Amps/Eris/JP2C Capture 16 Clean CH1 G6 T6 M1 B4 P6 - Emil Rohbe.nam",
+     "Amps/Eris/JP2C Capture 17 Clean CH1 G10 T6 M1 B4 P6 - Emil Rohbe.nam"
+    ]
+   },
+   "1|0|1": {
+    "name": "JP rhythm",
+    "by": "one",
+    "hide": true,
+    "note": "no boosted capture",
+    "files": [
+     "Amps/Eris/JP2C Capture 13 JP RHY CH2 G8 T6 M4 B3 P6 - Emil Rohbe.nam"
+    ]
+   },
+   "2|0|1": {
+    "name": "Lead",
+    "by": "one",
+    "files": [
+     "Amps/Eris/JP2C Capture 4 CH3 G8 T7 M4 B2 P4 TS808 - Emil Rohbe.nam"
+    ]
+   },
+   "2|1|1": {
+    "name": "Scooped lead",
+    "by": "one",
+    "files": [
+     "Amps/Eris/JP2C Capture 11 CH3 G8 T7 M2 B2 P5 TS808 - Emil Rohbe.nam"
+    ]
+   },
+   "2|2|1": {
+    "name": "JP lead",
+    "by": "one",
+    "files": [
+     "Amps/Eris/JP2C Capture 15 JP Lead CH3 G9 T6 M3 B3 P6 TS808 - Emil Rohbe.nam"
+    ]
+   },
+   "2|3|1": {
+    "name": "Ultimate lead",
+    "by": "one",
+    "hide": true,
+    "note": "no boosted capture",
+    "files": [
+     "Amps/Eris/JP2C Capture 18 Ultimate Lead - Emil Rohbe.nam"
+    ]
+   },
+   "2|4|1": {
+    "name": "Petrucci lead",
+    "by": "one",
+    "hide": true,
+    "note": "no boosted capture",
+    "files": [
+     "Amps/Eris/JP2C Capture 19 Petrucci Lead Current settings - Emil Rohbe.nam"
+    ]
+   },
+   "0|0|2": {
+    "name": "Clean",
+    "by": "gain",
+    "hide": true,
+    "note": "no boosted capture",
+    "files": [
+     "Amps/Eris/JP2C Capture 16 Clean CH1 G6 T6 M1 B4 P6 - Emil Rohbe.nam",
+     "Amps/Eris/JP2C Capture 17 Clean CH1 G10 T6 M1 B4 P6 - Emil Rohbe.nam"
+    ]
+   },
+   "1|0|2": {
+    "name": "JP rhythm",
+    "by": "one",
+    "hide": true,
+    "note": "no boosted capture",
+    "files": [
+     "Amps/Eris/JP2C Capture 13 JP RHY CH2 G8 T6 M4 B3 P6 - Emil Rohbe.nam"
+    ]
+   },
+   "2|0|2": {
+    "name": "Lead",
+    "by": "one",
+    "files": [
+     "Amps/Eris/JP2C Capture 6 CH3 G8 T7 M4 B2 P4 Shred - Emil Rohbe.nam"
+    ]
+   },
+   "2|1|2": {
+    "name": "Scooped lead",
+    "by": "one",
+    "files": [
+     "Amps/Eris/JP2C Capture 10 CH3 G8 T7 M2 B2 P5 Shred - Emil Rohbe.nam"
+    ]
+   },
+   "2|2|2": {
+    "name": "JP lead",
+    "by": "one",
+    "files": [
+     "Amps/Eris/JP2C Capture 14 JP Lead CH3 G9 T6 M3 B3 P6 Shred - Emil Rohbe.nam"
+    ]
+   },
+   "2|3|2": {
+    "name": "Ultimate lead",
+    "by": "one",
+    "hide": true,
+    "note": "no boosted capture",
+    "files": [
+     "Amps/Eris/JP2C Capture 18 Ultimate Lead - Emil Rohbe.nam"
+    ]
+   },
+   "2|4|2": {
+    "name": "Petrucci lead",
+    "by": "one",
+    "hide": true,
+    "note": "no boosted capture",
+    "files": [
+     "Amps/Eris/JP2C Capture 19 Petrucci Lead Current settings - Emil Rohbe.nam"
+    ]
+   }
+  }
+ }
+}

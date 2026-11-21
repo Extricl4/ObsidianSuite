@@ -1,0 +1,93 @@
+{
+ "key": "typhon",
+ "name": "TYPHON",
+ "type": "nam",
+ "role": "high gain",
+ "folder": "CAPTURE AMPS",
+ "basedOn": "EVH 5150 III Stealth 100W",
+ "description": "Typhon is new, in the spirit of the 5150 III Stealth: all matte black, with a 3D pyramid grid across the front and glossy black stripes criss-crossing it like tape. The stripes only show when the light catches them. GREEN, BLUE and RED pick the three channels, and the light strip and power lamp change to that channel's colour.",
+ "pack": "5150 Stealth 100w Mesa OS Full Rig - Blue, Red and Green",
+ "madeBy": "jpisoutoftune",
+ "files": 3,
+ "kind": "Full rig (cab in the capture)",
+ "captures": [
+  "Amps/Typhon/5150 Stealth 100w Green SD1 Mesa OS - jp_is_out_of_tune.nam",
+  "Amps/Typhon/5150 Stealth 100w Blue Mesa OS - jp_is_out_of_tune.nam",
+  "Amps/Typhon/5150 Stealth 100w Red Mesa OS - jp_is_out_of_tune.nam"
+ ],
+ "channelNames": [
+  "Green",
+  "Blue",
+  "Red"
+ ],
+ "map": {
+  "knobs": [
+   "Gain",
+   "Volume",
+   "Low",
+   "Mid",
+   "High",
+   "Presence",
+   "Resonance"
+  ],
+  "gainKnob": 0,
+  "buttons": [
+   {
+    "id": "channel",
+    "names": [
+     "Green",
+     "Blue",
+     "Red"
+    ],
+    "buttons": [
+     "ch1",
+     "ch2",
+     "ch3"
+    ],
+    "leds": [
+     [
+      "ch1_led"
+     ],
+     [
+      "ch2_led"
+     ],
+     [
+      "ch3_led"
+     ]
+    ],
+    "skin": true,
+    "perknobs": [
+     0,
+     1,
+     2,
+     3,
+     4
+    ],
+    "start": 2
+   }
+  ],
+  "settings": {
+   "0": {
+    "by": "one",
+    "rig": true,
+    "files": [
+     "Amps/Typhon/5150 Stealth 100w Green SD1 Mesa OS - jp_is_out_of_tune.nam"
+    ]
+   },
+   "1": {
+    "by": "one",
+    "rig": true,
+    "files": [
+     "Amps/Typhon/5150 Stealth 100w Blue Mesa OS - jp_is_out_of_tune.nam"
+    ]
+   },
+   "2": {
+    "by": "one",
+    "rig": true,
+    "files": [
+     "Amps/Typhon/5150 Stealth 100w Red Mesa OS - jp_is_out_of_tune.nam"
+    ]
+   }
+  }
+ }
+}

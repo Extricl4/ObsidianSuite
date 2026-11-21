@@ -1,0 +1,175 @@
+{
+ "key": "nyx",
+ "name": "NYX",
+ "type": "nam",
+ "role": "high gain",
+ "folder": "CAPTURE AMPS",
+ "basedOn": "Bogner Überschall Rev Blue",
+ "description": "Nyx is now a Bogner Überschall (Rev Blue). CHANNEL switches Clean and Lead, and VOICE steps through the named settings the capture maker saved on each channel: 3 cleans and 12 leads. The readout shows which one is loaded.",
+ "pack": "Bogner Uberschall",
+ "madeBy": "2dor",
+ "files": 16,
+ "kind": "Amp only",
+ "captures": [
+  "Amps/Nyx/[AMP] UBER.BLUE-Mar412-CLEAN Noon - DI.nam",
+  "Amps/Nyx/[AMP] UBER.BLUE-Mar412-LEAD Anthem - DI.nam"
+ ],
+ "channelNames": [
+  "Clean",
+  "Lead"
+ ],
+ "map": {
+  "knobs": [
+   "Gain",
+   "Bass",
+   "Middle",
+   "Treble",
+   "Presence",
+   "Depth",
+   "Master"
+  ],
+  "gainKnob": 0,
+  "buttons": [
+   {
+    "id": "channel",
+    "names": [
+     "Clean",
+     "Lead"
+    ],
+    "button": "channel",
+    "leds": [
+     [
+      "ch1"
+     ],
+     [
+      "ch2"
+     ]
+    ],
+    "perknobs": [
+     0,
+     1,
+     2,
+     3,
+     6
+    ],
+    "start": 1
+   },
+   {
+    "id": "voice",
+    "button": "voice",
+    "leds": [],
+    "per": "channel"
+   }
+  ],
+  "settings": {
+   "0|0": {
+    "name": "Noon",
+    "by": "one",
+    "files": [
+     "Amps/Nyx/[AMP] UBER.BLUE-Mar412-CLEAN Noon - DI.nam"
+    ]
+   },
+   "0|1": {
+    "name": "Cookie",
+    "by": "one",
+    "files": [
+     "Amps/Nyx/[AMP] UBER.BLUE-Mar412-CLEAN Cookie - DI.nam"
+    ]
+   },
+   "0|2": {
+    "name": "Instant gratification",
+    "by": "one",
+    "files": [
+     "Amps/Nyx/[AMP] UBER.BLUE-Mar412-CLEAN Instant gratification - DI.nam"
+    ]
+   },
+   "1|0": {
+    "name": "Anthem",
+    "by": "one",
+    "files": [
+     "Amps/Nyx/[AMP] UBER.BLUE-Mar412-LEAD Anthem - DI.nam"
+    ]
+   },
+   "1|1": {
+    "name": "Basher",
+    "by": "one",
+    "files": [
+     "Amps/Nyx/[AMP] UBER.BLUE-Mar412-LEAD Basher - DI.nam"
+    ]
+   },
+   "1|2": {
+    "name": "Blue Lights",
+    "by": "one",
+    "files": [
+     "Amps/Nyx/[AMP] UBER.BLUE-Mar412-LEAD Blue Lights - DI.nam"
+    ]
+   },
+   "1|3": {
+    "name": "Clover",
+    "by": "one",
+    "files": [
+     "Amps/Nyx/[AMP] UBER.BLUE-Mar412-LEAD Clover - DI.nam"
+    ]
+   },
+   "1|4": {
+    "name": "Cookie",
+    "by": "one",
+    "files": [
+     "Amps/Nyx/[AMP] UBER.BLUE-Mar412-LEAD Cookie - DI.nam"
+    ]
+   },
+   "1|5": {
+    "name": "Darkness",
+    "by": "one",
+    "files": [
+     "Amps/Nyx/[AMP] UBER.BLUE-Mar412-LEAD Darkness - DI.nam"
+    ]
+   },
+   "1|6": {
+    "name": "Glazed",
+    "by": "one",
+    "files": [
+     "Amps/Nyx/[AMP] UBER.BLUE-Mar412-LEAD Glazed - DI.nam"
+    ]
+   },
+   "1|7": {
+    "name": "Holly Rocks",
+    "by": "one",
+    "files": [
+     "Amps/Nyx/[AMP] UBER.BLUE-Mar412-LEAD Holly Rocks - DI.nam"
+    ]
+   },
+   "1|8": {
+    "name": "Instant gratification",
+    "by": "one",
+    "files": [
+     "Amps/Nyx/[AMP] UBER.BLUE-Mar412-LEAD Instant gratification - DI.nam"
+    ]
+   },
+   "1|9": {
+    "name": "Noon",
+    "by": "one",
+    "files": [
+     "Amps/Nyx/[AMP] UBER.BLUE-Mar412-LEAD Noon - DI.nam"
+    ]
+   },
+   "1|10": {
+    "name": "Rosemary",
+    "by": "one",
+    "files": [
+     "Amps/Nyx/[AMP] UBER.BLUE-Mar412-LEAD Rosemary - DI.nam"
+    ]
+   },
+   "1|11": {
+    "name": "Striptaser",
+    "by": "one",
+    "files": [
+     "Amps/Nyx/[AMP] UBER.BLUE-Mar412-LEAD Striptaser - DI.nam"
+    ],
+    "spare": [
+     "Amps/Nyx/[AMP] UBER.BLUE-Mes412-LEAD Striptaser - DI.nam"
+    ]
+   }
+  }
+ }
+}

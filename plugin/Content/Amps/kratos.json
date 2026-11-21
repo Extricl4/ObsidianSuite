@@ -1,0 +1,122 @@
+{
+ "key": "kratos",
+ "name": "KRATOS",
+ "type": "nam",
+ "role": "high gain",
+ "folder": "CAPTURE AMPS",
+ "basedOn": "Peavey 6505+",
+ "description": "Kratos is new, built on the 6505+: a bead-blasted matte steel front with a heavy square grate, bolted frame and a stamped centre plate, with red-hot power tubes behind the grate. The panel follows the real 6505+ layout: Rhythm pre/post, Lead pre/post, then the shared Low, Mid, High, Resonance and Presence, plus CRUNCH and BRIGHT for the rhythm channel and a CHANNEL button with green (rhythm) and red (lead) lamps.",
+ "pack": "6505 Gain Range Pack (High Gain)",
+ "madeBy": "ampspedalspickups",
+ "files": 30,
+ "kind": "Amp only",
+ "captures": [
+  "Amps/Kratos/APP-6505Plus-Clean-Gain-06.nam",
+  "Amps/Kratos/APP-6505Plus-MidForward-Gain-06.nam"
+ ],
+ "channelNames": [
+  "Rhythm",
+  "Lead"
+ ],
+ "map": {
+  "knobs": [
+   "Rhythm pre",
+   "Rhythm post",
+   "Lead pre",
+   "Lead post",
+   "Low",
+   "Mid",
+   "High",
+   "Resonance",
+   "Presence"
+  ],
+  "gainKnob": 0,
+  "buttons": [
+   {
+    "id": "channel",
+    "names": [
+     "Rhythm",
+     "Lead"
+    ],
+    "button": "channel",
+    "leds": [
+     [
+      "ch1"
+     ],
+     [
+      "ch2"
+     ]
+    ],
+    "start": 1
+   }
+  ],
+  "settings": {
+   "0": {
+    "by": "gain",
+    "files": [
+     "Amps/Kratos/APP-6505Plus-Clean-Gain-01.nam",
+     "Amps/Kratos/APP-6505Plus-Clean-Gain-02.nam",
+     "Amps/Kratos/APP-6505Plus-Clean-Gain-03.nam",
+     "Amps/Kratos/APP-6505Plus-Clean-Gain-04.nam",
+     "Amps/Kratos/APP-6505Plus-Clean-Gain-05.nam",
+     "Amps/Kratos/APP-6505Plus-Clean-Gain-06.nam",
+     "Amps/Kratos/APP-6505Plus-Clean-Gain-07.nam",
+     "Amps/Kratos/APP-6505Plus-Clean-Gain-08.nam",
+     "Amps/Kratos/APP-6505Plus-Clean-Gain-09.nam",
+     "Amps/Kratos/APP-6505Plus-Clean-Gain-10.nam"
+    ]
+   },
+   "1": {
+    "by": "grid",
+    "rowKnob": 5,
+    "colKnob": 2,
+    "rowNames": [
+     "Scooped",
+     "Mid forward"
+    ],
+    "files": [
+     [
+      "Amps/Kratos/APP-6505Plus-Scooped-Gain-01.nam",
+      "Amps/Kratos/APP-6505Plus-Scooped-Gain-02.nam",
+      "Amps/Kratos/APP-6505Plus-Scooped-Gain-03.nam",
+      "Amps/Kratos/APP-6505Plus-Scooped-Gain-04.nam",
+      "Amps/Kratos/APP-6505Plus-Scooped-Gain-05.nam",
+      "Amps/Kratos/APP-6505Plus-Scooped-Gain-06.nam",
+      "Amps/Kratos/APP-6505Plus-Scooped-Gain-07.nam",
+      "Amps/Kratos/APP-6505Plus-Scooped-Gain-08.nam",
+      "Amps/Kratos/APP-6505Plus-Scooped-Gain-09.nam",
+      "Amps/Kratos/APP-6505Plus-Scooped-Gain-10.nam"
+     ],
+     [
+      "Amps/Kratos/APP-6505Plus-MidForward-Gain-01.nam",
+      "Amps/Kratos/APP-6505Plus-MidForward-Gain-02.nam",
+      "Amps/Kratos/APP-6505Plus-MidForward-Gain-03.nam",
+      "Amps/Kratos/APP-6505Plus-MidForward-Gain-04.nam",
+      "Amps/Kratos/APP-6505Plus-MidForward-Gain-05.nam",
+      "Amps/Kratos/APP-6505Plus-MidForward-Gain-06.nam",
+      "Amps/Kratos/APP-6505Plus-MidForward-Gain-07.nam",
+      "Amps/Kratos/APP-6505Plus-MidForward-Gain-08.nam",
+      "Amps/Kratos/APP-6505Plus-MidForward-Gain-09.nam",
+      "Amps/Kratos/APP-6505Plus-MidForward-Gain-10.nam"
+     ]
+    ]
+   }
+  },
+  "switches": [
+   {
+    "id": "crunch",
+    "button": "crunch",
+    "led": "crunch_led",
+    "label": "Crunch",
+    "does": "more drive into the rhythm captures"
+   },
+   {
+    "id": "bright",
+    "button": "bright",
+    "led": "bright_led",
+    "label": "Bright",
+    "does": "treble lift on the rhythm channel"
+   }
+  ]
+ }
+}

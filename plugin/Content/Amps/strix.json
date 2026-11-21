@@ -1,0 +1,106 @@
+{
+ "key": "strix",
+ "name": "STRIX",
+ "type": "nam",
+ "role": "high gain",
+ "folder": "CAPTURE AMPS",
+ "basedOn": "Schecter Hellwin 100W (Synyster Gates)",
+ "description": "Strix runs Synyster Gates' Hellwin settings. CHANNEL switches Clean and Lead, and VOICE picks between the two captures of each: USA or UK clean, Lead 1 or Lead 2. The middle window has also been rebuilt: three lancets on mullions, with a rose on top that ties into every arch, so nothing floats any more.",
+ "pack": "Hellwin 100W 'Synyster Settings'",
+ "madeBy": "gtrjeremy",
+ "files": 5,
+ "kind": "Amp only",
+ "captures": [
+  "Amps/Strix/Hellwin Clean USA.nam",
+  "Amps/Strix/Hellwin Lead 1.nam"
+ ],
+ "channelNames": [
+  "Clean",
+  "Lead"
+ ],
+ "map": {
+  "knobs": [
+   "Gain",
+   "Bass",
+   "Middle",
+   "Treble",
+   "Presence",
+   "Resonance",
+   "Master"
+  ],
+  "gainKnob": 0,
+  "buttons": [
+   {
+    "id": "channel",
+    "names": [
+     "Clean",
+     "Lead"
+    ],
+    "button": "channel",
+    "leds": [
+     [
+      "ch1"
+     ],
+     [
+      "ch2"
+     ]
+    ],
+    "perknobs": [
+     0,
+     1,
+     2,
+     3,
+     6
+    ],
+    "start": 1
+   },
+   {
+    "id": "voice",
+    "button": "voice",
+    "leds": [
+     [
+      "vo1"
+     ],
+     [
+      "vo2"
+     ]
+    ],
+    "per": "channel"
+   }
+  ],
+  "settings": {
+   "0|0": {
+    "name": "Clean USA",
+    "by": "one",
+    "files": [
+     "Amps/Strix/Hellwin Clean USA.nam"
+    ]
+   },
+   "0|1": {
+    "name": "Clean UK",
+    "by": "one",
+    "files": [
+     "Amps/Strix/Hellwin Clean UK.nam"
+    ]
+   },
+   "1|0": {
+    "name": "Lead 1",
+    "by": "one",
+    "files": [
+     "Amps/Strix/Hellwin Lead 1.nam"
+    ]
+   },
+   "1|1": {
+    "name": "Lead 2",
+    "by": "one",
+    "files": [
+     "Amps/Strix/Hellwin Lead 2.nam"
+    ],
+    "spare": [
+     "Amps/Strix/Hellwin Lead 2 (Capture 2).nam",
+     "Amps/Strix/Hellwin SYN100-H Lead 2 (Knobs at Noon).nam"
+    ]
+   }
+  }
+ }
+}
