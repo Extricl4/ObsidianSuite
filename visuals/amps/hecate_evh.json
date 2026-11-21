@@ -1,0 +1,141 @@
+{
+ "size": [
+  22,
+  9,
+  8.6
+ ],
+ "border": 0.75,
+ "recess": 0.45,
+ "zones": [
+  {
+   "type": "wood",
+   "z": [
+    4.15,
+    7.85
+   ],
+   "planks": 2,
+   "c1": [
+    0.004,
+    0.003,
+    0.003
+   ],
+   "c2": [
+    0.26,
+    0.07,
+    0.45
+   ],
+   "fade": [
+    0.35,
+    1.25
+   ],
+   "coat": 0.0,
+   "rough": 0.8
+  },
+  {
+   "type": "panel",
+   "z": [
+    0.75,
+    4.12
+   ],
+   "art": "art/hecate_evh_panel.png",
+   "color": [
+    0.016,
+    0.016,
+    0.018
+   ],
+   "rough": 0.62,
+   "artemis": 0.35,
+   "knobs": [
+    {
+     "x": -4.37,
+     "z": 1.9,
+     "r": 0.62,
+     "v": 0.7,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "gold",
+     "ptr": "black"
+    },
+    {
+     "x": 4.43,
+     "z": 1.9,
+     "r": 0.62,
+     "v": 0.45,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "gold",
+     "ptr": "black"
+    },
+    {
+     "x": -2.71,
+     "z": 1.9,
+     "r": 0.38,
+     "v": 0.45,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "gold",
+     "ptr": "black"
+    },
+    {
+     "x": -1.54,
+     "z": 1.9,
+     "r": 0.38,
+     "v": 0.5,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "gold",
+     "ptr": "black"
+    },
+    {
+     "x": -0.37,
+     "z": 1.9,
+     "r": 0.38,
+     "v": 0.55,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "gold",
+     "ptr": "black"
+    },
+    {
+     "x": 1.38,
+     "z": 1.9,
+     "r": 0.38,
+     "v": 0.4,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "gold",
+     "ptr": "black"
+    },
+    {
+     "x": 2.57,
+     "z": 1.9,
+     "r": 0.38,
+     "v": 0.6,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "gold",
+     "ptr": "black"
+    }
+   ],
+   "jewels": [
+    {
+     "x": 9.38,
+     "z": 1.9,
+     "color": [
+      0.7,
+      0.35,
+      1.0
+     ],
+     "r": 0.26,
+     "id": "power"
+    }
+   ]
+  }
+ ],
+ "rimcolor": [
+  0.8720000000000001,
+  0.454,
+  1
+ ],
+ "bevel": 0.1
+}

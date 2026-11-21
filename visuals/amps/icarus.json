@@ -6,7 +6,6 @@
  ],
  "border": 0.8,
  "recess": 0.5,
- "corners": "L",
  "zones": [
   {
    "type": "cloth",

@@ -1,0 +1,269 @@
+{
+ "size": [
+  24,
+  10,
+  10.5
+ ],
+ "border": 0.7,
+ "recess": 1.0,
+ "bevel": 0.2,
+ "rimcolor": [
+  0.7,
+  0.7,
+  0.75
+ ],
+ "body": {
+  "color": [
+   0.01,
+   0.01,
+   0.011
+  ],
+  "rough": 0.85,
+  "bump": [
+   "noise",
+   300,
+   0.012
+  ]
+ },
+ "handle": {
+  "w": 8.5,
+  "h": 1.2,
+  "color": [
+   0.012,
+   0.012,
+   0.013
+  ]
+ },
+ "glow_strips": [
+  {
+   "z": 4.25,
+   "color": [
+    0.2,
+    1.0,
+    0.35
+   ],
+   "strength": 3.2,
+   "w": 22.54
+  }
+ ],
+ "zones": [
+  {
+   "type": "relief",
+   "z": [
+    4.25,
+    9.8
+   ],
+   "height": "art/typhon_h.png",
+   "depth": 0.3,
+   "res": 64,
+   "color": [
+    0.04,
+    0.04,
+    0.045
+   ],
+   "low": [
+    0.006,
+    0.006,
+    0.007
+   ],
+   "lo_at": 0.2,
+   "hi_at": 0.86,
+   "metal": 0.0,
+   "metal_hi": 0.85,
+   "rough": 0.62,
+   "grain": [
+    300,
+    0.01
+   ],
+   "graze": [
+    {
+     "color": [
+      0.2,
+      1.0,
+      0.35
+     ],
+     "energy": 40,
+     "tilt": -25,
+     "out": 1.0,
+     "top": 0.35
+    }
+   ]
+  },
+  {
+   "type": "panel",
+   "z": [
+    0.7,
+    4.25
+   ],
+   "art": "art/typhon_panel.png",
+   "artemis": 0.12,
+   "color": [
+    0.009,
+    0.009,
+    0.01
+   ],
+   "metal": 0.1,
+   "rough": 0.8,
+   "bump": [
+    "noise",
+    300,
+    0.01
+   ],
+   "knobs": [
+    {
+     "x": -8.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.75,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "bakelite",
+     "ptr": "white"
+    },
+    {
+     "x": -6.0,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.5,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "bakelite",
+     "ptr": "white"
+    },
+    {
+     "x": -3.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.45,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "bakelite",
+     "ptr": "white"
+    },
+    {
+     "x": -1.0,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.55,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "bakelite",
+     "ptr": "white"
+    },
+    {
+     "x": 1.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.5,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "bakelite",
+     "ptr": "white"
+    },
+    {
+     "x": 4.0,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.55,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "bakelite",
+     "ptr": "white"
+    },
+    {
+     "x": 6.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.5,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "bakelite",
+     "ptr": "white"
+    }
+   ],
+   "jacks": [
+    [
+     -10.3,
+     2.2975,
+     "jack"
+    ]
+   ],
+   "buttons": [
+    {
+     "id": "ch1",
+     "x": 7.75,
+     "z": 2.2975,
+     "w": 0.46,
+     "h": 0.32,
+     "cap": [
+      0.012,
+      0.012,
+      0.013
+     ],
+     "metal": 0.2,
+     "rough": 0.7,
+     "led": [
+      0.2,
+      1.0,
+      0.35
+     ],
+     "ledr": 0.055
+    },
+    {
+     "id": "ch2",
+     "x": 8.55,
+     "z": 2.2975,
+     "w": 0.46,
+     "h": 0.32,
+     "cap": [
+      0.012,
+      0.012,
+      0.013
+     ],
+     "metal": 0.2,
+     "rough": 0.7,
+     "led": [
+      0.25,
+      0.55,
+      1.0
+     ],
+     "ledr": 0.055
+    },
+    {
+     "id": "ch3",
+     "x": 9.35,
+     "z": 2.2975,
+     "w": 0.46,
+     "h": 0.32,
+     "cap": [
+      0.012,
+      0.012,
+      0.013
+     ],
+     "metal": 0.2,
+     "rough": 0.7,
+     "led": [
+      1.0,
+      0.1,
+      0.04
+     ],
+     "ledr": 0.055
+    }
+   ],
+   "jewels": [
+    {
+     "x": 10.3,
+     "z": 2.2975,
+     "color": [
+      0.2,
+      1.0,
+      0.35
+     ],
+     "r": 0.24,
+     "strength": 24,
+     "id": "power"
+    }
+   ]
+  }
+ ]
+}

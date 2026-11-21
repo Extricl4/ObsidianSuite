@@ -94,7 +94,7 @@
     0.7,
     4.25
    ],
-   "art": "art/sanctum_panel.png",
+   "art": "art/sanctum_panel3.png",
    "color": [
     0.015,
     0.012,
@@ -114,49 +114,70 @@
      "z": 2.2975,
      "r": 0.4,
      "v": 0.3142844336753074,
-     "style": "black"
+     "shape": "skirt2",
+     "mat": "bakelite",
+     "mat2": "gold",
+     "ptr": "black"
     },
     {
      "x": -6.0,
      "z": 2.2975,
      "r": 0.4,
      "v": 0.6191658696545712,
-     "style": "black"
+     "shape": "skirt2",
+     "mat": "bakelite",
+     "mat2": "gold",
+     "ptr": "black"
     },
     {
      "x": -3.5,
      "z": 2.2975,
      "r": 0.4,
      "v": 0.47562332070807445,
-     "style": "black"
+     "shape": "skirt2",
+     "mat": "bakelite",
+     "mat2": "gold",
+     "ptr": "black"
     },
     {
      "x": -1.0,
      "z": 2.2975,
      "r": 0.4,
      "v": 0.384934242080806,
-     "style": "black"
+     "shape": "skirt2",
+     "mat": "bakelite",
+     "mat2": "gold",
+     "ptr": "black"
     },
     {
      "x": 1.5,
      "z": 2.2975,
      "r": 0.4,
      "v": 0.7079147222402404,
-     "style": "black"
+     "shape": "skirt2",
+     "mat": "bakelite",
+     "mat2": "gold",
+     "ptr": "black"
     },
     {
      "x": 4.0,
      "z": 2.2975,
      "r": 0.4,
      "v": 0.6928586507504141,
-     "style": "black"
+     "shape": "skirt2",
+     "mat": "bakelite",
+     "mat2": "gold",
+     "ptr": "black"
     },
     {
      "x": 6.5,
      "z": 2.2975,
      "r": 0.4,
      "v": 0.6934705361184494,
-     "style": "black"
+     "shape": "skirt2",
+     "mat": "bakelite",
+     "mat2": "gold",
+     "ptr": "black"
     }
    ],
    "toggles": [
@@ -199,5 +220,6 @@
    0.5
   ]
  },
- "corners": "chrome"
+ "corners": "chrome",
+ "chrome_size": 1.6
 }

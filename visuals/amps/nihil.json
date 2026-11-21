@@ -1,0 +1,197 @@
+{
+ "size": [
+  24,
+  10,
+  10.5
+ ],
+ "border": 0.7,
+ "recess": 1.0,
+ "bevel": 0.28,
+ "rimcolor": [
+  0.8,
+  0.85,
+  0.9
+ ],
+ "body": {
+  "color": [
+   0.016,
+   0.016,
+   0.018
+  ],
+  "rough": 0.6,
+  "bump": [
+   "leather",
+   34,
+   0.8
+  ]
+ },
+ "handle": {
+  "w": 8.5,
+  "h": 1.2,
+  "color": [
+   0.02,
+   0.02,
+   0.02
+  ]
+ },
+ "zones": [
+  {
+   "type": "relief",
+   "z": [
+    0.7,
+    9.8
+   ],
+   "height": "art/nihil_h.png",
+   "holes": "art/nihil_holes.png",
+   "depth": 0.32,
+   "res": 62,
+   "color": [
+    0.03,
+    0.03,
+    0.033
+   ],
+   "cavity": 0.45,
+   "rough": 0.6,
+   "hi_at": 0.5
+  },
+  {
+   "type": "panel",
+   "z": [
+    1.15,
+    3.65
+   ],
+   "window": [
+    -7.4,
+    7.4
+   ],
+   "inset": 0.32,
+   "art": "art/nihil_panel.png",
+   "artemis": 0.1,
+   "color": [
+    0.004,
+    0.004,
+    0.005
+   ],
+   "metal": 0.4,
+   "rough": 0.06,
+   "bump": 0,
+   "knobs": [
+    {
+     "x": -4.2,
+     "z": 2.4,
+     "r": 0.27,
+     "v": 0.35,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "bakelite",
+     "ptr": "white"
+    },
+    {
+     "x": -3.0,
+     "z": 2.4,
+     "r": 0.27,
+     "v": 0.55,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "bakelite",
+     "ptr": "white"
+    },
+    {
+     "x": -1.8,
+     "z": 2.4,
+     "r": 0.27,
+     "v": 0.5,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "bakelite",
+     "ptr": "white"
+    },
+    {
+     "x": -0.6,
+     "z": 2.4,
+     "r": 0.27,
+     "v": 0.42,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "bakelite",
+     "ptr": "white"
+    },
+    {
+     "x": 0.6,
+     "z": 2.4,
+     "r": 0.27,
+     "v": 0.6,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "bakelite",
+     "ptr": "white"
+    },
+    {
+     "x": 1.8,
+     "z": 2.4,
+     "r": 0.27,
+     "v": 0.7,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "bakelite",
+     "ptr": "white"
+    },
+    {
+     "x": 3.0,
+     "z": 2.4,
+     "r": 0.27,
+     "v": 0.75,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "bakelite",
+     "ptr": "white"
+    }
+   ],
+   "toggles": [
+    [
+     -6.0,
+     2.4
+    ],
+    [
+     -5.25,
+     2.4
+    ]
+   ],
+   "jewels": [
+    {
+     "x": -6.75,
+     "z": 2.4,
+     "color": [
+      0.2,
+      1,
+      0.45
+     ],
+     "r": 0.18,
+     "strength": 18
+    }
+   ],
+   "jacks": [
+    [
+     4.75,
+     2.95,
+     "jack"
+    ],
+    [
+     6.45,
+     2.95,
+     "jack"
+    ],
+    [
+     4.75,
+     1.85,
+     "jack"
+    ],
+    [
+     6.45,
+     1.85,
+     "jack"
+    ]
+   ]
+  }
+ ]
+}

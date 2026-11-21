@@ -1,0 +1,254 @@
+{
+ "size": [
+  24,
+  10,
+  10.5
+ ],
+ "border": 0.7,
+ "recess": 1.2,
+ "bevel": 0.2,
+ "rimcolor": [
+  0.6,
+  0.8,
+  1.0
+ ],
+ "corners": "chrome",
+ "chrome_size": 1.4,
+ "body": {
+  "color": [
+   0.012,
+   0.012,
+   0.014
+  ],
+  "rough": 0.6,
+  "bump": [
+   "leather",
+   40,
+   0.6
+  ]
+ },
+ "handle": {
+  "w": 8.5,
+  "h": 1.2,
+  "color": [
+   0.02,
+   0.02,
+   0.02
+  ]
+ },
+ "glow_strips": [
+  {
+   "z": 4.25,
+   "color": [
+    0.45,
+    0.75,
+    1.0
+   ],
+   "strength": 3.5,
+   "w": 22.54
+  }
+ ],
+ "zones": [
+  {
+   "type": "relief",
+   "z": [
+    4.25,
+    9.8
+   ],
+   "height": "art/niflheim_h.png",
+   "holes": "art/niflheim_holes.png",
+   "glass": "art/niflheim_glass.png",
+   "glass_strength": 0.35,
+   "glass_y": 0.2,
+   "glass_lights": [
+    {
+     "x": -7,
+     "color": [
+      0.45,
+      0.75,
+      1.0
+     ],
+     "energy": 25,
+     "size": 4
+    },
+    {
+     "x": 0,
+     "color": [
+      0.45,
+      0.75,
+      1.0
+     ],
+     "energy": 25,
+     "size": 4
+    },
+    {
+     "x": 7,
+     "color": [
+      0.45,
+      0.75,
+      1.0
+     ],
+     "energy": 25,
+     "size": 4
+    }
+   ],
+   "depth": 0.45,
+   "res": 60,
+   "color": [
+    0.4,
+    0.43,
+    0.48
+   ],
+   "cavity": 0.12,
+   "metal": 0.85,
+   "rough": 0.3,
+   "hi_at": 0.9,
+   "grain": [
+    120,
+    0.05
+   ]
+  },
+  {
+   "type": "panel",
+   "z": [
+    0.7,
+    4.25
+   ],
+   "art": "art/niflheim_panel.png",
+   "artemis": 0.15,
+   "color": [
+    0.012,
+    0.012,
+    0.014
+   ],
+   "metal": 0.4,
+   "rough": 0.4,
+   "knobs": [
+    {
+     "x": -8.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.8,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "silver",
+     "ptr": [
+      0.45,
+      0.75,
+      1.0
+     ]
+    },
+    {
+     "x": -6.0,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.45,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "silver",
+     "ptr": [
+      0.45,
+      0.75,
+      1.0
+     ]
+    },
+    {
+     "x": -3.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.4,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "silver",
+     "ptr": [
+      0.45,
+      0.75,
+      1.0
+     ]
+    },
+    {
+     "x": -1.0,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.6,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "silver",
+     "ptr": [
+      0.45,
+      0.75,
+      1.0
+     ]
+    },
+    {
+     "x": 1.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.55,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "silver",
+     "ptr": [
+      0.45,
+      0.75,
+      1.0
+     ]
+    },
+    {
+     "x": 4.0,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.65,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "silver",
+     "ptr": [
+      0.45,
+      0.75,
+      1.0
+     ]
+    },
+    {
+     "x": 6.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.4,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "silver",
+     "ptr": [
+      0.45,
+      0.75,
+      1.0
+     ]
+    }
+   ],
+   "toggles": [
+    [
+     8.4,
+     2.2975
+    ]
+   ],
+   "jewels": [
+    {
+     "x": 9.5,
+     "z": 2.2975,
+     "color": [
+      0.45,
+      0.75,
+      1.0
+     ],
+     "r": 0.28,
+     "strength": 28
+    }
+   ],
+   "jacks": [
+    [
+     -10.3,
+     2.2975,
+     "jack"
+    ]
+   ]
+  }
+ ]
+}

@@ -1,0 +1,197 @@
+{
+ "size": [
+  24,
+  10,
+  10.5
+ ],
+ "border": 0.7,
+ "recess": 1.0,
+ "bevel": 0.2,
+ "rimcolor": [
+  1.0,
+  0.75,
+  0.4
+ ],
+ "body": {
+  "color": [
+   0.012,
+   0.011,
+   0.011
+  ],
+  "rough": 0.6,
+  "bump": [
+   "leather",
+   42,
+   0.55
+  ]
+ },
+ "handle": {
+  "w": 8.5,
+  "h": 1.2
+ },
+ "glow_strips": [
+  {
+   "z": 4.25,
+   "color": [
+    1.0,
+    0.72,
+    0.32
+   ],
+   "strength": 3,
+   "w": 22.54
+  }
+ ],
+ "zones": [
+  {
+   "type": "relief",
+   "z": [
+    4.25,
+    9.8
+   ],
+   "height": "art/chrysaor_h.png",
+   "depth": 0.4,
+   "res": 56,
+   "color": [
+    0.86,
+    0.62,
+    0.26
+   ],
+   "low": [
+    0.008,
+    0.007,
+    0.006
+   ],
+   "lo_at": 0.16,
+   "hi_at": 0.34,
+   "metal": 0.25,
+   "metal_hi": 1.0,
+   "rough": 0.26,
+   "grain": [
+    160,
+    0.03
+   ],
+   "graze": [
+    {
+     "color": [
+      1.0,
+      0.8,
+      0.5
+     ],
+     "energy": 55,
+     "tilt": -25,
+     "out": 1.0,
+     "top": 0.4
+    }
+   ]
+  },
+  {
+   "type": "panel",
+   "z": [
+    0.7,
+    4.25
+   ],
+   "art": "art/chrysaor_panel.png",
+   "artemis": 0.0,
+   "color": [
+    0.78,
+    0.56,
+    0.22
+   ],
+   "metal": 0.95,
+   "rough": 0.33,
+   "bump": [
+    "brush",
+    70,
+    0.03
+   ],
+   "knobs": [
+    {
+     "x": -7.6,
+     "z": 2.2975,
+     "r": 0.44,
+     "v": 0.5,
+     "shape": "cap",
+     "mat": "bakelite",
+     "mat2": "gold",
+     "ptr": "white"
+    },
+    {
+     "x": -5.1,
+     "z": 2.2975,
+     "r": 0.44,
+     "v": 0.5,
+     "shape": "cap",
+     "mat": "bakelite",
+     "mat2": "gold",
+     "ptr": "white"
+    },
+    {
+     "x": -2.6,
+     "z": 2.2975,
+     "r": 0.44,
+     "v": 0.6,
+     "shape": "cap",
+     "mat": "bakelite",
+     "mat2": "gold",
+     "ptr": "white"
+    },
+    {
+     "x": -0.1,
+     "z": 2.2975,
+     "r": 0.44,
+     "v": 0.55,
+     "shape": "cap",
+     "mat": "bakelite",
+     "mat2": "gold",
+     "ptr": "white"
+    },
+    {
+     "x": 2.4,
+     "z": 2.2975,
+     "r": 0.44,
+     "v": 0.5,
+     "shape": "cap",
+     "mat": "bakelite",
+     "mat2": "gold",
+     "ptr": "white"
+    },
+    {
+     "x": 4.9,
+     "z": 2.2975,
+     "r": 0.44,
+     "v": 0.7,
+     "shape": "cap",
+     "mat": "bakelite",
+     "mat2": "gold",
+     "ptr": "white"
+    }
+   ],
+   "jacks": [
+    [
+     7.4,
+     2.2975,
+     "jack"
+    ],
+    [
+     8.5,
+     2.2975,
+     "jack"
+    ]
+   ],
+   "jewels": [
+    {
+     "x": -9.9,
+     "z": 2.2975,
+     "color": [
+      1.0,
+      0.12,
+      0.04
+     ],
+     "r": 0.3,
+     "strength": 30,
+     "id": "power"
+    }
+   ]
+  }
+ ]
+}

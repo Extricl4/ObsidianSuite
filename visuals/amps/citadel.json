@@ -20,7 +20,7 @@
    "rough": 0.55,
    "tubes": [
     {
-     "x": -8.1,
+     "x": -9.355,
      "h": 2.6,
      "r": 0.4,
      "color": [
@@ -32,7 +32,7 @@
      "light": 55
     },
     {
-     "x": -5.4,
+     "x": -6.055,
      "h": 2.6,
      "r": 0.4,
      "color": [
@@ -44,7 +44,7 @@
      "light": 55
     },
     {
-     "x": -2.7,
+     "x": -2.755,
      "h": 2.6,
      "r": 0.4,
      "color": [
@@ -56,7 +56,7 @@
      "light": 55
     },
     {
-     "x": 0,
+     "x": 2.745,
      "h": 2.6,
      "r": 0.4,
      "color": [
@@ -68,7 +68,7 @@
      "light": 55
     },
     {
-     "x": 2.7,
+     "x": 6.045,
      "h": 2.6,
      "r": 0.4,
      "color": [
@@ -80,19 +80,7 @@
      "light": 55
     },
     {
-     "x": 5.4,
-     "h": 2.6,
-     "r": 0.4,
-     "color": [
-      1,
-      0.5,
-      0.12
-     ],
-     "strength": 9,
-     "light": 55
-    },
-    {
-     "x": 8.1,
+     "x": 9.345,
      "h": 2.6,
      "r": 0.4,
      "color": [
@@ -171,7 +159,7 @@
     0.7,
     4.25
    ],
-   "art": "art/citadel_panel.png",
+   "art": "art/citadel_panel3.png",
    "color": [
     0.035,
     0.032,
@@ -191,49 +179,70 @@
      "z": 2.2975,
      "r": 0.4,
      "v": 0.38867780215417064,
-     "style": "black"
+     "shape": "knurl",
+     "mat": "iron",
+     "mat2": "brass",
+     "ptr": "black"
     },
     {
      "x": -6.0,
      "z": 2.2975,
      "r": 0.4,
      "v": 0.5298556143859815,
-     "style": "black"
+     "shape": "knurl",
+     "mat": "iron",
+     "mat2": "brass",
+     "ptr": "black"
     },
     {
      "x": -3.5,
      "z": 2.2975,
      "r": 0.4,
      "v": 0.31246513248998775,
-     "style": "black"
+     "shape": "knurl",
+     "mat": "iron",
+     "mat2": "brass",
+     "ptr": "black"
     },
     {
      "x": -1.0,
      "z": 2.2975,
      "r": 0.4,
      "v": 0.4640437211601819,
-     "style": "black"
+     "shape": "knurl",
+     "mat": "iron",
+     "mat2": "brass",
+     "ptr": "black"
     },
     {
      "x": 1.5,
      "z": 2.2975,
      "r": 0.4,
      "v": 0.42837264698966976,
-     "style": "black"
+     "shape": "knurl",
+     "mat": "iron",
+     "mat2": "brass",
+     "ptr": "black"
     },
     {
      "x": 4.0,
      "z": 2.2975,
      "r": 0.4,
      "v": 0.38930127591456753,
-     "style": "black"
+     "shape": "knurl",
+     "mat": "iron",
+     "mat2": "brass",
+     "ptr": "black"
     },
     {
      "x": 6.5,
      "z": 2.2975,
      "r": 0.4,
      "v": 0.506901224750004,
-     "style": "black"
+     "shape": "knurl",
+     "mat": "iron",
+     "mat2": "brass",
+     "ptr": "black"
     }
    ],
    "toggles": [
@@ -276,6 +285,5 @@
    4,
    0.5
   ]
- },
- "corners": "L"
+ }
 }

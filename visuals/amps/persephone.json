@@ -1,0 +1,210 @@
+{
+ "size": [
+  24,
+  10,
+  10.5
+ ],
+ "border": 0.7,
+ "recess": 1.0,
+ "bevel": 0.2,
+ "rimcolor": [
+  1,
+  0.9,
+  0.85
+ ],
+ "world": [
+  0.012,
+  0.011,
+  0.012
+ ],
+ "body": {
+  "color": [
+   0.72,
+   0.71,
+   0.68
+  ],
+  "rough": 0.78,
+  "bump": [
+   "leather",
+   40,
+   0.35
+  ]
+ },
+ "handle": {
+  "w": 8.5,
+  "h": 1.2,
+  "color": [
+   0.66,
+   0.65,
+   0.62
+  ]
+ },
+ "glow_strips": [
+  {
+   "z": 4.25,
+   "color": [
+    1.0,
+    0.62,
+    0.6
+   ],
+   "strength": 5,
+   "w": 22.54
+  }
+ ],
+ "zones": [
+  {
+   "type": "relief",
+   "z": [
+    4.25,
+    9.8
+   ],
+   "height": "art/persephone_h.png",
+   "depth": 0.42,
+   "res": 56,
+   "color": [
+    0.78,
+    0.77,
+    0.74
+   ],
+   "cavity": 0.72,
+   "rough": 0.78,
+   "hi_at": 0.5,
+   "grain": [
+    180,
+    0.04
+   ],
+   "graze": [
+    {
+     "color": [
+      1,
+      0.88,
+      0.8
+     ],
+     "energy": 70,
+     "tilt": -25,
+     "out": 1.0,
+     "top": 0.35
+    }
+   ]
+  },
+  {
+   "type": "panel",
+   "z": [
+    0.7,
+    4.25
+   ],
+   "art": "art/persephone_panel3.png",
+   "artemis": 0.0,
+   "artrough": 0.6,
+   "color": [
+    0.74,
+    0.73,
+    0.7
+   ],
+   "rough": 0.72,
+   "bump": [
+    "noise",
+    300,
+    0.02
+   ],
+   "knobs": [
+    {
+     "x": -8.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.62,
+     "shape": "knurl",
+     "mat": "white",
+     "mat2": "rosegold",
+     "ptr": "black"
+    },
+    {
+     "x": -6.0,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.5,
+     "shape": "knurl",
+     "mat": "white",
+     "mat2": "rosegold",
+     "ptr": "black"
+    },
+    {
+     "x": -3.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.55,
+     "shape": "knurl",
+     "mat": "white",
+     "mat2": "rosegold",
+     "ptr": "black"
+    },
+    {
+     "x": -1.0,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.48,
+     "shape": "knurl",
+     "mat": "white",
+     "mat2": "rosegold",
+     "ptr": "black"
+    },
+    {
+     "x": 1.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.52,
+     "shape": "knurl",
+     "mat": "white",
+     "mat2": "rosegold",
+     "ptr": "black"
+    },
+    {
+     "x": 4.0,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.45,
+     "shape": "knurl",
+     "mat": "white",
+     "mat2": "rosegold",
+     "ptr": "black"
+    },
+    {
+     "x": 6.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.4,
+     "shape": "knurl",
+     "mat": "white",
+     "mat2": "rosegold",
+     "ptr": "black"
+    }
+   ],
+   "toggles": [
+    [
+     8.4,
+     2.2975
+    ]
+   ],
+   "jewels": [
+    {
+     "x": 9.5,
+     "z": 2.2975,
+     "color": [
+      1,
+      0.5,
+      0.6
+     ],
+     "r": 0.28,
+     "strength": 28
+    }
+   ],
+   "jacks": [
+    [
+     -10.3,
+     2.2975,
+     "jack"
+    ]
+   ]
+  }
+ ]
+}

@@ -1,0 +1,243 @@
+{
+ "size": [
+  24,
+  10,
+  10.5
+ ],
+ "border": 0.7,
+ "recess": 1.0,
+ "bevel": 0.22,
+ "rimcolor": [
+  0.75,
+  0.82,
+  1.0
+ ],
+ "body": {
+  "color": [
+   0.014,
+   0.014,
+   0.016
+  ],
+  "rough": 0.65,
+  "bump": [
+   "leather",
+   36,
+   0.8
+  ]
+ },
+ "handle": {
+  "w": 8.5,
+  "h": 1.2,
+  "color": [
+   0.02,
+   0.02,
+   0.02
+  ]
+ },
+ "zones": [
+  {
+   "type": "relief",
+   "z": [
+    4.25,
+    9.8
+   ],
+   "height": "art/moros_h.png",
+   "depth": 0.3,
+   "res": 56,
+   "color": [
+    0.14,
+    0.11,
+    0.095
+   ],
+   "low": [
+    0.025,
+    0.02,
+    0.017
+   ],
+   "lo_at": 0.3,
+   "hi_at": 0.62,
+   "rough": 0.5,
+   "metal": 0.1,
+   "grain": [
+    200,
+    0.03
+   ],
+   "graze": [
+    {
+     "color": [
+      0.85,
+      0.9,
+      1.0
+     ],
+     "energy": 55,
+     "tilt": -22,
+     "out": 1.0,
+     "top": 0.4
+    }
+   ],
+   "plates": [
+    {
+     "height": "art/moros_badge_h.png",
+     "x": -8.3,
+     "z": 7.45,
+     "w": 2.2,
+     "h": 2.2,
+     "depth": 0.3,
+     "res": 110,
+     "lift": 0.12,
+     "color": [
+      0.7,
+      0.7,
+      0.73
+     ],
+     "low": [
+      0.02,
+      0.02,
+      0.022
+     ],
+     "lo_at": 0.32,
+     "hi_at": 0.75,
+     "metal": 0.5,
+     "metal_hi": 1.0,
+     "rough": 0.28
+    }
+   ]
+  },
+  {
+   "type": "panel",
+   "z": [
+    0.7,
+    4.25
+   ],
+   "art": "art/moros_panel.png",
+   "artemis": 0.15,
+   "color": [
+    0.008,
+    0.008,
+    0.009
+   ],
+   "metal": 0.3,
+   "rough": 0.32,
+   "knobs": [
+    {
+     "x": -8.6,
+     "z": 2.25,
+     "r": 0.45,
+     "v": 0.7,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "silver",
+     "ptr": "white"
+    },
+    {
+     "x": -6.7,
+     "z": 2.25,
+     "r": 0.3,
+     "v": 0.55,
+     "shape": "chicken",
+     "mat": "bakelite",
+     "mat2": "silver",
+     "ptr": "white"
+    },
+    {
+     "x": -5.5,
+     "z": 2.25,
+     "r": 0.3,
+     "v": 0.4,
+     "shape": "chicken",
+     "mat": "bakelite",
+     "mat2": "silver",
+     "ptr": "white"
+    },
+    {
+     "x": -4.3,
+     "z": 2.25,
+     "r": 0.3,
+     "v": 0.6,
+     "shape": "chicken",
+     "mat": "bakelite",
+     "mat2": "silver",
+     "ptr": "white"
+    },
+    {
+     "x": -2.4,
+     "z": 2.25,
+     "r": 0.45,
+     "v": 0.5,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "silver",
+     "ptr": "white"
+    },
+    {
+     "x": 0.0,
+     "z": 2.25,
+     "r": 0.48,
+     "v": 0.35,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "silver",
+     "ptr": "white"
+    },
+    {
+     "x": 1.75,
+     "z": 2.25,
+     "r": 0.3,
+     "v": 0.65,
+     "shape": "chicken",
+     "mat": "bakelite",
+     "mat2": "silver",
+     "ptr": "white"
+    },
+    {
+     "x": 2.95,
+     "z": 2.25,
+     "r": 0.3,
+     "v": 0.55,
+     "shape": "chicken",
+     "mat": "bakelite",
+     "mat2": "silver",
+     "ptr": "white"
+    }
+   ],
+   "toggles": [
+    [
+     -7.6,
+     2.25
+    ],
+    [
+     -1.2,
+     2.25
+    ],
+    [
+     7.4,
+     2.1
+    ],
+    [
+     8.35,
+     2.1
+    ]
+   ],
+   "jewels": [
+    {
+     "x": 9.4,
+     "z": 2.1,
+     "color": [
+      0.3,
+      0.55,
+      1.0
+     ],
+     "r": 0.2,
+     "strength": 24
+    }
+   ],
+   "jacks": [
+    [
+     -10.4,
+     2.25,
+     "jack"
+    ]
+   ]
+  }
+ ]
+}

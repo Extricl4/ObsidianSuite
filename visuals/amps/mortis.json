@@ -1,0 +1,259 @@
+{
+ "size": [
+  24,
+  10,
+  10.5
+ ],
+ "border": 0.7,
+ "recess": 1.2,
+ "bevel": 0.2,
+ "rimcolor": [
+  0.6,
+  1,
+  0.5
+ ],
+ "body": {
+  "color": [
+   0.016,
+   0.015,
+   0.014
+  ],
+  "rough": 0.75,
+  "bump": [
+   "leather",
+   30,
+   0.8
+  ]
+ },
+ "handle": {
+  "w": 8.5,
+  "h": 1.2,
+  "color": [
+   0.02,
+   0.02,
+   0.02
+  ]
+ },
+ "glow_strips": [
+  {
+   "z": 4.25,
+   "color": [
+    0.35,
+    1.0,
+    0.2
+   ],
+   "strength": 3.5,
+   "w": 22.54
+  }
+ ],
+ "zones": [
+  {
+   "type": "relief",
+   "z": [
+    4.25,
+    9.8
+   ],
+   "height": "art/mortis_h.png",
+   "holes": "art/mortis_holes.png",
+   "glass": "art/mortis_glass.png",
+   "glass_strength": 1.6,
+   "glass_y": 0.18,
+   "glass_lights": [
+    {
+     "x": -7,
+     "color": [
+      0.35,
+      1.0,
+      0.2
+     ],
+     "energy": 10,
+     "size": 4
+    },
+    {
+     "x": 0,
+     "color": [
+      0.35,
+      1.0,
+      0.2
+     ],
+     "energy": 10,
+     "size": 4
+    },
+    {
+     "x": 7,
+     "color": [
+      0.35,
+      1.0,
+      0.2
+     ],
+     "energy": 10,
+     "size": 4
+    }
+   ],
+   "depth": 0.45,
+   "res": 60,
+   "color": [
+    0.2,
+    0.18,
+    0.15
+   ],
+   "cavity": 0.12,
+   "rough": 0.85,
+   "hi_at": 0.72,
+   "grain": [
+    90,
+    0.14
+   ],
+   "graze": [
+    {
+     "color": [
+      0.9,
+      1.0,
+      0.85
+     ],
+     "energy": 30,
+     "tilt": -25,
+     "out": 1.0,
+     "top": 0.3
+    }
+   ]
+  },
+  {
+   "type": "panel",
+   "z": [
+    0.7,
+    4.25
+   ],
+   "art": "art/mortis_panel.png",
+   "artemis": 0.15,
+   "color": [
+    0.035,
+    0.032,
+    0.03
+   ],
+   "metal": 0.8,
+   "rough": 0.65,
+   "bump": [
+    "noise",
+    14,
+    0.4
+   ],
+   "knobs": [
+    {
+     "x": -8.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.85,
+     "shape": "knurl",
+     "mat": "bone",
+     "mat2": "iron",
+     "ptr": "black"
+    },
+    {
+     "x": -6.0,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.6,
+     "shape": "knurl",
+     "mat": "bone",
+     "mat2": "iron",
+     "ptr": "black"
+    },
+    {
+     "x": -3.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.3,
+     "shape": "knurl",
+     "mat": "bone",
+     "mat2": "iron",
+     "ptr": "black"
+    },
+    {
+     "x": -1.0,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.65,
+     "shape": "knurl",
+     "mat": "bone",
+     "mat2": "iron",
+     "ptr": "black"
+    },
+    {
+     "x": 1.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.55,
+     "shape": "knurl",
+     "mat": "bone",
+     "mat2": "iron",
+     "ptr": "black"
+    },
+    {
+     "x": 4.0,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.7,
+     "shape": "knurl",
+     "mat": "bone",
+     "mat2": "iron",
+     "ptr": "black"
+    },
+    {
+     "x": 6.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.45,
+     "shape": "knurl",
+     "mat": "bone",
+     "mat2": "iron",
+     "ptr": "black"
+    }
+   ],
+   "toggles": [
+    [
+     8.4,
+     2.2975
+    ]
+   ],
+   "jewels": [
+    {
+     "x": 9.5,
+     "z": 2.2975,
+     "color": [
+      0.35,
+      1.0,
+      0.2
+     ],
+     "r": 0.28,
+     "strength": 28
+    }
+   ],
+   "jacks": [
+    [
+     -10.3,
+     2.2975,
+     "jack"
+    ]
+   ],
+   "posts": [
+    [
+     -11.0,
+     0.98
+    ],
+    [
+     11.0,
+     0.98
+    ],
+    [
+     -11.0,
+     3.97
+    ],
+    [
+     11.0,
+     3.97
+    ]
+   ]
+  }
+ ]
+}

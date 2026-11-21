@@ -1,0 +1,251 @@
+{
+ "size": [
+  24,
+  10,
+  10.5
+ ],
+ "border": 0.7,
+ "recess": 1.2,
+ "bevel": 0.2,
+ "rimcolor": [
+  1,
+  0.38,
+  0.42
+ ],
+ "body": {
+  "color": [
+   0.012,
+   0.011,
+   0.013
+  ],
+  "rough": 0.6,
+  "bump": [
+   "leather",
+   40,
+   0.5
+  ]
+ },
+ "handle": {
+  "w": 8.5,
+  "h": 1.2,
+  "color": [
+   0.0144,
+   0.013199999999999998,
+   0.0156
+  ]
+ },
+ "glow_strips": [
+  {
+   "z": 4.25,
+   "color": [
+    1,
+    0.08,
+    0.12
+   ],
+   "strength": 4,
+   "w": 22.54
+  }
+ ],
+ "zones": [
+  {
+   "type": "relief",
+   "z": [
+    4.25,
+    9.8
+   ],
+   "height": "art/lilith_h.png",
+   "depth": 0.42,
+   "res": 56,
+   "color": [
+    0.07,
+    0.066,
+    0.07
+   ],
+   "cavity": 0.4,
+   "metal": 0.3,
+   "rough": 0.55,
+   "hi_at": 0.75,
+   "grain": [
+    90,
+    0.08
+   ],
+   "holes": "art/lilith_holes.png",
+   "glass": "art/lilith_glass.png",
+   "glass_strength": 2.2,
+   "glass_lights": [
+    {
+     "x": 0,
+     "color": [
+      1,
+      0.15,
+      0.2
+     ],
+     "energy": 40,
+     "size": 4
+    },
+    {
+     "x": -7,
+     "color": [
+      0.6,
+      0.1,
+      0.8
+     ],
+     "energy": 25
+    },
+    {
+     "x": 7,
+     "color": [
+      0.6,
+      0.1,
+      0.8
+     ],
+     "energy": 25
+    }
+   ]
+  },
+  {
+   "type": "panel",
+   "z": [
+    0.7,
+    4.25
+   ],
+   "art": "art/lilith_panel.png",
+   "artemis": 0.15,
+   "color": [
+    0.012,
+    0.011,
+    0.013
+   ],
+   "metal": 0.4,
+   "rough": 0.4,
+   "knobs": [
+    {
+     "x": -8.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.68,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "silver",
+     "ptr": [
+      1,
+      0.08,
+      0.06
+     ]
+    },
+    {
+     "x": -6.0,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.5,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "silver",
+     "ptr": [
+      1,
+      0.08,
+      0.06
+     ]
+    },
+    {
+     "x": -3.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.44,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "silver",
+     "ptr": [
+      1,
+      0.08,
+      0.06
+     ]
+    },
+    {
+     "x": -1.0,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.56,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "silver",
+     "ptr": [
+      1,
+      0.08,
+      0.06
+     ]
+    },
+    {
+     "x": 1.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.5,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "silver",
+     "ptr": [
+      1,
+      0.08,
+      0.06
+     ]
+    },
+    {
+     "x": 4.0,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.58,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "silver",
+     "ptr": [
+      1,
+      0.08,
+      0.06
+     ]
+    },
+    {
+     "x": 6.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.4,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "silver",
+     "ptr": [
+      1,
+      0.08,
+      0.06
+     ]
+    }
+   ],
+   "toggles": [
+    [
+     8.4,
+     2.2975
+    ]
+   ],
+   "jewels": [
+    {
+     "x": 9.5,
+     "z": 2.2975,
+     "color": [
+      1,
+      0.08,
+      0.12
+     ],
+     "r": 0.28,
+     "strength": 28
+    }
+   ],
+   "jacks": [
+    [
+     -10.3,
+     2.2975,
+     "jack"
+    ]
+   ]
+  }
+ ],
+ "corners": "chrome",
+ "chrome_size": 1.4
+}

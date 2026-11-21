@@ -6,7 +6,6 @@
  ],
  "border": 0.75,
  "recess": 0.45,
- "corners": "L",
  "zones": [
   {
    "type": "wood",
@@ -125,5 +124,6 @@
   1,
   0.75,
   0.5
- ]
+ ],
+ "bevel": 0.1
 }

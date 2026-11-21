@@ -1,0 +1,202 @@
+{
+ "size": [
+  24,
+  10,
+  10.5
+ ],
+ "border": 0.7,
+ "recess": 1.0,
+ "bevel": 0.2,
+ "rimcolor": [
+  0.95,
+  0.6,
+  1
+ ],
+ "body": {
+  "color": [
+   0.012,
+   0.01,
+   0.014
+  ],
+  "rough": 0.6,
+  "bump": [
+   "leather",
+   40,
+   0.5
+  ]
+ },
+ "handle": {
+  "w": 8.5,
+  "h": 1.2,
+  "color": [
+   0.0144,
+   0.012,
+   0.0168
+  ]
+ },
+ "glow_strips": [
+  {
+   "z": 4.25,
+   "color": [
+    0.65,
+    0.3,
+    1.0
+   ],
+   "strength": 4,
+   "w": 22.54
+  }
+ ],
+ "zones": [
+  {
+   "type": "relief",
+   "z": [
+    4.25,
+    9.8
+   ],
+   "height": "art/tyche_h.png",
+   "depth": 0.42,
+   "res": 56,
+   "color": [
+    0.88,
+    0.64,
+    0.32
+   ],
+   "low": [
+    0.04,
+    0.008,
+    0.06
+   ],
+   "lo_at": 0.14,
+   "hi_at": 0.36,
+   "metal": 0.15,
+   "metal_hi": 1.0,
+   "rough": 0.32,
+   "grain": [
+    160,
+    0.03
+   ],
+   "graze": [
+    {
+     "color": [
+      1,
+      0.85,
+      0.7
+     ],
+     "energy": 65,
+     "tilt": -25,
+     "out": 1.0,
+     "top": 0.4
+    }
+   ]
+  },
+  {
+   "type": "panel",
+   "z": [
+    0.7,
+    4.25
+   ],
+   "art": "art/tyche_pl_panel.png",
+   "artemis": 0.15,
+   "color": [
+    0.03,
+    0.008,
+    0.04
+   ],
+   "metal": 0.3,
+   "rough": 0.35,
+   "knobs": [
+    {
+     "x": -8.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.68,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "brass",
+     "ptr": "black"
+    },
+    {
+     "x": -6.0,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.5,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "brass",
+     "ptr": "black"
+    },
+    {
+     "x": -3.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.44,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "brass",
+     "ptr": "black"
+    },
+    {
+     "x": -1.0,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.56,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "brass",
+     "ptr": "black"
+    },
+    {
+     "x": 1.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.5,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "brass",
+     "ptr": "black"
+    },
+    {
+     "x": 4.0,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.58,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "brass",
+     "ptr": "black"
+    },
+    {
+     "x": 6.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.4,
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "brass",
+     "ptr": "black"
+    }
+   ],
+   "jewels": [
+    {
+     "x": 9.5,
+     "z": 2.2975,
+     "color": [
+      0.65,
+      0.3,
+      1.0
+     ],
+     "r": 0.28,
+     "strength": 28,
+     "id": "power"
+    }
+   ],
+   "jacks": [
+    [
+     -10.3,
+     2.2975,
+     "jack"
+    ]
+   ]
+  }
+ ]
+}

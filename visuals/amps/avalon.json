@@ -1,0 +1,205 @@
+{
+ "size": [
+  24,
+  10,
+  10.5
+ ],
+ "border": 0.7,
+ "recess": 1.0,
+ "bevel": 0.2,
+ "rimcolor": [
+  1,
+  0.8500000000000001,
+  0.5
+ ],
+ "body": {
+  "color": [
+   0.04,
+   0.035,
+   0.03
+  ],
+  "rough": 0.85,
+  "bump": [
+   "leather",
+   30,
+   0.6
+  ]
+ },
+ "handle": {
+  "w": 8.5,
+  "h": 1.2,
+  "color": [
+   0.048,
+   0.042,
+   0.036
+  ]
+ },
+ "glow_strips": [
+  {
+   "z": 4.25,
+   "color": [
+    1.0,
+    0.55,
+    0.2
+   ],
+   "strength": 4,
+   "w": 22.54
+  }
+ ],
+ "zones": [
+  {
+   "type": "relief",
+   "z": [
+    4.25,
+    9.8
+   ],
+   "height": "art/avalon_h.png",
+   "depth": 0.42,
+   "res": 56,
+   "color": [
+    0.6,
+    0.56,
+    0.48
+   ],
+   "cavity": 0.5,
+   "rough": 0.9,
+   "hi_at": 0.65,
+   "grain": [
+    70,
+    0.18
+   ],
+   "graze": [
+    {
+     "color": [
+      1.0,
+      0.75,
+      0.5
+     ],
+     "energy": 65,
+     "tilt": -25,
+     "out": 1.0,
+     "top": 0.4
+    }
+   ]
+  },
+  {
+   "type": "panel",
+   "z": [
+    0.7,
+    4.25
+   ],
+   "art": "art/avalon_panel.png",
+   "artemis": 0.15,
+   "color": [
+    0.04,
+    0.038,
+    0.036
+   ],
+   "metal": 0.7,
+   "rough": 0.55,
+   "bump": [
+    "noise",
+    14,
+    0.3
+   ],
+   "knobs": [
+    {
+     "x": -8.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.68,
+     "shape": "skirt2",
+     "mat": "bakelite",
+     "mat2": "brass",
+     "ptr": "black"
+    },
+    {
+     "x": -6.0,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.5,
+     "shape": "skirt2",
+     "mat": "bakelite",
+     "mat2": "brass",
+     "ptr": "black"
+    },
+    {
+     "x": -3.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.44,
+     "shape": "skirt2",
+     "mat": "bakelite",
+     "mat2": "brass",
+     "ptr": "black"
+    },
+    {
+     "x": -1.0,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.56,
+     "shape": "skirt2",
+     "mat": "bakelite",
+     "mat2": "brass",
+     "ptr": "black"
+    },
+    {
+     "x": 1.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.5,
+     "shape": "skirt2",
+     "mat": "bakelite",
+     "mat2": "brass",
+     "ptr": "black"
+    },
+    {
+     "x": 4.0,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.58,
+     "shape": "skirt2",
+     "mat": "bakelite",
+     "mat2": "brass",
+     "ptr": "black"
+    },
+    {
+     "x": 6.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.4,
+     "shape": "skirt2",
+     "mat": "bakelite",
+     "mat2": "brass",
+     "ptr": "black"
+    }
+   ],
+   "toggles": [
+    [
+     8.4,
+     2.2975
+    ]
+   ],
+   "jewels": [
+    {
+     "x": 9.5,
+     "z": 2.2975,
+     "color": [
+      1.0,
+      0.55,
+      0.2
+     ],
+     "r": 0.28,
+     "strength": 28
+    }
+   ],
+   "jacks": [
+    [
+     -10.3,
+     2.2975,
+     "jack"
+    ]
+   ]
+  }
+ ]
+}

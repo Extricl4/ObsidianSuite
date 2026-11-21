@@ -1,0 +1,235 @@
+{
+ "size": [
+  24,
+  9.6,
+  9.6
+ ],
+ "border": 0.62,
+ "recess": 1.0,
+ "bevel": 0.22,
+ "body": {
+  "color": [
+   0.02,
+   0.02,
+   0.022
+  ],
+  "rough": 0.6,
+  "bump": [
+   "pebble",
+   22,
+   0.6
+  ]
+ },
+ "zones": [
+  {
+   "type": "panel",
+   "z": [
+    2.75,
+    8.98
+   ],
+   "color": [
+    0.022,
+    0.022,
+    0.024
+   ],
+   "rough": 0.62,
+   "bump": [
+    "pebble",
+    30,
+    0.5
+   ],
+   "posts": [
+    [
+     -11.0,
+     8.45
+    ],
+    [
+     11.0,
+     8.45
+    ],
+    [
+     -11.0,
+     3.25
+    ],
+    [
+     11.0,
+     3.25
+    ]
+   ],
+   "art": "art/umbra_engrave.png",
+   "artemis": 0.0,
+   "artmetal": 0.8,
+   "artrough": 0.22
+  },
+  {
+   "type": "panel",
+   "z": [
+    0.62,
+    2.75
+   ],
+   "color": [
+    0.011,
+    0.011,
+    0.012
+   ],
+   "metal": 0.35,
+   "rough": 0.42,
+   "bump": [
+    "noise",
+    300,
+    0.02
+   ],
+   "knobs": [
+    {
+     "x": -7.0,
+     "z": 1.62,
+     "r": 0.5,
+     "v": 0.62,
+     "shape": "chicken",
+     "mat": "bakelite",
+     "mat2": "bakelite",
+     "ptr": [
+      1,
+      0.08,
+      0.04
+     ]
+    },
+    {
+     "x": -5.1,
+     "z": 1.62,
+     "r": 0.5,
+     "v": 0.45,
+     "shape": "chicken",
+     "mat": "bakelite",
+     "mat2": "bakelite",
+     "ptr": [
+      1,
+      0.08,
+      0.04
+     ]
+    },
+    {
+     "x": -3.5,
+     "z": 1.62,
+     "r": 0.5,
+     "v": 0.55,
+     "shape": "chicken",
+     "mat": "bakelite",
+     "mat2": "bakelite",
+     "ptr": [
+      1,
+      0.08,
+      0.04
+     ]
+    },
+    {
+     "x": -1.9,
+     "z": 1.62,
+     "r": 0.5,
+     "v": 0.6,
+     "shape": "chicken",
+     "mat": "bakelite",
+     "mat2": "bakelite",
+     "ptr": [
+      1,
+      0.08,
+      0.04
+     ]
+    },
+    {
+     "x": -0.3,
+     "z": 1.62,
+     "r": 0.5,
+     "v": 0.4,
+     "shape": "chicken",
+     "mat": "bakelite",
+     "mat2": "bakelite",
+     "ptr": [
+      1,
+      0.08,
+      0.04
+     ]
+    },
+    {
+     "x": 2.0,
+     "z": 1.62,
+     "r": 0.58,
+     "v": 0.5,
+     "shape": "chicken",
+     "mat": "bakelite",
+     "mat2": "bakelite",
+     "ptr": [
+      1,
+      0.08,
+      0.04
+     ]
+    },
+    {
+     "x": 4.0,
+     "z": 1.62,
+     "r": 0.5,
+     "v": 0.35,
+     "shape": "chicken",
+     "mat": "bakelite",
+     "mat2": "bakelite",
+     "ptr": [
+      1,
+      0.08,
+      0.04
+     ]
+    }
+   ],
+   "toggles": [
+    [
+     -9.0,
+     1.62
+    ],
+    [
+     6.0,
+     1.62
+    ],
+    [
+     7.4,
+     1.62
+    ]
+   ],
+   "jewels": [
+    {
+     "x": -10.6,
+     "z": 1.62,
+     "color": [
+      1.0,
+      0.05,
+      0.02
+     ],
+     "r": 0.22,
+     "strength": 40
+    }
+   ],
+   "jacks": [
+    [
+     10.4,
+     1.62,
+     "jack"
+    ]
+   ],
+   "art": "art/umbra_panel3.png",
+   "artemis": 0.25
+  }
+ ],
+ "handle": {
+  "w": 8.5,
+  "h": 1.2
+ },
+ "glow_strips": [
+  {
+   "z": 2.75,
+   "color": [
+    1.0,
+    0.06,
+    0.03
+   ],
+   "strength": 3.5
+  }
+ ]
+}

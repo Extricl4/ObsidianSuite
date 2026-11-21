@@ -23,6 +23,14 @@ New pedal art is drawn by `tools/art_<key>.py` (shared helpers in `tools/pedal_a
 Add `"engrave": {rough, metal, depth, strength, distance}` to a pedal spec to cut the art into the surface instead of printing it on top.
 Wide pedals set `size`, `res` and `cam` (see `pedals/aeon.json`).
 
+## Finished amps (2026-11-21)
+Amps with their captures wired in live in `finished/` (see `finished/README.md`): `amps_data.py` says which
+capture every button and knob plays, `build_page.py` builds the interactive page from layer renders
+(`head.py ... out=on|off|ptr|led`), and `export_amps.py` writes the plugin's amp files. The captures are in
+`plugin/Content/Captures/Amps/`. `head.py` gained: knob/button/LED/screen/power hotspots in `map.json`,
+`layer=ptr|led` and `off` renders, zone `tilt`, `chamfer`, `recess_z`, panel `slab_bevel` and `rails`,
+open-chassis `can` transformers, tube collars and feet.
+
 ## Tweak loop
 1. Collect several changes for one item.
 2. Edit its spec (and art texture if a label or mask changes).

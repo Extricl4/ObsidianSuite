@@ -1,0 +1,287 @@
+{
+ "size": [
+  24,
+  10,
+  10.5
+ ],
+ "border": 0.7,
+ "recess": 1.6,
+ "bevel": 0.2,
+ "rimcolor": [
+  1,
+  0.6,
+  0.35
+ ],
+ "body": {
+  "color": [
+   0.014,
+   0.014,
+   0.016
+  ],
+  "rough": 0.55,
+  "bump": [
+   "leather",
+   40,
+   0.55
+  ]
+ },
+ "handle": {
+  "w": 8.5,
+  "h": 1.2,
+  "color": [
+   0.02,
+   0.02,
+   0.022
+  ]
+ },
+ "glow_strips": [
+  {
+   "z": 4.25,
+   "color": [
+    1.0,
+    0.32,
+    0.05
+   ],
+   "strength": 4,
+   "w": 22.54
+  }
+ ],
+ "zones": [
+  {
+   "type": "relief",
+   "z": [
+    4.25,
+    9.8
+   ],
+   "height": "art/talos_h.png",
+   "holes": "art/talos_holes.png",
+   "depth": 0.32,
+   "res": 64,
+   "color": [
+    0.62,
+    0.62,
+    0.64
+   ],
+   "cavity": 0.55,
+   "metal": 1.0,
+   "rough": 0.3,
+   "hi_at": 0.45,
+   "grain": [
+    260,
+    0.04
+   ],
+   "tubes": [
+    {
+     "x": -3.0,
+     "z": 6.92,
+     "h": 1.7,
+     "r": 0.36,
+     "color": [
+      1.0,
+      0.32,
+      0.05
+     ],
+     "strength": 10,
+     "light": 55
+    },
+    {
+     "x": -1.0,
+     "z": 6.92,
+     "h": 1.7,
+     "r": 0.36,
+     "color": [
+      1.0,
+      0.32,
+      0.05
+     ],
+     "strength": 10,
+     "light": 55
+    },
+    {
+     "x": 1.0,
+     "z": 6.92,
+     "h": 1.7,
+     "r": 0.36,
+     "color": [
+      1.0,
+      0.32,
+      0.05
+     ],
+     "strength": 10,
+     "light": 55
+    },
+    {
+     "x": 3.0,
+     "z": 6.92,
+     "h": 1.7,
+     "r": 0.36,
+     "color": [
+      1.0,
+      0.32,
+      0.05
+     ],
+     "strength": 10,
+     "light": 55
+    }
+   ],
+   "ambient": [
+    {
+     "x": -2.5,
+     "energy": 55,
+     "color": [
+      1.0,
+      0.32,
+      0.05
+     ],
+     "size": 3
+    },
+    {
+     "x": 2.5,
+     "energy": 55,
+     "color": [
+      1.0,
+      0.32,
+      0.05
+     ],
+     "size": 3
+    }
+   ]
+  },
+  {
+   "type": "panel",
+   "z": [
+    0.7,
+    4.25
+   ],
+   "art": "art/talos_panel.png",
+   "artemis": 0.15,
+   "color": [
+    0.008,
+    0.008,
+    0.009
+   ],
+   "metal": 0.5,
+   "rough": 0.32,
+   "bump": [
+    "brush",
+    60,
+    0.02
+   ],
+   "knobs": [
+    {
+     "x": -8.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.65,
+     "shape": "cap",
+     "mat": "silver",
+     "mat2": "pewter",
+     "ptr": "black"
+    },
+    {
+     "x": -6.0,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.55,
+     "shape": "cap",
+     "mat": "silver",
+     "mat2": "pewter",
+     "ptr": "black"
+    },
+    {
+     "x": -3.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.35,
+     "shape": "cap",
+     "mat": "silver",
+     "mat2": "pewter",
+     "ptr": "black"
+    },
+    {
+     "x": -1.0,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.6,
+     "shape": "cap",
+     "mat": "silver",
+     "mat2": "pewter",
+     "ptr": "black"
+    },
+    {
+     "x": 1.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.5,
+     "shape": "cap",
+     "mat": "silver",
+     "mat2": "pewter",
+     "ptr": "black"
+    },
+    {
+     "x": 4.0,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.45,
+     "shape": "cap",
+     "mat": "silver",
+     "mat2": "pewter",
+     "ptr": "black"
+    },
+    {
+     "x": 6.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.5,
+     "shape": "cap",
+     "mat": "silver",
+     "mat2": "pewter",
+     "ptr": "black"
+    }
+   ],
+   "jacks": [
+    [
+     -10.3,
+     2.2975,
+     "jack"
+    ]
+   ],
+   "buttons": [
+    {
+     "id": "boost",
+     "x": 8.35,
+     "z": 2.2975,
+     "w": 0.52,
+     "h": 0.36,
+     "cap": [
+      0.6,
+      0.6,
+      0.62
+     ],
+     "metal": 1.0,
+     "rough": 0.25,
+     "led": [
+      1.0,
+      0.32,
+      0.05
+     ],
+     "ledr": 0.06
+    }
+   ],
+   "jewels": [
+    {
+     "x": 9.6,
+     "z": 2.2975,
+     "color": [
+      1.0,
+      0.32,
+      0.05
+     ],
+     "r": 0.28,
+     "strength": 28,
+     "id": "power"
+    }
+   ]
+  }
+ ]
+}

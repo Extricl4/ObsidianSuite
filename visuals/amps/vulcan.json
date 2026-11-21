@@ -71,7 +71,7 @@
     0.7,
     4.25
    ],
-   "art": "art/vulcan_panel.png",
+   "art": "art/vulcan_panel3.png",
    "color": [
     0.05,
     0.048,
@@ -91,49 +91,98 @@
      "z": 2.2975,
      "r": 0.4,
      "v": 0.30265042458172964,
-     "style": "black"
+     "shape": "knurl",
+     "mat": "iron",
+     "mat2": "copper",
+     "ptr": [
+      1.0,
+      0.35,
+      0.05
+     ]
     },
     {
      "x": -6.0,
      "z": 2.2975,
      "r": 0.4,
      "v": 0.779450100242391,
-     "style": "black"
+     "shape": "knurl",
+     "mat": "iron",
+     "mat2": "copper",
+     "ptr": [
+      1.0,
+      0.35,
+      0.05
+     ]
     },
     {
      "x": -3.5,
      "z": 2.2975,
      "r": 0.4,
      "v": 0.5230536754942519,
-     "style": "black"
+     "shape": "knurl",
+     "mat": "iron",
+     "mat2": "copper",
+     "ptr": [
+      1.0,
+      0.35,
+      0.05
+     ]
     },
     {
      "x": -1.0,
      "z": 2.2975,
      "r": 0.4,
      "v": 0.31107742803602234,
-     "style": "black"
+     "shape": "knurl",
+     "mat": "iron",
+     "mat2": "copper",
+     "ptr": [
+      1.0,
+      0.35,
+      0.05
+     ]
     },
     {
      "x": 1.5,
      "z": 2.2975,
      "r": 0.4,
      "v": 0.39677021236620436,
-     "style": "black"
+     "shape": "knurl",
+     "mat": "iron",
+     "mat2": "copper",
+     "ptr": [
+      1.0,
+      0.35,
+      0.05
+     ]
     },
     {
      "x": 4.0,
      "z": 2.2975,
      "r": 0.4,
      "v": 0.7310899420210973,
-     "style": "black"
+     "shape": "knurl",
+     "mat": "iron",
+     "mat2": "copper",
+     "ptr": [
+      1.0,
+      0.35,
+      0.05
+     ]
     },
     {
      "x": 6.5,
      "z": 2.2975,
      "r": 0.4,
      "v": 0.489908565180847,
-     "style": "black"
+     "shape": "knurl",
+     "mat": "iron",
+     "mat2": "copper",
+     "ptr": [
+      1.0,
+      0.35,
+      0.05
+     ]
     }
    ],
    "toggles": [

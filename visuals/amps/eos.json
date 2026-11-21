@@ -161,7 +161,7 @@
     0.4,
     4.0
    ],
-   "art": "art/eos_panel.png",
+   "art": "art/eos_panel3.png",
    "color": [
     0.86,
     0.86,
@@ -175,42 +175,60 @@
      "z": 2.15,
      "r": 0.4,
      "v": 0.4,
-     "style": "alu"
+     "shape": "ivory",
+     "mat": "ivory",
+     "mat2": "gold",
+     "ptr": "gold"
     },
     {
      "x": -5.0,
      "z": 2.15,
      "r": 0.4,
      "v": 0.5,
-     "style": "alu"
+     "shape": "ivory",
+     "mat": "ivory",
+     "mat2": "gold",
+     "ptr": "gold"
     },
     {
      "x": -2.5,
      "z": 2.15,
      "r": 0.4,
      "v": 0.55,
-     "style": "alu"
+     "shape": "ivory",
+     "mat": "ivory",
+     "mat2": "gold",
+     "ptr": "gold"
     },
     {
      "x": 0,
      "z": 2.15,
      "r": 0.4,
      "v": 0.6,
-     "style": "alu"
+     "shape": "ivory",
+     "mat": "ivory",
+     "mat2": "gold",
+     "ptr": "gold"
     },
     {
      "x": 2.5,
      "z": 2.15,
      "r": 0.4,
      "v": 0.45,
-     "style": "alu"
+     "shape": "ivory",
+     "mat": "ivory",
+     "mat2": "gold",
+     "ptr": "gold"
     },
     {
      "x": 5.0,
      "z": 2.15,
      "r": 0.4,
      "v": 0.5,
-     "style": "alu"
+     "shape": "ivory",
+     "mat": "ivory",
+     "mat2": "gold",
+     "ptr": "gold"
     }
    ],
    "toggles": [

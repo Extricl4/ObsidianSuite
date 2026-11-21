@@ -1,0 +1,212 @@
+{
+ "size": [
+  24,
+  10,
+  10.5
+ ],
+ "border": 0.7,
+ "recess": 1.0,
+ "bevel": 0.2,
+ "rimcolor": [
+  1,
+  0.8999999999999999,
+  0.5
+ ],
+ "body": {
+  "color": [
+   0.07,
+   0.035,
+   0.016
+  ],
+  "rough": 0.7,
+  "bump": [
+   "leather",
+   34,
+   0.6
+  ]
+ },
+ "handle": {
+  "w": 8.5,
+  "h": 1.2,
+  "color": [
+   0.084,
+   0.042,
+   0.0192
+  ]
+ },
+ "glow_strips": [
+  {
+   "z": 4.25,
+   "color": [
+    1.0,
+    0.6,
+    0.2
+   ],
+   "strength": 4,
+   "w": 22.54
+  }
+ ],
+ "zones": [
+  {
+   "type": "relief",
+   "z": [
+    4.25,
+    9.8
+   ],
+   "height": "art/thoth_h.png",
+   "depth": 0.42,
+   "res": 56,
+   "color": [
+    0.85,
+    0.62,
+    0.3
+   ],
+   "low": [
+    0.13,
+    0.06,
+    0.025
+   ],
+   "lo_at": 0.3,
+   "hi_at": 0.62,
+   "metal": 0.0,
+   "metal_hi": 1.0,
+   "rough": 0.45,
+   "grain": [
+    90,
+    0.1
+   ],
+   "graze": [
+    {
+     "color": [
+      1,
+      0.82,
+      0.6
+     ],
+     "energy": 65,
+     "tilt": -25,
+     "out": 1.0,
+     "top": 0.4
+    }
+   ]
+  },
+  {
+   "type": "panel",
+   "z": [
+    0.7,
+    4.25
+   ],
+   "art": "art/thoth_panel.png",
+   "artemis": 0.15,
+   "color": [
+    0.03,
+    0.016,
+    0.01
+   ],
+   "metal": 0.2,
+   "rough": 0.5,
+   "bump": [
+    "leather",
+    50,
+    0.3
+   ],
+   "knobs": [
+    {
+     "x": -8.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.68,
+     "shape": "knurl",
+     "mat": "bone",
+     "mat2": "brass",
+     "ptr": "black"
+    },
+    {
+     "x": -6.0,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.5,
+     "shape": "knurl",
+     "mat": "bone",
+     "mat2": "brass",
+     "ptr": "black"
+    },
+    {
+     "x": -3.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.44,
+     "shape": "knurl",
+     "mat": "bone",
+     "mat2": "brass",
+     "ptr": "black"
+    },
+    {
+     "x": -1.0,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.56,
+     "shape": "knurl",
+     "mat": "bone",
+     "mat2": "brass",
+     "ptr": "black"
+    },
+    {
+     "x": 1.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.5,
+     "shape": "knurl",
+     "mat": "bone",
+     "mat2": "brass",
+     "ptr": "black"
+    },
+    {
+     "x": 4.0,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.58,
+     "shape": "knurl",
+     "mat": "bone",
+     "mat2": "brass",
+     "ptr": "black"
+    },
+    {
+     "x": 6.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.4,
+     "shape": "knurl",
+     "mat": "bone",
+     "mat2": "brass",
+     "ptr": "black"
+    }
+   ],
+   "toggles": [
+    [
+     8.4,
+     2.2975
+    ]
+   ],
+   "jewels": [
+    {
+     "x": 9.5,
+     "z": 2.2975,
+     "color": [
+      1.0,
+      0.6,
+      0.2
+     ],
+     "r": 0.28,
+     "strength": 28
+    }
+   ],
+   "jacks": [
+    [
+     -10.3,
+     2.2975,
+     "jack"
+    ]
+   ]
+  }
+ ]
+}

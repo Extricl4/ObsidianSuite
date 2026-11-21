@@ -1,0 +1,209 @@
+{
+ "size": [
+  24,
+  10,
+  10.5
+ ],
+ "border": 0.7,
+ "recess": 1.0,
+ "bevel": 0.2,
+ "rimcolor": [
+  0.8999999999999999,
+  0.6,
+  1
+ ],
+ "body": {
+  "color": [
+   0.012,
+   0.011,
+   0.013
+  ],
+  "rough": 0.6,
+  "bump": [
+   "leather",
+   40,
+   0.5
+  ]
+ },
+ "handle": {
+  "w": 8.5,
+  "h": 1.2,
+  "color": [
+   0.0144,
+   0.013199999999999998,
+   0.0156
+  ]
+ },
+ "glow_strips": [
+  {
+   "z": 4.25,
+   "color": [
+    0.6,
+    0.3,
+    1.0
+   ],
+   "strength": 4,
+   "w": 22.54
+  }
+ ],
+ "zones": [
+  {
+   "type": "relief",
+   "z": [
+    4.25,
+    9.8
+   ],
+   "height": "art/euterpe_h.png",
+   "depth": 0.42,
+   "res": 56,
+   "color": [
+    0.72,
+    0.72,
+    0.75
+   ],
+   "low": [
+    0.045,
+    0.028,
+    0.018
+   ],
+   "lo_at": 0.2,
+   "hi_at": 0.5,
+   "metal": 0.1,
+   "metal_hi": 1.0,
+   "rough": 0.3,
+   "grain": [
+    120,
+    0.04
+   ],
+   "graze": [
+    {
+     "color": [
+      0.85,
+      0.8,
+      1.0
+     ],
+     "energy": 65,
+     "tilt": -25,
+     "out": 1.0,
+     "top": 0.4
+    }
+   ]
+  },
+  {
+   "type": "panel",
+   "z": [
+    0.7,
+    4.25
+   ],
+   "art": "art/euterpe_panel.png",
+   "artemis": 0.15,
+   "color": [
+    0.012,
+    0.011,
+    0.014
+   ],
+   "metal": 0.4,
+   "rough": 0.38,
+   "knobs": [
+    {
+     "x": -8.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.68,
+     "shape": "skirt2",
+     "mat": "bakelite",
+     "mat2": "pewter",
+     "ptr": "black"
+    },
+    {
+     "x": -6.0,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.5,
+     "shape": "skirt2",
+     "mat": "bakelite",
+     "mat2": "pewter",
+     "ptr": "black"
+    },
+    {
+     "x": -3.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.44,
+     "shape": "skirt2",
+     "mat": "bakelite",
+     "mat2": "pewter",
+     "ptr": "black"
+    },
+    {
+     "x": -1.0,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.56,
+     "shape": "skirt2",
+     "mat": "bakelite",
+     "mat2": "pewter",
+     "ptr": "black"
+    },
+    {
+     "x": 1.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.5,
+     "shape": "skirt2",
+     "mat": "bakelite",
+     "mat2": "pewter",
+     "ptr": "black"
+    },
+    {
+     "x": 4.0,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.58,
+     "shape": "skirt2",
+     "mat": "bakelite",
+     "mat2": "pewter",
+     "ptr": "black"
+    },
+    {
+     "x": 6.5,
+     "z": 2.2975,
+     "r": 0.42,
+     "v": 0.4,
+     "shape": "skirt2",
+     "mat": "bakelite",
+     "mat2": "pewter",
+     "ptr": "black"
+    }
+   ],
+   "toggles": [
+    [
+     8.4,
+     2.2975
+    ]
+   ],
+   "jewels": [
+    {
+     "x": 9.5,
+     "z": 2.2975,
+     "color": [
+      0.6,
+      0.3,
+      1.0
+     ],
+     "r": 0.28,
+     "strength": 28
+    }
+   ],
+   "jacks": [
+    [
+     -10.3,
+     2.2975,
+     "jack"
+    ]
+   ]
+  }
+ ],
+ "corners": "chrome",
+ "chrome_size": 1.3
+}

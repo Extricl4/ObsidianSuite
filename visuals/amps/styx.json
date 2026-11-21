@@ -6,7 +6,6 @@
  ],
  "border": 0.75,
  "recess": 0.45,
- "corners": "L",
  "zones": [
   {
    "type": "wood",
@@ -38,7 +37,7 @@
     0.75,
     4.12
    ],
-   "art": "art/amp_art.png",
+   "art": "art/styx_panel3.png",
    "color": [
     0.016,
     0.016,
@@ -52,49 +51,70 @@
      "z": 1.9,
      "r": 0.62,
      "v": 0.62,
-     "style": "black"
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "silver",
+     "ptr": "white"
     },
     {
      "x": 4.43,
      "z": 1.9,
      "r": 0.62,
      "v": 0.45,
-     "style": "black"
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "silver",
+     "ptr": "white"
     },
     {
      "x": -2.71,
      "z": 1.9,
      "r": 0.38,
      "v": 0.45,
-     "style": "black"
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "silver",
+     "ptr": "white"
     },
     {
      "x": -1.54,
      "z": 1.9,
      "r": 0.38,
      "v": 0.5,
-     "style": "black"
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "silver",
+     "ptr": "white"
     },
     {
      "x": -0.37,
      "z": 1.9,
      "r": 0.38,
      "v": 0.55,
-     "style": "black"
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "silver",
+     "ptr": "white"
     },
     {
      "x": 1.38,
      "z": 1.9,
      "r": 0.38,
      "v": 0.4,
-     "style": "black"
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "silver",
+     "ptr": "white"
     },
     {
      "x": 2.57,
      "z": 1.9,
      "r": 0.38,
      "v": 0.6,
-     "style": "black"
+     "shape": "knurl",
+     "mat": "bakelite",
+     "mat2": "silver",
+     "ptr": "white"
     }
    ],
    "toggles": [
@@ -125,5 +145,6 @@
   0.65,
   0.8,
   1.0
- ]
+ ],
+ "bevel": 0.1
 }

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Obsidian Suite amps</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Manrope:wght@400;600;700&family=Michroma&display=swap" rel="stylesheet">
+<style>
+/* VOICE: a backline rundown for the plugin, quiet and dark, each amp lit by its own lamp
+   IDEA: the amps sit on a stage you can play with; the page reads like a rig sheet under it
+   PICTURE: the rendered heads themselves, live: knobs turn, channels switch, power fades the tubes
+   COLOUR and TYPE: stage black with one accent per amp; Cinzel (the panels' lettering) + Manrope
+   LAYOUT: one full-width band per amp: title, stage, readout, then notes beside the capture sheet */
+:root{color-scheme:light dark;--bg:light-dark(#ecebe7,#0c0b0d);--ink:light-dark(#18171a,#ecebee);--mute:light-dark(#5e5c63,#9b98a1);--line:light-dark(#d2d0cb,#232127);--card:light-dark(#f7f6f3,#131216);--stage:#070708}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 Manrope,system-ui,sans-serif;overflow-x:clip}
+.band{padding:clamp(28px,4vw,56px) max(4vw,16px)}
+.wrap{max-width:1240px;margin:0 auto}
+h1,h2{font-family:Cinzel,Georgia,serif;font-weight:700;line-height:1.05;text-wrap:balance;margin:0}
+h1{font-size:clamp(32px,5vw,52px)}h2{font-size:clamp(30px,4vw,44px);color:var(--ink)}
+h3{font:700 13px/1.4 Manrope,sans-serif;color:var(--mute);margin:0 0 10px}
+header p{max-width:66ch;color:var(--mute);margin:14px 0 0}
+nav{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+nav a{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 14px;border:1px solid var(--line);border-radius:999px;color:var(--ink);text-decoration:none;font-weight:600;font-size:14px}
+nav a i{width:8px;height:8px;border-radius:50%;background:var(--ac)}nav a:hover,nav a:focus-visible{border-color:var(--ac);outline:none}
+.amp{border-top:1px solid var(--line)}
+.head{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px;margin-bottom:16px}
+.sub{color:var(--mute);margin:0;flex:1 1 320px}
+.tag{font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--ac);color:#0c0b0d}
+.stage{position:relative;background:var(--stage);border-radius:10px;overflow:hidden;box-shadow:0 30px 60px -30px color-mix(in srgb,var(--ac) 45%,transparent);touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.stage img{position:absolute;pointer-events:none;-webkit-user-drag:none}
+.base{inset:0;width:100%;height:100%;opacity:0;transition:opacity .45s ease}
+.ptr{transition:transform .22s cubic-bezier(.3,.7,.3,1),opacity .6s ease}.stage.drag .ptr{transition:opacity .6s ease}
+.led{opacity:0;transition:opacity .25s ease}
+.hot{position:absolute;padding:0;border:0;background:transparent;border-radius:50%;cursor:ns-resize;touch-action:none}
+.hot.btn{border-radius:4px;cursor:pointer}.hot.pw{cursor:pointer}
+.hot:focus-visible{outline:2px solid var(--ac);outline-offset:3px}
+.tip{position:absolute;transform:translate(-50%,-130%);background:rgba(10,10,12,.88);color:#fff;font:600 13px/1 Manrope,sans-serif;padding:7px 10px;border-radius:6px;opacity:0;transition:opacity .15s;pointer-events:none;white-space:nowrap}
+.tip.on{opacity:1}
+.read{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 18px;align-items:center;margin-top:14px;padding:14px 16px;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+.read .ch{font-weight:700}.read .ch b{color:var(--ac);font-weight:700}
+.read .cap{grid-column:1;color:var(--mute);font-size:14px;overflow-wrap:anywhere}
+.read .cap code{font:600 13px/1.5 ui-monospace,Menlo,monospace;color:var(--ink);overflow-wrap:anywhere}
+.meter{grid-column:1;height:4px;border-radius:2px;background:var(--line);overflow:hidden}.meter i{display:block;height:100%;background:var(--ac);transition:width .2s}
+.pbtn{grid-row:1/4;grid-column:2;min-height:44px;padding:0 18px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink);font:700 14px Manrope,sans-serif;cursor:pointer}
+.pbtn[aria-pressed=true]{background:var(--ac);border-color:var(--ac);color:#0c0b0d}
+.pbtn:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.info{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:28px;margin-top:22px}
+.info p{margin:0 0 12px;max-width:68ch}.info ul{margin:0;padding-left:18px;color:var(--mute)}.info li{margin:0 0 6px}
+.facts{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:14px;color:var(--mute);margin:0 0 14px}.facts b{color:var(--ink);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:14px}th{text-align:left;font-size:12px;color:var(--mute);font-weight:700;padding:0 8px 8px 0;border-bottom:1px solid var(--line)}
+td{padding:9px 8px 9px 0;border-bottom:1px solid var(--line);vertical-align:top}td:first-child{font-weight:600;white-space:nowrap;padding-right:14px}
+td code{font:12.5px/1.5 ui-monospace,Menlo,monospace;overflow-wrap:anywhere}td details summary{cursor:pointer;color:var(--ac);font-weight:600;margin:2px 0}td details[open] code{display:inline-block;margin:0 10px 2px 0}.alt{color:var(--mute)}
+tr.cur td:first-child{color:var(--ac)}
+.hint{font-size:14px;color:var(--mute);margin:10px 0 0}
+.scr{position:absolute;container-type:size;pointer-events:none;transition:opacity .5s ease;border-radius:.4%;
+ background:radial-gradient(120% 140% at 50% 0%,#0c1a24 0%,#060b10 55%,#030508 100%)}
+.scr::after{content:"";position:absolute;inset:0;background:linear-gradient(170deg,rgba(255,255,255,.06) 0%,rgba(255,255,255,0) 38%);pointer-events:none}
+.scr .sc-in{position:absolute;inset:0;color:#a9e6ff;font-family:Michroma,Manrope,sans-serif}
+.scr .sc-in>*{position:absolute;margin:0;line-height:1}
+.scr .sc-top{left:4cqw;right:4cqw;top:7cqh;display:flex;justify-content:space-between;font-size:5cqh;letter-spacing:.22em;color:#4f93b3}
+.scr .sc-nm{left:5cqw;right:5cqw;top:22cqh;height:17cqh;line-height:17cqh;text-align:center;font-size:13cqh;color:#e9f8ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 0 3cqh rgba(110,205,255,.4)}
+.scr .sc-sub{left:5cqw;right:5cqw;top:44cqh;text-align:center;font-size:5.4cqh;letter-spacing:.14em;color:#7fc6e6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scr .sc-info{left:5cqw;right:5cqw;top:53cqh;text-align:center;font-size:4.4cqh;letter-spacing:.2em;color:#4f93b3;white-space:nowrap}
+.scr .sc-rule{left:3cqw;right:3cqw;top:65cqh;height:1px;background:rgba(110,205,255,.16)}
+.scr .sc-kc{top:71cqh;width:15cqw;transform:translateX(-50%);text-align:center}
+.scr .sc-kl{display:block;font-size:4cqh;letter-spacing:.18em;color:#4f93b3;transition:color .3s}
+.scr .sc-kn{display:block;margin-top:3.5cqh;font-size:10cqh;color:#bfe9ff;font-variant-numeric:tabular-nums;transition:color .3s,text-shadow .3s}
+.scr .sc-kc.lit .sc-kl{color:#a9e6ff}.scr .sc-kc.lit .sc-kn{color:#fff;text-shadow:0 0 2.5cqh rgba(110,205,255,.75)}
+.scr.off{opacity:0}
+.filein{display:none}
+footer{color:var(--mute);font-size:14px}
+@media(max-width:820px){.info{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){.read{grid-template-columns:minmax(0,1fr)}.pbtn{grid-row:auto;grid-column:1;justify-self:start}
+ table{font-size:13px}.stack thead{display:none}.stack tr{display:grid;padding-block:8px;border-bottom:1px solid var(--line)}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:6.5em;text-align:start;white-space:normal}.stack td::before{content:attr(data-l);float:inline-start;width:6em;margin-inline-start:-6.5em;color:var(--mute);font-weight:600}}
+@media(prefers-reduced-motion:reduce){.base,.ptr,.led,.meter i{transition:none!important}}
+</style></head><body>
+<header class="band"><div class="wrap">
+<h1>Obsidian Suite: the finished amps</h1>
+<p>These ten heads have their NAM captures wired in. Drag a knob up or down (or scroll on it, double-click to reset), use the buttons to switch channels, and click the power lamp to shut an amp down and watch the lights and tubes die out. Under each amp: which capture is loading right now, and what every control does.</p>
+<nav class="scroll" id="nav"></nav>
+</div></header>
+<main id="amps"></main>
+<footer class="band"><div class="wrap">Captures come from your Tone3000 downloads; file names are shown without .nam. Accuracy scores are the error figures stored in the captures where the creator included them (lower is closer to the real amp).</div></footer>
+<script>
+{
+const AMPS=/*DATA*/[];
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pct=(v,t)=>(v/t*100).toFixed(4)+'%';
+$('#nav').innerHTML=AMPS.map(a=>`<a href="#${a.key}" style="--ac:${a.accent}"><i></i>${a.name}</a>`).join('');
+
+function capKey(a,st){return a.dims.map(d=>dv(a,st,d)).join('|')}
+function dv(a,st,d){return d.per?st[d.id][st[a.dims[0].id]]:st[d.id]}
+function dcount(a,st,d){
+  if(d.names)return d.names.length;
+  const ch=String(st[a.dims[0].id]),ix=a.dims.indexOf(d);
+  return new Set(Object.keys(a.caps).filter(k=>k.split('|')[0]===ch).map(k=>k.split('|')[ix])).size}
+function dname(a,st,d,v){
+  if(d.names)return d.names[v];
+  const k=a.dims.map(x=>x===d?v:dv(a,st,x)).join('|');return a.caps[k]?.name||''}
+function rowName(a,key){
+  if(!a.dims.length)return 'Gain × Master';
+  const vs=key.split('|').map(Number);
+  return a.dims.filter((d,i)=>!(d.names&&d.id==='boost'&&vs[i]===0)).map(d=>{const i=a.dims.indexOf(d);return d.names?d.names[vs[i]]:a.caps[key].name}).join(' · ')}
+
+function build(a){
+  const s=document.createElement('section');s.className='amp band';s.id=a.key;s.style.setProperty('--ac',a.accent);
+  const W=a.W,H=a.H;
+  let stage='';
+  a.skins.forEach((sk,i)=>{stage+=`<img class="base off" data-s="${i}" src="img/${sk.id}_off.jpg" alt=""><img class="base on" data-s="${i}" src="img/${sk.id}_on.jpg" alt="">`});
+  a.skins.forEach((sk,i)=>a.knobs.forEach((k,j)=>{
+    const [x,y,w,h]=k.b,pos=`left:${pct(x,W)};top:${pct(y,H)};width:${pct(w,W)};height:${pct(h,H)};transform-origin:${k.o[0]}% ${k.o[1]}%`;
+    stage+=`<img class="ptr" data-s="${i}" data-k="${j}" data-v="on" src="img/${sk.id}_k${j}.png" style="${pos}" alt="">`;
+    if(sk.ptrOff)stage+=`<img class="ptr" data-s="${i}" data-k="${j}" data-v="off" src="img/${sk.id}_k${j}o.png" style="${pos}" alt="">`}));
+  for(const [id,[x,y,w,h]] of Object.entries(a.leds))stage+=`<img class="led" data-l="${id}" src="img/${a.key}_led_${id}.png" style="left:${pct(x,W)};top:${pct(y,H)};width:${pct(w,W)};height:${pct(h,H)}" alt="">`;
+  a.knobs.forEach((k,j)=>{const r=k.r*1.15;stage+=`<button class="hot" data-k="${j}" aria-label="${esc(k.label)}" role="slider" aria-valuemin="0" aria-valuemax="10" style="left:${pct(k.c[0]-r,W)};top:${pct(k.c[1]-r,H)};width:${pct(2*r,W)};height:${pct(2*r,H)}"></button>`});
+  for(const [id,[x,y,w,h]] of Object.entries(a.buttons))stage+=`<button class="hot btn" data-b="${id}" aria-label="${esc(btnLabel(a,id))}" style="left:${pct(x-6,W)};top:${pct(y-6,H)};width:${pct(w+12,W)};height:${pct(h+12,H)}"></button>`;
+  const [px,py,pr]=a.power,R=pr*1.25;
+  if(a.screen){const [sx,sy,sw,sh]=a.screen;stage+=`<div class="scr" style="left:${pct(sx,W)};top:${pct(sy,H)};width:${pct(sw,W)};height:${pct(sh,H)}"><div class="sc-in"><div class="sc-top"><span>EIDOLON</span><span class="sc-slot"></span></div><div class="sc-nm"></div><div class="sc-sub"></div><div class="sc-info"></div><div class="sc-rule"></div>${a.knobs.slice(0,-1).map((k,j)=>`<div class="sc-kc" data-j="${j}" style="left:${((k.c[0]-sx)/sw*100).toFixed(3)}%"><span class="sc-kl">${esc(k.label.toUpperCase())}</span><span class="sc-kn"></span></div>`).join('')}</div></div><input class="filein" type="file" accept=".nam,application/json" multiple>`}
+  stage+=`<button class="hot pw" aria-label="Power" style="left:${pct(px-R,W)};top:${pct(py-R,H)};width:${pct(2*R,W)};height:${pct(2*R,H)}"></button><div class="tip"></div>`;
+  const rows=Object.keys(a.caps).filter(k=>!a.caps[k].hide&&a.caps[k].by!=='loader').map(k=>{const c=a.caps[k];
+    if(c.by==='grid')return c.files.map((row,mi)=>`<tr data-key="${k}"><td data-l="Setting">${esc((a.dims.length?rowName(a,k)+' · ':'')+c.rowNames[mi])}</td><td data-l="Files"><span class="alt">${esc(a.knobs[c.colKnob].label)} steps through:</span> <code>${esc(row[0])}</code> → … → <code>${esc(row[row.length-1])}</code> <span class="alt">(${row.length} files; ${esc(a.knobs[c.rowKnob].label)} blends between rows)</span></td></tr>`).join('');
+    if(c.by==='near')return `<tr data-key="${k}"><td data-l="Setting">${esc(c.label||rowName(a,k))}</td><td data-l="Files"><span class="alt">${c.axes.map(j=>esc(a.knobs[j].label)).join(', ').replace(/, ([^,]*)$/,' and $1')} pick the closest of ${c.files.length} captures:</span> <details><summary>show all ${c.files.length}</summary>${c.files.map(f=>`<code>${esc(f)}</code>`).join(' ')}</details></td></tr>`;
+    const how=c.by==='gain'?`${esc(a.knobs[c.knob??a.gain].label)} steps through`:c.by==='mid'?'Middle crossfades':'Single capture';
+    const files=c.files.map(f=>`<code>${esc(f)}</code>`).join(c.by==='one'?'<br>':' → ');
+    const alt=c.alt?`<div class="alt">Also in the pack: ${c.alt.map(f=>`<code>${esc(f)}</code>`).join(', ')}</div>`:'';
+    return `<tr data-key="${k}"><td data-l="Setting">${esc(c.label||rowName(a,k))}</td><td data-l="Files"><span class="alt">${how}:</span> ${files}${alt}</td></tr>`}).join('')+(a.sel?a.sel.names.map((n,i)=>i?`<tr data-key="sel${i}"><td data-l="Setting">${esc(a.sel.label+' · '+n)}</td><td data-l="Files"><span class="alt">Single capture:</span> <code>${esc(a.sel.files[i])}</code></td></tr>`:'').join(''):'');
+  s.innerHTML=`<div class="wrap">
+  <div class="head"><h2>${esc(a.name)}</h2>${a.new?'<span class="tag">New amp</span>':''}<p class="sub">${a.loader?esc(a.based):'Based on the '+esc(a.based)}</p></div>
+  <div class="stage" style="aspect-ratio:${W}/${H}">${stage}</div>
+  <div class="read" aria-live="polite"><div class="ch"></div><div class="cap"></div><div class="meter"><i></i></div><button class="pbtn" aria-pressed="true">Power on</button></div>
+  <p class="hint">${a.loader?'LOAD opens .nam files · PREV, NEXT and the BROWSE encoder step through them · drag knobs up or down · the rocker is the power switch':'Drag knobs up or down · scroll to fine-tune · double-click to reset · buttons switch channels · the lamp is the power switch'}</p>
+  <div class="info"><div><p>${esc(a.intro)}</p><ul>${a.notes.map(n=>`<li>${esc(n)}</li>`).join('')}</ul></div>
+  <div>${a.loader?`<h3>Loads</h3><div class="facts"><span><b>.nam</b> files</span><span>Any size</span><span>Amp only, full rig or pedal</span><span>As many as you like</span></div>`:`<h3>Captures</h3><div class="facts"><span>Pack <b>${esc(a.pack)}</b></span><span>By <b>${esc(a.by)}</b></span><span><b>${a.nfiles}</b> files</span><span><b>${esc(a.kind)}</b></span>${a.esr?`<span>Accuracy <b>${a.esr}</b></span>`:''}</div>
+  <table class="stack"><thead><tr><th>Setting</th><th>Files</th></tr></thead><tbody>${rows}</tbody></table>`}</div></div></div>`;
+  return s}
+
+function btnLabel(a,id){const w=(a.switches||[]).find(w=>w.button===id);if(w)return w.label;const d=a.dims.find(d=>d.button===id||(d.buttons||[]).includes(id));return d?(d.buttons?(d.names[d.buttons.indexOf(id)]):d.id[0].toUpperCase()+d.id.slice(1)):id}
+
+function init(a,s){
+  const st={on:true,kv:{},kg:a.knobs.map(k=>k.v),sw:{}};
+  a.dims.forEach((d,i)=>{if(d.per){st[d.id]={};}else st[d.id]=d.start||0});
+  const d0=a.dims[0]||{id:'_',names:['-']},nCh=d0.names?d0.names.length:1;if(!a.dims.length)st._=0;
+  a.dims.forEach(d=>{if(d.per)for(let c=0;c<nCh;c++)st[d.id][c]=c===(d0.start||0)?(d.start||0):0});
+  if(d0.perknobs)for(let c=0;c<nCh;c++)st.kv[c]=a.knobs.map(k=>k.v);
+  const per=j=>d0.perknobs&&d0.perknobs.includes(j);
+  const get=j=>per(j)?st.kv[st[d0.id]][j]:st.kg[j];
+  const set=(j,v)=>{v=Math.min(1,Math.max(0,v));const ns=a.knobs[j].steps;if(ns)v=Math.round(v*(ns-1))/(ns-1);if(per(j))st.kv[st[d0.id]][j]=v;else st.kg[j]=v};
+  const stage=$('.stage',s),tip=$('.tip',s);
+  const skin=()=>d0.skin?st[d0.id]:0;
+  function paint(pwr=false){
+    const sk=skin(),on=st.on;
+    s.querySelectorAll('.base').forEach(im=>{const mine=+im.dataset.s===sk;
+      im.style.transition=(im.classList.contains('on')&&pwr)?(on?'opacity 1.7s cubic-bezier(.6,0,.3,1)':'opacity .7s ease-out'):'opacity .4s ease';
+      im.style.opacity=mine?(im.classList.contains('off')?1:(on?1:0)):0});
+    const off=a.skins[sk].ptrOff;
+    s.querySelectorAll('.ptr').forEach(im=>{const j=+im.dataset.k,mine=+im.dataset.s===sk;
+      im.style.transform=`rotate(${(get(j)-.5)*270}deg)`;
+      im.style.opacity=!mine?0:(!off?1:(im.dataset.v==='on')===on?1:0)});
+    const lit=new Set();a.dims.forEach(d=>(d.leds[dv(a,st,d)]||[]).forEach(l=>lit.add(l)));(a.switches||[]).forEach(w=>{if(st.sw[w.id])lit.add(w.led)});
+    s.querySelectorAll('.led').forEach(im=>im.style.opacity=on&&lit.has(im.dataset.l)?1:0);
+    s.querySelectorAll('.hot[data-k]').forEach(b=>{const j=+b.dataset.k;b.setAttribute('aria-valuenow',(get(j)*10).toFixed(1))});
+    if(a._screen)a._screen();readout()}
+  function readout(){
+    if(a.loader){$('.ch',s).innerHTML='<b>NAM loader</b>';$('.cap',s).innerHTML=st.on?a._readout:'Amp is off.';$('.meter i',s).style.width=(get(0)*100)+'%';
+      const pb=$('.pbtn',s);pb.setAttribute('aria-pressed',st.on);pb.textContent=st.on?'Power on':'Power off';return}
+    const si=a.sel?Math.round(get(a.sel.knob)*(a.sel.names.length-1)):0;
+    const key=si>0?'sel'+si:capKey(a,st),c=si>0?{by:'one',files:[a.sel.files[si]],rig:a.sel.rig,knob:a.gain}:a.caps[key];
+    if(si>0)$('.ch',s).innerHTML=`<b>${esc(a.sel.label)} · ${esc(a.sel.names[si])}</b> <span class="alt">(${esc(a.sel.note)})</span>`;else
+    $('.ch',s).innerHTML=a.dims.length?a.dims.filter(d=>!(d.id==='boost'&&d.names&&dv(a,st,d)===0)).map(d=>`<b>${esc(dname(a,st,d,dv(a,st,d)))}</b>`).join(' · ')+(c.note?` <span class="alt">(${esc(c.note)})</span>`:''):'<b>Single channel</b>';
+    s.querySelectorAll('tbody tr').forEach(r=>r.classList.toggle('cur',r.dataset.key===key));
+    const pb=$('.pbtn',s);pb.setAttribute('aria-pressed',st.on);pb.textContent=st.on?'Power on':'Power off';
+    let txt,fill=0;
+    if(!st.on){txt='Amp is off. Nothing is loaded.'}
+    else if(c.by==='grid'){const nr=c.files.length,nc=c.files[0].length,cv=get(c.colKnob),rv=get(c.rowKnob),cp=cv*(nc-1),rp=rv*(nr-1),ci=Math.min(nc-2,Math.floor(cp)),ri=Math.min(nr-2,Math.floor(rp));fill=cv;
+      txt=`Nearest <code>${esc(c.files[Math.round(rp)][Math.round(cp)])}</code> · ${esc(a.knobs[c.colKnob].label)} blends steps ${ci+1}–${ci+2} of ${nc}, ${esc(a.knobs[c.rowKnob].label)} blends ${esc(c.rowNames[ri])} ${Math.round((1-(rp-ri))*100)}% / ${esc(c.rowNames[ri+1])} ${Math.round((rp-ri)*100)}%`}
+    else if(c.by==='near'){const P=c.axes.map(j=>get(j)*10);
+      const ds=c.at.map(at=>Math.sqrt(at.reduce((q,v,i)=>v==null?q:q+c.w[i]*(v-P[i])**2,0)));
+      const o=ds.map((d,i)=>i).sort((x,y)=>ds[x]-ds[y]),d1=ds[o[0]],d2=ds[o[1]],f=d2==null?0:d1/(d1+d2+1e-9);fill=get(c.axes[0]);
+      txt=f<.08?`Loaded <code>${esc(c.files[o[0]])}</code>`:`Blending <code>${esc(c.files[o[0]])}</code> ${Math.round((1-f)*100)}% with <code>${esc(c.files[o[1]])}</code> ${Math.round(f*100)}%`;
+      txt+=` · closest of ${c.files.length} captured settings to your ${c.axes.map(j=>esc(a.knobs[j].label)).join(', ').replace(/, ([^,]*)$/,' and $1')}`}
+    else if(c.by==='one'){const kn=c.knob??a.gain;fill=get(kn);txt=`Loaded <code>${esc(c.files[0])}</code> · ${esc(a.knobs[kn].label)} drives the input (${(get(kn)*10).toFixed(1)})`}
+    else{const kn=c.by==='mid'?a.mid:(c.knob??a.gain),v=get(kn),n=c.files.length,p=v*(n-1),i=Math.min(n-2,Math.floor(p)),f=p-i;fill=v;
+      txt=f<.03?`Loaded <code>${esc(c.files[i])}</code>`:f>.97?`Loaded <code>${esc(c.files[i+1])}</code>`
+        :`Blending <code>${esc(c.files[i])}</code> ${Math.round((1-f)*100)}% with <code>${esc(c.files[i+1])}</code> ${Math.round(f*100)}%`;
+      txt+=` · set by ${esc(a.knobs[kn].label)}`}
+    if(st.on&&c.rig)txt+=' · <span class="alt">cab is inside this capture, so the plugin cab is bypassed</span>';
+    const sws=(a.switches||[]).filter(w=>st.sw[w.id]);if(st.on&&sws.length)txt+=' · '+sws.map(w=>`<b>${esc(w.label)}</b> on (${esc(w.does)})`).join(', ');
+    $('.cap',s).innerHTML=txt;$('.meter i',s).style.width=(fill*100)+'%'}
+  function showTip(j){const k=a.knobs[j];tip.textContent=k.stepNames?`${k.label} · ${k.stepNames[Math.round(get(j)*(k.steps-1))]}`:`${k.label} ${(get(j)*10).toFixed(1)}`;tip.style.left=pct(k.c[0],a.W);tip.style.top=pct(k.c[1]-k.r,a.H);tip.classList.add('on')}
+  let tipT;
+  s.querySelectorAll('.hot[data-k]').forEach(b=>{const j=+b.dataset.k;let y0,v0,id=null;
+    b.addEventListener('pointerdown',e=>{id=e.pointerId;b.setPointerCapture(id);y0=e.clientY;v0=get(j);stage.classList.add('drag');showTip(j);e.preventDefault()});
+    b.addEventListener('pointermove',e=>{if(id!==e.pointerId)return;const sc=e.shiftKey?900:260;set(j,v0+(y0-e.clientY)/sc);if(a._knob)a._knob(j);paint();showTip(j)});
+    const end=e=>{if(id!==e.pointerId)return;id=null;stage.classList.remove('drag');tip.classList.remove('on')};
+    b.addEventListener('pointerup',end);b.addEventListener('pointercancel',end);
+    b.addEventListener('wheel',e=>{e.preventDefault();const ns=a.knobs[j].steps;set(j,get(j)-Math.sign(e.deltaY)*(ns?1/(ns-1):.02));if(a._knob)a._knob(j);paint();showTip(j);clearTimeout(tipT);tipT=setTimeout(()=>tip.classList.remove('on'),700)},{passive:false});
+    b.addEventListener('dblclick',()=>{set(j,a.knobs[j].v);if(a._knob)a._knob(j);paint()});
+    b.addEventListener('keydown',e=>{const st_={ArrowUp:.02,ArrowRight:.02,ArrowDown:-.02,ArrowLeft:-.02,PageUp:.1,PageDown:-.1}[e.key];if(st_){e.preventDefault();const ns=a.knobs[j].steps;set(j,get(j)+(ns?Math.sign(st_)/(ns-1):st_));paint();showTip(j)}});
+    b.addEventListener('blur',()=>tip.classList.remove('on'))});
+  s.querySelectorAll('.hot.btn').forEach(b=>b.addEventListener('click',()=>{const id=b.dataset.b;
+    if(a._btn&&a._btn(id)){paint();return}
+    const sw=(a.switches||[]).find(w=>w.button===id);if(sw){st.sw[sw.id]=!st.sw[sw.id];paint();return}
+    for(const d of a.dims){
+      if(d.buttons&&d.buttons.includes(id)){st[d.id]=d.buttons.indexOf(id)}
+      else if(d.button===id){const n=dcount(a,st,d);if(d.per){const c=st[d0.id];st[d.id][c]=(st[d.id][c]+1)%n}else st[d.id]=(st[d.id]+1)%n}
+      else continue;
+      if(d===d0)a.dims.forEach(x=>{if(x.per){const c=st[d0.id];if(st[x.id][c]>=dcount(a,st,x))st[x.id][c]=0}})}
+    paint()}));
+  if(a.loader){
+    st.files=[];st.idx=0;const fi=$('.filein',s),scr=$('.scr',s),BR=a.knobs.length-1;
+    const fmtType=t=>({amp:'amp only',amp_cab:'full rig',amp_pedal:'amp + pedal',amp_pedal_cab:'full rig + pedal',pedal:'pedal',pedal_amp:'pedal + amp'}[t]||t||'');
+    async function readOne(f){let m={};try{const j=JSON.parse(await f.text());m=j.metadata||{};m._arch=j.architecture;m._sr=j.sample_rate}catch(e){m._bad=true}
+      return {name:f.name.replace(/\.nam$/i,''),m}}
+    fi.addEventListener('change',async()=>{const list=[...fi.files];if(!list.length)return;const add=await Promise.all(list.map(readOne));st.files.push(...add);st.idx=st.files.length-add.length;fi.value='';syncBrowse();paint()});
+    function syncBrowse(){const n=st.files.length;st.kg[BR]=n>1?st.idx/(n-1):0.5}
+    a._screen=()=>{scr.classList.toggle('off',!st.on);const n=st.files.length,f=st.files[st.idx];
+      $('.sc-slot',scr).textContent=n?`${String(st.idx+1).padStart(2,'0')} / ${String(n).padStart(2,'0')}`:'';
+      const nm=$('.sc-nm',scr),tx=f?f.name:'NO CAPTURE';nm.textContent=tx;nm.style.fontSize=Math.max(7,Math.min(13,13*28/tx.length))+'cqh';
+      $('.sc-sub',scr).textContent=f?(f.m._bad?'could not read this file':[f.m.gear_make,f.m.gear_model].filter((v,i,arr)=>v&&arr.indexOf(v)===i).join(' · ')||'NAM capture'):'PRESS LOAD TO OPEN A .NAM FILE';
+      $('.sc-info',scr).textContent=f&&!f.m._bad?[fmtType(f.m.gear_type),f.m._sr?Math.round(f.m._sr/1000)+' kHz':''].filter(Boolean).join(' · ').toUpperCase():'';
+      scr.querySelectorAll('.sc-kc').forEach(e=>{$('.sc-kn',e).textContent=(get(+e.dataset.j)*10).toFixed(1)});
+      a._readout=f?`Loaded <code>${esc(f.name)}</code>${f.m.gear_type?` · ${esc(fmtType(f.m.gear_type))}`:''}${f.m.loudness!=null?` · loudness ${(+f.m.loudness).toFixed(1)} dB`:''}${f.m.training&&f.m.training.validation_esr?` · accuracy ${(+f.m.training.validation_esr).toFixed(4)}`:''}`:'No capture loaded. Press LOAD on the amp to open one or more .nam files from your device.'};
+    a._knob=j=>{if(j===BR){if(st.files.length>1)st.idx=Math.round(get(BR)*(st.files.length-1));return}
+      const e=scr.querySelector(`.sc-kc[data-j="${j}"]`);if(!e)return;e.classList.add('lit');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('lit'),1200)};
+    a._btn=id=>{if(id==='load'){fi.click();return true}const n=st.files.length;if(!n)return true;
+      if(id==='next')st.idx=(st.idx+1)%n;if(id==='prev')st.idx=(st.idx-1+n)%n;syncBrowse();return true};
+  }
+  const pw=()=>{st.on=!st.on;paint(true)};
+  $('.hot.pw',s).addEventListener('click',pw);$('.pbtn',s).addEventListener('click',pw);
+  paint()}
+
+const main=$('#amps');
+AMPS.forEach(a=>{const s=build(a);main.appendChild(s);init(a,s)});
+}
+</script></body></html>

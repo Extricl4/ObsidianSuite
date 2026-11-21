@@ -161,7 +161,7 @@
     0.5,
     3.45
    ],
-   "art": "art/nyx_panel.png",
+   "art": "art/nyx_panel3.png",
    "color": [
     0.02,
     0.02,
@@ -180,49 +180,98 @@
      "z": 1.75,
      "r": 0.38,
      "v": 0.7,
-     "style": "alu"
+     "shape": "cap",
+     "mat": "silver",
+     "mat2": "pewter",
+     "ptr": [
+      0.2,
+      0.9,
+      1.0
+     ]
     },
     {
      "x": -5.7,
      "z": 1.75,
      "r": 0.38,
      "v": 0.5,
-     "style": "alu"
+     "shape": "cap",
+     "mat": "silver",
+     "mat2": "pewter",
+     "ptr": [
+      0.2,
+      0.9,
+      1.0
+     ]
     },
     {
      "x": -3.3,
      "z": 1.75,
      "r": 0.38,
      "v": 0.6,
-     "style": "alu"
+     "shape": "cap",
+     "mat": "silver",
+     "mat2": "pewter",
+     "ptr": [
+      0.2,
+      0.9,
+      1.0
+     ]
     },
     {
      "x": -0.9,
      "z": 1.75,
      "r": 0.38,
      "v": 0.55,
-     "style": "alu"
+     "shape": "cap",
+     "mat": "silver",
+     "mat2": "pewter",
+     "ptr": [
+      0.2,
+      0.9,
+      1.0
+     ]
     },
     {
      "x": 1.5,
      "z": 1.75,
      "r": 0.38,
      "v": 0.45,
-     "style": "alu"
+     "shape": "cap",
+     "mat": "silver",
+     "mat2": "pewter",
+     "ptr": [
+      0.2,
+      0.9,
+      1.0
+     ]
     },
     {
      "x": 3.9,
      "z": 1.75,
      "r": 0.38,
      "v": 0.6,
-     "style": "alu"
+     "shape": "cap",
+     "mat": "silver",
+     "mat2": "pewter",
+     "ptr": [
+      0.2,
+      0.9,
+      1.0
+     ]
     },
     {
      "x": 6.3,
      "z": 1.75,
      "r": 0.38,
      "v": 0.4,
-     "style": "alu"
+     "shape": "cap",
+     "mat": "silver",
+     "mat2": "pewter",
+     "ptr": [
+      0.2,
+      0.9,
+      1.0
+     ]
     }
    ],
    "toggles": [
