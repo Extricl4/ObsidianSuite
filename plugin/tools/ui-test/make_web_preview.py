@@ -23,6 +23,8 @@ def main():
     # every amp of the amp pack, with its face
     state['amps'] = [a for a in state['amps'] if a.get('type') != 'capture']
     state['amps'] += [run.capture_entry(f.stem) for f in sorted((run.CONTENT / 'Amps').glob('*.json'))]
+    for a in state['amps']:            # the preview has a file limit: no separate "amp off" pointer images
+        for sk in (a.get('face') or {}).get('skins', []): sk['ptrOff'] = False
     WEB.mkdir(exist_ok=True)
     html = (run.UI / 'obsidian-demo.html').read_text(encoding='utf-8')
     mock = (HERE / 'mock-native.js').read_text(encoding='utf-8')
@@ -39,7 +41,7 @@ def main():
     for f in (run.PLUGIN / 'WebUI' / 'pedals').glob('*.webp'): shutil.copy(f, WEB / f.name)
     shutil.copytree(run.UI / 'fonts', WEB / 'fonts', dirs_exist_ok=True)
     if (WEB / 'faces').is_symlink(): (WEB / 'faces').unlink()
-    shutil.copytree(run.CONTENT / 'Faces' / 'img', WEB / 'faces' / 'img', dirs_exist_ok=True)
+    shutil.copytree(run.CONTENT / 'Faces' / 'img', WEB / 'faces' / 'img', dirs_exist_ok=True, ignore=shutil.ignore_patterns('*_k[0-9]o.png'))
     print('wrote', WEB / 'index.html', round(len(html) / 1024), 'KB')
 
 
