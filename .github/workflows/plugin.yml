@@ -47,7 +47,11 @@ jobs:
         shell: pwsh
         run: |
           $exe = "build\ObsidianSuite_artefacts\Release\Standalone\Obsidian Amp Suite.exe"
-          $p = Start-Process -FilePath $exe -ArgumentList '--selftest','selftest.txt' -Wait -PassThru -NoNewWindow
+          # install the pedal pack where the plugin looks for it, so --packs plays every capture and IR
+          $docs = Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'Obsidian Amp Suite'
+          New-Item -ItemType Directory -Force $docs | Out-Null
+          Copy-Item -Recurse -Force plugin\Content\Captures, plugin\Content\IRs $docs
+          $p = Start-Process -FilePath $exe -ArgumentList '--selftest','selftest.txt','--packs' -Wait -PassThru -NoNewWindow
           if (Test-Path selftest.txt) { Get-Content selftest.txt }
           if ($p.ExitCode -ne 0) { if (Test-Path selftest.txt) { ./plugin/tools/ci-report.ps1 selftest.txt } ; exit 1 }
 
@@ -59,6 +63,8 @@ jobs:
           Copy-Item -Recurse "build\ObsidianSuite_artefacts\Release\VST3\Obsidian Amp Suite.vst3" "dist\ObsidianAmpSuite\"
           Copy-Item "build\ObsidianSuite_artefacts\Release\Standalone\Obsidian Amp Suite.exe" "dist\ObsidianAmpSuite\"
           Copy-Item plugin\README.md, plugin\LICENSES.md, selftest.txt "dist\ObsidianAmpSuite\"
+          New-Item -ItemType Directory -Force dist\ObsidianAmpSuite\Content | Out-Null
+          Copy-Item -Recurse plugin\Content\Captures, plugin\Content\IRs, plugin\Content\README.md "dist\ObsidianAmpSuite\Content\"
           Compress-Archive -Path dist\ObsidianAmpSuite\* -DestinationPath "dist\ObsidianAmpSuite-$v-Windows.zip" -Force
           echo "OBS_VERSION=$v" >> $env:GITHUB_ENV
 

@@ -58,8 +58,10 @@ IRs\Pedals\<Pedal>\        the pedal pack's reverb IRs (Crypt, Ossuary, Halcyon)
 
 ### The pedal pack
 
-Pack pedals bring their own files. Unzip the **Obsidian pedal pack** into `Documents\Obsidian Amp Suite` (it
-already has the `Captures\Pedals\…` and `IRs\Pedals\…` folders). When you add one of these pedals, its whole
+Pack pedals bring their own files. They live in the repo in `plugin/Content` (credits in
+`plugin/Content/README.md`), and the installer's **Pedal pack** option copies them into
+`Documents\Obsidian Amp Suite` (it never overwrites files that are already there). The release zip has them in
+`Content\`: copy its `Captures` and `IRs` folders into `Documents\Obsidian Amp Suite` by hand. When you add one of these pedals, its whole
 set loads in the background and the pedal's switches pick which file plays. A missing file shows a message
 and that position plays dry. The exact file for every switch position is in `visuals/registry.json`.
 

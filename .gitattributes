@@ -1,0 +1,3 @@
+# Pedal pack: keep captures and IRs byte-for-byte (no line-ending conversion)
+plugin/Content/**/*.nam -text
+plugin/Content/**/*.wav binary

@@ -15,3 +15,5 @@ Downloaded at build time (see `cmake/Dependencies.cmake`), not stored in this re
 
 VST is a registered trademark of Steinberg Media Technologies GmbH.
 This build is for personal use. Selling it would need a paid JUCE licence and the Steinberg ASIO licence.
+
+Pedal pack (`Content/`): captures and IRs made by other people; creators listed in `Content/README.md`.
