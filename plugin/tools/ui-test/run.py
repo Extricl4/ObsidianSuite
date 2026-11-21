@@ -482,15 +482,26 @@ async def run(standalone):
         n_fac = sum(1 for e in state['presets'] if e['factory'] and not e['category'].startswith('Artists/'))
         n_art = sum(1 for e in state['presets'] if e['category'].startswith('Artists/'))
         folders = await pg.evaluate("[...document.querySelectorAll('.obs-folder')].map(f=>f.dataset.folder)")
-        check(rows == n_fac >= 50 and 'All presets' not in folders and folders[:1] == ['FACTORY'] and 'ARTISTS' in folders and 'MY' in folders,
-              f'preset browser opens on Factory ({rows} presets, its types as sub-folders), no "All presets" folder')
+        # the browser opens on the loaded preset's folder; go to the top of Factory
+        await pg.locator('.obs-folder[data-folder="FACTORY"]').click(); await pg.wait_for_timeout(150)
+        if await pg.locator('.obs-pdir').count() == 0: await pg.locator('.obs-folder[data-folder="FACTORY"]').click(); await pg.wait_for_timeout(150)
+        dirs = await pg.evaluate("[...document.querySelectorAll('.obs-pdir')].map(d=>d.querySelector('b').textContent)")
+        rows0 = await pg.locator('.obs-prow').count()
+        check(rows0 == 0 and dirs[:4] == ['Clean', 'Crunch', 'Rhythm', 'Lead'] and len(dirs) == 8 and 'All presets' not in folders and folders[:1] == ['FACTORY'] and 'ARTISTS' in folders and 'MY' in folders,
+              f'Factory shows its folders, not every preset ({dirs})')
+        await pg.locator('.obs-pdir[data-folder="FACTORY/Clean"]').click(); await pg.wait_for_timeout(150)
+        clean = await pg.locator('.obs-prow').count(); up = await pg.locator('.obs-pup').count()
+        n_clean = sum(1 for e in state['presets'] if e['factory'] and e['category'] == 'Clean')
+        check(clean == n_clean and up == 1, f'going into Clean lists its {clean} presets, with a way back')
+        await pg.locator('.obs-pup').click(); await pg.wait_for_timeout(150)
+        check(await pg.locator('.obs-pdir').count() == 8 and await pg.locator('.obs-prow').count() == 0, 'the back row goes up to Factory again')
         await pg.locator('.obs-folder[data-folder="ARTISTS"]').click(); await pg.wait_for_timeout(150)
-        arts = await pg.evaluate("[...document.querySelectorAll('.obs-folder.obs-fsub')].filter(f=>f.dataset.folder.startsWith('ARTISTS/')).length")
+        arts = await pg.locator('.obs-pdir').count()
         rows_all = await pg.locator('.obs-prow').count()
-        await pg.locator('.obs-folder[data-folder="ARTISTS/Metallica"]').click(); await pg.wait_for_timeout(150)
+        await pg.locator('.obs-pdir[data-folder="ARTISTS/Metallica"]').click(); await pg.wait_for_timeout(150)
         met = await pg.evaluate("[...document.querySelectorAll('.obs-prow')].map(r=>r.children[1].textContent)")
-        check(arts >= 40 and rows_all == n_art and 'Enter Sandman' in met and 'Master of Puppets' in met and len(met) >= 10,
-              f'ARTISTS has {arts} artist folders ({rows_all} presets); Metallica lists {len(met)} (Enter Sandman, Master of Puppets...)')
+        check(arts >= 40 and rows_all == 0 and 'Enter Sandman' in met and 'Master of Puppets' in met and len(met) >= 10,
+              f'ARTISTS shows {arts} artist folders (no presets until you open one); Metallica lists {len(met)} (Enter Sandman, Master of Puppets...)')
         await pg.screenshot(path=str(OUT / 'presets.png'))
         await pg.locator('#preset-search').fill('sandman'); await pg.wait_for_timeout(120)
         hits = await pg.evaluate("[...document.querySelectorAll('.obs-prow')].map(r=>r.children[1].textContent)")
