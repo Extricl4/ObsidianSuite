@@ -15,12 +15,14 @@ ObsidianEditor::ObsidianEditor (ObsidianProcessor& p)
 
     using WBC = juce::WebBrowserComponent;
     auto options = WBC::Options{}
-        .withBackend (WBC::Options::Backend::webview2)
+       #if JUCE_WINDOWS
+        .withBackend (WBC::Options::Backend::webview2)      // Edge WebView2 (part of Windows 10/11)
         .withWinWebView2Options (WBC::Options::WinWebView2{}
                                     .withUserDataFolder (AppSettings::dataFolder().getChildFile ("WebView2"))
                                     .withStatusBarDisabled()
                                     .withBuiltInErrorPageDisabled()
                                     .withBackgroundColour (juce::Colour (0xff0c0c0d)))
+       #endif
         .withNativeIntegrationEnabled()
         .withKeepPageLoadedWhenBrowserIsHidden()
         .withNativeFunction ("obsidianCall", [this] (const juce::Array<juce::var>& args, WBC::NativeFunctionCompletion done)
@@ -30,7 +32,7 @@ ObsidianEditor::ObsidianEditor (ObsidianProcessor& p)
             for (int i = 1; i < args.size(); ++i) rest.add (args[i]);
             bridge->handle (args[0].toString(), rest, [done] (juce::var r) { done (r); });
         })
-       #if JUCE_WEB_BROWSER_RESOURCE_PROVIDER_AVAILABLE
+       #if JUCE_WEB_BROWSER_RESOURCE_PROVIDER_AVAILABLE && ! JUCE_LINUX
         .withResourceProvider ([this] (const juce::String& url) { return provide (url); })
        #endif
         ;
@@ -39,7 +41,15 @@ ObsidianEditor::ObsidianEditor (ObsidianProcessor& p)
     {
         web = std::make_unique<WBC> (options);
         addAndMakeVisible (*web);
-       #if JUCE_WEB_BROWSER_RESOURCE_PROVIDER_AVAILABLE
+       #if JUCE_LINUX
+        // Linux (development only): JUCE's WebKit pipe can't carry a page this big, so load it from a temp folder.
+        auto dir = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("obsidian-ui");
+        dir.createDirectory();
+        for (auto name : { "obsidian-demo.html", "grain.png", "obsidian-bridge.js", "obsidian-native.css" })
+            if (auto r = provide (name))
+                dir.getChildFile (name).replaceWithData (r->data.data(), r->data.size());
+        web->goToURL (juce::URL (dir.getChildFile ("obsidian-demo.html")).toString (false));
+       #elif JUCE_WEB_BROWSER_RESOURCE_PROVIDER_AVAILABLE
         web->goToURL (WBC::getResourceProviderRoot());
        #endif
     }
