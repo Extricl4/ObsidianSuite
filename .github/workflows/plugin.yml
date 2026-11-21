@@ -1,0 +1,77 @@
+# Builds the Obsidian Suite plugin for Windows on every change to plugin/ or ui/,
+# runs its self-test, and uploads the VST3, the standalone app and an installer.
+# Download them from the run's "Artifacts" box (Actions tab).
+# Push a tag like v0.2.0 to publish them as a GitHub release.
+name: Plugin (Windows)
+
+on:
+  push:
+    paths: [ 'plugin/**', 'ui/**', '.github/workflows/plugin.yml' ]
+    tags: [ 'v*' ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: WebView2 SDK (for the UI)
+        run: nuget install Microsoft.Web.WebView2 -Version 1.0.1901.177 -OutputDirectory "$env:RUNNER_TEMP\nuget" -NonInteractive
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: build/_deps
+          key: deps-${{ runner.os }}-${{ hashFiles('plugin/cmake/Dependencies.cmake') }}
+
+      - name: Configure
+        run: cmake -S plugin -B build -G "Visual Studio 17 2022" -A x64 -DJUCE_WEBVIEW2_PACKAGE_LOCATION="$env:RUNNER_TEMP\nuget"
+
+      - name: Build VST3 + standalone
+        run: cmake --build build --config Release --parallel --target ObsidianSuite_VST3 ObsidianSuite_Standalone
+
+      - name: Self-test
+        shell: pwsh
+        run: |
+          $exe = "build\ObsidianSuite_artefacts\Release\Standalone\Obsidian Suite.exe"
+          $p = Start-Process -FilePath $exe -ArgumentList '--selftest','selftest.txt' -Wait -PassThru -NoNewWindow
+          if (Test-Path selftest.txt) { Get-Content selftest.txt }
+          if ($p.ExitCode -ne 0) { Write-Error "Self-test failed ($($p.ExitCode))"; exit 1 }
+
+      - name: Package
+        shell: pwsh
+        run: |
+          $v = (Get-Content plugin\VERSION).Trim()
+          New-Item -ItemType Directory -Force dist\ObsidianSuite | Out-Null
+          Copy-Item -Recurse "build\ObsidianSuite_artefacts\Release\VST3\Obsidian Suite.vst3" "dist\ObsidianSuite\"
+          Copy-Item "build\ObsidianSuite_artefacts\Release\Standalone\Obsidian Suite.exe" "dist\ObsidianSuite\"
+          Copy-Item plugin\README.md, plugin\LICENSES.md, selftest.txt "dist\ObsidianSuite\"
+          Compress-Archive -Path dist\ObsidianSuite\* -DestinationPath "dist\ObsidianSuite-$v-Windows.zip" -Force
+          echo "OBS_VERSION=$v" >> $env:GITHUB_ENV
+
+      - name: Installer
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          if (-not (Get-Command iscc -ErrorAction SilentlyContinue)) { choco install innosetup -y --no-progress | Out-Null; $env:Path += ";C:\Program Files (x86)\Inno Setup 6" }
+          iscc /DAppVersion=$env:OBS_VERSION /DSourceDir="$pwd\dist\ObsidianSuite" /O"$pwd\dist" plugin\installer\ObsidianSuite.iss
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ObsidianSuite-${{ env.OBS_VERSION }}-Windows
+          path: |
+            dist/*.zip
+            dist/*.exe
+
+      - name: Release (tags only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.zip
+            dist/*.exe
