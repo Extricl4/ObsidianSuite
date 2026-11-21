@@ -370,6 +370,7 @@ void UiBridge::timerCallback()
         { "cpu", e.cpuLoad() }, { "clip", e.takeClip() }, { "tuner", tuner }, { "beat", e.metronomeBeat() },
         { "synth", e.synthActivity() }, { "bpm", e.effectiveBpm() }, { "busy", proc.rig().isBusy() },
         { "synNote", e.synthNote() }, { "synStep", e.synthStep() }, { "synSrc", e.synthSource() },
+        { "hmNote", e.harmonyNote() }, { "hmChord", juce::var (e.harmonyChord()) },
         { "ampA", e.amp().playingA() }, { "ampB", e.amp().playingB() }, { "ampF", e.amp().playingBlend() }, { "cabIn", e.amp().cabInside() },
         { "latencyMs", proc.getSampleRate() > 0 ? proc.getLatencySamples() * 1000.0 / proc.getSampleRate() : 0.0 } }));
 

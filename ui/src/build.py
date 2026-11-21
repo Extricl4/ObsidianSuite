@@ -42,8 +42,8 @@ rep('white-space: nowrap">SPECIAL FX</span>', 'white-space: nowrap">SFX</span>')
 rep('<div class="page" data-page="SPECIAL FX"', '<div class="page" data-page="SFX"')
 rep("const TABS=['SPECIAL FX','PEDALS','SYNTH','AMP','CAB','EQ','FX'];", "const TABS=['SFX','PEDALS','SYNTH','AMP','CAB','EQ','FX'];")
 rep("const TABTIP={'SPECIAL FX':", "const TABTIP={'SFX':")
-# HARMONY tab (harmony.js): only in the preview build until it is approved (OBS_HARMONY=1)
-HARMONY = os.environ.get('OBS_HARMONY') == '1'
+# HARMONY tab (harmony.js): HYDRA, the six-voice harmonizer (OBS_HARMONY=0 builds without it)
+HARMONY = os.environ.get('OBS_HARMONY', '1') != '0'
 if HARMONY:
     m = re.search(r'<button style="min-width: 62px;[^>]*>(?:(?!</button>).)*?>SYNTH</span><span style="width: 18px; height: 2px"></span></button>', h)
     assert m, 'SYNTH tab'

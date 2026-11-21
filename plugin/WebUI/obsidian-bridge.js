@@ -214,7 +214,7 @@ function setupBindings() {
 
   /* ---- page tabs: double-click bypasses a whole section ---- */
   safe('tabs', () => {
-  const SECTIONS = { 'SFX': 'sfx.on', 'PEDALS': 'pre.on', 'SYNTH': 'synth.on', 'AMP': 'amp.on', 'CAB': 'cab.on', 'EQ': 'eq.on', 'FX': 'post.on' };
+  const SECTIONS = { 'SFX': 'sfx.on', 'PEDALS': 'pre.on', 'SYNTH': 'synth.on', 'HARMONY': 'harm.on', 'AMP': 'amp.on', 'CAB': 'cab.on', 'EQ': 'eq.on', 'FX': 'post.on' };
   for (const name in SECTIONS)
     single(SECTIONS[name], () => bypassed.has(name) ? 0 : 1, n => { if (n >= .5) bypassed.delete(name); else bypassed.add(name); styleTabs(); });
   });
@@ -236,6 +236,17 @@ function setupBindings() {
     };
     // show "the synth is off" on its page whenever the section is bypassed
     const showPower = () => { if (S.setPower) S.setPower((vals['synth.on'] || 0) >= .5); };
+    showPower(); setInterval(showPower, 300);
+  });
+
+  /* ---- HARMONY page (HYDRA: harmony.js exposes all of its state) ---- */
+  if (window.obsHarmony) safe('harmony', () => {
+    const H = window.obsHarmony;
+    addBinding({ ids: H.ids, read: () => H.read(), write: v => H.write(v) });
+    // POWER is the section switch (like double-clicking the HARMONY tab)
+    H.powerOut = on => { vals['harm.on'] = on ? 1 : 0; last['harm.on'] = vals['harm.on']; call('setParam', 'harm.on', on ? 1 : 0);
+      if (on) bypassed.delete('HARMONY'); else bypassed.add('HARMONY'); if (typeof styleTabs === 'function') styleTabs(); };
+    const showPower = () => { if (H.setPower) H.setPower((vals['harm.on'] || 0) >= .5); };
     showPower(); setInterval(showPower, 300);
   });
 
@@ -362,6 +373,7 @@ document.addEventListener('click', e => {
 let meterEls = null, cpuSpan = null;
 const dbPct = lin => { const db = 20 * Math.log10(Math.max(lin, 1e-6)); return clamp((db + 60) / 60 * 100, 2, 100); };
 function showMeters(m) {
+  if (window.obsHarmony && window.obsHarmony.live) safe('harmony live', () => window.obsHarmony.live({ note: m.hmNote, chord: m.hmChord || [] }));
   if (window.obsSynth && window.obsSynth.live) safe('synth live', () => {
     window.obsSynth.live({ note: m.synNote, step: m.synStep, level: Math.min(1, (m.synth || 0) * 1.4), src: ['guitar', 'midi', 'hold'][m.synSrc] || 'guitar' });
     if (m.bpm) window.obsSynth.setBpm(m.bpm);

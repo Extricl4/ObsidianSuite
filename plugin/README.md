@@ -22,13 +22,14 @@ If an ASIO driver is installed the app picks it by itself on the first start. In
 
 | Part | Where |
 |---|---|
-| Signal chain: input → gate → transpose → synth (pre) → pedals → amp → cab → EQ → FX → special FX → doubler → width → output | `Source/DSP/Engine.cpp` |
+| Signal chain: input → gate → transpose → synth (pre) → pedals → [HYDRA before amp] → amp → cab → [HYDRA after amp] → EQ → FX → special FX → doubler → width → output | `Source/DSP/Engine.cpp` |
 | Amps: 9 in-house amps in the **OBSIDIAN AMPS** folder (modelled circuit by circuit, see below), *NAM Loader* (up to 4 `.nam` captures) | `Source/DSP/AmpModels.h`, `AmpSection.h`, `NamEngine.*` |
 | Cab: two mics (model, position, distance, level, pan, solo/mute/phase), IR loading, built-in cabs | `Source/DSP/CabSection.h` |
-| 30 pedals / effects (drive, fuzz, boost, comp, wah, whammy, octave, harmonizer, sub, delay, reverb, shimmer, swell, freeze, tape stop, looper, glitch, chorus, flanger, phaser, tremolo, vibrato/rotary, ring mod, bitcrusher, filters, limiter) | `Source/DSP/Modules/*.cpp` |
+| 29 pedals / effects (drive, fuzz, boost, comp, wah, whammy, octave, sub, delay, reverb, shimmer, swell, freeze, tape stop, looper, glitch, chorus, flanger, phaser, tremolo, vibrato/rotary, ring mod, bitcrusher, filters, limiter) | `Source/DSP/Modules/*.cpp` |
 | 9 pack pedals with their own captures / IRs (Chiron, Emperor, Graven, Maw, XXXIII, Helios, Aeon; Ossuary, Halcyon) plus Crypt's six RV-6 modes | `Source/DSP/Modules/PackModules.cpp`, `IrCore.h` |
 | Transpose: **Live** (instant) and **HQ** (studio quality, latency reported to the DAW) | `Source/DSP/Sections.h`, `PitchShifter.h` |
 | Synth, played by the guitar or MIDI (see below) | `Source/DSP/GuitarSynth.h`, parameters in `SynthDefs.h`, page in `ui/src/synth.js` |
+| HYDRA harmonizer, six voices (see below) | `Source/DSP/Harmonizer.h`, parameters and modes in `HarmonyDefs.h`, page in `ui/src/harmony.js` |
 | Themes: colours, fonts, bands and moving details | `ui/src/themes.js`, fonts in `ui/fonts` (OFL) |
 | Parameters (one list: DAW automation, presets and UI all use it) | `Source/Core/Params.cpp` |
 | Presets (yours: `Documents\Obsidian Amp Suite\Presets\*.obsidian`; factory presets: `Presets/Factory` and `Presets/Artists/<artist>`, 360 of them) | `Source/Core/PresetManager.*` |
@@ -116,6 +117,31 @@ On the SYNTH page, **AUDITION** and the computer keys A–K play it too.
   The steps are saved with the preset.
 * **Output**: level, mix, space (stereo echoes), **character** (clean, analog, 8-bit, VHS), before or after the amp
 * **DICE** rolls a whole new sound (keeps mix, level, key and your playing settings), with undo.
+
+## HYDRA, the harmonizer (HARMONY page)
+
+Up to six voices. Each one is **SMART** (a step in the key and mode, so the semitones follow the note you
+play: a 3rd up is +4 on one note and +3 on the next) or **FIXED** (always the same number of semitones),
+with its own level, pan, detune (cents) and delay (up to 120 ms). 45 modes (major and minor, the church
+modes, pentatonics and blues, harmonic and melodic minor families, Phrygian dominant, Hungarian minor,
+diminished, whole tone, Hirajoshi, bebop and more). Notes outside the mode either take the interval of
+the nearest scale note (FOLLOW) or keep the last harmony (HOLD). HUMANIZE adds a little drift in pitch,
+timing and level; SPREAD widens or narrows the pans; MIX is dry and harmony at full in the middle.
+PLACE: after the amp (harmonies of your amp sound, stereo) or before it (the voices go through the amp).
+
+* **LEAD** (single notes, the main mode). Its own pitch tracker listens to the clean guitar (NSDF, the
+  window grows with the period: a high note is known in a couple of periods). Each voice is a
+  pitch-synchronous shifter: a read head moving through the signal at the pitch ratio that jumps by whole,
+  cross-correlated periods with a short crossfade, so splices don't click; it reads band-limited (32-tap
+  sinc). A voice trails the guitar by ~3–5 ms and has the new note's interval ~8–12 ms after the pick
+  attack (a voice with some DELAY gets it exactly on the attack: notes are time-stamped). Splices never
+  repeat or skip a pick attack. Hammer-ons jump, bends glide.
+* **CHORDS** finds the notes of a chord (up to six) and gives every partial the interval of the note it
+  belongs to (Signalsmith Stretch with a frequency map). It is about 85 ms behind.
+
+`tools/harmony/bench.cpp` (`tools/harmony/run.sh`) is its test bench: synthetic guitar parts (held notes over the
+neck, picked phrases, fast runs, legato, bends, low riffs, a distorted amp, chords, every sample rate) with
+pitch, lag, click, level-ripple and CPU numbers.
 
 ## Themes
 
@@ -232,8 +258,8 @@ version.
 ## Tests
 
 * `"Obsidian Amp Suite.exe" --selftest report.txt` renders every pedal in every slot with random settings,
-  every sample rate and buffer size, checks transpose pitch accuracy, the synth, presets, DAW state and
-  CPU. Add `--nam file.nam` to test a capture, and `--packs` to play every file of the installed pedal and amp
+  every sample rate and buffer size, checks transpose pitch accuracy, the synth, HYDRA (pitch of every voice,
+  how fast it follows, bypass, moving it while playing), presets, DAW state and CPU. Add `--nam file.nam` to test a capture, and `--packs` to play every file of the installed pedal and amp
   pack (every capture amp: all its captures load, the gain is swept, every button is pressed, level and CPU).
   The GitHub build runs it on every push.
 * `python plugin/tools/ui-test/run.py` runs the real UI in headless Chrome against a fake engine and clicks

@@ -11,6 +11,7 @@
 #include "Sections.h"
 #include "PitchTracker.h"
 #include "GuitarSynth.h"
+#include "Harmonizer.h"
 #include <array>
 #include "AmpSection.h"
 #include "CabSection.h"
@@ -66,6 +67,14 @@ public:
     float synthNote() const                       { return synth.currentNote(); }
     int   synthStep() const                       { return synth.currentStep(); }
     int   synthSource() const                     { return synth.currentSource(); }
+    /** HYDRA, for the HARMONY page: the note it hears (-1: none), in CHORDS the chord's notes. */
+    int   harmonyNote() const                     { return harmonizer.uiNote.load(); }
+    juce::Array<juce::var> harmonyChord() const
+    {
+        juce::Array<juce::var> a; const int n = harmonizer.uiChordCount.load();
+        for (int i = 0; i < n && i < dsp::hydra::ChordDetector::kMaxNotes; ++i) a.add (harmonizer.uiChord[i].load());
+        return a;
+    }
 
     /** Arpeggiator steps (16 packed numbers, see SynthDefs.h). Any thread. */
     void setSynthSteps (const unsigned* s)         { for (int i = 0; i < 16; ++i) synthSteps[i].store (s[i]); }
@@ -125,6 +134,13 @@ private:
         std::atomic<float>* cabLc, *cabHc;
         // synth: every parameter, by SynthDefs index
         std::atomic<float>* syn[obs::synthdefs::count];
+        // HYDRA: by HarmonyDefs index
+        std::atomic<float>* harm[obs::harmdefs::gCount];
+        std::atomic<float>* harmV[obs::harmdefs::kVoices][obs::harmdefs::vCount];
     } p {};
+    void readHarmonyParams (dsp::hydra::Params& hp);
+    dsp::hydra::Harmonizer harmonizer;
+    std::vector<float> di;
+    int harmPlace = 0; bool harmMoving = false;
 };
 } // namespace obs

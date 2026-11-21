@@ -24,6 +24,10 @@ void Engine::attach (juce::AudioProcessorValueTreeState& state)
     }
     p.cabLc = g ("cab.lc"); p.cabHc = g ("cab.hc");
     for (int i = 0; i < obs::synthdefs::count; ++i) p.syn[i] = g (obs::synthdefs::table()[i].id);
+    for (int i = 0; i < obs::harmdefs::gCount; ++i) p.harm[i] = g (obs::harmdefs::globals()[i].id);
+    for (int v = 0; v < obs::harmdefs::kVoices; ++v)
+        for (int i = 0; i < obs::harmdefs::vCount; ++i)
+            p.harmV[v][i] = g ("harm.v" + juce::String (v + 1) + "." + obs::harmdefs::voiceDefs()[i].id);
     for (int i = 0; i < 16; ++i) synthSteps[i].store (obs::synthdefs::defaultStep (i));
     for (int r = 0; r < kNumRacks; ++r) racks[r].attach (params, r);
 }
@@ -36,6 +40,7 @@ void Engine::prepare (double sampleRate, int block)
     ampSection.prepare (sr, maxBlock); cabSection.prepare (sr, maxBlock); eq.prepare (sr);
     for (auto& r : racks) r.prepare (ctxProto);
     doubler.prepare (sr); width.prepare (sr); metronome.prepare (sr);
+    harmonizer.prepare (sr, maxBlock); di.assign ((size_t) maxBlock, 0.f);
     // Re-prepare loaded captures for this rate.
     for (int c = 0; c < AmpSection::kChannels; ++c)
         if (auto* e = ampSection.channelSlot (c).get()) e->prepare (sr, maxBlock);
@@ -71,6 +76,30 @@ void Engine::readSynthParams (SynthParams& sp, const HostInfo& h)
     // The guitar notes follow the plugin's transpose.
     sp.transposeSemis = std::round (p.transpose->load (std::memory_order_relaxed));
     sp.bpm = h.bpm; sp.hostPlaying = h.playing; sp.ppq = h.ppq;
+}
+
+void Engine::readHarmonyParams (dsp::hydra::Params& hp)
+{
+    namespace hd = obs::harmdefs;
+    auto v = [] (std::atomic<float>* a) { return a->load (std::memory_order_relaxed); };
+    hp.on = v (p.harm[hd::on]) > 0.5f;
+    hp.key = juce::jlimit (0, 11, (int) std::lround (v (p.harm[hd::key])));
+    hp.mode = juce::jlimit (0, hd::kModes - 1, (int) std::lround (v (p.harm[hd::mode])));
+    hp.track = (int) std::lround (v (p.harm[hd::track]));
+    hp.place = (int) std::lround (v (p.harm[hd::place]));
+    hp.hold = v (p.harm[hd::offkey]) > 0.5f;
+    hp.human = v (p.harm[hd::human]) * 0.01f;
+    hp.spread = v (p.harm[hd::spread]) * 0.01f;
+    hp.mix = v (p.harm[hd::mix]) * 0.01f;
+    hp.outDb = v (p.harm[hd::out]);
+    for (int k = 0; k < hd::kVoices; ++k)
+    {
+        auto& o = hp.v[k]; auto* q = p.harmV[k];
+        o.on = v (q[hd::vOn]) > 0.5f; o.smart = v (q[hd::vSmart]) > 0.5f;
+        o.step = (int) std::lround (v (q[hd::vStep])); o.semi = (int) std::lround (v (q[hd::vSemi]));
+        o.level = v (q[hd::vLevel]) * 0.01f; o.pan = v (q[hd::vPan]); o.detune = v (q[hd::vDetune]); o.delayMs = v (q[hd::vDelay]);
+    }
+    hp.transpose = (float) std::lround (v (p.transpose));
 }
 
 void Engine::process (juce::AudioBuffer<float>& buffer, int numIn, const HostInfo& hostIn)
@@ -123,6 +152,16 @@ void Engine::process (juce::AudioBuffer<float>& buffer, int numIn, const HostInf
         for (int i = 0; i < n; ++i) { float s = x[i] * inGainSm.next(); x[i] = std::isfinite (s) ? s : 0.f; }
         inMeter.process (x, n);
         pitch.process (x, n);
+        std::copy (x, x + n, di.data());                // the clean guitar: HYDRA listens to this
+
+        // HYDRA: where it sits (a move fades it out, switches, fades it back in)
+        dsp::hydra::Params hp; readHarmonyParams (hp);
+        if (hp.place != harmPlace && ! harmMoving) harmMoving = true;
+        if (harmMoving)
+        {
+            if (harmonizer.isQuiet()) { harmPlace = hp.place; harmMoving = false; harmonizer.reset(); }
+            else hp.on = false;
+        }
 
         // ---- gate + transpose ------------------------------------------------------------
         gate.process (x, n, v (p.gateThresh), v (p.gateOn) > 0.5f);
@@ -152,6 +191,9 @@ void Engine::process (juce::AudioBuffer<float>& buffer, int numIn, const HostInf
             racks[0].process (chans, 1, n, ctxProto, v (p.preOn) > 0.5f);
         }
 
+        // ---- HYDRA before the amp (the voices go through it) ---------------------------------
+        if (harmPlace == 1) harmonizer.process (di.data(), x, nullptr, x, nullptr, n, hp);
+
         // ---- amp ----------------------------------------------------------------------------
         ampSection.process (x, n, v (p.ampOn) > 0.5f, (int) std::round (v (p.ampChannel)), v (p.ampGain), v (p.ampBass), v (p.ampMid),
                             v (p.ampTreble), v (p.ampPresence), v (p.ampDepth), v (p.ampMaster));
@@ -174,6 +216,9 @@ void Engine::process (juce::AudioBuffer<float>& buffer, int numIn, const HostInf
                 L[i] = L[i] * (1.f - synthMix) + synthL[(size_t) i] * synthMix;
                 outR[i] = outR[i] * (1.f - synthMix) + synthR[(size_t) i] * synthMix;
             }
+
+        // ---- HYDRA after the amp: harmonies of the amp's sound, like a second guitarist -------
+        if (harmPlace == 0) harmonizer.process (di.data(), L, outR, L, outR, n, hp);
 
         float* st[2] = { L, outR };
 

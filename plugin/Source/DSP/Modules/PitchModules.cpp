@@ -61,47 +61,6 @@ private:
 };
 
 // ---------------------------------------------------------------------------
-class Harmonizer : public Module   // "Legion": in-key harmony using the guitar's detected note
-{
-public:
-    void prepare (const ModuleContext& c) override { for (auto& s : sh) s.prepare (c.sampleRate, 26.f); for (auto& s : sh2) s.prepare (c.sampleRate, 26.f); reset(); }
-    void reset() override { for (auto& s : sh) s.reset(); for (auto& s : sh2) s.reset(); }
-    static int scaleShift (int note, int key, int scale, int degrees)
-    {
-        static const int maj[7] = { 0, 2, 4, 5, 7, 9, 11 }, mnr[7] = { 0, 2, 3, 5, 7, 8, 10 };
-        const int* sc = scale == 0 ? maj : mnr;
-        const int rel = ((note - key) % 12 + 12) % 12;
-        int deg = 0, best = 99;
-        for (int d = 0; d < 7; ++d) { const int df = std::abs (sc[d] - rel); if (df < best) { best = df; deg = d; } }
-        const int target = deg + degrees;
-        const int oct = (int) std::floor (target / 7.0);
-        const int td = target - oct * 7;
-        return (sc[td] + 12 * oct) - sc[deg];
-    }
-    void process (float* const* ch, int numCh, int n, const float* p, const ModuleContext& ctx) override
-    {
-        // p: voice 1 interval, voice 2 interval, key, scale, mix, voice 2 level
-        static const int intervals[] = { -7, -4, -3, -2, 0, 2, 3, 4, 5, 7 };   // scale degrees: oct down .. oct up
-        int note = lastNote;
-        if (ctx.pitch != nullptr && ctx.pitch->confidence() > 0.7f && ctx.pitch->frequency() > 0)
-            note = lastNote = (int) std::round (PitchTracker::toMidi (ctx.pitch->frequency()));
-        const int key = (int) p[2], scale = (int) p[3];
-        const int s1 = note > 0 ? scaleShift (note, key, scale, intervals[juce::jlimit (0, 9, (int) p[0])]) : 0;
-        const int s2 = note > 0 ? scaleShift (note, key, scale, intervals[juce::jlimit (0, 9, (int) p[1])]) : 0;
-        for (int c = 0; c < numCh; ++c) { sh[c].setSemitones ((float) s1); sh2[c].setSemitones ((float) s2); }
-        const float mix = p[4] * 0.01f, v2 = p[5] * 0.01f;
-        for (int c = 0; c < numCh; ++c)
-            for (int i = 0; i < n; ++i)
-            {
-                const float x = ch[c][i];
-                ch[c][i] = x + (sh[c].process (x) + sh2[c].process (x) * v2) * mix;
-            }
-    }
-private:
-    PitchShifter sh[2], sh2[2]; int lastNote = -1;
-};
-
-// ---------------------------------------------------------------------------
 class SubOctave : public Module   // "Richter": earthquake sub with low-pass
 {
 public:
@@ -172,8 +131,6 @@ private:
 void registerPitchModules (std::vector<ModuleType>& t)
 {
     using P = ModuleParam;
-    const juce::StringArray keys { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" };
-    const juce::StringArray harm { "Oct down", "5th down", "4th down", "3rd down", "Unison", "3rd up", "4th up", "5th up", "6th up", "Oct up" };
     t.push_back ({ "ascend", "Ascend Whammy", "pitch", RackAll,
         "Bends your guitar up or down. Sweep Position like an expression pedal.",
         { P { "Shift", "st", -24, 24, 12 }, P { "Position", "%", 0, 100, 100 }, P { "Mix", "%", 0, 100, 100 } },
@@ -182,11 +139,7 @@ void registerPitchModules (std::vector<ModuleType>& t)
         "Adds an octave below, two octaves below and an octave above.",
         { P { "Dry", "%", 0, 100, 100 }, P { "-1 Oct", "%", 0, 100, 70 }, P { "-2 Oct", "%", 0, 100, 0 }, P { "+1 Oct", "%", 0, 100, 0 }, P { "Tone", "", 0, 10, 6 } },
         [] { return std::make_unique<Octave>(); } });
-    t.push_back ({ "legion", "Legion Harmonizer", "pitch", RackAll,
-        "Two harmony voices that stay in key (it listens to the note you play).",
-        { P { "Voice 1", "", 0, 9, 5, 1, harm }, P { "Voice 2", "", 0, 9, 4, 1, harm }, P { "Key", "", 0, 11, 4, 1, keys }, P { "Scale", "", 0, 1, 1, 1, { "Major", "Minor" } },
-          P { "Mix", "%", 0, 100, 70 }, P { "Voice 2 Level", "%", 0, 100, 0 } },
-        [] { return std::make_unique<Harmonizer>(); } });
+    // "legion" (Legion Harmonizer) is gone: HYDRA, the HARMONY page, does it with six voices and 45 modes.
     t.push_back ({ "richter", "Richter Sub", "pitch", RackAll,
         "Earthquake sub-octave for huge low end.",
         { P { "Dry", "%", 0, 100, 100 }, P { "Sub 1", "%", 0, 100, 80 }, P { "Sub 2", "%", 0, 100, 30 }, P { "Low Pass", "Hz", 60, 800, 220, 2.f }, P { "Drive", "", 0, 10, 2 } },

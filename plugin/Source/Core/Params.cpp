@@ -1,5 +1,6 @@
 #include "Params.h"
 #include "../DSP/SynthDefs.h"
+#include "../DSP/HarmonyDefs.h"
 
 namespace obs
 {
@@ -82,6 +83,32 @@ std::vector<ParamDef> build()
             case obs::synthdefs::BOOL:   p.b  (d.id, d.name, d.def > 0.5f); break;
             case obs::synthdefs::CHOICE: p.c  (d.id, d.name, juce::StringArray::fromTokens (d.unit, "|", ""), (int) d.def); break;
         }
+    }
+
+    // ---- HYDRA harmonizer (the HARMONY page): see DSP/HarmonyDefs.h -------------------------------
+    {
+        namespace hd = obs::harmdefs;
+        auto add = [&] (const juce::String& id, const juce::String& name, const hd::Def& d, float def)
+        {
+            ParamDef x; x.id = id; x.name = name; x.group = "harmony"; x.min = d.min; x.max = d.max; x.def = def;
+            switch (d.type)
+            {
+                case hd::F:      x.type = ParamType::Float; x.unit = d.unit; break;
+                case hd::INT:    x.type = ParamType::Int; x.unit = d.unit; break;
+                case hd::BOOL:   x.type = ParamType::Bool; break;
+                case hd::CHOICE: x.type = ParamType::Choice;
+                                 x.choices = juce::StringArray::fromTokens (d.unit != nullptr ? d.unit : hd::modeChoices(), "|", "");
+                                 x.max = (float) (x.choices.size() - 1); break;
+            }
+            p.v.push_back (x);
+        };
+        for (int i = 0; i < hd::gCount; ++i) add (hd::globals()[i].id, hd::globals()[i].name, hd::globals()[i], hd::globals()[i].def);
+        for (int v = 0; v < hd::kVoices; ++v)
+            for (int i = 0; i < hd::vCount; ++i)
+            {
+                const auto& d = hd::voiceDefs()[i];
+                add ("harm.v" + juce::String (v + 1) + "." + d.id, "Harmony Voice " + juce::String (v + 1) + " " + d.name, d, hd::voiceDefault (v, i));
+            }
     }
 
     // ---- Amp ---------------------------------------------------------------------------------

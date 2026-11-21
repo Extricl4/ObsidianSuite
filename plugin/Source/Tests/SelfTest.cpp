@@ -9,6 +9,7 @@
 //  pack pedals (file maps, IR reverb, capture switching; --packs also plays
 //  every file of the installed Obsidian pedal pack), and a CPU budget for a full rig.
 // =============================================================================
+#include "../DSP/HarmonyDefs.h"
 #include "../PluginProcessor.h"
 #include <set>
 #include "../DSP/Modules/ModuleRegistry.h"
@@ -332,6 +333,135 @@ int runSelfTest (const juce::StringArray& args)
                 const float cents = f > 0 ? 1200.f * std::log2 (f / expected) : 9999.f;
                 r.check (std::abs (cents) < 8.f, juce::String (hq ? "HQ  " : "Live") + juce::String (st > 0 ? " +" : " ") + juce::String (st) + " st -> " + juce::String (f, 1) + " Hz (expected " + juce::String (expected, 1) + ", " + juce::String (cents, 1) + " cents)");
             }
+        p.presetManager().loadInit();
+    }
+
+    // ---------------------------------------------------------------- 5b. HYDRA
+    r.head ("HYDRA harmonizer (the HARMONY page)");
+    {
+        int nHarm = 0;
+        for (auto* prm : p.getParameters())
+            if (auto* rp = dynamic_cast<juce::RangedAudioParameter*> (prm)) if (rp->getParameterID().startsWith ("harm.")) ++nHarm;
+        r.check (nHarm == obs::harmdefs::gCount + obs::harmdefs::kVoices * obs::harmdefs::vCount, juce::String (nHarm) + " harmony parameters");
+
+        // a picked melody in A minor, rendered like a guitar (decaying harmonics, a short pick attack)
+        const double noteLen = 0.30;
+        const int mel[] = { 57, 59, 60, 62, 64, 65, 67, 69, 67, 64, 60, 57 };
+        const int nNotes = (int) (sizeof (mel) / sizeof (mel[0]));
+        auto guitar = [&] (int i) -> float {
+            const double t = i / SR; const int k = (int) (t / noteLen); if (k >= nNotes) return 0.f;
+            const double tn = t - k * noteLen, f = 440.0 * std::pow (2.0, (mel[k] - 69) / 12.0);
+            double v = 0; for (int h = 1; h <= 10; ++h) v += std::sin (juce::MathConstants<double>::twoPi * f * h * tn) * std::exp (-tn * (1.5 + 0.6 * h)) / h;
+            const double att = juce::jmin (1.0, tn / 0.0015), rel = juce::jmin (1.0, (noteLen - tn) / 0.008);
+            return (float) (0.2 * v * att * rel); };
+        auto isolate = [&] {
+            p.presetManager().loadInit();
+            setNorm (p, "amp.on", 0); setNorm (p, "cab.on", 0); setNorm (p, "synth.on", 0); setNorm (p, "doubler.on", 0); setNorm (p, "gate.on", 0); setNorm (p, "eq.on", 0);
+            for (int v = 1; v <= 6; ++v) setNorm (p, "harm.v" + juce::String (v) + ".on", 0);
+            setNorm (p, "harm.on", 1); setReal (p, "harm.mix", 100); setReal (p, "harm.key", 9); setReal (p, "harm.mode", 1); setReal (p, "harm.human", 0);
+            setReal (p, "harm.v1.on", 1); setReal (p, "harm.v1.level", 100); setReal (p, "harm.v1.pan", 0); };
+        auto play = [&] (std::vector<float>& out) {
+            out.clear(); juce::AudioBuffer<float> buf (2, BLOCK); juce::MidiBuffer midi; int at = 0;
+            for (int b = 0; b < (int) (SR * noteLen * (nNotes + 1) / BLOCK); ++b)
+            {
+                for (int i = 0; i < BLOCK; ++i) { buf.setSample (0, i, guitar (at + i)); buf.setSample (1, i, 0.f); }
+                at += BLOCK; p.processBlock (buf, midi);
+                for (int i = 0; i < BLOCK; ++i) out.push_back (buf.getSample (0, i));
+            } };
+        auto pitchAt = [&] (const std::vector<float>& x, double from, double to) {
+            const auto a = (size_t) (from * SR), b = (size_t) juce::jmin ((double) x.size(), to * SR);
+            return detectPitch (std::vector<float> (x.begin() + (long) a, x.begin() + (long) b), SR); };
+
+        struct Case { const char* name; bool smart; int val; };
+        for (auto c : { Case { "smart 3rd up", true, 2 }, Case { "smart 6th down", true, -2 }, Case { "fixed octave down", false, -12 }, Case { "fixed 5th up", false, 7 } })
+        {
+            isolate();
+            setReal (p, "harm.v1.smart", c.smart ? 1.f : 0.f);
+            if (c.smart) setReal (p, "harm.v1.step", (float) c.val); else setReal (p, "harm.v1.semi", (float) c.val);
+            std::vector<float> out; play (out);
+            int good = 0; float worst = 0;
+            for (int k = 0; k < nNotes; ++k)
+            {
+                const int sh = c.smart ? obs::harmdefs::smartShift (mel[k], c.val, 9, 1, false, 0) : c.val;
+                const float want = 440.f * std::pow (2.f, (mel[k] + sh - 69) / 12.f);
+                const float got = pitchAt (out, k * noteLen + 0.06, k * noteLen + 0.29);
+                const float cents = got > 0 ? std::abs (1200.f * std::log2 (got / want)) : 9999.f;
+                worst = juce::jmax (worst, cents); if (cents < 15.f) ++good;
+            }
+            r.check (good == nNotes, juce::String ("LEAD ") + c.name + ": " + juce::String (good) + " of " + juce::String (nNotes) + " notes on pitch (worst " + juce::String (worst, 1) + " cents)");
+        }
+        // the voice is on its new note within a few ms of the attack (smart 3rd, mid register)
+        {
+            isolate(); setReal (p, "harm.v1.smart", 1); setReal (p, "harm.v1.step", 2);
+            std::vector<float> out; play (out);
+            double worstLag = 0;
+            for (int k = 1; k < nNotes; ++k)
+            {
+                const int sh = obs::harmdefs::smartShift (mel[k], 2, 9, 1, false, 0);
+                const float want = 440.f * std::pow (2.f, (mel[k] + sh - 69) / 12.f);
+                double lag = 1;
+                for (double ms = 4; ms < 60; ms += 1)
+                {
+                    // short YIN window ending at that moment
+                    const double t1 = k * noteLen + ms * 0.001;
+                    const auto b = (size_t) (t1 * SR), a = b - (size_t) (0.0035 * SR) - 400;
+                    std::vector<double> d (420, 1.0); double run = 0; const int W = (int) (0.0035 * SR);
+                    for (int tau = 1; tau < 420; ++tau) { double acc = 0; for (int j = 0; j < W; ++j) { const double df = out[a + (size_t) j] - out[a + (size_t) (j + tau)]; acc += df * df; } run += acc; d[(size_t) tau] = run > 0 ? acc * tau / run : 1; }
+                    const int expTau = (int) std::lround (SR / want);
+                    bool ok = false;
+                    for (int tau = juce::jmax (2, expTau - 6); tau <= juce::jmin (418, expTau + 6); ++tau) if (d[(size_t) tau] < 0.2) ok = true;
+                    if (ok) { lag = ms * 0.001; break; }
+                }
+                worstLag = juce::jmax (worstLag, lag);
+                if (lag > 0.020) r.info ("  note " + juce::String (k) + " (midi " + juce::String (mel[k]) + "): " + juce::String (lag * 1000.0, 0) + " ms");
+            }
+            r.check (worstLag < 0.025, "LEAD follows new notes fast: on the new interval within " + juce::String (worstLag * 1000.0, 0) + " ms of each attack (clean tones, no pick noise)");
+        }
+        // off means off: switched off (after its fade) it hands the signal through untouched, whatever its settings
+        {
+            dsp::hydra::Harmonizer h; h.prepare (SR, BLOCK);
+            dsp::hydra::Params hp; hp.on = true;
+            for (auto& v : hp.v) { v.on = true; v.level = 1.f; }
+            hp.track = 1; hp.mix = 0.8f;
+            std::vector<float> in ((size_t) BLOCK), di ((size_t) BLOCK), L ((size_t) BLOCK), R ((size_t) BLOCK);
+            float diff = 0; int at = 0;
+            for (int b = 0; b < (int) (SR * 1.5 / BLOCK); ++b, at += BLOCK)
+            {
+                if (b == (int) (SR * 0.5 / BLOCK)) hp.on = false;                 // switch off while playing
+                for (int i = 0; i < BLOCK; ++i) in[(size_t) i] = di[(size_t) i] = guitar (at + i);
+                h.process (di.data(), in.data(), in.data(), L.data(), R.data(), BLOCK, hp);
+                if (b > (int) (SR * 0.6 / BLOCK))
+                    for (int i = 0; i < BLOCK; ++i) diff = juce::jmax (diff, std::abs (L[(size_t) i] - in[(size_t) i]), std::abs (R[(size_t) i] - in[(size_t) i]));
+            }
+            r.check (diff == 0.f, "switched off it is bit-for-bit out of the way" + (diff == 0.f ? juce::String() : " (differs by " + juce::String (diff) + ")"));
+        }
+        // everything at once, CHORDS, moving before/after the amp while playing: no clicks, no NaN
+        {
+            p.presetManager().loadInit();
+            setNorm (p, "harm.on", 1);
+            for (int v = 1; v <= 6; ++v) setNorm (p, "harm.v" + juce::String (v) + ".on", 1);
+            setReal (p, "harm.human", 60);
+            const auto lead6 = render (p, SR, BLOCK, 4.0, [&] (int i) { return guitar (i % (int) (SR * noteLen * nNotes)); });
+            r.check (lead6.finite && lead6.peak < 1.99f, "six voices + humanize through the full rig: clean (peak " + juce::String (lead6.peak, 2) + ")");
+            r.info ("six LEAD voices on the full rig: " + juce::String (lead6.avgLoad * 100.0, 1) + "% of one core");
+            setReal (p, "harm.track", 1);
+            auto chordIn = [&] (int i) { const double t = i / SR; double v = 0; for (int m : { 57, 61, 64 }) { const double f = 440.0 * std::pow (2.0, (m - 69) / 12.0); for (int h = 1; h <= 8; ++h) v += std::sin (juce::MathConstants<double>::twoPi * f * h * t) / (h * 1.0); } return (float) (0.06 * v * std::exp (-std::fmod (t, 1.0) * 1.5)); };
+            const auto ch6 = render (p, SR, BLOCK, 3.0, chordIn);
+            r.check (ch6.finite && ch6.peak < 1.99f && ch6.rms > 1e-3f, "six CHORDS voices on a chord: clean (peak " + juce::String (ch6.peak, 2) + ")");
+            r.info ("six CHORDS voices: " + juce::String (ch6.avgLoad * 100.0, 1) + "% of one core");
+            // move it before the amp and back while playing
+            setReal (p, "harm.track", 0);
+            juce::AudioBuffer<float> buf (2, BLOCK); juce::MidiBuffer midi; bool finite = true; float jump = 0, prev = 0;
+            for (int b = 0; b < (int) (SR * 2.0 / BLOCK); ++b)
+            {
+                if (b == (int) (SR * 0.6 / BLOCK)) setReal (p, "harm.place", 1);
+                if (b == (int) (SR * 1.3 / BLOCK)) setReal (p, "harm.place", 0);
+                for (int i = 0; i < BLOCK; ++i) { buf.setSample (0, i, guitar (b * BLOCK + i)); buf.setSample (1, i, 0.f); }
+                p.processBlock (buf, midi);
+                for (int i = 0; i < BLOCK; ++i) { const float v = buf.getSample (0, i); finite &= std::isfinite (v); jump = juce::jmax (jump, std::abs (v - prev)); prev = v; }
+            }
+            r.check (finite && jump < 0.5f, "moving it before / after the amp while playing: no jumps (biggest step " + juce::String (jump, 3) + ")");
+        }
         p.presetManager().loadInit();
     }
 

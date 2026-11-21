@@ -34,7 +34,7 @@ const DEG = ['1', '♭2', '2', '♭3', '3', '4', '♭5', '5', '♭6', '6', '♭7
 
 /* ------------------------------------------------------------ state */
 const VC = ['#6fd3ff', '#ff7ba6', '#ffd36e', '#9cf07a', '#b48cff', '#ff9a5c'];
-const S = { on: true, key: 4, mode: 1, mix: 50, out: 0, human: 15, spread: 60, place: 1, chroma: 0, track: 0,
+const S = { on: true, key: 4, mode: 1, mix: 50, out: 0, human: 15, spread: 50, place: 0, chroma: 0, track: 0,
   voices: [
     { on: 1, smart: 1, step: 2, semi: 4, level: 80, pan: -35, detune: 0, delay: 0 },
     { on: 1, smart: 1, step: 4, semi: 7, level: 65, pan: 35, detune: 0, delay: 0 },
@@ -267,7 +267,7 @@ const root = el('div', 'hm-root'), dev = el('div', 'hm-dev'); root.appendChild(d
 /* ---- top strip ---- */
 const top = el('div', 'hm-top'); dev.appendChild(top);
 const pw = el('button', 'hm-pw on', IC.power); pw.title = 'Harmony on / off';
-pw.onclick = () => { S.on = !S.on; changed(); };
+pw.onclick = () => { S.on = !S.on; changed(); if (window.obsHarmony && window.obsHarmony.powerOut) window.obsHarmony.powerOut(S.on); };
 const pwV = el('span', 'hm-sub');
 const colPw = el('div', 'hm-col'); colPw.append(el('span', 'hm-eng', 'POWER'), pw, pwV);
 
@@ -286,8 +286,8 @@ const seg = (label, opts, get, set, tip) => { const c = el('div', 'hm-col'); c.t
   opts.forEach((t, i) => { const b = el('button', null, t); b.onclick = () => { set(i); changed(); }; s.appendChild(b); });
   redraws.push(() => [...s.children].forEach((b, i) => b.classList.toggle('on', get() === i)));
   c.append(el('span', 'hm-eng', label), s); return c; };
-const colTrack = seg('TRACKING', ['LEAD', 'CHORDS'], () => S.track, i => { S.track = i; stop(); }, 'LEAD: the fastest, follows single notes (solos, melodies, riffs) · CHORDS: listens a little longer and gives every note of a chord its own harmony');
-const colPlace = seg('PLACE', ['AFTER AMP', 'BEFORE AMP'], () => S.place ? 0 : 1, i => S.place = i ? 0 : 1, 'AFTER: harmonies of your amp sound, like a second guitarist · BEFORE: the voices go through the amp');
+const colTrack = seg('TRACKING', ['LEAD', 'CHORDS'], () => S.track, i => { S.track = i; stop(); }, 'LEAD: the fastest, follows single notes (solos, melodies, riffs), only a few ms behind you · CHORDS: listens longer (the voices are about 85 ms behind) and gives every note of a chord its own harmony');
+const colPlace = seg('PLACE', ['AFTER AMP', 'BEFORE AMP'], () => S.place, i => S.place = i, 'AFTER: harmonies of your amp sound, like a second guitarist (in stereo, with the pans) · BEFORE: the voices go through the amp with you (mono)');
 const chroma = el('div', 'hm-chroma', '<span>OFF-KEY NOTES</span><button>FOLLOW</button><button>HOLD</button>');
 chroma.title = 'Notes outside the mode: FOLLOW uses the interval of the nearest scale note · HOLD keeps the last harmony';
 chroma.children[1].onclick = () => { S.chroma = 0; changed(); }; chroma.children[2].onclick = () => { S.chroma = 1; changed(); };
@@ -295,7 +295,7 @@ redraws.push(() => { chroma.children[1].classList.toggle('on', !S.chroma); chrom
 const knobs = el('div'); knobs.style.cssText = 'display: flex; gap: 14px; margin-left: auto; margin-top: 4px';
 knobs.append(
   knob({ label: 'HUMANIZE', get: () => S.human, set: v => S.human = v, min: 0, max: 100, def: 15, fmt: pct, size: 40 }),
-  knob({ label: 'SPREAD', get: () => S.spread, set: v => S.spread = v, min: 0, max: 100, def: 60, fmt: pct, size: 40 }),
+  knob({ label: 'SPREAD', get: () => S.spread, set: v => S.spread = v, min: 0, max: 100, def: 50, fmt: pct, size: 40 }),
   knob({ label: 'MIX', get: () => S.mix, set: v => S.mix = v, min: 0, max: 100, def: 50, fmt: pct, size: 40 }),
   knob({ label: 'OUTPUT', get: () => S.out, set: v => S.out = v, min: -24, max: 12, def: 0, fmt: v => sgn(+v.toFixed(1)) + ' dB', size: 40 }));
 [...knobs.children].forEach(k => k.style.marginTop = '14px');
@@ -394,7 +394,7 @@ const HPRE = [
   ['Power Fifths', 'Fixed fifth and octave below: chords too', { voices: [[1, 0, 0, 7], [1, 0, 0, -12]] }],
   ['Octave Stack', 'Octave down and up, organ-like', { voices: [[1, 0, 0, -12], [1, 0, 0, 12]] }],
   ['Neo-Classical', 'Harmonic minor thirds and sixths', { voices: [[1, 1, 2], [1, 1, 5]], mode: 2 }],
-  ['Diminished Horror', 'Stacked minor thirds, unsettling', { voices: [[1, 1, 2], [1, 1, 4], [1, 1, 6]], mode: 21 }],
+  ['Diminished Horror', 'Stacked minor thirds, unsettling', { voices: [[1, 1, 2], [1, 1, 4], [1, 1, 6]], mode: 22 }],
   ['Eastern Gold', 'Phrygian dominant thirds', { voices: [[1, 1, 2], [1, 1, -3]], mode: 14 }],
   ['Doom Choir', 'Octaves below, slightly detuned', { voices: [[1, 0, 0, -12, 80, -40, 8], [1, 0, 0, -24, 60, 40, -8]] }],
   ['Angel Wings', 'An octave and two octaves above', { voices: [[1, 1, 7, 0, 60, -50], [1, 1, 14, 0, 40, 50]], mode: 0 }],
@@ -449,12 +449,14 @@ redraws.push(() => {
 
 /* ============================================================ preview sound (browser only) */
 let ac = null, nodes = [];
+let userHeld = false;          // a key held on the page (the plugin's live notes don't wipe it)
 function toggleChord(m) {
+  userHeld = true;
   played = played.includes(m) ? played.filter(x => x !== m) : played.concat([m]).slice(-6);
   if (!played.length) { stop(); return; }
   sound(played);
 }
-function play(m) { played = [m]; sound(played); }
+function play(m) { userHeld = true; played = [m]; sound(played); }
 function sound(notes) {
   changed();
   if (window.__JUCE__) return;
@@ -467,15 +469,16 @@ function sound(notes) {
     const st = t + dl / 1000; g.gain.setValueAtTime(0, st); g.gain.linearRampToValueAtTime(lvl * .09, st + .012); g.gain.setTargetAtTime(lvl * .05, st + .05, .4);
     o.connect(f); f.connect(g); if (pn) { pn.pan.value = clamp(p, -1, 1); g.connect(pn); pn.connect(ac.destination); } else g.connect(ac.destination);
     o.start(st); nodes.push([o, g]); };
-  const dry = (1 - S.mix / 100 * .5) / Math.sqrt(notes.length), lag = S.track ? 30 : 0;      // CHORDS listens a little longer
+  const mx = S.mix / 100, dryG = mx <= .5 ? 1 : 2 * (1 - mx), wetG = mx >= .5 ? 1 : 2 * mx;   // both at full in the middle (as in the plugin)
+  const dry = dryG / Math.sqrt(notes.length), lag = S.track ? 85 : 0;      // CHORDS listens longer
   notes.forEach(m => {
     voice(m, dry, 0, 0, 0);
-    if (S.on) S.voices.forEach((v, i) => { if (!v.on) return; const n = voiceNote(m, i); const sp = S.spread / 100;
-      voice(n, v.level / 100 * S.mix / 50 / Math.sqrt(notes.length), v.pan / 100 * sp, v.detune + (Math.random() - .5) * S.human * .3, lag + v.delay + Math.random() * S.human * .25); });
+    if (S.on) S.voices.forEach((v, i) => { if (!v.on) return; const n = voiceNote(m, i); const sp = S.spread / 50;
+      voice(n, v.level / 100 * wetG / Math.sqrt(notes.length), v.pan / 100 * sp, v.detune + (Math.random() - .5) * S.human * .3, lag + v.delay + Math.random() * S.human * .25); });
   });
 }
 function stopSound() { if (!ac) return; const t = ac.currentTime; nodes.forEach(([o, g]) => { g.gain.cancelScheduledValues(t); g.gain.setTargetAtTime(0, t, .06); o.stop(t + .4); }); nodes = []; }
-function stop() { played = []; stopSound(); changed(); }
+function stop() { userHeld = false; played = []; stopSound(); changed(); }
 const KEYMAP = { a: 52, w: 53, s: 54, e: 55, d: 55, f: 57, t: 58, g: 59, h: 60, u: 61, j: 62, k: 64 };
 const down = new Set();
 addEventListener('keydown', e => { if (HP.style.display === 'none' || e.repeat || /INPUT/.test(e.target.tagName)) return; const m = KEYMAP[e.key.toLowerCase()]; if (m == null) return;
@@ -483,7 +486,32 @@ addEventListener('keydown', e => { if (HP.style.display === 'none' || e.repeat |
 addEventListener('keyup', e => { const m = KEYMAP[e.key.toLowerCase()]; if (m == null || !down.has(m)) return; down.delete(m);
   if (S.track) { played = [...down]; if (played.length) sound(played); else stop(); } else if (played[0] === m) stop(); });
 
-window.obsHarmony = { state: S, modes: MODE_LIST, play, stop, voiceNote, redraw: changed };
+/* ============================================================ plugin hooks
+   The plugin's parameters (plugin/Source/DSP/HarmonyDefs.h): harm.on, harm.key ... harm.v1.on ... harm.v6.delay.
+   read() / write() use 0..1 like every other control; obsidian-bridge.js connects them. */
+const PDEF = [['on', 'on', 0, 1], ['key', 'key', 0, 11], ['mode', 'mode', 0, MODE_LIST.length - 1], ['track', 'track', 0, 1], ['place', 'place', 0, 1],
+  ['offkey', 'chroma', 0, 1], ['human', 'human', 0, 100], ['spread', 'spread', 0, 100], ['mix', 'mix', 0, 100], ['out', 'out', -24, 12]];
+const VDEF = [['on', 0, 1], ['smart', 0, 1], ['step', -14, 14], ['semi', -24, 24], ['level', 0, 100], ['pan', -100, 100], ['detune', -50, 50], ['delay', 0, 120]];
+const CONT = new Set(['human', 'spread', 'mix', 'out', 'level', 'pan', 'detune', 'delay']);      // the rest are whole numbers
+const params = [];
+PDEF.forEach(([id, key, lo, hi]) => params.push({ id: 'harm.' + id, lo, hi, cont: CONT.has(key), get: () => +S[key], set: v => { S[key] = key === 'on' ? !!v : v; } }));
+S.voices.forEach((vc, i) => VDEF.forEach(([key, lo, hi]) => params.push({ id: 'harm.v' + (i + 1) + '.' + key, lo, hi, cont: CONT.has(key), get: () => +vc[key], set: v => { vc[key] = v; } })));
+const byId = {}; params.forEach(q => byId[q.id] = q);
+window.obsHarmony = { state: S, modes: MODE_LIST, play, stop, voiceNote, redraw: changed,
+  ids: params.map(q => q.id).filter(id => id !== 'harm.on'),       // harm.on is the section switch: powerOut / setPower
+  read() { const o = {}; params.forEach(q => o[q.id] = clamp((q.get() - q.lo) / (q.hi - q.lo), 0, 1)); return o; },
+  write(vals) { let any = false; for (const id in vals) { const q = byId[id]; if (!q) continue; let v = q.lo + clamp(+vals[id], 0, 1) * (q.hi - q.lo); if (!q.cont) v = Math.round(v); q.set(v); any = true; } if (any) changed(); },
+  /* live from the engine: { note: midi or -1, chord: [midi...] } */
+  live(l) {
+    if (!l) return;
+    const eng = S.track ? (l.chord || []).slice().sort((a, b) => a - b) : (l.note >= 0 ? [l.note] : []);
+    const next = eng.length ? eng : (userHeld ? played : []);
+    if (next.join(',') !== played.join(',')) { played = next; changed(); }
+  },
+  powerOut: null,             // set by the bridge: switches the HARMONY section
+  setPower(isOn) { if (!!isOn !== !!S.on) { S.on = !!isOn; changed(); } },
+  presets: HPRE, loadPreset: loadPre,
+};
 changed();
 })();
 </script>
