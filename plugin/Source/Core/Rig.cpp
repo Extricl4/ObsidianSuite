@@ -417,6 +417,7 @@ juce::var Rig::ampLibrary()
         auto* o = list.getReference (list.size() - 1).getDynamicObject();
         o->setProperty ("basedOn", juce::String::fromUTF8 (m.basedOn));
         o->setProperty ("tint", juce::String::toHexString ((int) m.tint).paddedLeft ('0', 6));
+        o->setProperty ("folder", "OBSIDIAN AMPS");      // the amp chooser groups these in one folder
     }
     add ("nam-loader", "NAM Loader", "nam", "capture", "Load your own .nam captures, one per channel.", 4);
 
@@ -435,6 +436,7 @@ juce::var Rig::ampLibrary()
                 c = cf.getFullPathName();
             }
         o->setProperty ("builtIn", false);
+        if (v["folder"].toString().isEmpty()) o->setProperty ("folder", "YOUR AMPS");
         list.add (v);
     }
     return list;
@@ -463,6 +465,7 @@ juce::var Rig::cabLibrary()
             if (p.isNotEmpty() && ! juce::File::isAbsolutePath (p)) o->setProperty (k, contentFolder().getChildFile ("IRs").getChildFile (p).getFullPathName());
         }
         o->setProperty ("builtIn", false);
+        if (v["folder"].toString().isEmpty()) o->setProperty ("folder", "YOUR AMPS");
         list.add (v);
     }
     return list;

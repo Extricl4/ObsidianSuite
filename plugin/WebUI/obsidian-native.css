@@ -6,7 +6,7 @@
 .obs-hidden { display: none !important; }
 
 /* ---- library tiles (ADD PEDAL / ADD AMP / ADD CAB pop-ups) -------------------- */
-.obs-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; max-height: 330px; overflow-y: auto; padding-right: 2px; }
+.obs-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; max-height: 340px; overflow-y: auto; padding-right: 2px; }
 .obs-tile { height: 100px; box-sizing: border-box; border-radius: 12px; border: 1px solid rgba(255,255,255,.08);
   background: rgba(255,255,255,.035); color: rgb(var(--cf_e9e6df)); font: inherit; cursor: pointer; padding: 10px 10px 8px;
   display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; text-align: left; gap: 4px;
@@ -17,6 +17,16 @@
 .obs-tile b { font-size: 12px; font-weight: 600; letter-spacing: .04em; line-height: 1.25; }
 .obs-tile i { font-style: normal; font-size: 9px; letter-spacing: .18em; color: var(--accent); text-transform: uppercase; }
 .obs-tile small { font-size: 10px; line-height: 1.35; color: rgb(var(--cf_8d8d93)); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.obs-ampfolder { position: relative; background: linear-gradient(160deg, rgba(255,255,255,.07), rgba(255,255,255,.02)); }
+.obs-grid .obs-tile[data-amp], .obs-ampfolder { height: 92px; }
+.obs-ampfolder::after { content: ''; position: absolute; right: 12px; top: 11px; width: 15px; height: 11px; border-radius: 2px 3px 3px 3px;
+  border: 1.5px solid rgb(var(--cf_8d8d93)); border-top-width: 3px; opacity: .6; }
+.obs-ampfolder.has { box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); }
+.obs-ampfolder.has small { color: var(--accent); }
+.obs-crumb { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; height: 32px; }
+.obs-crumb .obs-btn { height: 28px; padding: 0 12px; }
+.obs-crumb span { font-size: 11px; font-weight: 600; letter-spacing: .2em; }
+.obs-crumb em { font-style: normal; font-size: 11px; color: rgb(var(--cf_8d8d93)); }
 .obs-empty { grid-column: 1 / -1; padding: 18px 6px; font-size: 12px; color: rgb(var(--cf_8d8d93)); line-height: 1.5; }
 
 /* ---- pedal / effect card in a rack slot ---------------------------------------- */

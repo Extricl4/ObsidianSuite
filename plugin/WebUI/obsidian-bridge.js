@@ -840,8 +840,15 @@ function setupAmpCab(st) {
     p._grid = grid; p._kind = title === 'CHOOSE AMP' ? 'amp' : 'cab';
     const search = $('input', p); if (search) search.addEventListener('input', () => renderLib(p));
     p.addEventListener('click', () => setTimeout(() => renderLib(p), 0));
-    new MutationObserver(() => { if (p.style.display === 'block') renderLib(p); }).observe(p, { attributes: true, attributeFilter: ['style'] });
+    new MutationObserver(() => {
+      const open = p.style.display === 'block';
+      if (open && !p._open) p._folder = '';          // every time the chooser opens, start at the top
+      p._open = open;
+      if (open) renderLib(p);
+    }).observe(p, { attributes: true, attributeFilter: ['style'] });
   });
+  intercept(b => b.dataset.ampFolder !== undefined, b => { const p = b.closest('.pop'); p._folder = b.dataset.ampFolder; renderLib(p); p._grid.scrollTop = 0; });
+  intercept(b => b.classList.contains('obs-crumb-back'), b => { const p = b.closest('.pop'); p._folder = ''; renderLib(p); });
   intercept(b => b.classList.contains('obs-tile') && b.dataset.amp !== undefined, b => { call('setAmp', b.dataset.amp).then(r => r && applyRig(r)); $$('.pop').forEach(p => p.style.display = 'none'); });
   intercept(b => (b === ampUi.cabBtn || b === ampUi.cabBig) && rig && rig.cab && rig.cab.key && rig.cab.key !== 'none', b => {
     const page = b.closest('.page'); const pop = $$('.pop', page).find(p => txt($('span', p)) === 'CHOOSE CAB');
@@ -882,8 +889,24 @@ function renderLib(p) {
   if (p._kind === 'amp') {
     const cur = rig && rig.amp ? rig.amp.key : '';
     const roles = { 'CLEAN': /clean/i, 'CRUNCH': /crunch/i, 'HIGH GAIN': /high|lead|metal/i };
-    const list = AMPS.filter(a => (filter === 'ALL' || (roles[filter] && roles[filter].test(a.role + ' ' + a.description))) && (!q || (a.name + ' ' + a.role + ' ' + a.description).toLowerCase().includes(q)));
-    p._grid.innerHTML = list.map(a => '<button class="obs-tile' + (a.key === cur ? ' on' : '') + '" data-amp="' + esc(a.key) + '" title="' + esc(a.description) + '"><i>' + esc(a.role || a.type) + '</i><b>' + esc(a.name) + '</b><small>' + esc(a.basedOn ? (/^Obsidian original/i.test(a.basedOn) ? a.basedOn : 'Based on ' + a.basedOn) : a.description) + '</small></button>').join('') || '<div class="obs-empty">No amps match.</div>';
+    const match = a => (filter === 'ALL' || (roles[filter] && roles[filter].test(a.role + ' ' + a.description))) && (!q || (a.name + ' ' + a.role + ' ' + a.description + ' ' + (a.basedOn || '')).toLowerCase().includes(q));
+    // Folders: amps with a "folder" are grouped (OBSIDIAN AMPS = the in-house amps). Searching or
+    // filtering at the top level shows matching amps from every folder.
+    const folder = p._folder || '';
+    const flat = !folder && (q || filter !== 'ALL');
+    let list = AMPS.filter(a => (folder ? a.folder === folder : (flat || !a.folder)) && match(a));
+    let head = '';
+    if (folder) {
+      head = '<div class="obs-crumb"><button class="obs-btn obs-crumb-back">‹  ALL AMPS</button><span>' + esc(folder) + '</span><em>' + AMPS.filter(a => a.folder === folder).length + ' amps</em></div>';
+    } else if (!flat) {
+      const folders = [...new Set(AMPS.map(a => a.folder).filter(Boolean))];
+      head = folders.map(f => {
+        const inF = AMPS.filter(a => a.folder === f), here = inF.find(a => a.key === cur);
+        const sub = f === 'OBSIDIAN AMPS' ? 'Our in-house amps, each modelled on a classic' : 'Amps you added';
+        return '<button class="obs-tile obs-ampfolder' + (here ? ' has' : '') + '" data-amp-folder="' + esc(f) + '"><i>' + inF.length + ' AMPS</i><b>' + esc(f) + '</b><small>' + esc(here ? 'Playing now: ' + here.name : sub) + '</small></button>';
+      }).join('');
+    }
+    p._grid.innerHTML = head + list.map(a => '<button class="obs-tile' + (a.key === cur ? ' on' : '') + '" data-amp="' + esc(a.key) + '" title="' + esc(a.description) + '"><i>' + esc(a.role || a.type) + '</i><b>' + esc(a.name) + '</b><small>' + esc(a.basedOn ? (/^Obsidian original/i.test(a.basedOn) ? a.basedOn : 'Based on ' + a.basedOn) : a.description) + '</small></button>').join('') + (list.length || (!folder && !flat && head) ? '' : '<div class="obs-empty">No amps match.</div>');
   } else {
     const cur = rig && rig.cab ? rig.cab.key : '';
     const list = CABS.filter(c => (filter === 'ALL' || (c.size || '').replace('x', '×') === filter) && (!q || (c.name + ' ' + (c.size || '')).toLowerCase().includes(q)));

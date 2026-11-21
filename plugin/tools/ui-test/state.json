@@ -5977,7 +5977,8 @@
    "channels": 1,
    "builtIn": true,
    "basedOn": "Fender '65 Twin Reverb",
-   "tint": "15181d"
+   "tint": "15181d",
+   "folder": "OBSIDIAN AMPS"
   },
   {
    "key": "top30",
@@ -5988,7 +5989,8 @@
    "channels": 1,
    "builtIn": true,
    "basedOn": "Vox AC30 Top Boost",
-   "tint": "1d1915"
+   "tint": "1d1915",
+   "folder": "OBSIDIAN AMPS"
   },
   {
    "key": "plexi68",
@@ -5999,7 +6001,8 @@
    "channels": 1,
    "builtIn": true,
    "basedOn": "Marshall 1959 Super Lead (jumped)",
-   "tint": "1c1812"
+   "tint": "1c1812",
+   "folder": "OBSIDIAN AMPS"
   },
   {
    "key": "brit800",
@@ -6010,7 +6013,8 @@
    "channels": 1,
    "builtIn": true,
    "basedOn": "Marshall JCM800 2203",
-   "tint": "1d1712"
+   "tint": "1d1712",
+   "folder": "OBSIDIAN AMPS"
   },
   {
    "key": "slo100",
@@ -6021,7 +6025,8 @@
    "channels": 1,
    "builtIn": true,
    "basedOn": "Soldano SLO-100 (overdrive channel)",
-   "tint": "18161c"
+   "tint": "18161c",
+   "folder": "OBSIDIAN AMPS"
   },
   {
    "key": "styx51",
@@ -6032,7 +6037,8 @@
    "channels": 1,
    "builtIn": true,
    "basedOn": "Peavey 5150 / EVH 5150 (lead channel)",
-   "tint": "1a1414"
+   "tint": "1a1414",
+   "folder": "OBSIDIAN AMPS"
   },
   {
    "key": "recto",
@@ -6043,7 +6049,8 @@
    "channels": 1,
    "builtIn": true,
    "basedOn": "Mesa/Boogie Dual Rectifier (modern)",
-   "tint": "141619"
+   "tint": "141619",
+   "folder": "OBSIDIAN AMPS"
   },
   {
    "key": "vh4",
@@ -6054,7 +6061,8 @@
    "channels": 1,
    "builtIn": true,
    "basedOn": "Diezel VH4 (channel 3)",
-   "tint": "161816"
+   "tint": "161816",
+   "folder": "OBSIDIAN AMPS"
   },
   {
    "key": "core",
@@ -6065,7 +6073,8 @@
    "channels": 1,
    "builtIn": true,
    "basedOn": "Obsidian original (modern high gain)",
-   "tint": "121214"
+   "tint": "121214",
+   "folder": "OBSIDIAN AMPS"
   },
   {
    "key": "nam-loader",
