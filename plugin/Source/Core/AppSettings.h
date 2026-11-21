@@ -46,6 +46,7 @@ public:
             juce::NamedValueSet s;
             s.set ("theme", "obsidian");
             s.set ("accent", "");
+            s.set ("themeFx", true);           // moving theme details (particles, flicker)
             s.set ("tooltips", true);
             s.set ("uiScale", 1.0);
             s.set ("presetFolder", defaultPresetFolder().getFullPathName());

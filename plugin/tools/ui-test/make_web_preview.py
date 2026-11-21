@@ -33,6 +33,7 @@ def main():
     html = html[:j] + tail + html[j:]
     (WEB / 'index.html').write_text(html, encoding='utf-8')
     shutil.copy(run.UI / 'grain.png', WEB / 'grain.png')
+    shutil.copytree(run.UI / 'fonts', WEB / 'fonts', dirs_exist_ok=True)
     print('wrote', WEB / 'index.html', round(len(html) / 1024), 'KB')
 
 

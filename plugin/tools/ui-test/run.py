@@ -24,6 +24,7 @@ def build_page(standalone):
     i = html.lower().rfind('</body>')
     html = html[:i] + inject + html[i:]
     (OUT / 'page.html').write_text(html, encoding='utf-8')
+    shutil.copytree(UI / 'fonts', OUT / 'fonts', dirs_exist_ok=True)
     for f in [UI / 'grain.png', PLUGIN / 'WebUI' / 'obsidian-bridge.js', PLUGIN / 'WebUI' / 'obsidian-native.css']:
         shutil.copy(f, OUT / f.name)
     state = json.loads((HERE / 'state.json').read_text(encoding='utf-8'))
@@ -259,6 +260,25 @@ async def run(standalone):
         for panel in ('Device', 'Audio', 'MIDI', 'Interface'):
             await pg.locator('.setnav button', has_text=panel).click(); await pg.wait_for_timeout(120)
             await pg.screenshot(path=str(OUT / f'settings-{panel.lower()}.png'))
+        # ---- themes: every theme applies cleanly, is saved, and its moving layer can be switched off
+        await pg.evaluate("window.__mock.log.length=0")
+        ids = await pg.evaluate("window.obsThemes")
+        for tid in ids:
+            await pg.locator(f'.thc[data-t="{tid}"]').click(); await pg.wait_for_timeout(120)
+        saved = await pg.evaluate("window.__mock.log.filter(x=>x[0]==='setSetting'&&x[1]==='theme').map(x=>x[2])")
+        check(len(ids) >= 10 and saved[-len(ids):] == ids, f'all {len(ids)} themes apply and are saved ({", ".join(ids)})')
+        await pg.locator('.thc[data-t="norse"]').click(); await pg.wait_for_timeout(300)
+        band = await pg.evaluate("getComputedStyle(document.querySelector('.thband')).display")
+        fx = await pg.evaluate("getComputedStyle(document.getElementById('themefx')).display")
+        font = await pg.evaluate("getComputedStyle(document.querySelector('.thlogo')).fontFamily")
+        loaded = await pg.evaluate("document.fonts.check(\"16px 'Uncial Antiqua'\")")
+        await pg.screenshot(path=str(OUT / 'theme-norse.png'))
+        await pg.locator('[aria-label="Moving theme details"]').click(); await pg.wait_for_timeout(150)
+        fx_off = await pg.evaluate("getComputedStyle(document.getElementById('themefx')).display")
+        sent_fx = await pg.evaluate("window.__mock.log.some(x=>x[0]==='setSetting'&&x[1]==='themeFx'&&x[2]===false)")
+        check(band == 'block' and fx == 'block' and 'Uncial' in font and loaded and fx_off == 'none' and sent_fx, f'Norse: rune bands, snow and its own font; moving details switch off ({band}, {fx}->{fx_off}, font loaded {loaded})')
+        await pg.locator('[aria-label="Moving theme details"]').click(); await pg.locator('.thc[data-t="obsidian"]').click(); await pg.wait_for_timeout(150)
+        check(await pg.evaluate("getComputedStyle(document.querySelector('.thband')).display") == 'none', 'back to Obsidian: no bands')
         await pg.locator('.setnav button', has_text='Audio').click()
         await pg.evaluate("window.__mock.log.length=0")
         await pg.locator('.spanel[data-panel="Audio"] .seg button', has_text='HQ').click(); await pg.wait_for_timeout(120)

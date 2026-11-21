@@ -44,10 +44,14 @@ ObsidianEditor::ObsidianEditor (ObsidianProcessor& p)
        #if JUCE_LINUX
         // Linux (development only): JUCE's WebKit pipe can't carry a page this big, so load it from a temp folder.
         auto dir = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("obsidian-ui");
-        dir.createDirectory();
-        for (auto name : { "obsidian-demo.html", "grain.png", "obsidian-bridge.js", "obsidian-native.css" })
+        dir.createDirectory(); dir.getChildFile ("fonts").createDirectory();
+        for (int i = 0; i < ObsidianAssets::namedResourceListSize; ++i)
+        {
+            const juce::String name (ObsidianAssets::originalFilenames[i]);
+            if (name.endsWithIgnoreCase (".json")) continue;
             if (auto r = provide (name))
-                dir.getChildFile (name).replaceWithData (r->data.data(), r->data.size());
+                dir.getChildFile (name.endsWithIgnoreCase (".woff2") ? "fonts/" + name : name).replaceWithData (r->data.data(), r->data.size());
+        }
         web->goToURL (juce::URL (dir.getChildFile ("obsidian-demo.html")).toString (false));
        #elif JUCE_WEB_BROWSER_RESOURCE_PROVIDER_AVAILABLE
         web->goToURL (WBC::getResourceProviderRoot());

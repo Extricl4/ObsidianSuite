@@ -17,3 +17,7 @@ VST is a registered trademark of Steinberg Media Technologies GmbH.
 This build is for personal use. Selling it would need a paid JUCE licence and the Steinberg ASIO licence.
 
 Pedal pack (`Content/`): captures and IRs made by other people; creators listed in `Content/README.md`.
+
+Theme fonts (`ui/fonts/`): Cinzel, Cormorant Garamond, IM Fell English, Marcellus, MedievalSharp, Orbitron,
+Pirata One, Rajdhani, Uncial Antiqua and UnifrakturMaguntia, all under the SIL Open Font License 1.1.
+Authors and the full licence text are in `ui/fonts/OFL.txt`.

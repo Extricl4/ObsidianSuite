@@ -1025,6 +1025,7 @@ function setupSettings(st) {
   const ddIn = (p, test) => $$('button', p).find(b => b.querySelector('path[d="M6 9l6 6 6-6"]') && test(ddText(b)));
   const S = st.settings || {};
   const setS = (k, v) => { INIT.settings[k] = v; call('setSetting', k, v); };
+  window.obsSetSetting = setS;
 
   /* ---- Audio ---- */
   const A = panel('Audio');
@@ -1100,6 +1101,7 @@ function renderSettings(S) {
     $$('.tog').forEach(t => { const k = TOGS[t.getAttribute('aria-label')]; if (k && S[k] !== undefined) setTog(t, !!S[k]); });
     if (S.liveTuner !== undefined && typeof live !== 'undefined') { live = !!S.liveTuner; setFoot(); }
     if (S.theme && typeof applyTheme === 'function') applyTheme(S.theme);
+    if (S.themeFx !== undefined && typeof setThemeFx === 'function') setThemeFx(!!S.themeFx);
     if (S.accent && typeof setAccent === 'function') { setAccent(S.accent); const h = $('#acchex'); if (h) h.value = S.accent.toUpperCase(); }
     const A = $('.spanel[data-panel="Audio"]');
     if (A) {
