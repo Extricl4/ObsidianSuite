@@ -6,6 +6,7 @@ void registerDriveModules (std::vector<ModuleType>&);
 void registerPitchModules (std::vector<ModuleType>&);
 void registerTimeModules (std::vector<ModuleType>&);
 void registerModModules (std::vector<ModuleType>&);
+void registerPackModules (std::vector<ModuleType>&);
 
 const std::vector<ModuleType>& moduleTypes()
 {
@@ -16,6 +17,7 @@ const std::vector<ModuleType>& moduleTypes()
         registerPitchModules (t);
         registerTimeModules (t);
         registerModModules (t);
+        registerPackModules (t);
         for (auto& m : t) jassert (m.params.size() <= (size_t) kSlotParams);   // a module may have at most 8 knobs
         return t;
     }();

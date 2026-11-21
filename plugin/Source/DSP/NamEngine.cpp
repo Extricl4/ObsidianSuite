@@ -2,6 +2,14 @@
 
 #include <NAM/dsp.h>
 #include <NAM/get_dsp.h>
+#include <NAM/model_config.h>
+#include <NAM/container.h>
+#include <NAM/convnet.h>
+#include <NAM/linear.h>
+#include <NAM/lstm.h>
+#include <NAM/sequential.h>
+#include <NAM/wavenet/model.h>
+#include <mutex>
 #include <juce_audio_basics/juce_audio_basics.h>
 
 // AudioDSPTools' resampler expects two constants from iPlug2; provide them here.
@@ -13,6 +21,29 @@ namespace iplug { static constexpr double PI = 3.14159265358979323846; }
 
 namespace obs::dsp
 {
+namespace
+{
+/** NAM registers its model types (WaveNet, SlimmableContainer, ...) from static initialisers in their own
+    source files. Linked through static archives (the plugin's shared code is one), files nothing calls are
+    dropped and those types vanish: "No config parser registered for architecture: SlimmableContainer"
+    (the format TONE3000 exports today). Naming every type here keeps them in, and registers any still missing. */
+void ensureNamArchitectures()
+{
+    static std::once_flag once;
+    std::call_once (once, []
+    {
+        using Fn = std::unique_ptr<nam::ModelConfig> (*) (const nlohmann::json&, double);
+        const std::pair<const char*, Fn> types[] = {
+            { "WaveNet", &nam::wavenet::create_config },  { "SlimmableContainer", &nam::container::create_config },
+            { "LSTM", &nam::lstm::create_config },        { "ConvNet", &nam::convnet::create_config },
+            { "Linear", &nam::linear::create_config },    { "Sequential", &nam::sequential::create_config } };
+        auto& reg = nam::ConfigParserRegistry::instance();
+        for (auto& [name, fn] : types)
+            if (! reg.has (name)) reg.registerParser (name, fn);
+    });
+}
+} // namespace
+
 struct NamEngine::Impl
 {
     std::unique_ptr<nam::DSP> model;
@@ -45,6 +76,7 @@ std::unique_ptr<NamEngine> NamEngine::load (const juce::File& file, double hostR
 {
     try
     {
+        ensureNamArchitectures();
         if (! file.existsAsFile()) { error = "File not found: " + file.getFullPathName(); return nullptr; }
         if (file.getSize() > 200 * 1024 * 1024) { error = "File is too big to be a NAM capture"; return nullptr; }
 

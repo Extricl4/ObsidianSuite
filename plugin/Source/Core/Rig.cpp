@@ -1,4 +1,5 @@
 #include "Rig.h"
+#include <juce_audio_formats/juce_audio_formats.h>
 
 namespace obs
 {
@@ -75,7 +76,7 @@ juce::var readJsonFile (const juce::File& f)
 Rig::Rig (Engine& e, juce::AudioProcessorValueTreeState& s) : engine (e), state (s)
 {
     rig = makeDefaultRig();
-    startTimer (400);
+    startTimer (200);
 }
 
 Rig::~Rig()
@@ -289,6 +290,9 @@ void Rig::applySlot (int rack, int slot)
         if (auto* m = r.moduleAt (slot); m != nullptr && m->fileName().isEmpty())
             startModuleFileLoad (rack, slot, juce::File (file));
     }
+    if (const auto* type = key.isEmpty() ? nullptr : findModule (key); type != nullptr && (! type->captures.empty() || ! type->irs.empty()))
+        if (auto* m = r.moduleAt (slot); m != nullptr && ! m->packRequested)
+            startPackLoad (rack, slot);
 }
 
 void Rig::setModule (int rack, int slot, const juce::String& key, bool applyDefaults)
@@ -299,6 +303,7 @@ void Rig::setModule (int rack, int slot, const juce::String& key, bool applyDefa
     if (key.isNotEmpty() && type == nullptr) { message ("Unknown effect: " + key, true); return; }
     s.setProperty ("key", key, nullptr).setProperty ("file", "", nullptr);
     engine.rack (rack).setModule (slot, key, engine.moduleContext());
+    if (type != nullptr && (! type->captures.empty() || ! type->irs.empty())) startPackLoad (rack, slot);
 
     if (applyDefaults)
     {
@@ -378,6 +383,82 @@ void Rig::startModuleFileLoad (int rack, int slot, const juce::File& f)
                 m->setNamEngine (std::move (*box), name);
                 message ("Loaded " + name, false);
             }
+            notifyChanged();
+        });
+    });
+}
+
+std::shared_ptr<Rig::PackFiles> Rig::loadPackFiles (const ModuleType& type, double rate, int block)
+{
+    auto res = std::make_shared<PackFiles>();
+    const auto capDir = contentFolder().getChildFile ("Captures"), irDir = contentFolder().getChildFile ("IRs");
+    res->total = (int) (type.captures.size() + type.irs.size());
+    res->folder = (type.captures.empty() ? irDir.getChildFile (type.irs.front()) : capDir.getChildFile (type.captures.front())).getParentDirectory();
+    for (auto& c : type.captures)
+    {
+        const auto f = capDir.getChildFile (c);
+        res->names.add (f.getFileNameWithoutExtension());
+        if (! f.existsAsFile()) { res->missing.add (f.getFileName()); res->engines.push_back (nullptr); continue; }
+        juce::String err;
+        auto e = NamEngine::load (f, rate, block, err);
+        if (e == nullptr) res->broken.add (f.getFileName() + ": " + err);
+        res->engines.push_back (std::move (e));
+    }
+    if (! type.irs.empty())
+    {
+        juce::AudioFormatManager fm; fm.registerBasicFormats();
+        for (auto& rel : type.irs)
+        {
+            const auto f = irDir.getChildFile (rel);
+            IrFile ir; ir.name = f.getFileNameWithoutExtension();
+            if (! f.existsAsFile()) res->missing.add (f.getFileName());
+            else if (std::unique_ptr<juce::AudioFormatReader> rd (fm.createReaderFor (f)); rd != nullptr && rd->lengthInSamples > 0)
+            {
+                const int len = (int) std::min<juce::int64> (rd->lengthInSamples, (juce::int64) (rd->sampleRate * 30.0));   // 30 s is plenty
+                ir.buffer.setSize ((int) juce::jlimit (1u, 2u, rd->numChannels), len);
+                rd->read (&ir.buffer, 0, len, 0, true, ir.buffer.getNumChannels() > 1);
+                ir.sampleRate = rd->sampleRate;
+            }
+            else res->broken.add (f.getFileName() + ": not a readable audio file");
+            res->irs.push_back (std::move (ir));
+        }
+    }
+    return res;
+}
+
+void Rig::installPack (Module& m, PackFiles& files)
+{
+    if (! files.engines.empty()) m.setCaptureBank (std::move (files.engines), files.names);
+    if (! files.irs.empty()) m.setIrBank (std::move (files.irs));
+}
+
+void Rig::startPackLoad (int rack, int slot)
+{
+    auto* m = engine.rack (rack).moduleAt (slot);
+    const auto key = slotTree (rack, slot)["key"].toString();
+    const auto* type = findModule (key);
+    if (m == nullptr || type == nullptr) return;
+    m->packRequested = true;
+    const double rate = engine.currentSampleRate();
+    const int block = engine.currentBlockSize();
+    ++pending;
+    auto token = alive;
+    loader.addJob ([this, token, rack, slot, key, m, type, rate, block]
+    {
+        auto res = loadPackFiles (*type, rate, block);
+        juce::MessageManager::callAsync ([this, token, rack, slot, key, m, type, res, rate]
+        {
+            if (! token->load()) return;
+            --pending;
+            if (slotTree (rack, slot)["key"].toString() != key || engine.rack (rack).moduleAt (slot) != m) return;   // slot changed meanwhile
+            if (engine.currentSampleRate() != rate)
+                for (auto& e : res->engines) if (e) e->prepare (engine.currentSampleRate(), engine.currentBlockSize());
+            installPack (*m, *res);
+            if (res->missing.size() == res->total)
+                message (type->name + ": its files aren't installed. Put the Obsidian pedal pack in " + res->folder.getFullPathName(), true);
+            else if (! res->missing.isEmpty())
+                message (type->name + ": " + juce::String (res->missing.size()) + " of " + juce::String (res->total) + " files missing (" + res->missing.joinIntoString (", ") + ")", true);
+            for (auto& b : res->broken) message (type->name + ": " + b, true);
             notifyChanged();
         });
     });
@@ -529,7 +610,19 @@ juce::var Rig::toJson() const
     return juce::var (o);
 }
 
-void Rig::timerCallback()                     { engine.collectGarbage (false); }
+void Rig::timerCallback()
+{
+    engine.collectGarbage (false);
+    bool changed = false;
+    for (int r = 0; r < kNumRacks; ++r)                         // IR pedals rebuild their IR here (never on the audio thread)
+        for (int s = 0; s < kSlotsPerRack; ++s)
+            if (auto* m = engine.rack (r).moduleAt (s))
+            {
+                m->messageTick();
+                if (const auto f = m->fileName(); f != shownFile[r][s]) { shownFile[r][s] = f; changed = true; }
+            }
+    if (changed) notifyChanged();                               // e.g. a pack pedal's switch picked another capture
+}
 void Rig::notifyChanged()                     { listeners.call ([] (Listener& l) { l.rigChanged(); }); }
 void Rig::message (const juce::String& t, bool err)
 {

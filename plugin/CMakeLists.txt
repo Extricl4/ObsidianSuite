@@ -38,6 +38,8 @@ include(cmake/Dependencies.cmake)
 # -----------------------------------------------------------------------------
 file(GLOB NAM_SOURCES_TOP "${nam_core_SOURCE_DIR}/NAM/*.cpp")
 file(GLOB NAM_SOURCES_SUB "${nam_core_SOURCE_DIR}/NAM/*/*.cpp")
+# Note: NAM registers its model types from static initialisers; NamEngine.cpp names them all
+# (ensureNamArchitectures) so the linker can't drop SlimmableContainer & co. from the static archive.
 add_library(obsidian_nam STATIC ${NAM_SOURCES_TOP} ${NAM_SOURCES_SUB})
 target_include_directories(obsidian_nam SYSTEM PUBLIC
     "${nam_core_SOURCE_DIR}"

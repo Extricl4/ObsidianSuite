@@ -12,9 +12,18 @@
 //   3. That's it. The UI lists it automatically in the right library
 //      (by category), and its knobs appear on the card. If a pedal design
 //      from visuals/pedals/<key>.json exists, the UI uses that art.
+//
+//  PACK PEDALS (a pedal that ships with its own captures or reverb IRs)
+//   List the files in ModuleType::captures / ::irs, relative to
+//   Documents\Obsidian Amp Suite\Captures and ...\IRs (e.g. "Pedals/Chiron/x.nam").
+//   ModuleType::packSelectors names the knobs that pick the file: the file
+//   index is built from them like digits (first selector = most significant).
+//   The Rig loads the whole set in the background when the pedal is added and
+//   hands it over with setCaptureBank / setIrBank. See PackModules.cpp.
 // =============================================================================
 #include "../DspCore.h"
 #include "../NamEngine.h"
+#include <juce_audio_basics/juce_audio_basics.h>
 #include <functional>
 #include <memory>
 
@@ -34,6 +43,14 @@ struct ModuleContext
     const PitchTracker* pitch = nullptr;    // shared guitar pitch tracker (may be null)
 };
 
+/** A reverb impulse response read from disk (any channel count, any rate). */
+struct IrFile
+{
+    juce::AudioBuffer<float> buffer;
+    double sampleRate = 48000;
+    juce::String name;
+};
+
 class Module
 {
 public:
@@ -48,6 +65,15 @@ public:
     virtual juce::String fileName() const { return {}; }
     /** Hand over an already-loaded capture (loaded on a background thread). */
     virtual void setNamEngine (std::unique_ptr<NamEngine> engine, const juce::String& name) { juce::ignoreUnused (engine, name); }
+
+    // ---- pack pedals (message thread) ---------------------------------------------------
+    /** All captures of a pack pedal, in ModuleType::captures order (missing files = nullptr). */
+    virtual void setCaptureBank (std::vector<std::unique_ptr<NamEngine>> engines, juce::StringArray names) { juce::ignoreUnused (engines, names); }
+    /** All IRs of a pack pedal, in ModuleType::irs order (missing files = empty buffer). */
+    virtual void setIrBank (std::vector<IrFile> irs) { juce::ignoreUnused (irs); }
+    /** Called on the message thread every few hundred ms (IR pedals rebuild their IR here). */
+    virtual void messageTick() {}
+    bool packRequested = false;          // set by the Rig once it started loading this pedal's files
 };
 
 struct ModuleParam
@@ -90,6 +116,13 @@ struct ModuleType
     juce::String description;
     std::vector<ModuleParam> params;     // max 8
     std::function<std::unique_ptr<Module>()> create;
-    juce::String fileKind;               // "nam" for capture pedals, empty otherwise
+    juce::String fileKind;               // "nam" for capture pedals, "pack" for pack pedals, empty otherwise
+    std::vector<juce::String> captures;  // pack pedals: .nam files (relative to Documents\Obsidian Amp Suite\Captures)
+    std::vector<juce::String> irs;       // pack pedals: .wav IRs   (relative to Documents\Obsidian Amp Suite\IRs)
+    std::vector<int> packSelectors;      // param indices that pick the file (stepped choices or on/off switches)
+    int packFirstChoice = 0;             // selector value that maps to file 0 (Crypt: 0 = built-in algorithm, 1.. = IRs)
 };
+
+/** Number of positions of a selector knob (choices) or switch (2). */
+inline int selectorSize (const ModuleParam& p)  { return p.choices.size() > 0 ? p.choices.size() : 2; }
 } // namespace obs::dsp

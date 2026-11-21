@@ -681,7 +681,8 @@ function renderRack(ri) {
     if (b.dataset.sig !== sig || !b.classList.contains('obs-filled')) {
       b.innerHTML = '<div class="obs-card"><span class="obs-x" title="Remove">×</span><span class="obs-led"></span>'
         + '<span class="obs-cat">' + esc(m.category) + '</span><span class="obs-name">' + esc(m.name) + '</span>'
-        + (m.fileKind ? '<span class="obs-file obs-loadfile" title="Load a .nam capture">' + esc(s.fileName || 'LOAD CAPTURE…') + '</span>' : '<span class="obs-file">&nbsp;</span>')
+        + (m.fileKind === 'pack' ? '<span class="obs-file" title="Playing from the Obsidian pedal pack">' + (s.fileName ? esc(s.fileName) : '&nbsp;') + '</span>'
+           : m.fileKind ? '<span class="obs-file obs-loadfile" title="Load a .nam capture">' + esc(s.fileName || 'LOAD CAPTURE…') + '</span>' : '<span class="obs-file">&nbsp;</span>')
         + '<span class="obs-foot" title="Footswitch: on / off"></span></div>';
       b.classList.add('obs-filled'); b.dataset.sig = sig;
     }
@@ -736,7 +737,8 @@ function renderEditor(ri) {
   ui.editor.classList.remove('obs-hidden');
   ui.column.style.gap = '26px';                     // make room for the editor under the board
   ui.editor.innerHTML = '<div class="obs-head"><span class="obs-title">' + esc(m.name) + '</span><span class="obs-desc">' + esc(m.description) + '</span>'
-    + (m.fileKind ? '<button class="obs-btn obs-modfile">' + esc(s.fileName ? 'CAPTURE: ' + s.fileName : 'LOAD CAPTURE…') + '</button>' : '')
+    + (m.fileKind === 'pack' ? (s.fileName ? '<span class="obs-desc" title="Playing from the Obsidian pedal pack">▶ ' + esc(s.fileName) + '</span>' : '')
+       : m.fileKind ? '<button class="obs-btn obs-modfile">' + esc(s.fileName ? 'CAPTURE: ' + s.fileName : 'LOAD CAPTURE…') + '</button>' : '')
     + '<button class="obs-btn obs-moddefaults" title="Back to this pedal\'s starting settings">RESET</button></div><div class="obs-knobs"></div>';
   const row = $('.obs-knobs', ui.editor);
   m.params.forEach((p, k) => {

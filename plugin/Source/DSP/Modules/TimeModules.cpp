@@ -2,6 +2,7 @@
 //  Time effects: delay, reverb, shimmer, swell, freeze, tape stop, looper, glitch.
 // =============================================================================
 #include "Module.h"
+#include "IrCore.h"
 #include "../PitchShifter.h"
 
 namespace obs::dsp
@@ -170,6 +171,43 @@ public:
     }
 private:
     bool shimmer; FdnReverb fdn; Smoother mixSm;
+};
+
+// ---------------------------------------------------------------------------
+class CryptReverb : public Module   // "Crypt": its own reverb, or one of the Boss RV-6 modes (IRs from the pedal pack)
+{
+public:
+    void prepare (const ModuleContext& c) override
+    {
+        algo.prepare (c); ir.prepare (c.sampleRate, c.maxBlock); mixSm.reset (c.sampleRate, 30.f, 0.3f);
+        for (auto& w : wet) w.assign ((size_t) c.maxBlock, 0.f);
+        for (auto& w : dry) w.assign ((size_t) c.maxBlock, 0.f);
+    }
+    void reset() override { algo.reset(); ir.reset(); }
+    void setIrBank (std::vector<IrFile> irs) override { ir.setBank (std::move (irs)); ir.messageTick(); }
+    void messageTick() override { ir.messageTick(); }
+    juce::String fileName() const override { return ir.bankSize() > 0 ? ir.currentName() : juce::String(); }
+    void process (float* const* ch, int numCh, int n, const float* p, const ModuleContext& ctx) override
+    {
+        // p: decay s, size, pre-delay ms, tone Hz, low cut Hz, mod, mix %, voice (0 = Crypt, 1.. = RV-6 modes)
+        const int voice = (int) std::lround (p[7]);
+        if (voice <= 0 || ir.bankSize() == 0) { algo.process (ch, numCh, n, p, ctx); return; }
+        n = juce::jmin (n, (int) wet[0].size());
+        ir.setParams (voice - 1, p[0], p[2], p[3], p[4]);
+        mixSm.set (ir.ready() ? p[6] * 0.01f : 0.f);
+        const float* inR = numCh > 1 ? ch[1] : ch[0];
+        std::copy (ch[0], ch[0] + n, dry[0].begin()); std::copy (inR, inR + n, dry[1].begin());
+        ir.processWet (dry[0].data(), dry[1].data(), wet[0].data(), wet[1].data(), n);
+        for (int i = 0; i < n; ++i)
+        {
+            const float m = mixSm.next(), dryG = m < 0.5f ? 1.f : 2.f * (1.f - m);
+            if (numCh > 1) { ch[0][i] = dry[0][(size_t) i] * dryG + wet[0][(size_t) i] * m; ch[1][i] = dry[1][(size_t) i] * dryG + wet[1][(size_t) i] * m; }
+            else ch[0][i] = dry[0][(size_t) i] * dryG + 0.5f * (wet[0][(size_t) i] + wet[1][(size_t) i]) * m;
+        }
+    }
+private:
+    Reverb algo { false }; IrCore ir; Smoother mixSm;
+    std::vector<float> wet[2], dry[2];
 };
 
 // ---------------------------------------------------------------------------
@@ -440,11 +478,18 @@ void registerTimeModules (std::vector<ModuleType>& t)
         { P { "Time", "ms", 1, 2000, 420, 2.f }, toggle ("Sync", 0), P { "Division", "", 0, 12, 7, 1, divs }, P { "Feedback", "%", 0, 100, 35 },
           P { "Mix", "%", 0, 100, 30 }, P { "Tone", "Hz", 800, 16000, 5500, 2.f }, P { "Mod", "%", 0, 100, 15 }, P { "Mode", "", 0, 2, 0, 1, { "Digital", "Tape", "Ping-Pong" } } },
         [] { return std::make_unique<Delay>(); } });
-    t.push_back ({ "crypt", "Crypt Reverb", "reverb", RackPost | RackSfx,
-        "Deep, smooth room-to-cathedral reverb.",
-        { P { "Decay", "s", 0.2f, 20.f, 2.6f, 2.f }, P { "Size", "%", 0, 100, 60 }, P { "Pre-delay", "ms", 0, 250, 18, 2.f }, P { "Tone", "Hz", 1000, 16000, 6500, 2.f },
-          P { "Low Cut", "Hz", 20, 600, 120, 2.f }, P { "Mod", "", 0, 10, 4 }, P { "Mix", "%", 0, 100, 25 } },
-        [] { return std::make_unique<Reverb> (false); } });
+    {   // Voice 0 = Crypt's own reverb; 1-6 = the Boss RV-6 modes (IRs from the pedal pack; Size and Mod only affect Crypt's own voice)
+        P voice { "Voice", "", 0, 6, 0 }; voice.choices = { "CRYPT", "SPRING", "DELAY", "HALL", "PLATE", "ROOM", "MOD" };
+        ModuleType m { "crypt", "Crypt Reverb", "reverb", RackPost | RackSfx,
+            "Deep, smooth room-to-cathedral reverb. Voice switches to the six Boss RV-6 modes (from the pedal pack).",
+            { P { "Decay", "s", 0.2f, 20.f, 2.6f, 2.f }, P { "Size", "%", 0, 100, 60 }, P { "Pre-delay", "ms", 0, 250, 18, 2.f }, P { "Tone", "Hz", 1000, 16000, 6500, 2.f },
+              P { "Low Cut", "Hz", 20, 600, 120, 2.f }, P { "Mod", "", 0, 10, 4 }, P { "Mix", "%", 0, 100, 25 }, voice },
+            [] { return std::make_unique<CryptReverb>(); } };
+        m.fileKind = "pack"; m.packSelectors = { 7 }; m.packFirstChoice = 1;
+        for (auto* f : { "1 Rv-6 Spring Reverb.wav", "2 Rv-6 Delay.wav", "3 Rv-6 Hall 1 Reverb.wav", "4 Rv-6 Plate Reverb.wav", "5 Rv-6 Room Reverb.wav", "6 Rv-6 Mod Reverb.wav" })
+            m.irs.push_back (juce::String ("Pedals/Crypt/") + f);
+        t.push_back (std::move (m));
+    }
     t.push_back ({ "seraph", "Seraph Shimmer", "reverb", RackPost | RackSfx,
         "Reverb whose tail rises an octave (or a fifth): angelic pads.",
         { P { "Decay", "s", 0.5f, 20.f, 6.f, 2.f }, P { "Size", "%", 0, 100, 80 }, P { "Shimmer", "%", 0, 100, 55 }, P { "Interval", "", 0, 4, 0, 1, { "+Oct", "+5th", "+Oct+5th", "+2 Oct", "-Oct" } },

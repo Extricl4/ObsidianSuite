@@ -4568,8 +4568,8 @@
    "key": "crypt",
    "name": "Crypt Reverb",
    "category": "reverb",
-   "description": "Deep, smooth room-to-cathedral reverb.",
-   "fileKind": "",
+   "description": "Deep, smooth room-to-cathedral reverb. Voice switches to the six Boss RV-6 modes (from the pedal pack).",
+   "fileKind": "pack",
    "racks": [
     "post",
     "sfx"
@@ -4651,6 +4651,26 @@
      "skew": 1.0,
      "momentary": false,
      "toggle": false
+    },
+    {
+     "name": "Voice",
+     "unit": "",
+     "min": 0.0,
+     "max": 6.0,
+     "def": 0.0,
+     "defNorm": 0.0,
+     "skew": 1.0,
+     "momentary": false,
+     "toggle": false,
+     "choices": [
+      "CRYPT",
+      "SPRING",
+      "DELAY",
+      "HALL",
+      "PLATE",
+      "ROOM",
+      "MOD"
+     ]
     }
    ]
   },
@@ -5960,6 +5980,652 @@
      "max": 500.0,
      "def": 80.0,
      "defNorm": 0.389249473810196,
+     "skew": 2.0,
+     "momentary": false,
+     "toggle": false
+    }
+   ]
+  },
+  {
+   "key": "chiron",
+   "name": "Chiron",
+   "category": "drive",
+   "description": "Transparent overdrive (Klon-style Centaur captures). Blend mixes your clean signal back in.",
+   "fileKind": "pack",
+   "racks": [
+    "pre",
+    "post"
+   ],
+   "params": [
+    {
+     "name": "Drive",
+     "unit": "dB",
+     "min": -24.0,
+     "max": 24.0,
+     "def": 0.0,
+     "defNorm": 0.5,
+     "skew": 1.0,
+     "momentary": false,
+     "toggle": false
+    },
+    {
+     "name": "Blend",
+     "unit": "%",
+     "min": 0.0,
+     "max": 100.0,
+     "def": 100.0,
+     "defNorm": 1.0,
+     "skew": 1.0,
+     "momentary": false,
+     "toggle": false
+    },
+    {
+     "name": "Output",
+     "unit": "dB",
+     "min": -24.0,
+     "max": 24.0,
+     "def": 0.0,
+     "defNorm": 0.5,
+     "skew": 1.0,
+     "momentary": false,
+     "toggle": false
+    },
+    {
+     "name": "Capture",
+     "unit": "",
+     "min": 0.0,
+     "max": 1.0,
+     "def": 0.0,
+     "defNorm": 0.0,
+     "skew": 1.0,
+     "momentary": false,
+     "toggle": false,
+     "choices": [
+      "MID",
+      "HIGH"
+     ]
+    }
+   ]
+  },
+  {
+   "key": "emperor",
+   "name": "Emperor",
+   "category": "drive",
+   "description": "Three-mode drive (Duke of Tone captures): boost, overdrive or distortion.",
+   "fileKind": "pack",
+   "racks": [
+    "pre",
+    "post"
+   ],
+   "params": [
+    {
+     "name": "Drive",
+     "unit": "dB",
+     "min": -24.0,
+     "max": 24.0,
+     "def": 0.0,
+     "defNorm": 0.5,
+     "skew": 1.0,
+     "momentary": false,
+     "toggle": false
+    },
+    {
+     "name": "Volume",
+     "unit": "dB",
+     "min": -24.0,
+     "max": 24.0,
+     "def": 0.0,
+     "defNorm": 0.5,
+     "skew": 1.0,
+     "momentary": false,
+     "toggle": false
+    },
+    {
+     "name": "Mode",
+     "unit": "",
+     "min": 0.0,
+     "max": 2.0,
+     "def": 1.0,
+     "defNorm": 0.5,
+     "skew": 1.0,
+     "momentary": false,
+     "toggle": false,
+     "choices": [
+      "BST",
+      "OD",
+      "DIST"
+     ]
+    },
+    {
+     "name": "Mix",
+     "unit": "%",
+     "min": 0.0,
+     "max": 100.0,
+     "def": 100.0,
+     "defNorm": 1.0,
+     "skew": 1.0,
+     "momentary": false,
+     "toggle": false
+    }
+   ]
+  },
+  {
+   "key": "graven",
+   "name": "Graven",
+   "category": "drive",
+   "description": "Tight metal overdrive (Fortin-modded TS-9 captures). Put it in front of a high-gain amp.",
+   "fileKind": "pack",
+   "racks": [
+    "pre",
+    "post"
+   ],
+   "params": [
+    {
+     "name": "Drive",
+     "unit": "dB",
+     "min": -24.0,
+     "max": 24.0,
+     "def": 0.0,
+     "defNorm": 0.5,
+     "skew": 1.0,
+     "momentary": false,
+     "toggle": false
+    },
+    {
+     "name": "Level",
+     "unit": "dB",
+     "min": -24.0,
+     "max": 24.0,
+     "def": 0.0,
+     "defNorm": 0.5,
+     "skew": 1.0,
+     "momentary": false,
+     "toggle": false
+    },
+    {
+     "name": "Capture",
+     "unit": "",
+     "min": 0.0,
+     "max": 2.0,
+     "def": 0.0,
+     "defNorm": 0.0,
+     "skew": 1.0,
+     "momentary": false,
+     "toggle": false,
+     "choices": [
+      "I",
+      "II",
+      "III"
+     ]
+    },
+    {
+     "name": "Mix",
+     "unit": "%",
+     "min": 0.0,
+     "max": 100.0,
+     "def": 100.0,
+     "defNorm": 1.0,
+     "skew": 1.0,
+     "momentary": false,
+     "toggle": false
+    }
+   ]
+  },
+  {
+   "key": "maw",
+   "name": "Maw",
+   "category": "drive",
+   "description": "High-gain grinder (Fortin Grind captures).",
+   "fileKind": "pack",
+   "racks": [
+    "pre",
+    "post"
+   ],
+   "params": [
+    {
+     "name": "Gain",
+     "unit": "dB",
+     "min": -24.0,
+     "max": 24.0,
+     "def": 0.0,
+     "defNorm": 0.5,
+     "skew": 1.0,
+     "momentary": false,
+     "toggle": false
+    },
+    {
+     "name": "Capture",
+     "unit": "",
+     "min": 0.0,
+     "max": 1.0,
+     "def": 0.0,
+     "defNorm": 0.0,
+     "skew": 1.0,
+     "momentary": false,
+     "toggle": false,
+     "choices": [
+      "SLAM",
+      "KODY"
+     ]
+    },
+    {
+     "name": "Level",
+     "unit": "dB",
+     "min": -24.0,
+     "max": 24.0,
+     "def": 0.0,
+     "defNorm": 0.5,
+     "skew": 1.0,
+     "momentary": false,
+     "toggle": false
+    },
+    {
+     "name": "Mix",
+     "unit": "%",
+     "min": 0.0,
+     "max": 100.0,
+     "def": 100.0,
+     "defNorm": 1.0,
+     "skew": 1.0,
+     "momentary": false,
+     "toggle": false
+    }
+   ]
+  },
+  {
+   "key": "xxxiii",
+   "name": "XXXIII",
+   "category": "boost",
+   "description": "Fortin 33 boost (Thordendal signature capture). Tightens and pushes the amp.",
+   "fileKind": "pack",
+   "racks": [
+    "pre",
+    "post"
+   ],
+   "params": [
+    {
+     "name": "Drive",
+     "unit": "dB",
+     "min": -24.0,
+     "max": 24.0,
+     "def": 0.0,
+     "defNorm": 0.5,
+     "skew": 1.0,
+     "momentary": false,
+     "toggle": false
+    },
+    {
+     "name": "Level",
+     "unit": "dB",
+     "min": -24.0,
+     "max": 24.0,
+     "def": 0.0,
+     "defNorm": 0.5,
+     "skew": 1.0,
+     "momentary": false,
+     "toggle": false
+    },
+    {
+     "name": "Mix",
+     "unit": "%",
+     "min": 0.0,
+     "max": 100.0,
+     "def": 100.0,
+     "defNorm": 1.0,
+     "skew": 1.0,
+     "momentary": false,
+     "toggle": false
+    }
+   ]
+  },
+  {
+   "key": "helios",
+   "name": "Helios",
+   "category": "drive",
+   "description": "Super-overdrive (Boss SD-1 captures): three boost and six drive voices.",
+   "fileKind": "pack",
+   "racks": [
+    "pre",
+    "post"
+   ],
+   "params": [
+    {
+     "name": "Level",
+     "unit": "dB",
+     "min": -24.0,
+     "max": 24.0,
+     "def": 0.0,
+     "defNorm": 0.5,
+     "skew": 1.0,
+     "momentary": false,
+     "toggle": false
+    },
+    {
+     "name": "Voice",
+     "unit": "",
+     "min": 0.0,
+     "max": 8.0,
+     "def": 4.0,
+     "defNorm": 0.5,
+     "skew": 1.0,
+     "momentary": false,
+     "toggle": false,
+     "choices": [
+      "B I",
+      "B II",
+      "B III",
+      "D I",
+      "D II",
+      "D III",
+      "D IV",
+      "D V",
+      "D VI"
+     ]
+    },
+    {
+     "name": "Drive",
+     "unit": "dB",
+     "min": -24.0,
+     "max": 24.0,
+     "def": 0.0,
+     "defNorm": 0.5,
+     "skew": 1.0,
+     "momentary": false,
+     "toggle": false
+    },
+    {
+     "name": "Mix",
+     "unit": "%",
+     "min": 0.0,
+     "max": 100.0,
+     "def": 100.0,
+     "defNorm": 1.0,
+     "skew": 1.0,
+     "momentary": false,
+     "toggle": false
+    }
+   ]
+  },
+  {
+   "key": "aeon",
+   "name": "Aeon",
+   "category": "drive",
+   "description": "Bass/guitar drive (Darkglass Alpha Omega Ultra captures): alpha or omega voice, Growl and Bite, seven drive steps.",
+   "fileKind": "pack",
+   "racks": [
+    "pre",
+    "post"
+   ],
+   "params": [
+    {
+     "name": "Blend",
+     "unit": "%",
+     "min": 0.0,
+     "max": 100.0,
+     "def": 100.0,
+     "defNorm": 1.0,
+     "skew": 1.0,
+     "momentary": false,
+     "toggle": false
+    },
+    {
+     "name": "Level",
+     "unit": "dB",
+     "min": -24.0,
+     "max": 24.0,
+     "def": 0.0,
+     "defNorm": 0.5,
+     "skew": 1.0,
+     "momentary": false,
+     "toggle": false
+    },
+    {
+     "name": "Drive",
+     "unit": "",
+     "min": 0.0,
+     "max": 6.0,
+     "def": 3.0,
+     "defNorm": 0.5,
+     "skew": 1.0,
+     "momentary": false,
+     "toggle": false,
+     "choices": [
+      "0",
+      "1",
+      "3",
+      "5",
+      "7",
+      "8",
+      "10"
+     ]
+    },
+    {
+     "name": "Voice",
+     "unit": "",
+     "min": 0.0,
+     "max": 1.0,
+     "def": 0.0,
+     "defNorm": 0.0,
+     "skew": 1.0,
+     "momentary": false,
+     "toggle": false,
+     "choices": [
+      "ALPHA",
+      "OMEGA"
+     ]
+    },
+    {
+     "name": "Growl",
+     "unit": "",
+     "min": 0.0,
+     "max": 1.0,
+     "def": 0.0,
+     "defNorm": 0.0,
+     "skew": 1.0,
+     "momentary": false,
+     "toggle": true
+    },
+    {
+     "name": "Bite",
+     "unit": "",
+     "min": 0.0,
+     "max": 1.0,
+     "def": 0.0,
+     "defNorm": 0.0,
+     "skew": 1.0,
+     "momentary": false,
+     "toggle": true
+    },
+    {
+     "name": "Input",
+     "unit": "dB",
+     "min": -24.0,
+     "max": 24.0,
+     "def": 0.0,
+     "defNorm": 0.5,
+     "skew": 1.0,
+     "momentary": false,
+     "toggle": false
+    }
+   ]
+  },
+  {
+   "key": "ossuary",
+   "name": "Ossuary",
+   "category": "reverb",
+   "description": "Real catacomb reverb (Green-Wood Cemetery Catacombs IRs). Pick the room position and the mic.",
+   "fileKind": "pack",
+   "racks": [
+    "post",
+    "sfx"
+   ],
+   "params": [
+    {
+     "name": "Mix",
+     "unit": "%",
+     "min": 0.0,
+     "max": 100.0,
+     "def": 35.0,
+     "defNorm": 0.349999994039536,
+     "skew": 1.0,
+     "momentary": false,
+     "toggle": false
+    },
+    {
+     "name": "Decay",
+     "unit": "s",
+     "min": 0.200000002980232,
+     "max": 4.0,
+     "def": 4.0,
+     "defNorm": 1.0,
+     "skew": 1.0,
+     "momentary": false,
+     "toggle": false
+    },
+    {
+     "name": "Tone",
+     "unit": "Hz",
+     "min": 1000.0,
+     "max": 16000.0,
+     "def": 9000.0,
+     "defNorm": 0.730296790599823,
+     "skew": 2.0,
+     "momentary": false,
+     "toggle": false
+    },
+    {
+     "name": "Room",
+     "unit": "",
+     "min": 0.0,
+     "max": 2.0,
+     "def": 1.0,
+     "defNorm": 0.5,
+     "skew": 1.0,
+     "momentary": false,
+     "toggle": false,
+     "choices": [
+      "CLOSE",
+      "MID",
+      "FAR"
+     ]
+    },
+    {
+     "name": "Mic",
+     "unit": "",
+     "min": 0.0,
+     "max": 2.0,
+     "def": 1.0,
+     "defNorm": 0.5,
+     "skew": 1.0,
+     "momentary": false,
+     "toggle": false,
+     "choices": [
+      "I",
+      "II",
+      "III"
+     ]
+    },
+    {
+     "name": "Pre-delay",
+     "unit": "ms",
+     "min": 0.0,
+     "max": 250.0,
+     "def": 0.0,
+     "defNorm": 0.0,
+     "skew": 2.0,
+     "momentary": false,
+     "toggle": false
+    },
+    {
+     "name": "Low Cut",
+     "unit": "Hz",
+     "min": 20.0,
+     "max": 600.0,
+     "def": 80.0,
+     "defNorm": 0.321633756160736,
+     "skew": 2.0,
+     "momentary": false,
+     "toggle": false
+    }
+   ]
+  },
+  {
+   "key": "halcyon",
+   "name": "Halcyon",
+   "category": "reverb",
+   "description": "Ambient shoegaze reverb (Tone Charm Audio IRs): a slap-back echo or a long percussive wash.",
+   "fileKind": "pack",
+   "racks": [
+    "post",
+    "sfx"
+   ],
+   "params": [
+    {
+     "name": "Mix",
+     "unit": "%",
+     "min": 0.0,
+     "max": 100.0,
+     "def": 40.0,
+     "defNorm": 0.400000005960464,
+     "skew": 1.0,
+     "momentary": false,
+     "toggle": false
+    },
+    {
+     "name": "Decay",
+     "unit": "s",
+     "min": 0.200000002980232,
+     "max": 20.0,
+     "def": 20.0,
+     "defNorm": 1.0,
+     "skew": 2.0,
+     "momentary": false,
+     "toggle": false
+    },
+    {
+     "name": "Tone",
+     "unit": "Hz",
+     "min": 1000.0,
+     "max": 16000.0,
+     "def": 8000.0,
+     "defNorm": 0.683130025863647,
+     "skew": 2.0,
+     "momentary": false,
+     "toggle": false
+    },
+    {
+     "name": "Mode",
+     "unit": "",
+     "min": 0.0,
+     "max": 1.0,
+     "def": 1.0,
+     "defNorm": 1.0,
+     "skew": 1.0,
+     "momentary": false,
+     "toggle": false,
+     "choices": [
+      "SLAP",
+      "VERB"
+     ]
+    },
+    {
+     "name": "Pre-delay",
+     "unit": "ms",
+     "min": 0.0,
+     "max": 250.0,
+     "def": 0.0,
+     "defNorm": 0.0,
+     "skew": 2.0,
+     "momentary": false,
+     "toggle": false
+    },
+    {
+     "name": "Low Cut",
+     "unit": "Hz",
+     "min": 20.0,
+     "max": 600.0,
+     "def": 120.0,
+     "defNorm": 0.41522741317749,
      "skew": 2.0,
      "momentary": false,
      "toggle": false

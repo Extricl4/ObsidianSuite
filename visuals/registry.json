@@ -374,7 +374,7 @@
    "spec": "pedals/aeon.json",
    "type": "bass/guitar drive, wide enclosure",
    "inspired_by": "Darkglass Alpha Omega Ultra",
-   "engine": "nampedal",
+   "engine": "pack pedal (captures in Documents/Obsidian Suite/Captures/Pedals/Aeon)",
    "knobs": {
     "Blend": "Mix",
     "Level": "Output",
@@ -428,7 +428,7 @@
    "spec": "pedals/chiron.json",
    "type": "transparent overdrive",
    "inspired_by": "Klon Centaur (captures: Behringer Centaur OD)",
-   "engine": "nampedal",
+   "engine": "pack pedal (captures in Documents/Obsidian Suite/Captures/Pedals/Chiron)",
    "knobs": {
     "Drive": "Input",
     "Blend": "Mix",
@@ -448,7 +448,7 @@
    "type": "reverb",
    "irs": {
     "source": "Boss RV-6 (Boss_RV-6.zip)",
-    "note": "Crypt's toggle picks the RV-6 mode. Needs an IR-reverb mode in the engine; Crypt is algorithmic today.",
+    "note": "Voice knob: CRYPT (its own reverb) or the six RV-6 modes. IRs in Documents/Obsidian Suite/IRs/Pedals/Crypt.",
     "files": [
      "1 Rv-6 Spring Reverb.wav",
      "2 Rv-6 Delay.wav",
@@ -469,7 +469,7 @@
    "spec": "pedals/emperor.json",
    "type": "3-mode drive (tarot card IV)",
    "inspired_by": "MXR Custom Shop Duke of Tone",
-   "engine": "nampedal",
+   "engine": "pack pedal (captures in Documents/Obsidian Suite/Captures/Pedals/Emperor)",
    "knobs": {
     "Drive": "Input",
     "Volume": "Output"
@@ -488,7 +488,7 @@
    "spec": "pedals/graven.json",
    "type": "forged overdrive",
    "inspired_by": "Fortin-modded TS-9",
-   "engine": "nampedal",
+   "engine": "pack pedal (captures in Documents/Obsidian Suite/Captures/Pedals/Graven)",
    "knobs": {
     "Drive": "Input",
     "Level": "Output"
@@ -512,7 +512,7 @@
    "spec": "pedals/halcyon.json",
    "type": "ambient reverb (IR)",
    "inspired_by": "Tone Charm Audio Ambient Shoegaze Machine IRs",
-   "engine": "needs IR reverb module",
+   "engine": "pack pedal, IR reverb (IRs in Documents/Obsidian Suite/IRs/Pedals/Halcyon)",
    "knobs": {
     "Mix": "wet/dry",
     "Decay": "IR length/fade",
@@ -531,7 +531,7 @@
    "spec": "pedals/helios.json",
    "type": "overdrive",
    "inspired_by": "Boss SD-1",
-   "engine": "nampedal",
+   "engine": "pack pedal (captures in Documents/Obsidian Suite/Captures/Pedals/Helios)",
    "knobs": {
     "Level": "Output",
     "Voice": "capture select (9 positions)",
@@ -577,7 +577,7 @@
    "spec": "pedals/maw.json",
    "type": "high-gain grinder",
    "inspired_by": "Fortin Grind",
-   "engine": "nampedal",
+   "engine": "pack pedal (captures in Documents/Obsidian Suite/Captures/Pedals/Maw)",
    "knobs": {
     "Gain": "Input"
    },
@@ -594,7 +594,7 @@
    "spec": "pedals/ossuary.json",
    "type": "catacomb reverb (IR)",
    "inspired_by": "Green-Wood Cemetery Catacombs impulse responses",
-   "engine": "needs IR reverb module",
+   "engine": "pack pedal, IR reverb (IRs in Documents/Obsidian Suite/IRs/Pedals/Ossuary)",
    "knobs": {
     "Mix": "wet/dry",
     "Decay": "IR length/fade",
@@ -674,7 +674,7 @@
    "spec": "pedals/xxxiii.json",
    "type": "boost",
    "inspired_by": "Fortin 33 (Fredrik Thordendal signature)",
-   "engine": "nampedal",
+   "engine": "pack pedal (captures in Documents/Obsidian Suite/Captures/Pedals/XXXIII)",
    "knobs": {
     "Drive": "Input",
     "Level": "Output"

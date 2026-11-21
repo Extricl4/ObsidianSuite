@@ -6,9 +6,12 @@
 //  module in every rack with random settings, random knob fuzzing, sample rates
 //  44.1/48/96 k and odd block sizes, transpose accuracy (Live + HQ), synth
 //  tracking, preset save/load round-trip, DAW state round-trip, NAM loading,
-//  and a CPU budget for a full rig.
+//  pack pedals (file maps, IR reverb, capture switching; --packs also plays
+//  every file of the installed Obsidian pedal pack), and a CPU budget for a full rig.
 // =============================================================================
 #include "../PluginProcessor.h"
+#include <set>
+#include "../DSP/Modules/ModuleRegistry.h"
 
 namespace obs
 {
@@ -120,6 +123,69 @@ float detectPitch (const std::vector<float>& x, double sr)
         }
     return 0;
 }
+
+/** Runs one module on its own (stereo), with knob values in real units. */
+struct ModuleRig
+{
+    const dsp::ModuleType* type = nullptr;
+    std::unique_ptr<dsp::Module> m;
+    std::vector<float> p;
+    dsp::ModuleContext ctx;
+    explicit ModuleRig (const juce::String& key, double sr, int block)
+    {
+        type = dsp::findModule (key);
+        if (type == nullptr) return;
+        m = type->create(); ctx.sampleRate = sr; ctx.maxBlock = block; m->prepare (ctx);
+        p.assign ((size_t) kSlotParams, 0.f);
+        for (size_t k = 0; k < type->params.size(); ++k) p[k] = type->params[k].def;
+    }
+    /** Sets the selector knobs so that file `index` plays. */
+    void selectFile (int index)
+    {
+        index += type->packFirstChoice;
+        for (int k = (int) type->packSelectors.size() - 1; k >= 0; --k)
+        {
+            const int sel = type->packSelectors[(size_t) k], size = dsp::selectorSize (type->params[(size_t) sel]);
+            p[(size_t) sel] = (float) (index % size); index /= size;
+        }
+    }
+    void set (const juce::String& name, float v) { for (size_t k = 0; k < type->params.size(); ++k) if (type->params[k].name == name) p[k] = v; }
+    RunStats run (double sr, int block, double seconds, std::function<float (int)> input, std::function<void (int)> everyBlock = {})
+    {
+        RunStats st; juce::AudioBuffer<float> b (2, block); double sum = 0; long cnt = 0; double load = 0; int blocks = 0;
+        const int total = (int) (sr * seconds);
+        for (int done = 0; done < total; done += block)
+        {
+            if (everyBlock) everyBlock (done);
+            const int n = juce::jmin (block, total - done);
+            for (int i = 0; i < n; ++i) { const float x = input (done + i); b.setSample (0, i, x); b.setSample (1, i, x); }
+            const auto t0 = juce::Time::getHighResolutionTicks();
+            m->process (b.getArrayOfWritePointers(), 2, n, p.data(), ctx);
+            const double l = juce::Time::highResolutionTicksToSeconds (juce::Time::getHighResolutionTicks() - t0) / (n / sr);
+            load += l; ++blocks; st.maxBlockLoad = juce::jmax (st.maxBlockLoad, l);
+            for (int c = 0; c < 2; ++c) for (int i = 0; i < n; ++i)
+            {
+                const float v = b.getSample (c, i);
+                if (! std::isfinite (v)) st.finite = false;
+                st.peak = juce::jmax (st.peak, std::abs (v)); sum += (double) v * v; ++cnt;
+            }
+        }
+        st.rms = (float) std::sqrt (sum / juce::jmax (1L, cnt)); st.avgLoad = load / juce::jmax (1, blocks);
+        return st;
+    }
+};
+
+/** A made-up reverb IR: decaying stereo noise. */
+dsp::IrFile fakeIr (double sr, float seconds, float rt60, int channels, juce::Random& rng)
+{
+    dsp::IrFile f; f.sampleRate = sr; f.name = "test";
+    const int n = (int) (sr * seconds);
+    f.buffer.setSize (channels, n);
+    for (int c = 0; c < channels; ++c)
+        for (int i = 0; i < n; ++i)
+            f.buffer.setSample (c, i, (rng.nextFloat() * 2.f - 1.f) * std::pow (10.f, -3.f * (float) i / (float) (sr * rt60)));
+    return f;
+}
 } // namespace
 
 int runSelfTest (const juce::StringArray& args)
@@ -128,6 +194,7 @@ int runSelfTest (const juce::StringArray& args)
     const auto start = juce::Time::getMillisecondCounterHiRes();
     juce::File reportFile;
     juce::File namFile;
+    const bool packs = args.contains ("--packs");
     for (int i = 0; i < args.size(); ++i)
     {
         if (args[i] == "--nam" && i + 1 < args.size()) namFile = juce::File (args[i + 1].unquoted());
@@ -311,6 +378,114 @@ int runSelfTest (const juce::StringArray& args)
         p.prepareToPlay (SR, BLOCK);
     }
     else r.info ("(skipped: pass --nam <file.nam> to test capture loading)");
+
+    // ---------------------------------------------------------------- 7b. pack pedals
+    r.head ("Pack pedals (pedals with their own captures / IRs)");
+    {
+        int packTypes = 0; bool mapsOk = true;
+        for (auto& t : dsp::moduleTypes())
+        {
+            if (t.captures.empty() && t.irs.empty()) continue;
+            ++packTypes;
+            int combos = 1; bool selOk = ! t.packSelectors.empty() || (t.captures.size() + t.irs.size()) == 1;
+            for (int k : t.packSelectors)
+            {
+                if (! juce::isPositiveAndBelow (k, (int) t.params.size())) { selOk = false; continue; }
+                const auto& prm = t.params[(size_t) k];
+                if (prm.choices.isEmpty() && ! prm.toggle) selOk = false;
+                combos *= dsp::selectorSize (prm);
+            }
+            const int files = (int) (t.captures.size() + t.irs.size());
+            std::set<juce::String> unique (t.captures.begin(), t.captures.end()); unique.insert (t.irs.begin(), t.irs.end());
+            const bool ok = selOk && combos - t.packFirstChoice == files && (int) unique.size() == files && t.fileKind == "pack";
+            if (! ok) { mapsOk = false; r.fail (t.key + ": its switches pick " + juce::String (combos - t.packFirstChoice) + " files but it lists " + juce::String (files)); }
+        }
+        r.check (mapsOk && packTypes >= 10, juce::String (packTypes) + " pack pedals: every switch position maps to exactly one file");
+
+        // IR reverb with made-up IRs (no files needed)
+        juce::Random rng (77);
+        for (auto key : { "ossuary", "halcyon", "crypt" })
+        {
+            ModuleRig mr (key, SR, BLOCK);
+            if (mr.m == nullptr) { r.fail (juce::String (key) + " is registered"); continue; }
+            std::vector<dsp::IrFile> bank;
+            for (size_t i = 0; i < mr.type->irs.size(); ++i) bank.push_back (fakeIr (i % 2 ? 44100.0 : 96000.0, 2.5f, 0.6f + 0.2f * (float) i, (int) (1 + i % 2), rng));
+            mr.m->setIrBank (std::move (bank));
+            mr.selectFile (0); mr.set ("Mix", 100.f);
+            juce::Random nz (5);
+            auto noise = [&nz] (int) { return (nz.nextFloat() * 2.f - 1.f) * 0.25f; };
+            const double wait0 = juce::Time::getMillisecondCounterHiRes();
+            RunStats warm; while ((warm = mr.run (SR, BLOCK, 0.25, noise)).rms < 1.0e-4f && juce::Time::getMillisecondCounterHiRes() - wait0 < 3000) juce::Thread::sleep (20);
+            auto st = mr.run (SR, BLOCK, 1.0, noise);
+            const float ratio = st.rms / (0.25f / std::sqrt (3.f));
+            r.check (st.finite && st.peak < 4.f && ratio > 0.2f && ratio < 4.f,
+                     juce::String (key) + ": IR reverb plays (wet level " + juce::String (juce::Decibels::gainToDecibels (ratio), 1) + " dB vs dry)");
+            // switch files and shorten the decay while playing (the message tick rebuilds the IR)
+            int ticks = 0; bool finite = true; float peak = 0;
+            for (int f = 0; f < (int) mr.type->irs.size(); ++f)
+            {
+                mr.selectFile (f); mr.set ("Decay", f % 2 ? 0.4f : 100.f);
+                auto s2 = mr.run (SR, BLOCK, 0.3, noise, [&] (int done) { if (done % (int) (SR * 0.1) < BLOCK) { mr.m->messageTick(); ++ticks; } });
+                finite = finite && s2.finite; peak = juce::jmax (peak, s2.peak);
+            }
+            r.check (finite && peak < 4.f, juce::String (key) + ": switching IRs and decay while playing stays clean (" + juce::String ((int) mr.type->irs.size()) + " IRs)");
+        }
+        {   // Crypt voice 0 keeps the original reverb even with the IR files loaded
+            ModuleRig a ("crypt", SR, BLOCK);
+            a.set ("Mix", 50.f); a.set ("Voice", 0.f);
+            Guitar g4 (SR);
+            auto st = a.run (SR, BLOCK, 1.0, [&g4] (int i) { if (i % 12000 == 0) g4.pluck (110.f, 0.4f); return g4.next(); });
+            r.check (st.finite && st.rms > 0.001f, "Crypt's own voice still works (old presets sound the same)");
+        }
+
+        // capture switching (needs --nam): load the same capture into every slot of a 3-way pedal and flick the switch
+        if (namFile.existsAsFile())
+        {
+            ModuleRig mr ("graven", SR, BLOCK);
+            std::vector<std::unique_ptr<dsp::NamEngine>> engines; juce::StringArray names; juce::String err;
+            for (int i = 0; i < 3; ++i) { engines.push_back (dsp::NamEngine::load (namFile, SR, BLOCK, err)); names.add ("c" + juce::String (i)); }
+            mr.m->setCaptureBank (std::move (engines), names);
+            Guitar g5 (SR); int flips = 0;
+            auto st = mr.run (SR, BLOCK, 2.0, [&g5] (int i) { if (i % 9600 == 0) g5.pluck (82.4f, 0.4f); return g5.next(); },
+                              [&] (int done) { if (done % 4800 < BLOCK) { mr.selectFile (++flips % 3); } });
+            r.check (st.finite && st.rms > 0.0005f && st.peak < 4.f, "capture pedal switches captures while playing (" + juce::String (flips) + " switches)");
+        }
+        else r.info ("(capture switching skipped: pass --nam <file.nam>)");
+
+        // --packs: play every file of the installed pedal pack
+        if (packs)
+        {
+            for (auto& t : dsp::moduleTypes())
+            {
+                if (t.captures.empty() && t.irs.empty()) continue;
+                auto files = Rig::loadPackFiles (t, SR, BLOCK);
+                const int present = files->total - files->missing.size();
+                r.check (files->missing.isEmpty() && files->broken.isEmpty(), t.name + ": " + juce::String (present) + " of " + juce::String (files->total) + " files installed and readable"
+                         + (files->missing.isEmpty() ? juce::String() : " (missing " + files->missing.joinIntoString (", ") + ")")
+                         + (files->broken.isEmpty() ? juce::String() : " (broken: " + files->broken.joinIntoString ("; ") + ")"));
+                std::vector<bool> loaded;
+                for (auto& e : files->engines) loaded.push_back (e != nullptr);
+                for (auto& f : files->irs) loaded.push_back (f.buffer.getNumSamples() > 0);
+                ModuleRig mr (t.key, SR, BLOCK);
+                Rig::installPack (*mr.m, *files);
+                const int count = (int) (t.captures.size() + t.irs.size());
+                int good = 0; float lo = 1e9f, hi = 0; double cpu = 0;
+                for (int f = 0; f < count; ++f)
+                {
+                    mr.selectFile (f);
+                    if (! t.irs.empty()) { mr.set ("Mix", 100.f); mr.m->messageTick(); mr.run (SR, BLOCK, 0.3, [] (int) { return 0.f; }); }
+                    Guitar g6 (SR);
+                    auto st = mr.run (SR, BLOCK, t.irs.empty() ? 1.0 : 1.5, [&g6] (int i) { if (i % 12000 == 0) g6.pluck (82.4f, 0.4f); return g6.next(); });
+                    if (loaded[(size_t) f] && st.finite && st.rms > 0.0003f && st.peak < 4.f) ++good;
+                    lo = juce::jmin (lo, st.rms); hi = juce::jmax (hi, st.rms); cpu = juce::jmax (cpu, st.avgLoad);
+                }
+                r.check (good == count, t.name + ": all " + juce::String (count) + " " + (t.irs.empty() ? "captures" : "IRs") + " play cleanly (levels "
+                         + juce::String (juce::Decibels::gainToDecibels (lo), 1) + " to " + juce::String (juce::Decibels::gainToDecibels (hi), 1) + " dB, worst cpu "
+                         + juce::String (cpu * 100, 2) + "%)");
+            }
+        }
+        else r.info ("(installed pack not played: pass --packs to play every file in Documents/" OBSIDIAN_PRODUCT_NAME ")");
+    }
 
     // ---------------------------------------------------------------- 8. presets
     r.head ("Presets and DAW state");

@@ -11,6 +11,10 @@
 //    built-in : Obsidian Core amp, NAM Loader amp, three generated cabs
 //    yours    : JSON files in  Documents\Obsidian Amp Suite\Amps  and  ...\Cabs
 //               (see Content/README.md for the format)
+//
+//  Pack pedals (Chiron, Aeon, Ossuary, Crypt's RV modes ...) bring their own
+//  files from  Documents\Obsidian Amp Suite\Captures\Pedals\<Pedal>  and
+//  ...\IRs\Pedals\<Pedal>; the Rig loads them when the pedal is added.
 // =============================================================================
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "../DSP/Engine.h"
@@ -52,6 +56,17 @@ public:
     juce::var getMisc (const juce::String& key, const juce::var& def = {}) const;
 
     juce::var toJson() const;                       // for the UI
+    /** A pack pedal's files, loaded (call off the audio thread; used by the Rig's loader and the self-test). */
+    struct PackFiles
+    {
+        std::vector<std::unique_ptr<dsp::NamEngine>> engines; juce::StringArray names;
+        std::vector<dsp::IrFile> irs;
+        juce::StringArray missing, broken;
+        int total = 0; juce::File folder;
+    };
+    static std::shared_ptr<PackFiles> loadPackFiles (const dsp::ModuleType& type, double rate, int block);
+    static void installPack (dsp::Module& m, PackFiles& files);
+
     static juce::var ampLibrary();
     static juce::var cabLibrary();
     static juce::File contentFolder();              // Documents\Obsidian Amp Suite
@@ -70,6 +85,7 @@ private:
     void applySlot (int rack, int slot);
     void startCaptureLoad (int channel, const juce::File& f, bool notifyOk);
     void startModuleFileLoad (int rack, int slot, const juce::File& f);
+    void startPackLoad (int rack, int slot);
     juce::ValueTree slotTree (int rack, int slot);
     static juce::var findInLibrary (const juce::var& lib, const juce::String& key);
 
@@ -80,6 +96,7 @@ private:
     std::shared_ptr<std::atomic<bool>> alive = std::make_shared<std::atomic<bool>> (true);
     std::atomic<int> pending { 0 };
     int generation[4] {};
+    juce::String shownFile[kNumRacks][kSlotsPerRack];   // what each pack pedal showed last (UI refresh when it changes)
     juce::ListenerList<Listener> listeners;
 };
 } // namespace obs
