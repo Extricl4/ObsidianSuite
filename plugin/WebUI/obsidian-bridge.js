@@ -1272,6 +1272,20 @@ function setupSettings(st) {
     const _apply = window.applyTheme;
     window.applyTheme = function (n) { _apply(n); if (!applying) setS('theme', n); };
   }
+  // Live UI: the look loads from Downloads\ObsidianUI (newer than this build), so UI updates need no reinstall
+  if (I && !$('.obs-liveui', I)) {
+    const row = document.createElement('div'); row.className = 'obs-liveui';
+    row.innerHTML = '<div><b>Live UI</b><span>Loads the look (pages, themes, faces) from Downloads\\ObsidianUI when it is newer than this version. Updates then need no reinstall.</span></div>'
+      + '<button class="obs-btn obs-livereload" title="Reload the interface now">RELOAD</button>';
+    const tg = $('.tog', I) ? $('.tog', I).cloneNode(true) : document.createElement('button');
+    tg.setAttribute('aria-label', 'Live UI'); tg.classList.add('obs-livetog'); row.appendChild(tg);
+    I.appendChild(row);
+    const drawLive = () => { if (typeof setTog === 'function') setTog(tg, !!INIT.settings.liveUi); };
+    drawLive();
+    tg.addEventListener('click', e => { e.stopPropagation(); e.preventDefault(); setS('liveUi', !INIT.settings.liveUi); drawLive();
+      say(INIT.settings.liveUi ? 'Live UI on: press RELOAD (or reopen the window) after an update' : 'Live UI off'); }, true);
+    $('.obs-livereload', row).addEventListener('click', e => { e.stopPropagation(); location.reload(); });
+  }
   const _acc = window.setAccent; let accT = null;
   window.setAccent = function (c) { _acc(c); if (!applying) { clearTimeout(accT); accT = setTimeout(() => setS('accent', c), 400); } };
 

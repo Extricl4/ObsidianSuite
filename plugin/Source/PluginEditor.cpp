@@ -134,7 +134,20 @@ juce::File ObsidianEditor::devFolder() const
 {
     auto env = juce::SystemStats::getEnvironmentVariable ("OBSIDIAN_UI_DEV", {});
     juce::File f (env.isNotEmpty() ? env : proc.settings().get ("uiDevFolder").toString());
-    return (f.getFullPathName().isNotEmpty() && f.isDirectory() && f.getChildFile ("obsidian-demo.html").existsAsFile()) ? f : juce::File();
+    if (f.getFullPathName().isNotEmpty() && f.isDirectory() && f.getChildFile ("obsidian-demo.html").existsAsFile()) return f;
+    return liveUiFolder();
+}
+
+/** Live UI (Settings > Interface): the look is loaded from Downloads\ObsidianUI, so UI updates arrive without a
+    reinstall (reopen the window or press RELOAD). Only files newer than this build count, so an old live folder
+    can never hide a newer installed version. */
+juce::File ObsidianEditor::liveUiFolder() const
+{
+    if (! (bool) proc.settings().get ("liveUi")) return {};
+    auto f = juce::File::getSpecialLocation (juce::File::userHomeDirectory).getChildFile ("Downloads").getChildFile ("ObsidianUI");
+    auto page = f.getChildFile ("obsidian-demo.html");
+    if (! page.existsAsFile() || page.getLastModificationTime() < juce::Time::getCompilationDate()) return {};
+    return f;
 }
 
 std::optional<juce::WebBrowserComponent::Resource> ObsidianEditor::provide (const juce::String& url)
@@ -150,7 +163,9 @@ std::optional<juce::WebBrowserComponent::Resource> ObsidianEditor::provide (cons
     {
         const auto rel = path.fromFirstOccurrenceOf ("faces/", false, false);
         if (rel.contains ("..") || rel.containsChar ('\\') || rel.containsChar (':')) return std::nullopt;
-        const auto f = Rig::contentFolder().getChildFile ("Faces").getChildFile (rel);
+        auto f = Rig::contentFolder().getChildFile ("Faces").getChildFile (rel);
+        if (auto live = devFolder(); live != juce::File() && live.getChildFile ("faces").getChildFile (rel).existsAsFile())
+            f = live.getChildFile ("faces").getChildFile (rel);
         if (! f.existsAsFile() || ! f.loadFileAsData (mb)) return std::nullopt;
         return juce::WebBrowserComponent::Resource { bytes (mb.getData(), mb.getSize()), mimeFor (name) };
     }

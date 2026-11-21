@@ -218,6 +218,14 @@ the file into `Presets\` (rename `.obsidian` to `.json`).
 
 **Version**: change `VERSION`.
 
+## Live UI (look updates without reinstalling)
+
+Settings > Interface > **Live UI**: the plugin loads its look (pages, themes, synth page, amp and pedal faces) from
+`Downloads\ObsidianUI` when that folder has an `obsidian-demo.html` newer than the installed version; files missing
+there come from the plugin as usual. After a UI update lands in that folder, press **RELOAD** (or reopen the window).
+The sound engine still needs a new install. An older live folder is ignored automatically after you install a newer
+version.
+
 ## Tests
 
 * `"Obsidian Amp Suite.exe" --selftest report.txt` renders every pedal in every slot with random settings,

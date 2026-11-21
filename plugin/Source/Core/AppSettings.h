@@ -67,6 +67,7 @@ public:
             s.set ("midiMappings", "[]");
             s.set ("metronomeVolume", 0.7);
             s.set ("uiDevFolder", "");
+            s.set ("liveUi", false);            // load the look from Downloads\ObsidianUI when it's newer than this build
             return s;
         }();
         return d;

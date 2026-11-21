@@ -23,6 +23,7 @@ private:
     static std::vector<std::byte> bytes (const void* data, size_t size);
     static juce::String mimeFor (const juce::String& path);
     juce::File devFolder() const;
+    juce::File liveUiFolder() const;
 
     ObsidianProcessor& proc;
     std::unique_ptr<UiBridge> bridge;

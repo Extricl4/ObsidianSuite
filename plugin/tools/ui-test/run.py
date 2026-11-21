@@ -402,6 +402,11 @@ async def run(standalone):
         check(all(counts[t] > 50 for t in ids if t not in ('obsidian', 'matte')) and counts['obsidian'] == 0 and counts['matte'] == 0, f'every theme but Obsidian and Matte has a scene ({counts})')
         await pg.locator('[aria-label="Moving theme details"]').click(); await pg.locator('.thc[data-t="obsidian"]').click(); await pg.wait_for_timeout(150)
         check(await pg.evaluate("getComputedStyle(document.querySelector('.thband')).display") == 'none', 'back to Obsidian: no bands')
+        await pg.evaluate("window.__mock.log.length=0")
+        await pg.locator('.obs-livetog').click(); await pg.wait_for_timeout(120)
+        check(await pg.evaluate("window.__mock.log.some(x=>x[0]==='setSetting'&&x[1]==='liveUi'&&x[2]===true)") and await pg.locator('.obs-livereload').count() == 1,
+              'Settings > Interface: Live UI switch (+ RELOAD) is saved')
+        await pg.locator('.obs-livetog').click(); await pg.wait_for_timeout(80)
         await pg.locator('.setnav button', has_text='Audio').click()
         await pg.evaluate("window.__mock.log.length=0")
         await pg.locator('.spanel[data-panel="Audio"] .seg button', has_text='HQ').click(); await pg.wait_for_timeout(120)

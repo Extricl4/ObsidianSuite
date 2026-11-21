@@ -159,3 +159,10 @@
 .obs-tile.pedpic { position: relative; padding-left: 58px !important; }
 .obs-pedpic { position: absolute; left: 10px; top: 50%; transform: translateY(-50%) rotate(-4deg); max-width: 38px; max-height: 70px; filter: drop-shadow(0 4px 6px rgba(0,0,0,.6)); pointer-events: none; transition: transform .15s; }
 .obs-tile.pedpic:hover .obs-pedpic { transform: translateY(-52%) rotate(0deg) scale(1.06); }
+
+/* ---- Settings > Interface: Live UI ------------------------------------------------ */
+.obs-liveui { display: flex; align-items: center; gap: 12px; margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.07); }
+.obs-liveui > div { flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.obs-liveui b { font-size: 12px; font-weight: 600; color: rgb(var(--cf_e9e6df)); }
+.obs-liveui span { font-size: 10.5px; line-height: 1.4; color: rgb(var(--cf_8d8d93)); }
+.obs-liveui .obs-btn { height: 26px; padding: 0 10px; }
