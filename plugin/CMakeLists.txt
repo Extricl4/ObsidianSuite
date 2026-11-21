@@ -2,7 +2,7 @@
 #  Obsidian Suite: amp sim plugin (VST3 + Standalone)
 #
 #  Build (Windows, from this folder):
-#     cmake -B build -G "Visual Studio 17 2022" -A x64
+#     cmake -B build -A x64      (uses the newest Visual Studio installed)
 #     cmake --build build --config Release
 #  Or just run build_windows.bat. See README.md for everything else.
 # =============================================================================

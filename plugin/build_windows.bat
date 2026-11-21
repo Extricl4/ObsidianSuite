@@ -16,7 +16,7 @@ if not exist build\nuget\Microsoft.Web.WebView2* (
   build\nuget.exe install Microsoft.Web.WebView2 -Version 1.0.1901.177 -OutputDirectory build\nuget -NonInteractive || goto :fail
 )
 
-cmake -B build -G "Visual Studio 17 2022" -A x64 -DJUCE_WEBVIEW2_PACKAGE_LOCATION="%cd%\build\nuget" || goto :fail
+cmake -B build -A x64 -DJUCE_WEBVIEW2_PACKAGE_LOCATION="%cd%\build\nuget" || goto :fail
 cmake --build build --config Release --parallel --target ObsidianSuite_VST3 ObsidianSuite_Standalone || goto :fail
 
 echo.

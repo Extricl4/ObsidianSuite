@@ -22,11 +22,12 @@ FetchContent_Declare(nam_core
     GIT_SUBMODULES "")
 
 # Eigen 3.4.0 (MPL2): linear algebra used by NAM.
-set(OBSIDIAN_EIGEN_URL "https://gitlab.com/libeigen/eigen.git" CACHE STRING "Eigen git URL (a GitHub mirror also works)")
+#   The official home is https://gitlab.com/libeigen/eigen.git; GitLab often blocks CI machines,
+#   so the GitHub mirror is the default. Same release, pinned to the 3.4.0 commit.
+set(OBSIDIAN_EIGEN_URL "https://github.com/eigen-mirror/eigen.git" CACHE STRING "Eigen git URL")
 FetchContent_Declare(eigen
     GIT_REPOSITORY ${OBSIDIAN_EIGEN_URL}
-    GIT_TAG        3.4.0
-    GIT_SHALLOW    TRUE)
+    GIT_TAG        3147391d946bb4b6c68edd901f2add6ac1f31f8c)   # 3.4.0
 
 # AudioDSPTools (MIT): sample-rate converter used when a capture was trained at another rate.
 FetchContent_Declare(audiodsptools
