@@ -369,6 +369,45 @@
    "spec": "pedals/abyss.json",
    "type": "octave"
   },
+  "aeon": {
+   "name": "Aeon",
+   "spec": "pedals/aeon.json",
+   "type": "bass/guitar drive, wide enclosure",
+   "inspired_by": "Darkglass Alpha Omega Ultra",
+   "engine": "nampedal",
+   "knobs": {
+    "Blend": "Mix",
+    "Level": "Output",
+    "Drive": "capture gain step (0,1,3,5,7,8,10)"
+   },
+   "switches": {
+    "Voice": {
+     "\u03b1": "Alpha",
+     "\u03a9": "Omega"
+    },
+    "Growl": "button",
+    "Bite": "button",
+    "footswitches": [
+     "Drive on/off",
+     "Bypass"
+    ]
+   },
+   "captures": {
+    "count": 56,
+    "pattern_alpha": "Alpha-{Neutral|Growl|BITE|Bite-Growl} G{n}.nam",
+    "pattern_omega": "Omega - Omega-{Neutral|Growl|BITE|Bite-Growl} G{n}.nam",
+    "gain_steps": [
+     0,
+     1,
+     3,
+     5,
+     7,
+     8,
+     10
+    ],
+    "note": "Voice + Growl/Bite buttons + Drive step pick one of the 56 files"
+   }
+  },
   "ascend": {
    "name": "Ascend",
    "spec": "pedals/ascend.json",
@@ -384,20 +423,134 @@
    "spec": "pedals/bloom.json",
    "type": "envelope filter"
   },
+  "chiron": {
+   "name": "Chiron",
+   "spec": "pedals/chiron.json",
+   "type": "transparent overdrive",
+   "inspired_by": "Klon Centaur (captures: Behringer Centaur OD)",
+   "engine": "nampedal",
+   "knobs": {
+    "Drive": "Input",
+    "Blend": "Mix",
+    "Output": "Output"
+   },
+   "switch": {
+    "label": "Capture",
+    "positions": {
+     "MID": "Centaur OD (mid gain).nam",
+     "HIGH": "Centaur OD (high gain).nam"
+    }
+   }
+  },
   "crypt": {
    "name": "Crypt",
    "spec": "pedals/crypt.json",
-   "type": "reverb"
+   "type": "reverb",
+   "irs": {
+    "source": "Boss RV-6 (Boss_RV-6.zip)",
+    "note": "Crypt's toggle picks the RV-6 mode. Needs an IR-reverb mode in the engine; Crypt is algorithmic today.",
+    "files": [
+     "1 Rv-6 Spring Reverb.wav",
+     "2 Rv-6 Delay.wav",
+     "3 Rv-6 Hall 1 Reverb.wav",
+     "4 Rv-6 Plate Reverb.wav",
+     "5 Rv-6 Room Reverb.wav",
+     "6 Rv-6 Mod Reverb.wav"
+    ]
+   }
   },
   "ember": {
    "name": "Ember",
    "spec": "pedals/ember.json",
    "type": "fuzz"
   },
+  "emperor": {
+   "name": "Emperor",
+   "spec": "pedals/emperor.json",
+   "type": "3-mode drive (tarot card IV)",
+   "inspired_by": "MXR Custom Shop Duke of Tone",
+   "engine": "nampedal",
+   "knobs": {
+    "Drive": "Input",
+    "Volume": "Output"
+   },
+   "switch": {
+    "label": "Mode",
+    "positions": {
+     "BST": "KOT BST Gain=5.nam",
+     "OD": "KOT OD Gain=5.nam",
+     "DIST": "KOT DIST Gain=5.nam"
+    }
+   }
+  },
+  "graven": {
+   "name": "Graven",
+   "spec": "pedals/graven.json",
+   "type": "forged overdrive",
+   "inspired_by": "Fortin-modded TS-9",
+   "engine": "nampedal",
+   "knobs": {
+    "Drive": "Input",
+    "Level": "Output"
+   },
+   "switch": {
+    "label": "Capture",
+    "positions": {
+     "I": "Fortin_TS9_1.nam",
+     "II": "Fortin_TS9_2.nam",
+     "III": "Fortin_TS9_3.nam"
+    }
+   }
+  },
   "gravity": {
    "name": "Gravity",
    "spec": "pedals/gravity.json",
    "type": "tape stop"
+  },
+  "halcyon": {
+   "name": "Halcyon",
+   "spec": "pedals/halcyon.json",
+   "type": "ambient reverb (IR)",
+   "inspired_by": "Tone Charm Audio Ambient Shoegaze Machine IRs",
+   "engine": "needs IR reverb module",
+   "knobs": {
+    "Mix": "wet/dry",
+    "Decay": "IR length/fade",
+    "Tone": "high cut"
+   },
+   "switch": {
+    "label": "Mode",
+    "positions": {
+     "SLAP": "Delay And Reverb Ambient Shoegaze Machine slap back.wav",
+     "VERB": "Delay And Reverb Ambient Shoegaze Machine percussive verb 1.wav"
+    }
+   }
+  },
+  "helios": {
+   "name": "Helios",
+   "spec": "pedals/helios.json",
+   "type": "overdrive",
+   "inspired_by": "Boss SD-1",
+   "engine": "nampedal",
+   "knobs": {
+    "Level": "Output",
+    "Voice": "capture select (9 positions)",
+    "Drive": "Input"
+   },
+   "switch": {
+    "label": "Voice",
+    "positions": {
+     "B I": "APP-SD1-Boost-I.nam",
+     "B II": "APP-SD1-Boost-II.nam",
+     "B III": "APP-SD1-Boost-III.nam",
+     "D I": "APP-SD1-Drive-I.nam",
+     "D II": "APP-SD1-Drive-II.nam",
+     "D III": "APP-SD1-Drive-III.nam",
+     "D IV": "APP-SD1-Drive-IV.nam",
+     "D V": "APP-SD1-Drive-V.nam",
+     "D VI": "APP-SD1-Drive-VI.nam"
+    }
+   }
   },
   "hex": {
    "name": "Hex",
@@ -418,6 +571,48 @@
    "name": "Lethe",
    "spec": "pedals/lethe.json",
    "type": "delay"
+  },
+  "maw": {
+   "name": "Maw",
+   "spec": "pedals/maw.json",
+   "type": "high-gain grinder",
+   "inspired_by": "Fortin Grind",
+   "engine": "nampedal",
+   "knobs": {
+    "Gain": "Input"
+   },
+   "switch": {
+    "label": "Capture",
+    "positions": {
+     "SLAM": "SLAMMIN_FORTIN_GRIND.nam",
+     "KODY": "SLAMMIN_FORTIN_GRIND_KODY.nam"
+    }
+   }
+  },
+  "ossuary": {
+   "name": "Ossuary",
+   "spec": "pedals/ossuary.json",
+   "type": "catacomb reverb (IR)",
+   "inspired_by": "Green-Wood Cemetery Catacombs impulse responses",
+   "engine": "needs IR reverb module",
+   "knobs": {
+    "Mix": "wet/dry",
+    "Decay": "IR length/fade",
+    "Tone": "high cut"
+   },
+   "irs": {
+    "room": {
+     "C": "Close",
+     "M": "Middle",
+     "F": "Far"
+    },
+    "mic": {
+     "I": "Neumann MA1 (mono)",
+     "II": "Lauten LA120 (stereo)",
+     "III": "Zoom XYH-6 (stereo)"
+    },
+    "pattern": "Greenwood Catacombs _ {room} + {mic} _ {Mono|Stereo}.wav"
+   }
   },
   "photon": {
    "name": "Photon",
@@ -473,6 +668,20 @@
    "name": "Vortex",
    "spec": "pedals/vortex.json",
    "type": "flanger"
+  },
+  "xxxiii": {
+   "name": "XXXIII",
+   "spec": "pedals/xxxiii.json",
+   "type": "boost",
+   "inspired_by": "Fortin 33 (Fredrik Thordendal signature)",
+   "engine": "nampedal",
+   "knobs": {
+    "Drive": "Input",
+    "Level": "Output"
+   },
+   "captures": [
+    "Fortin 33 - 1_30.nam"
+   ]
   }
  }
 }

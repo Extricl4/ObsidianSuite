@@ -1,0 +1,15 @@
+{
+ "art": "art/maw_art.png",
+ "glow": "art/maw_glow.png",
+ "glow_strength": 1.2,
+ "artmat": {"rough": 0.12, "metal": 0.0},
+ "enclosure": {"color": [0.07, 0.085, 0.11], "metal": 0.6, "rough": 0.5, "bump": ["noise", 500, 0.1]},
+ "knobs": [{"at": [660, 560], "r": 1.15, "style": "black", "v": 0.5, "h": 1.2}],
+ "toggles": [[660, 1110, -18]],
+ "leds": [{"at": [660, 1300], "color": [1.0, 0.1, 0.06], "strength": 45}],
+ "footswitches": [[660, 2060, 1.05]],
+ "screws": [],
+ "key": 2400, "rim": 700,
+ "rimcolor": [0.6, 0.75, 1.0],
+ "world": [0.006, 0.006, 0.008]
+}

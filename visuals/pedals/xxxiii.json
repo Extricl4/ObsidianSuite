@@ -1,0 +1,17 @@
+{
+ "art": "art/xxxiii_art.png",
+ "glow": "art/xxxiii_glow.png",
+ "glow_strength": 1.2,
+ "artmat": {"rough": 0.1, "metal": 0.0},
+ "enclosure": {"color": [0.045, 0.045, 0.048], "metal": 0.1, "rough": 0.86, "bump": ["noise", 600, 0.1]},
+ "knobs": [
+  {"at": [380, 520], "r": 0.72, "style": "black", "v": 0.55},
+  {"at": [940, 520], "r": 0.72, "style": "black", "v": 0.7}
+ ],
+ "leds": [{"at": [660, 1240], "color": [1.0, 0.1, 0.06], "strength": 45}],
+ "footswitches": [[660, 2080, 1.05]],
+ "screws": [],
+ "key": 2400, "rim": 700,
+ "rimcolor": [1.0, 0.35, 0.3],
+ "world": [0.006, 0.006, 0.007]
+}

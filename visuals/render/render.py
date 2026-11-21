@@ -85,7 +85,31 @@ setmat(enc, mat('enc', tuple(e['color'])+(1,), e.get('metal',0), e.get('rough',.
 def plane(path, z, m):
     p = add(bpy.ops.mesh.primitive_plane_add, size=1, location=(0,0,z)); p.scale=(W-0.02, L-0.02, 1)
     bpy.ops.object.transform_apply(scale=True); setmat(p, m); return p
-if spec.get('art'):
+def engrave_mat(path, e, ink):
+    # opaque top plate: enclosure finish where the art is empty, ink finish in the lines; lines cut into the surface
+    m = bpy.data.materials.new('engrave'); m.use_nodes = True; nt = m.node_tree; nt.nodes.clear()
+    out = nt.nodes.new('ShaderNodeOutputMaterial')
+    t = nt.nodes.new('ShaderNodeTexImage'); t.image = bpy.data.images.load(path); t.interpolation = 'Cubic'
+    base = nt.nodes.new('ShaderNodeBsdfPrincipled'); base.inputs['Base Color'].default_value = tuple(e['color'])+(1,)
+    base.inputs['Metallic'].default_value = e.get('metal',0); base.inputs['Roughness'].default_value = e.get('rough',.55); base.inputs['Coat Weight'].default_value = e.get('coat',0)
+    ik = nt.nodes.new('ShaderNodeBsdfPrincipled'); nt.links.new(t.outputs['Color'], ik.inputs['Base Color'])
+    ik.inputs['Metallic'].default_value = ink.get('metal',0); ik.inputs['Roughness'].default_value = ink.get('rough',.2)
+    # shared bump: alpha = depth of the cut, plus the enclosure's grain
+    tc = nt.nodes.new('ShaderNodeTexCoord'); nz = nt.nodes.new('ShaderNodeTexNoise'); nz.inputs['Scale'].default_value = e.get('bump',['noise',500,.1])[1]; nz.inputs['Detail'].default_value = 8
+    nt.links.new(tc.outputs['Object'], nz.inputs['Vector'])
+    hm = nt.nodes.new('ShaderNodeMath'); hm.operation = 'MULTIPLY_ADD'; hm.inputs[1].default_value = -ink.get('depth', 1.0)
+    nt.links.new(t.outputs['Alpha'], hm.inputs[0])
+    nm = nt.nodes.new('ShaderNodeMath'); nm.operation = 'MULTIPLY'; nm.inputs[1].default_value = e.get('bump',['noise',500,.1])[2]*0.15
+    nt.links.new(nz.outputs['Fac'], nm.inputs[0]); nt.links.new(nm.outputs[0], hm.inputs[2])
+    bp = nt.nodes.new('ShaderNodeBump'); bp.inputs['Strength'].default_value = ink.get('strength', 0.6); bp.inputs['Distance'].default_value = ink.get('distance', 0.02)
+    nt.links.new(hm.outputs[0], bp.inputs['Height'])
+    for b in (base, ik): nt.links.new(bp.outputs['Normal'], b.inputs['Normal'])
+    mx = nt.nodes.new('ShaderNodeMixShader'); nt.links.new(t.outputs['Alpha'], mx.inputs[0])
+    tr = nt.nodes.new('ShaderNodeBsdfTransparent'); nt.links.new(tr.outputs[0], mx.inputs[1]); nt.links.new(ik.outputs[0], mx.inputs[2]); nt.links.new(mx.outputs[0], out.inputs['Surface'])
+    return m
+if spec.get('art') and spec.get('engrave'):
+    plane(spec['art'], TOP+0.002, engrave_mat(spec['art'], e, spec['engrave']))
+elif spec.get('art'):
     a = spec.get('artmat', {})
     plane(spec['art'], TOP+0.002, img_mat('art', spec['art'], a.get('rough',.3), a.get('metal',0)))
 if spec.get('glow'):

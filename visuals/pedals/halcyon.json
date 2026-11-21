@@ -1,0 +1,8 @@
+{"art": "art/halcyon_art.png", "glow": "art/halcyon_glow.png", "glow_strength": 0.8,
+ "artmat": {"rough": 0.35, "metal": 0.0},
+ "enclosure": {"color": [0.72, 0.66, 0.86], "metal": 0.45, "rough": 0.28, "coat": 0.8, "bump": ["noise", 400, 0.03]},
+ "knobs": [{"at": [250, 540], "r": 0.66, "style": "alu", "v": 0.7}, {"at": [660, 540], "r": 0.66, "style": "alu", "v": 0.8}, {"at": [1070, 540], "r": 0.66, "style": "alu", "v": 0.45}],
+ "toggles": [[660, 900, -18]],
+ "leds": [{"at": [660, 1300], "color": [0.75, 0.6, 1.0], "strength": 35}],
+ "footswitches": [[660, 2150, 1.05]], "screws": [[110,110],[1210,110],[110,2290],[1210,2290]],
+ "rimcolor": [1.0, 0.8, 0.95]}

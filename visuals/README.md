@@ -18,6 +18,11 @@ python3 render/head.py   -- cabs/nyx_cab.json angle    # 3/4 showroom view
 python3 render/render.py -- pedals/seraph.json [prev]
 ```
 
+## Engraved pedals (2026-11-21)
+New pedal art is drawn by `tools/art_<key>.py` (shared helpers in `tools/pedal_art_lib.py`: 3x supersampled plate, tapered strokes, vine scrolls, leaves, thorns).
+Add `"engrave": {rough, metal, depth, strength, distance}` to a pedal spec to cut the art into the surface instead of printing it on top.
+Wide pedals set `size`, `res` and `cam` (see `pedals/aeon.json`).
+
 ## Tweak loop
 1. Collect several changes for one item.
 2. Edit its spec (and art texture if a label or mask changes).

@@ -1,0 +1,92 @@
+{
+ "art": "art/graven_art.png",
+ "glow": "art/graven_glow.png",
+ "glow_strength": 1.2,
+ "artmat": {
+  "rough": 0.12,
+  "metal": 0.0
+ },
+ "enclosure": {
+  "color": [
+   0.05,
+   0.051,
+   0.055
+  ],
+  "metal": 0.15,
+  "rough": 0.8,
+  "bump": [
+   "noise",
+   500,
+   0.12
+  ]
+ },
+ "knobs": [
+  {
+   "at": [
+    660,
+    640
+   ],
+   "r": 1.05,
+   "style": "black",
+   "v": 0.5,
+   "h": 1.15
+  },
+  {
+   "at": [
+    250,
+    1060
+   ],
+   "r": 0.42,
+   "style": "black",
+   "v": 0.55
+  }
+ ],
+ "toggles": [
+  [
+   1070,
+   1060,
+   -18
+  ]
+ ],
+ "leds": [
+  {
+   "at": [
+    660,
+    1300
+   ],
+   "color": [
+    1.0,
+    0.12,
+    0.06
+   ],
+   "strength": 45
+  }
+ ],
+ "footswitches": [
+  [
+   660,
+   2060,
+   1.05
+  ]
+ ],
+ "screws": [],
+ "key": 2400,
+ "rimcolor": [
+  1.0,
+  0.35,
+  0.25
+ ],
+ "world": [
+  0.006,
+  0.006,
+  0.007
+ ],
+ "rim": 700,
+ "engrave": {
+  "rough": 0.14,
+  "metal": 0.0,
+  "depth": 1.0,
+  "strength": 0.8,
+  "distance": 0.03
+ }
+}
