@@ -313,7 +313,7 @@ async def run(standalone):
         check(await pg.evaluate("window.__mock.log.some(x=>x[0]==='ampDim'&&x[1]===1)"), 'MODE button switches the mode')
         await pg.evaluate("window.__mock.meterExtra = {ampA: 3, ampB: 4, ampF: .4, cabIn: false}"); await pg.wait_for_timeout(300)
         rd = await pg.evaluate("document.querySelector('.obs-faceread').textContent")
-        check('Blending' in rd and '60%' in rd and '40%' in rd, f'readout says which captures play ({rd[:90]})')
+        check('Channel' in rd and 'Mesa' not in rd and '.nam' not in rd and '[18dBu]' not in rd, f'readout shows the channel and mode, no file names ({rd[:90]})')
         await pg.screenshot(path=str(OUT / 'amp-face.png'))
         await pg.evaluate("window.__mock.log.length=0")
         await pg.locator('.obs-face .ff-pw').click(); await pg.wait_for_timeout(300)

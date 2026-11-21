@@ -134,6 +134,7 @@
 .obs-faceread b { font-weight: 600; color: rgb(var(--cf_e9e6df)); letter-spacing: .04em; }
 .obs-faceread span { overflow: hidden; text-overflow: ellipsis; }
 .obs-faceread em { font-style: normal; font-size: 9px; letter-spacing: .16em; color: var(--accent); }
+.obs-faceread u { text-decoration: none; font-size: 9px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); opacity: .85; }
 .obs-tile.haspic { position: relative; overflow: hidden; padding-top: 48px !important; }
 .obs-grid .obs-tile.haspic[data-amp] { height: 128px; }
 .obs-tilepic { position: absolute; left: 0; right: 0; top: 0; height: 44px; background-size: cover; background-position: center 35%; opacity: .85; pointer-events: none;

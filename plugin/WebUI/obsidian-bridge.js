@@ -1147,23 +1147,24 @@ function drawFace(pwr) {
 function faceReadout() {
   const el = faceUi.read; if (!el || !faceUi.info) return;
   const I = faceUi.info, F = I.face, f = faceState(), m = faceUi.meters;
+  // what you'd read on the amp itself: channel, mode / voice, switches. No file names.
   let ch = F.dims.length ? F.dims.map((d, i) => (d.id === 'boost' && d.names && faceDimVal(i) === 0) ? '' : faceDimName(i)).filter(Boolean).join(' · ') : 'Single channel';
   if (F.sel) { const si = Math.round(faceKnobVal(F.sel.knob) * (F.sel.names.length - 1)); if (si > 0) ch = F.sel.label + ' · ' + F.sel.names[si]; }
   (F.switches || []).forEach((w, i) => { if (f.switches && f.switches[i]) ch += ' · ' + w.label; });
-  const nm = i => (I.bank || [])[i] || '?';
-  let cap;
-  if (!faceOn()) cap = 'The amp is off (click its power lamp or double-click the AMP tab)';
-  else if (f.ok === false) cap = 'Its amp file is missing: install the amp pack';
-  else if (!f.loaded) cap = 'Loading ' + (I.bank || []).length + ' captures…';
-  else if (m.ampA == null || m.ampA < 0) cap = '';
-  else cap = m.ampB >= 0 && m.ampF > .03 ? 'Blending ' + nm(m.ampA) + '  ' + Math.round((1 - m.ampF) * 100) + '%  ·  ' + nm(m.ampB) + '  ' + Math.round(m.ampF * 100) + '%' : 'Playing ' + nm(m.ampA);
-  const html = '<b>' + esc(ch) + '</b><span>' + esc(cap) + '</span>' + (m.cabIn && faceOn() && f.loaded ? '<em>THE CAB IS IN THIS CAPTURE · CAB SECTION BYPASSED</em>' : '');
+  const note = (faceCap().note || '');
+  let tail;
+  if (!faceOn()) tail = 'Amp off';
+  else if (f.ok === false) tail = 'Amp pack not installed';
+  else if (!f.loaded) tail = 'Loading the amp…';
+  else tail = note ? note.charAt(0).toUpperCase() + note.slice(1) : '';
+  const html = '<b>' + esc(ch) + '</b>' + (I.role ? '<u>' + esc(I.role) + '</u>' : '') + '<span>' + esc(tail) + '</span>'
+    + (m.cabIn && faceOn() && f.loaded ? '<em>CAB INCLUDED IN THIS CHANNEL</em>' : '');
   if (html !== faceUi.readHtml) { faceUi.readHtml = html; el.innerHTML = html; }
 }
 function faceMeters(m) {
   const fm = faceUi.meters;
-  if (fm.ampA === m.ampA && fm.ampB === m.ampB && Math.abs((fm.ampF || 0) - (m.ampF || 0)) < .01 && fm.cabIn === m.cabIn) return;
-  fm.ampA = m.ampA; fm.ampB = m.ampB; fm.ampF = m.ampF; fm.cabIn = m.cabIn;
+  if (fm.cabIn === !!m.cabIn) return;
+  fm.cabIn = !!m.cabIn;
   if (faceUi.info) faceReadout();
 }
 /** Called from renderAmp: shows the face for a capture amp, the plain panel for everything else. */
