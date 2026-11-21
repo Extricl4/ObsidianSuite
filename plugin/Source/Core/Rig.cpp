@@ -537,7 +537,7 @@ juce::var Rig::ampLibrary()
                 c = cf.getFullPathName();
             }
         o->setProperty ("builtIn", false);
-        if (v["folder"].toString().isEmpty()) o->setProperty ("folder", "YOUR AMPS");
+        if (v["folder"].toString().isEmpty()) o->setProperty ("folder", "CAPTURE AMPS");   // the amp pack and amps you add
         list.add (v);
     }
     return list;
@@ -566,7 +566,6 @@ juce::var Rig::cabLibrary()
             if (p.isNotEmpty() && ! juce::File::isAbsolutePath (p)) o->setProperty (k, contentFolder().getChildFile ("IRs").getChildFile (p).getFullPathName());
         }
         o->setProperty ("builtIn", false);
-        if (v["folder"].toString().isEmpty()) o->setProperty ("folder", "YOUR AMPS");
         list.add (v);
     }
     return list;

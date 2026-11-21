@@ -946,7 +946,7 @@ function renderLib(p) {
       const folders = [...new Set(AMPS.map(a => a.folder).filter(Boolean))];
       head = folders.map(f => {
         const inF = AMPS.filter(a => a.folder === f), here = inF.find(a => a.key === cur);
-        const sub = f === 'OBSIDIAN AMPS' ? 'Our in-house amps, each modelled on a classic' : 'Amps you added';
+        const sub = f === 'OBSIDIAN AMPS' ? 'Our in-house amps, each modelled on a classic' : f === 'CAPTURE AMPS' ? 'Amps made from NAM captures' : 'Amps you added';
         return '<button class="obs-tile obs-ampfolder' + (here ? ' has' : '') + '" data-amp-folder="' + esc(f) + '"><i>' + inF.length + ' AMPS</i><b>' + esc(f) + '</b><small>' + esc(here ? 'Playing now: ' + here.name : sub) + '</small></button>';
       }).join('');
     }
