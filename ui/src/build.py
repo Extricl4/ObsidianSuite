@@ -4,7 +4,8 @@
     python ui/src/build.py
 
   base.html  - the page (layout, knobs, pages, settings, base script)
-  synth.js   - SYNTH page logic + plugin hooks (window.obsSynth)
+  synth.js   - the SYNTH page (built in script) + plugin hooks (window.obsSynth)
+  header.js  - header knobs (TRANSPOSE, WIDTH) and knob wheel / double-click
   studio.js  - STUDIO recorder
   themes.js  - Obsidian / Matte / Midnight themes
 The same file runs in a browser (demo) and inside the plugin, where
@@ -22,7 +23,15 @@ rep("const ACC0='#f3ead8';","var ACC0='#f3ead8';")
 rep("""const td=$('[aria-label="Transpose down"]'); if(td) td.parentElement.children[1].children[0].textContent='0';""","""if(window.setTranspose) setTranspose(0);""")
 rep("setInterval(()=>{ meters.forEach(","setInterval(()=>{ if(window.__JUCE__) return; meters.forEach(")
 rep("setInterval(()=>{ const c=Math.round(Math.random()*8-5);","setInterval(()=>{ if(window.__JUCE__) return; const c=Math.round(Math.random()*8-5);")
-i=h.rfind('</body>'); h=h[:i]+open('synth.js').read()+'\n'+open('studio.js').read()+'\n'+h[i:]
+# the SYNTH page is built by synth.js: drop the old static markup of that page
+a=h.find('<div class="page" data-page="SYNTH"'); assert a>0
+b=h.find('>',a)+1; depth=1; i=b
+while depth:
+    o=h.find('<div',i); c=h.find('</div>',i)
+    if o!=-1 and o<c: depth+=1; i=o+4
+    else: depth-=1; i=c+6
+h=h[:b]+h[i-6:]
+i=h.rfind('</body>'); h=h[:i]+open('synth.js').read()+'\n'+open('header.js').read()+'\n'+open('studio.js').read()+'\n'+h[i:]
 
 # ---------- theme: greys -> CSS variables ----------
 DATA=[]; 

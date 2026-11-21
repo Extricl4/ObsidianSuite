@@ -336,21 +336,101 @@ int runSelfTest (const juce::StringArray& args)
     }
 
     // ---------------------------------------------------------------- 6. synth
-    r.head ("Guitar synth");
+    r.head ("Synth");
     {
+        auto& e = p.engine();
         setNorm (p, "synth.on", 1); setNorm (p, "syn.arp.on", 0); setReal (p, "syn.mix", 80);
-        float act = 0;
-        render (p, SR, BLOCK, 1.0, [&] (int i) { if (i % (int) (SR * 0.5) == 0) g.pluck (110.f, 0.5f); act = juce::jmax (act, p.engine().synthActivity()); return g.next(); });
-        r.check (act > 0.01f, "synth follows a plucked A2 (activity " + juce::String (act, 3) + ")");
-        setNorm (p, "syn.arp.on", 1);
-        auto st = render (p, SR, BLOCK, 1.0, riff);
-        r.check (st.finite && st.peak <= 2.f, "arpeggiator runs cleanly");
-        for (int slope = 0; slope < 4; ++slope)
+        setNorm (p, "amp.on", 0); setNorm (p, "cab.on", 0);
+        // the guitar plays it
+        float act = 0, seen = -1;
+        render (p, SR, BLOCK, 1.0, [&] (int i) { if (i % (int) (SR * 0.5) == 0) g.pluck (110.f, 0.5f); act = juce::jmax (act, e.synthActivity()); if (e.synthNote() > 0) seen = e.synthNote(); return g.next(); });
+        r.check (act > 0.01f && std::abs (seen - 45.f) < 0.6f, "follows a plucked A2 (activity " + juce::String (act, 3) + ", note " + juce::String (seen, 2) + ")");
+        // HOLD keeps it droning after the string dies away
+        setNorm (p, "syn.hold", 1);
+        render (p, SR, BLOCK, 0.3, [&] (int i) { if (i == 0) g.pluck (110.f, 0.5f); return g.next(); });
+        render (p, SR, BLOCK, 1.5, [&] (int) { return 0.f; });
+        r.check (e.synthActivity() > 0.01f, "HOLD keeps the note after you stop (activity " + juce::String (e.synthActivity(), 3) + ")");
+        setNorm (p, "syn.hold", 0);
+        render (p, SR, BLOCK, 1.5, [&] (int) { return 0.f; });
+        r.check (e.synthActivity() < 0.01f, "turning HOLD off releases it");
+        // MIDI notes play it too
+        e.addSynthNote (0, 64, 0.9f);
+        render (p, SR, BLOCK, 0.3, [&] (int) { return 0.f; });
+        r.check (std::abs (e.synthNote() - 64.f) < 0.01f && e.synthActivity() > 0.05f, "MIDI note E4 plays (note " + juce::String (e.synthNote(), 2) + ")");
+        e.uiSynthNote (64, false);
+        render (p, SR, BLOCK, 1.0, [&] (int) { return 0.f; });
+        r.check (e.synthActivity() < 0.01f, "the UI's AUDITION note off releases it");
+
+        // chords follow the key: E minor, A played -> A C E (minor), G played -> G B D (major)
+        float ch[4];
+        int n3 = dsp::GuitarSynth::chordNotes (45, 3, 4, 1, ch);
+        const bool aMin = n3 == 3 && ch[0] == 45 && ch[1] == 48 && ch[2] == 52;
+        n3 = dsp::GuitarSynth::chordNotes (43, 3, 4, 1, ch);
+        const bool gMaj = n3 == 3 && ch[0] == 43 && ch[1] == 47 && ch[2] == 50;
+        r.check (aMin && gMaj, "CHORD triads follow the key (E minor: A gives A-C-E, G gives G-B-D)");
+
+        // everything at its extremes stays clean
+        bool ok = true; juce::String bad; float worst = 0;
+        auto midiRun = [&] (double secs) {
+            e.addSynthNote (0, 40, 1.f);
+            auto st = render (p, SR, BLOCK, secs, [&] (int) { return 0.f; });
+            e.addSynthNote (0, 40, 0.f);
+            render (p, SR, BLOCK, 0.05, [&] (int) { return 0.f; });
+            return st; };
+        for (int w = 0; w < 5; ++w)
+            for (int sync = 0; sync < 2; ++sync)
+            {
+                setReal (p, "syn.a.wave", (float) w); setReal (p, "syn.b.wave", (float) w); setNorm (p, "syn.b.sync", (float) sync);
+                setReal (p, "syn.a.shape", 100); setReal (p, "syn.b.shape", 100); setReal (p, "syn.a.voices", 3); setReal (p, "syn.b.voices", 3);
+                setReal (p, "syn.chord", 6); setReal (p, "syn.b.pitch", 19);
+                auto st = midiRun (0.25);
+                worst = juce::jmax (worst, st.peak);
+                if (! st.finite || st.peak > 2.f || st.rms < 0.001f) { ok = false; bad << " wave " << w << (sync ? " sync" : ""); }
+            }
+        r.check (ok, "every wave, full shape, 7-voice unison, 9th chords, with and without sync" + bad + " (peak " + juce::String (worst, 2) + ")");
+        ok = true; bad.clear();
+        for (int t = 0; t < 7; ++t)
         {
-            setReal (p, "syn.flt.slope", (float) slope); setReal (p, "syn.flt.res", 100);
-            auto s2 = render (p, SR, BLOCK, 0.5, riff);
-            r.check (s2.finite && s2.peak <= 2.f, "filter slope " + juce::String (6 * (slope + 1)) + " dB at full resonance is stable");
+            setReal (p, "syn.flt.type", (float) t); setReal (p, "syn.flt.res", 100); setReal (p, "syn.flt.drive", 100); setReal (p, "syn.flt.env", 100);
+            auto st = midiRun (0.3);
+            if (! st.finite || st.peak > 2.f) { ok = false; bad << " type " << t; }
         }
+        r.check (ok, "every filter type at full resonance and drive is stable" + bad);
+        ok = true; bad.clear();
+        for (int c = 0; c < 4; ++c)
+        {
+            setReal (p, "syn.char", (float) c); setReal (p, "syn.space", 100); setReal (p, "syn.lfo.depth", 100);
+            for (int t = 0; t < 5; ++t) { setReal (p, "syn.lfo.target", (float) t); auto st = midiRun (0.15); if (! st.finite || st.peak > 2.f) { ok = false; bad << " char " << c << " lfo " << t; } }
+        }
+        r.check (ok, "every character and LFO target (full depth, full space)" + bad);
+
+        // arpeggiator: every pattern, ratchets and chance; the step moves
+        setReal (p, "syn.chord", 3); setReal (p, "syn.flt.res", 30); setReal (p, "syn.flt.drive", 20); setReal (p, "syn.lfo.depth", 0);
+        unsigned steps[16];
+        for (int i = 0; i < 16; ++i) { obs::synthdefs::Step st; st.on = true; st.acc = i % 4 == 0; st.ratchet = 1 + i % 4; st.chance = i % 3 ? 100 : 50; st.oct = i % 5 == 0 ? 1 : 0; st.note = i % 15; steps[i] = obs::synthdefs::packStep (st); }
+        e.setSynthSteps (steps);
+        setNorm (p, "syn.arp.on", 1); ok = true;
+        juce::SortedSet<int> stepsSeen;
+        for (int pat = 0; pat < 5; ++pat)
+        {
+            setReal (p, "syn.arp.pattern", (float) pat);
+            e.addSynthNote (0, 45, 0.9f);
+            auto st = render (p, SR, BLOCK, 0.6, [&] (int) { if (e.synthStep() >= 0) stepsSeen.add (e.synthStep()); return 0.f; });
+            e.addSynthNote (0, 45, 0.f); render (p, SR, BLOCK, 0.05, [&] (int) { return 0.f; });
+            ok = ok && st.finite && st.peak <= 2.f && st.rms > 0.001f;
+        }
+        r.check (ok && stepsSeen.size() >= 4, "arpeggiator: up, down, up-down, random and steps, with ratchets and chance (" + juce::String (stepsSeen.size()) + " steps seen)");
+        auto st2 = render (p, SR, BLOCK, 1.0, riff);
+        r.check (st2.finite && st2.peak <= 2.f, "arpeggiator follows the guitar riff cleanly");
+
+        // CPU: the heaviest patch (4-note chord, two 7-voice super saws, sync, vowel filter, VHS, space)
+        setNorm (p, "syn.arp.on", 0);
+        setReal (p, "syn.a.wave", 4); setReal (p, "syn.b.wave", 4); setNorm (p, "syn.b.sync", 1); setReal (p, "syn.chord", 6);
+        setReal (p, "syn.flt.type", 6); setReal (p, "syn.char", 3); setReal (p, "syn.space", 80); setReal (p, "syn.sub.level", 60); setReal (p, "syn.noise.level", 30);
+        e.addSynthNote (0, 40, 1.f);
+        auto heavy = render (p, SR, BLOCK, 1.0, [&] (int) { return 0.f; });
+        e.addSynthNote (0, 40, 0.f); render (p, SR, BLOCK, 0.05, [&] (int) { return 0.f; });
+        r.check (heavy.finite && heavy.avgLoad < 0.35, "heaviest synth patch: " + juce::String (heavy.avgLoad * 100, 2) + "% of one core");
         p.presetManager().loadInit();
     }
 
@@ -700,14 +780,75 @@ int writeFactoryPresets (const juce::File& dir)
 
     b.reset();
     b.on ("synth.on", true); b.on ("syn.arp.on", true); b.set ("syn.mix", 55.f);
-    for (int s = 1; s <= 8; ++s) b.on ("syn.arp.s" + juce::String (s), s == 1 || s == 3 || s == 5 || s == 8);
-    b.set ("syn.arp.rate", 0.75f); b.on ("syn.arp.sync", true);
+    b.set ("syn.arp.rate", 3.f); b.set ("syn.chord", 3.f);
     b.set ("amp.gain", 2.6f);
     b.module (POST, 0, "crypt", { { "Decay", 4.f }, { "Mix", 30.f } });
     written += b.write (dir, "Arp Machine", "Synth");
 
     proc->releaseResources();
     std::cout << "Wrote " << written << " presets to " << dir.getFullPathName() << std::endl;
+    return written > 0 ? 0 : 1;
+}
+
+// =============================================================================
+//  Synth sound check. Run:  "Obsidian Amp Suite" --render-synth <folder>
+//  Renders a few synth patches played by MIDI notes to 48 kHz WAV files, so
+//  they can be listened to and measured (tools/amp-lab/synthcheck.py).
+// =============================================================================
+int renderSynthDemos (const juce::File& dir)
+{
+    dir.createDirectory();
+    auto proc = std::make_unique<ObsidianProcessor>();
+    auto& p = *proc;
+    const double sr = 48000; const int block = 256;
+    p.setPlayConfigDetails (2, 2, sr, block); p.prepareToPlay (sr, block);
+    struct Patch { const char* name; std::vector<std::pair<const char*, float>> set; std::vector<int> notes; double noteLen; };
+    const std::vector<Patch> patches = {
+        { "01-init",        {}, { 40, 43, 45, 47 }, 0.5 },
+        { "02-saw-raw-E6",  { { "syn.b.on", 0 }, { "syn.flt.on", 0 }, { "syn.a.voices", 0 }, { "syn.sub.level", 0 }, { "syn.char", 0 }, { "syn.space", 0 } }, { 88 }, 1.0 },
+        { "03-pulse-raw-E6",{ { "syn.b.on", 0 }, { "syn.flt.on", 0 }, { "syn.a.voices", 0 }, { "syn.a.wave", 1 }, { "syn.a.shape", 60 }, { "syn.sub.level", 0 }, { "syn.char", 0 }, { "syn.space", 0 } }, { 88 }, 1.0 },
+        { "04-sync-sweep",  { { "syn.a.on", 0 }, { "syn.b.sync", 1 }, { "syn.b.wave", 0 }, { "syn.b.pitch", 7 }, { "syn.b.fine", 30 }, { "syn.flt.on", 0 }, { "syn.sub.level", 0 }, { "syn.char", 0 }, { "syn.space", 0 } }, { 64 }, 1.0 },
+        { "05-supersaw-pad",{ { "syn.a.wave", 4 }, { "syn.a.detune", 40 }, { "syn.b.wave", 4 }, { "syn.b.pitch", 12 }, { "syn.chord", 3 }, { "syn.flt.type", 2 }, { "syn.flt.cutoff", 3000 }, { "syn.env.a.att", 400 }, { "syn.env.a.rel", 1200 }, { "syn.space", 60 } }, { 45, 43 }, 1.4 },
+        { "06-arp",         { { "syn.arp.on", 1 }, { "syn.chord", 3 }, { "syn.a.wave", 1 }, { "syn.flt.env", 70 }, { "syn.flt.cutoff", 700 }, { "syn.env.a.sus", 0 }, { "syn.env.a.dec", 250 }, { "syn.space", 40 } }, { 40, 45 }, 2.0 },
+        { "07-vowel-talk",  { { "syn.flt.type", 6 }, { "syn.flt.res", 60 }, { "syn.lfo.target", 1 }, { "syn.lfo.depth", 45 }, { "syn.lfo.rate", 1.5f }, { "syn.flt.env", 0 } }, { 40, 47 }, 1.2 },
+        { "08-8bit-arp",    { { "syn.char", 2 }, { "syn.arp.on", 1 }, { "syn.arp.rate", 4 }, { "syn.a.wave", 1 }, { "syn.a.shape", 50 }, { "syn.b.on", 0 }, { "syn.flt.on", 0 }, { "syn.arp.oct", 2 } }, { 52, 48 }, 1.5 },
+        { "09-vhs-lead",    { { "syn.char", 3 }, { "syn.glide", 120 }, { "syn.lfo.depth", 12 }, { "syn.lfo.fade", 400 }, { "syn.lfo.rate", 5.5f }, { "syn.legato", 1 } }, { 64, 67, 69, 71 }, 0.5 },
+        { "10-bass",        { { "syn.sub.level", 70 }, { "syn.flt.cutoff", 400 }, { "syn.flt.env", 60 }, { "syn.flt.drive", 50 }, { "syn.env.a.sus", 60 }, { "syn.b.pitch", -12 }, { "syn.space", 0 } }, { 28, 31, 33, 35 }, 0.4 },
+    };
+    int written = 0;
+    for (const auto& pt : patches)
+    {
+        p.presetManager().loadInit();
+        setNorm (p, "synth.on", 1); setNorm (p, "amp.on", 0); setNorm (p, "cab.on", 0); setNorm (p, "doubler.on", 0); setNorm (p, "gate.on", 0);
+        setNorm (p, "eq.on", 0); setNorm (p, "post.on", 0); setNorm (p, "pre.on", 0); setNorm (p, "sfx.on", 0);
+        setReal (p, "syn.mix", 100);
+        for (auto& kv : pt.set) setReal (p, kv.first, kv.second);
+        const double total = pt.notes.size() * pt.noteLen + 1.5;
+        juce::AudioBuffer<float> out (2, (int) (total * sr)); out.clear();
+        juce::AudioBuffer<float> buf (2, block); juce::MidiBuffer midi;
+        int noteIdx = -1;
+        for (int pos = 0; pos + block <= out.getNumSamples(); pos += block)
+        {
+            buf.clear(); midi.clear();
+            const int want = (int) (pos / (pt.noteLen * sr));
+            if (want != noteIdx && want < (int) pt.notes.size())
+            {
+                if (noteIdx >= 0) midi.addEvent (juce::MidiMessage::noteOff (1, pt.notes[(size_t) noteIdx]), 0);
+                noteIdx = want; midi.addEvent (juce::MidiMessage::noteOn (1, pt.notes[(size_t) noteIdx], (juce::uint8) 110), 1);
+            }
+            else if (want >= (int) pt.notes.size() && noteIdx >= 0 && noteIdx < (int) pt.notes.size())
+            { midi.addEvent (juce::MidiMessage::noteOff (1, pt.notes[(size_t) noteIdx]), 0); noteIdx = (int) pt.notes.size(); }
+            p.processBlock (buf, midi);
+            for (int c = 0; c < 2; ++c) out.copyFrom (c, pos, buf, c, 0, block);
+        }
+        auto f = dir.getChildFile (juce::String (pt.name) + ".wav"); f.deleteFile();
+        juce::WavAudioFormat wav;
+        if (auto os = std::unique_ptr<juce::OutputStream> (f.createOutputStream()))
+            if (auto w = std::unique_ptr<juce::AudioFormatWriter> (wav.createWriterFor (os.get(), sr, 2, 24, {}, 0)))
+            { os.release(); w->writeFromAudioSampleBuffer (out, 0, out.getNumSamples()); ++written; }
+    }
+    p.releaseResources();
+    std::cout << "Wrote " << written << " synth demos to " << dir.getFullPathName() << std::endl;
     return written > 0 ? 0 : 1;
 }
 } // namespace obs

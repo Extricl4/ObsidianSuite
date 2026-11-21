@@ -18,6 +18,7 @@ namespace obs
 {
 int runSelfTest (const juce::StringArray& args);
 int writeFactoryPresets (const juce::File& dir);
+int renderSynthDemos (const juce::File& dir);
 
 class MainWindow : public juce::DocumentWindow
 {
@@ -81,6 +82,12 @@ public:
         if (const int i = args.indexOf ("--write-factory-presets"); i >= 0)
         {
             setApplicationReturnValue (writeFactoryPresets (juce::File::getCurrentWorkingDirectory().getChildFile (args[i + 1].unquoted())));
+            quit();
+            return;
+        }
+        if (const int i = args.indexOf ("--render-synth"); i >= 0)
+        {
+            setApplicationReturnValue (renderSynthDemos (juce::File::getCurrentWorkingDirectory().getChildFile (args[i + 1].unquoted())));
             quit();
             return;
         }

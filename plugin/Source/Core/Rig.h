@@ -53,6 +53,9 @@ public:
     void loadModuleFile (int rack, int slot, const juce::File& file);
     // ---- misc ------------------------------------------------------------------------
     void setMisc (const juce::String& key, const juce::var& value);
+    /** Arpeggiator steps: an array (or comma list) of 16 packed numbers. Stored with the rig. */
+    void setSynthSteps (const juce::var& steps);
+    void applySynthSteps();
     juce::var getMisc (const juce::String& key, const juce::var& def = {}) const;
 
     juce::var toJson() const;                       // for the UI

@@ -99,6 +99,20 @@ void ObsidianProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
     midiMapper.process (midi, midiChannel.load(), pcLoadsPresets.load());
     midiMapper.blockDone();
 
+    // MIDI notes play the synth (a keyboard, or notes from the DAW).
+    {
+        const int chan = midiChannel.load();
+        for (const auto meta : midi)
+        {
+            const auto msg = meta.getMessage();
+            if (chan > 0 && msg.getChannel() != chan) continue;
+            if (msg.isNoteOn())                              dsp.addSynthNote (meta.samplePosition, msg.getNoteNumber(), msg.getFloatVelocity());
+            else if (msg.isNoteOff())                        dsp.addSynthNote (meta.samplePosition, msg.getNoteNumber(), 0.f);
+            else if (msg.isAllNotesOff() || msg.isAllSoundOff())
+                for (int nn = 0; nn < 128; ++nn) dsp.addSynthNote (meta.samplePosition, nn, 0.f);
+        }
+    }
+
     HostInfo host;
     if (auto* ph = getPlayHead())
         if (auto pos = ph->getPosition())

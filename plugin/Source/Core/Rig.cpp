@@ -1,5 +1,6 @@
 #include "Rig.h"
 #include <juce_audio_formats/juce_audio_formats.h>
+#include "../DSP/SynthDefs.h"
 
 namespace obs
 {
@@ -120,6 +121,7 @@ void Rig::applyAll()
     applyAmp();
     applyCab();
     for (int r = 0; r < kNumRacks; ++r) for (int s = 0; s < kSlotsPerRack; ++s) applySlot (r, s);
+    applySynthSteps();
     notifyChanged();
 }
 
@@ -469,6 +471,24 @@ void Rig::setMisc (const juce::String& key, const juce::var& value)
 {
     rig.getChildWithName ("MISC").setProperty (key, value, nullptr);
 }
+void Rig::setSynthSteps (const juce::var& v)
+{
+    juce::StringArray parts;
+    if (auto* a = v.getArray()) for (auto& x : *a) parts.add (juce::String ((juce::int64) x));
+    else parts = juce::StringArray::fromTokens (v.toString(), ",", "");
+    if (parts.size() != 16) return;
+    setMisc ("synSteps", parts.joinIntoString (","));
+    applySynthSteps();
+}
+
+void Rig::applySynthSteps()
+{
+    unsigned s[16];
+    const auto parts = juce::StringArray::fromTokens (getMisc ("synSteps", {}).toString(), ",", "");
+    for (int i = 0; i < 16; ++i) s[i] = parts.size() == 16 ? (unsigned) parts[i].getLargeIntValue() : obs::synthdefs::defaultStep (i);
+    engine.setSynthSteps (s);
+}
+
 juce::var Rig::getMisc (const juce::String& key, const juce::var& def) const
 {
     auto m = rig.getChildWithName ("MISC");

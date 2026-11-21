@@ -221,8 +221,16 @@ function setupBindings() {
 
   /* ---- synth page (synth.js exposes all of its state) ---- */
   if (window.obsSynth) safe('synth', () => {
-    const ids = Object.keys(window.obsSynth.read());
-    addBinding({ ids, read: () => window.obsSynth.read(), write: v => window.obsSynth.write(v) });
+    const S = window.obsSynth;
+    const ids = Object.keys(S.read());
+    addBinding({ ids, read: () => S.read(), write: v => S.write(v) });
+    // arpeggiator steps travel with the rig (presets), not as parameters
+    if (S.onSteps) S.onSteps(from => { if (applying) return; const list = S.getSteps(); call('setSynthSteps', list); if (rig) { rig.misc = rig.misc || {}; rig.misc.synSteps = list.join(','); } });
+    // AUDITION / computer keys play the real engine; the synth tab must be on to hear it
+    S.noteOut = (note, isOn) => {
+      if (isOn && (vals['synth.on'] || 0) < .5) { vals['synth.on'] = 1; call('setParam', 'synth.on', 1); bypassed.delete('SYNTH'); if (typeof styleTabs === 'function') styleTabs(); say('Synth switched on'); }
+      call('synthNote', note, !!isOn);
+    };
   });
 
   /* ---- cab page ---- */
@@ -348,6 +356,10 @@ document.addEventListener('click', e => {
 let meterEls = null, cpuSpan = null;
 const dbPct = lin => { const db = 20 * Math.log10(Math.max(lin, 1e-6)); return clamp((db + 60) / 60 * 100, 2, 100); };
 function showMeters(m) {
+  if (window.obsSynth && window.obsSynth.live) safe('synth live', () => {
+    window.obsSynth.live({ note: m.synNote, step: m.synStep, level: Math.min(1, (m.synth || 0) * 1.4), src: ['guitar', 'midi', 'hold'][m.synSrc] || 'guitar' });
+    if (m.bpm) window.obsSynth.setBpm(m.bpm);
+  });
   if (!meterEls) {
     meterEls = (typeof meters !== 'undefined' ? meters : []).map(x => x.d);
     cpuSpan = $$('span').find(s => /^CPU \d+%$/.test(txt(s)));
@@ -665,6 +677,10 @@ function applyRig(r) {
     const n = $('.eqname'); if (n && m.eqPreset) n.textContent = m.eqPreset;
     if (m.beats) markTimeSig(+m.beats);
     const acc = $('.tog[aria-label="Accent first beat"]'); if (acc && m.accent !== undefined) setTog(acc, !!m.accent);
+    if (window.obsSynth && window.obsSynth.setSteps) {
+      const list = m.synSteps ? String(m.synSteps).split(',').map(Number) : null;
+      applying++; try { window.obsSynth.setSteps(list && list.length === 16 ? list : window.obsSynth.defaultSteps()); } finally { applying--; }
+    }
   });
 }
 function renderRack(ri) {

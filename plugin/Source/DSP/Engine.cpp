@@ -23,19 +23,8 @@ void Engine::attach (juce::AudioProcessorValueTreeState& state)
         p.mic[m] = { g (k + "mic"), g (k + "pos"), g (k + "dist"), g (k + "level"), g (k + "pan"), g (k + "solo"), g (k + "mute"), g (k + "phase") };
     }
     p.cabLc = g ("cab.lc"); p.cabHc = g ("cab.hc");
-    p.sGate = g ("syn.gate"); p.sSens = g ("syn.sens"); p.sGlide = g ("syn.glide"); p.sMix = g ("syn.mix"); p.sOut = g ("syn.out");
-    p.sDecay = g ("syn.decay"); p.sSustain = g ("syn.sustain");
-    for (int o = 0; o < 2; ++o)
-    {
-        const juce::String n (o + 1);
-        p.osc[o] = { g ("syn.o" + n + ".on"), g ("syn.o" + n + ".wave"), g ("syn.o" + n + ".semi"), g ("syn.o" + n + ".det"), g ("syn.o" + n + ".level"),
-                     g ("syn.u" + n + ".width"), g ("syn.u" + n + ".det") };
-    }
-    p.fOn = g ("syn.flt.on"); p.fCut = g ("syn.flt.cutoff"); p.fRes = g ("syn.flt.res"); p.fAtt = g ("syn.flt.attack"); p.fDrive = g ("syn.flt.drive");
-    p.fSlope = g ("syn.flt.slope"); p.fEnv = g ("syn.flt.env"); p.retrig = g ("syn.retrig"); p.post = g ("syn.post");
-    p.arpOn = g ("syn.arp.on"); for (int s = 0; s < 8; ++s) p.arpStep[s] = g ("syn.arp.s" + juce::String (s + 1));
-    p.arpKey = g ("syn.arp.key"); p.arpScale = g ("syn.arp.scale"); p.arpOct = g ("syn.arp.oct"); p.arpPattern = g ("syn.arp.pattern");
-    p.arpRate = g ("syn.arp.rate"); p.arpSync = g ("syn.arp.sync"); p.tune = g ("syn.tune");
+    for (int i = 0; i < obs::synthdefs::count; ++i) p.syn[i] = g (obs::synthdefs::table()[i].id);
+    for (int i = 0; i < 16; ++i) synthSteps[i].store (obs::synthdefs::defaultStep (i));
     for (int r = 0; r < kNumRacks; ++r) racks[r].attach (params, r);
 }
 
@@ -76,22 +65,10 @@ int Engine::latencySamples()
 
 void Engine::readSynthParams (SynthParams& sp, const HostInfo& h)
 {
-    auto v = [] (std::atomic<float>* a) { return a->load (std::memory_order_relaxed); };
-    sp.gateDb = v (p.sGate); sp.sens = v (p.sSens); sp.glideMs = v (p.sGlide); sp.mix = v (p.sMix); sp.outDb = v (p.sOut);
-    sp.decayMs = v (p.sDecay); sp.sustain = v (p.sSustain);
-    for (int o = 0; o < 2; ++o)
-    {
-        auto& d = sp.osc[o]; auto& s = p.osc[o];
-        d.on = v (s.on) > 0.5f; d.wave = (int) v (s.wave); d.semi = (int) std::round (v (s.semi)); d.det = v (s.det); d.level = v (s.level);
-        d.uWidth = v (s.uWidth); d.uDet = v (s.uDet);
-    }
-    sp.fltOn = v (p.fOn) > 0.5f; sp.cutoff = v (p.fCut); sp.res = v (p.fRes); sp.attackMs = v (p.fAtt); sp.drive = v (p.fDrive);
-    sp.slope = (int) v (p.fSlope); sp.envAmt = v (p.fEnv); sp.retrig = v (p.retrig) > 0.5f;
-    sp.arpOn = v (p.arpOn) > 0.5f; for (int s = 0; s < 8; ++s) sp.steps[s] = v (p.arpStep[s]) > 0.5f;
-    sp.key = (int) v (p.arpKey); sp.scale = (int) v (p.arpScale); sp.octave = (int) v (p.arpOct); sp.pattern = (int) v (p.arpPattern);
-    sp.rate = v (p.arpRate); sp.sync = v (p.arpSync) > 0.5f; sp.tuneHz = v (p.tune);
-    // The synth follows the transposed pitch.
-    sp.tuneHz *= std::pow (2.f, std::round (v (p.transpose)) / 12.f);
+    for (int i = 0; i < obs::synthdefs::count; ++i) sp.v[i] = p.syn[i]->load (std::memory_order_relaxed);
+    for (int i = 0; i < 16; ++i) sp.steps[i] = synthSteps[i].load (std::memory_order_relaxed);
+    // The guitar notes follow the plugin's transpose.
+    sp.transposeSemis = std::round (p.transpose->load (std::memory_order_relaxed));
     sp.bpm = h.bpm; sp.hostPlaying = h.playing; sp.ppq = h.ppq;
 }
 
@@ -108,6 +85,23 @@ void Engine::process (juce::AudioBuffer<float>& buffer, int numIn, const HostInf
 
     auto v = [] (std::atomic<float>* a) { return a->load (std::memory_order_relaxed); };
     const bool stereoOut = buffer.getNumChannels() >= 2;
+
+    // Notes from the UI (AUDITION / computer keys) play at the start of this block, before any MIDI.
+    {
+        int s1, n1, s2, n2; uiNotes.prepareToRead (uiNotes.getNumReady(), s1, n1, s2, n2);
+        const int ui = juce::jmin (n1 + n2, kMaxSynthNotes - numSynthNotes);
+        if (ui > 0)
+        {
+            std::memmove (synthNotes + ui, synthNotes, sizeof (SynthNote) * (size_t) numSynthNotes);
+            for (int k = 0; k < ui; ++k)
+            {
+                const int c = uiNoteBuf[(size_t) (k < n1 ? s1 + k : s2 + (k - n1))];
+                synthNotes[k] = c >= 0 ? SynthNote { 0, c, 0.85f } : SynthNote { 0, -1 - c, 0.f };
+            }
+            numSynthNotes += ui;
+        }
+        uiNotes.finishedRead (n1 + n2);
+    }
 
     // Process in chunks no larger than the prepared block size (hosts sometimes send more).
     for (int start = 0; start < total; start += maxBlock)
@@ -135,13 +129,18 @@ void Engine::process (juce::AudioBuffer<float>& buffer, int numIn, const HostInf
 
         // ---- synth ------------------------------------------------------------------------
         const bool synthOn = v (p.synthOn) > 0.5f;
-        const bool synthPost = v (p.post) > 0.5f;
+        const bool synthPost = v (p.syn[obs::synthdefs::post]) > 0.5f;
         float synthMix = 0.f;
         if (synthOn)
         {
             SynthParams sp; readSynthParams (sp, host);
-            synth.process (x, synthL.data(), synthR.data(), n, sp, pitch);
-            synthMix = sp.mix * 0.01f;
+            // this chunk's notes, with offsets relative to the chunk
+            SynthNote chunkNotes[64]; int numChunk = 0;
+            for (int e = 0; e < numSynthNotes && numChunk < 64; ++e)
+                if (synthNotes[e].offset >= start && synthNotes[e].offset < start + n)
+                    chunkNotes[numChunk++] = { synthNotes[e].offset - start, synthNotes[e].note, synthNotes[e].vel };
+            synth.process (x, synthL.data(), synthR.data(), n, sp, pitch, chunkNotes, numChunk);
+            synthMix = sp.v[obs::synthdefs::mix] * 0.01f;
             if (! synthPost)
                 for (int i = 0; i < n; ++i) x[i] = x[i] * (1.f - synthMix) + 0.5f * (synthL[(size_t) i] + synthR[(size_t) i]) * synthMix;
         }
@@ -212,6 +211,7 @@ void Engine::process (juce::AudioBuffer<float>& buffer, int numIn, const HostInf
     }
     // Any extra output channels: silence.
     for (int c = 2; c < buffer.getNumChannels(); ++c) buffer.clear (c, 0, total);
+    numSynthNotes = 0;          // this block's synth notes are used up
 
     // CPU meter: share of the real-time budget this block used.
     const double secs = juce::Time::highResolutionTicksToSeconds (juce::Time::getHighResolutionTicks() - t0);

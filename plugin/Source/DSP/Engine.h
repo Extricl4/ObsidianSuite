@@ -11,6 +11,7 @@
 #include "Sections.h"
 #include "PitchTracker.h"
 #include "GuitarSynth.h"
+#include <array>
 #include "AmpSection.h"
 #include "CabSection.h"
 #include "Modules/ModuleRegistry.h"
@@ -62,6 +63,23 @@ public:
     float outputPeakR() const                     { return outMeterR.read(); }
     float gateGain() const                        { return gate.currentGain(); }
     float synthActivity() const                   { return synth.currentActivity(); }
+    float synthNote() const                       { return synth.currentNote(); }
+    int   synthStep() const                       { return synth.currentStep(); }
+    int   synthSource() const                     { return synth.currentSource(); }
+
+    /** Arpeggiator steps (16 packed numbers, see SynthDefs.h). Any thread. */
+    void setSynthSteps (const unsigned* s)         { for (int i = 0; i < 16; ++i) synthSteps[i].store (s[i]); }
+    /** Audio thread, before process(): a MIDI note for the synth (vel 0 = off). */
+    void addSynthNote (int offset, int note, float vel)
+    {
+        if (numSynthNotes < kMaxSynthNotes) synthNotes[numSynthNotes++] = { offset, note, vel };
+    }
+    /** Message thread: the UI's AUDITION button / computer keys. */
+    void uiSynthNote (int note, bool on)
+    {
+        int s1, n1, s2, n2; uiNotes.prepareToWrite (1, s1, n1, s2, n2);
+        if (n1 > 0) { uiNoteBuf[(size_t) s1] = on ? note : -1 - note; uiNotes.finishedWrite (1); }
+    }
     float cpuLoad() const                         { return cpu.load(); }
     bool  takeClip()                              { return outMeterL.takeClip() | outMeterR.takeClip(); }
     double currentSampleRate() const              { return sr; }
@@ -91,6 +109,10 @@ private:
     std::atomic<float> cpu { 0.f };
 
     std::vector<float> mono, synthL, synthR, scratchR;
+    std::atomic<unsigned> synthSteps[16];
+    static constexpr int kMaxSynthNotes = 256;
+    dsp::SynthNote synthNotes[kMaxSynthNotes]; int numSynthNotes = 0;
+    juce::AbstractFifo uiNotes { 64 }; std::array<int, 64> uiNoteBuf {};
 
     // Cached parameter pointers (read every block, lock-free).
     struct P
@@ -101,11 +123,8 @@ private:
         std::atomic<float>* eqBand[kEqBands], *eqLc, *eqHc;
         struct Mic { std::atomic<float>* model, *pos, *dist, *level, *pan, *solo, *mute, *phase; } mic[2];
         std::atomic<float>* cabLc, *cabHc;
-        // synth
-        std::atomic<float>* sGate, *sSens, *sGlide, *sMix, *sOut, *sDecay, *sSustain;
-        struct Osc { std::atomic<float>* on, *wave, *semi, *det, *level, *uWidth, *uDet; } osc[2];
-        std::atomic<float>* fOn, *fCut, *fRes, *fAtt, *fDrive, *fSlope, *fEnv, *retrig, *post;
-        std::atomic<float>* arpOn, *arpStep[8], *arpKey, *arpScale, *arpOct, *arpPattern, *arpRate, *arpSync, *tune;
+        // synth: every parameter, by SynthDefs index
+        std::atomic<float>* syn[obs::synthdefs::count];
     } p {};
 };
 } // namespace obs

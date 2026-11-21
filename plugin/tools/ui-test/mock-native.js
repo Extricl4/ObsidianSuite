@@ -60,7 +60,7 @@
       t += 1;
       const lvl = 0.25 + 0.2 * Math.sin(t / 7);
       emit('obs:meters', { in: lvl, outL: lvl * 0.9, outR: lvl * 0.85, gate: 1, cpu: 0.06, clip: false,
-        tuner: { hz: 82.41 * Math.pow(2, (Math.sin(t / 15) * 8) / 1200), conf: 0.9, level: lvl }, beat: -1, synth: 0, bpm: 120, busy: false, latencyMs: 0 });
+        tuner: { hz: 82.41 * Math.pow(2, (Math.sin(t / 15) * 8) / 1200), conf: 0.9, level: lvl }, beat: -1, synth: 0, bpm: 120, busy: false, latencyMs: 0, synNote: -1, synStep: -1, synSrc: 0, ...(window.__mock.synthLive || {}) });
     }, 33);
   }
   window.__JUCE__ = {
@@ -79,7 +79,7 @@
     },
   };
   window.__mock = {
-    log, params, emit,
+    log, params, emit, get state() { return S; },
     load(state) { S = state; (S.params || []).forEach(p => params[p.id] = p.norm); },
     sent(id) { const l = log.filter(x => x[0] === 'setParam' && x[1] === id); return l.length ? l[l.length - 1][2] : undefined; },
   };

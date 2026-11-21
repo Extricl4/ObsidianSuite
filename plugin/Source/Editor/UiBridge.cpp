@@ -191,6 +191,13 @@ void UiBridge::buildCommands()
         chooseFile ("Load a pedal capture", "*.nam", false, [this, r, s] (juce::File f) { proc.rig().loadModuleFile (r, s, f); });
         d (true);
     };
+    // synth: a note from the UI (AUDITION, computer keys) and the arpeggiator steps
+    c["synthNote"]    = [this] (const juce::Array<juce::var>& a, Completion d) { proc.engine().uiSynthNote (juce::jlimit (0, 127, argInt (a, 0, 40)), a.size() > 1 && (bool) a[1]); d (true); };
+    c["setSynthSteps"]= [this] (const juce::Array<juce::var>& a, Completion d)
+    {
+        proc.rig().setSynthSteps (a.size() > 0 ? a[0] : juce::var());
+        proc.presetManager().markDirty(); d (true);
+    };
     c["setMisc"]      = [this] (const juce::Array<juce::var>& a, Completion d) { proc.rig().setMisc (argStr (a, 0), a.size() > 1 ? a[1] : juce::var()); proc.presetManager().markDirty(); d (true); };
 
     // ---- presets --------------------------------------------------------------------------
@@ -358,6 +365,7 @@ void UiBridge::timerCallback()
         { "in", e.inputPeak() }, { "outL", e.outputPeakL() }, { "outR", e.outputPeakR() }, { "gate", e.gateGain() },
         { "cpu", e.cpuLoad() }, { "clip", e.takeClip() }, { "tuner", tuner }, { "beat", e.metronomeBeat() },
         { "synth", e.synthActivity() }, { "bpm", e.effectiveBpm() }, { "busy", proc.rig().isBusy() },
+        { "synNote", e.synthNote() }, { "synStep", e.synthStep() }, { "synSrc", e.synthSource() },
         { "latencyMs", proc.getSampleRate() > 0 ? proc.getLatencySamples() * 1000.0 / proc.getSampleRate() : 0.0 } }));
 
     // Device info changes slowly; refresh it now and then for the settings page.

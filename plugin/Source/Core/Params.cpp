@@ -1,4 +1,5 @@
 #include "Params.h"
+#include "../DSP/SynthDefs.h"
 
 namespace obs
 {
@@ -68,54 +69,20 @@ std::vector<ParamDef> build()
     p.b  ("post.on",  "FX On",         true);
     p.b  ("sfx.on",   "Special FX On", true);
 
-    // ---- Synth (guitar-tracking) -------------------------------------------------------------
+    // ---- Synth (played by the guitar or MIDI): one table, see DSP/SynthDefs.h ------------------
     p.group = "synth";
-    p.f  ("syn.gate",    "Synth Gate",        -90.f, -30.f, -66.f, "dB");
-    p.f  ("syn.sens",    "Synth Sensitivity", 0.f, 100.f, 55.f, "%");
-    p.f  ("syn.glide",   "Synth Glide",       0.f, 1000.f, 62.5f, "ms", 0.5f);
-    p.f  ("syn.mix",     "Synth Mix",         0.f, 100.f, 60.f, "%");
-    p.f  ("syn.out",     "Synth Output",      -24.f, 12.f, 1.2f, "dB");
-    p.f  ("syn.decay",   "Synth Decay",       10.f, 5000.f, 1378.f, "ms", 1.0f / 2.17f);
-    p.f  ("syn.sustain", "Synth Sustain",     0.f, 100.f, 90.f, "%");
-    const juce::StringArray waves { "Sine", "Triangle", "Saw", "Square", "Pulse", "Noise" };
-    for (int o = 1; o <= 2; ++o)
+    for (int i = 0; i < obs::synthdefs::count; ++i)
     {
-        const auto n = juce::String (o);
-        auto id = [&] (const char* s) { return ("syn.o" + n + "." + s); };
-        auto nm = [&] (const char* s) { return ("Osc " + n + " " + s); };
-        auto add = [&] (ParamDef d) { p.v.push_back (d); };
-        ParamDef d;
-        d = {}; d.id = id ("on");    d.name = nm ("On");        d.type = ParamType::Bool;   d.min = 0; d.max = 1; d.def = 1; d.group = "synth"; add (d);
-        d = {}; d.id = id ("wave");  d.name = nm ("Wave");      d.type = ParamType::Choice; d.choices = waves; d.min = 0; d.max = 5; d.def = (o == 1 ? 2.f : 3.f); d.group = "synth"; add (d);
-        d = {}; d.id = id ("semi");  d.name = nm ("Semitones"); d.type = ParamType::Int;    d.min = -24; d.max = 24; d.def = 0; d.unit = "st"; d.group = "synth"; add (d);
-        d = {}; d.id = id ("det");   d.name = nm ("Detune");    d.type = ParamType::Float;  d.min = -100; d.max = 100; d.def = 0; d.unit = "%"; d.group = "synth"; add (d);
-        d = {}; d.id = id ("level"); d.name = nm ("Level");     d.type = ParamType::Float;  d.min = 0; d.max = 1; d.def = (o == 1 ? 0.649f : 0.62f); d.group = "synth"; add (d);
-        d = {}; d.id = ("syn.u" + n + ".width"); d.name = "Unison " + n + " Width";  d.type = ParamType::Float; d.min = 0; d.max = 100; d.def = (o == 1 ? 100.f : 60.f); d.unit = "%"; d.group = "synth"; add (d);
-        d = {}; d.id = ("syn.u" + n + ".det");   d.name = "Unison " + n + " Detune"; d.type = ParamType::Float; d.min = 0; d.max = 100; d.def = (o == 1 ? 10.f : 18.f); d.unit = "%"; d.group = "synth"; add (d);
+        const auto& d = obs::synthdefs::table()[i];
+        switch (d.type)
+        {
+            case obs::synthdefs::F:      p.f  (d.id, d.name, d.min, d.max, d.def, d.unit, d.skew); break;
+            case obs::synthdefs::LOG:    p.lg (d.id, d.name, d.min, d.max, d.def, d.unit); break;
+            case obs::synthdefs::INT:    p.i  (d.id, d.name, (int) d.min, (int) d.max, (int) d.def, d.unit); break;
+            case obs::synthdefs::BOOL:   p.b  (d.id, d.name, d.def > 0.5f); break;
+            case obs::synthdefs::CHOICE: p.c  (d.id, d.name, juce::StringArray::fromTokens (d.unit, "|", ""), (int) d.def); break;
+        }
     }
-    p.b  ("syn.flt.on",     "Filter On",        true);
-    p.lg ("syn.flt.cutoff", "Filter Cutoff",    20.f, 20000.f, 4480.f);
-    p.f  ("syn.flt.res",    "Filter Resonance", 0.f, 100.f, 0.f, "%");
-    p.f  ("syn.flt.attack", "Filter Attack",    1.f, 2001.f, 1.25f, "ms", 1.0f / 3.0f);
-    p.f  ("syn.flt.drive",  "Filter Drive",     0.f, 100.f, 0.f, "%");
-    p.c  ("syn.flt.slope",  "Filter Slope",     { "6 dB", "12 dB", "18 dB", "24 dB" }, 1);
-    p.f  ("syn.flt.env",    "Filter Env Amount", -100.f, 100.f, 0.f, "%");
-    p.b  ("syn.retrig",     "Env Retrigger",    true);
-    p.b  ("syn.post",       "Synth Post-Amp",   true);
-    p.b  ("syn.arp.on",     "Arp On",           true);
-    const char* stepNames[] = { "Root", "2", "3", "4", "5", "6", "7", "8" };
-    for (int s = 0; s < 8; ++s)
-    {
-        ParamDef d; d.id = "syn.arp.s" + juce::String (s + 1); d.name = juce::String ("Arp Step ") + stepNames[s];
-        d.type = ParamType::Bool; d.min = 0; d.max = 1; d.def = (s == 0 ? 1.f : 0.f); d.group = "synth"; p.v.push_back (d);
-    }
-    p.c  ("syn.arp.key",     "Arp Key",     { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" }, 0);
-    p.c  ("syn.arp.scale",   "Arp Scale",   { "Major", "Minor" }, 0);
-    p.c  ("syn.arp.oct",     "Arp Octave",  { "-2", "-1", "0", "+1", "+2" }, 2);
-    p.c  ("syn.arp.pattern", "Arp Pattern", { "Up", "Down", "Up and down", "Down and up", "Random" }, 0);
-    p.f  ("syn.arp.rate",    "Arp Rate",    0.f, 1.f, 0.5654f);   // free: 0.1 * 200^x Hz, synced: note value index
-    p.b  ("syn.arp.sync",    "Arp Sync",    false);
-    p.f  ("syn.tune",        "Synth Tuning", 415.f, 466.f, 440.f, "Hz");
 
     // ---- Amp ---------------------------------------------------------------------------------
     p.group = "amp";
