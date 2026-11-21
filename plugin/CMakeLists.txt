@@ -92,6 +92,7 @@ target_include_directories(ObsidianSuite PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/So
 # UI files live in ../ui (shared with the browser demo); the bridge script lives here.
 file(GLOB OBSIDIAN_FACTORY_PRESETS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Presets/*.json")
 file(GLOB OBSIDIAN_UI_FONTS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/../ui/fonts/*.woff2")   # theme fonts (OFL)
+file(GLOB OBSIDIAN_PEDAL_FACES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/WebUI/pedals/*.webp")  # tools/faces/build_pedals.py
 juce_add_binary_data(ObsidianAssets
     NAMESPACE ObsidianAssets
     HEADER_NAME ObsidianAssets.h
@@ -100,7 +101,9 @@ juce_add_binary_data(ObsidianAssets
         "${CMAKE_CURRENT_SOURCE_DIR}/../ui/grain.png"
         "${CMAKE_CURRENT_SOURCE_DIR}/WebUI/obsidian-bridge.js"
         "${CMAKE_CURRENT_SOURCE_DIR}/WebUI/obsidian-native.css"
+        "${CMAKE_CURRENT_SOURCE_DIR}/WebUI/obsidian-pedals.js"
         ${OBSIDIAN_UI_FONTS}
+        ${OBSIDIAN_PEDAL_FACES}
         ${OBSIDIAN_FACTORY_PRESETS})
 set_target_properties(ObsidianAssets PROPERTIES FOLDER "Dependencies")
 

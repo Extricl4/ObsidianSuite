@@ -20,12 +20,12 @@ OUT = HERE / 'out'
 def build_page(standalone):
     OUT.mkdir(exist_ok=True)
     html = (UI / 'obsidian-demo.html').read_text(encoding='utf-8')
-    inject = '<link rel="stylesheet" href="obsidian-native.css">\n<script src="obsidian-bridge.js"></script>\n'
+    inject = '<link rel="stylesheet" href="obsidian-native.css">\n<script src="obsidian-pedals.js"></script>\n<script src="obsidian-bridge.js"></script>\n'
     i = html.lower().rfind('</body>')
     html = html[:i] + inject + html[i:]
     (OUT / 'page.html').write_text(html, encoding='utf-8')
     shutil.copytree(UI / 'fonts', OUT / 'fonts', dirs_exist_ok=True)
-    for f in [UI / 'grain.png', PLUGIN / 'WebUI' / 'obsidian-bridge.js', PLUGIN / 'WebUI' / 'obsidian-native.css']:
+    for f in [UI / 'grain.png', PLUGIN / 'WebUI' / 'obsidian-bridge.js', PLUGIN / 'WebUI' / 'obsidian-native.css', PLUGIN / 'WebUI' / 'obsidian-pedals.js', *sorted((PLUGIN / 'WebUI' / 'pedals').glob('*.webp'))]:
         shutil.copy(f, OUT / f.name)
     state = json.loads((HERE / 'state.json').read_text(encoding='utf-8'))
     state['standalone'] = standalone
@@ -224,6 +224,17 @@ async def run(standalone):
         await pg.locator('.page[data-page="PEDALS"] .obs-slot').nth(1).locator('.obs-foot').click()
         await pg.wait_for_timeout(100)
         check(await pg.evaluate("window.__mock.sent('pre.2.on')") == 0, 'footswitch turns the pedal off')
+        # pedals with a design show their own face, lit when on
+        await pg.locator('.page[data-page="PEDALS"] .obs-slot').nth(2).click(); await pg.wait_for_timeout(150)
+        await pg.locator('.page[data-page="PEDALS"] .obs-tile[data-mod="ember"]').click(); await pg.wait_for_timeout(400)
+        face = pg.locator('.page[data-page="PEDALS"] .obs-slot').nth(2)
+        imgs = await face.evaluate("b=>[...b.querySelectorAll('.obs-pface img')].filter(i=>i.complete&&i.naturalWidth>0).length")
+        lit = await face.evaluate("b=>getComputedStyle(b.querySelector('.pf-on')).opacity")
+        await face.locator('.pf-foot').click(); await pg.wait_for_timeout(400)
+        unlit = await face.evaluate("b=>getComputedStyle(b.querySelector('.pf-on')).opacity")
+        check(imgs == 2 and lit == '1' and unlit == '0' and await pg.evaluate("window.__mock.sent('pre.3.on')") == 0, f'EMBER shows its own face, lit when on; its drawn footswitch turns it off ({imgs} images, {lit} -> {unlit})')
+        await face.locator('.pf-foot').click(); await pg.wait_for_timeout(200)
+        await pg.screenshot(path=str(OUT / 'pedals-faces.png'))
         # drag slot 2 onto slot 4
         a = await pg.locator('.page[data-page="PEDALS"] .obs-slot').nth(1).bounding_box()
         c = await pg.locator('.page[data-page="PEDALS"] .obs-slot').nth(3).bounding_box()

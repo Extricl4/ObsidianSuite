@@ -685,7 +685,10 @@ function renderLibrary(ri) {
   const list = Object.values(MODS).filter(m => m.racks.includes(RACKS[ri].mask)
     && (filter === 'all' || m.category === filter || (filter === 'compressor' && m.category === 'dynamics') || (filter === 'modulation' && m.category === 'modulation'))
     && (!q || (m.name + ' ' + m.category + ' ' + m.description).toLowerCase().includes(q)));
-  ui.grid.innerHTML = list.map(m => '<button class="obs-tile' + (m.key === cur ? ' on' : '') + '" data-mod="' + esc(m.key) + '" data-rack="' + ri + '" title="' + esc(m.description) + '"><i>' + esc(m.category) + '</i><b>' + esc(m.name) + '</b><small>' + esc(m.description) + '</small></button>').join('')
+  const PF = window.OBS_PEDALS || {};
+  ui.grid.innerHTML = list.map(m => '<button class="obs-tile' + (m.key === cur ? ' on' : '') + (PF[m.key] ? ' pedpic' : '') + '" data-mod="' + esc(m.key) + '" data-rack="' + ri + '" title="' + esc(m.description) + '">'
+    + (PF[m.key] ? '<img class="obs-pedpic" src="' + esc(m.key) + '_on.webp" alt="" draggable="false">' : '')
+    + '<i>' + esc(m.category) + '</i><b>' + esc(m.name) + '</b><small>' + esc(m.description) + '</small></button>').join('')
     || '<div class="obs-empty">Nothing matches. Try ALL or clear the search.</div>';
 }
 function applyRig(r) {
@@ -715,13 +718,25 @@ function renderRack(ri) {
   ui.slots.forEach((b, si) => {
     const s = rig.racks[ri][si] || {}, m = MODS[s.key];
     if (!s.key || !m) {
-      if (b.classList.contains('obs-filled')) { b.innerHTML = ui.empty[si]; b.classList.remove('obs-filled', 'obs-sel'); }
+      if (b.classList.contains('obs-filled')) { b.innerHTML = ui.empty[si]; b.classList.remove('obs-filled', 'obs-sel', 'pfslot'); }
       b.title = 'Add a ' + (ri ? 'effect' : 'pedal');
       if (ui.sel === si) { ui.sel = -1; ui.editor.classList.add('obs-hidden'); ui.column.style.gap = ''; }
       return;
     }
     const sig = s.key + '|' + (s.fileName || '');
-    if (b.dataset.sig !== sig || !b.classList.contains('obs-filled')) {
+    const pf = (window.OBS_PEDALS || {})[s.key];
+    if (pf && (b.dataset.sig !== sig || !b.classList.contains('obs-filled'))) {
+      // the pedal's own face (tools/faces/build_pedals.py): lit when on, the drawn footswitch switches it
+      const sw = Math.max(40, b.clientWidth - 10), sh = Math.max(60, b.clientHeight - 10), k = Math.min(sw / pf.w, sh / pf.h);
+      const W = Math.round(pf.w * k), H = Math.round(pf.h * k), f = (pf.fs || [])[pf.fs.length - 1] || [.5, .9, .1];
+      const r = f[2] * W * 1.15;
+      b.innerHTML = '<div class="obs-card face"><span class="obs-x" title="Remove">×</span><div class="obs-pface" style="width:' + W + 'px;height:' + H + 'px">'
+        + '<img class="pf-off" src="' + s.key + '_off.webp" alt="" draggable="false"><img class="pf-on" src="' + s.key + '_on.webp" alt="" draggable="false">'
+        + '<span class="obs-foot pf-foot" title="Footswitch: on / off" style="left:' + (f[0] * W - r) + 'px;top:' + (f[1] * H - r) + 'px;width:' + 2 * r + 'px;height:' + 2 * r + 'px"></span></div>'
+        + (m.fileKind && m.fileKind !== 'pack' ? '<span class="obs-file obs-loadfile" title="Load a .nam capture">' + esc(s.fileName || 'LOAD CAPTURE…') + '</span>' : '') + '</div>';
+      b.classList.add('obs-filled', 'pfslot'); b.dataset.sig = sig;
+    } else if (!pf && (b.dataset.sig !== sig || !b.classList.contains('obs-filled'))) {
+      b.classList.remove('pfslot');
       b.innerHTML = '<div class="obs-card"><span class="obs-x" title="Remove">×</span><span class="obs-led"></span>'
         + '<span class="obs-cat">' + esc(m.category) + '</span><span class="obs-name">' + esc(m.name) + '</span>'
         + (m.fileKind === 'pack' ? '<span class="obs-file" title="Playing from the Obsidian pedal pack">' + (s.fileName ? esc(s.fileName) : '&nbsp;') + '</span>'

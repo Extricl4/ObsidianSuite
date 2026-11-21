@@ -89,6 +89,14 @@ channel.
   option installs them in `Documents\Obsidian Amp Suite` (Amps and Faces are always updated); the release zip has
   them under `Content`.
 
+## Pedal faces
+
+The 31 pedal designs from the visuals chat (`visuals/pedals/*.json` + the artwork in `visuals/art`) show on the
+pedal board as their real faces: enclosure, artwork, knobs at their positions, toggles, LED and footswitch. The
+LED and the glowing parts of the artwork light up when the pedal is on, and the drawn footswitch switches it.
+`tools/faces/build_pedals.py` draws them (the 3D renders need Blender) into `WebUI/pedals/*.webp` and
+`WebUI/obsidian-pedals.js`; they are compiled into the plugin.
+
 ## The synth
 
 Played by the guitar (pitch tracking, bends come through) or by MIDI notes from a keyboard or the DAW.
@@ -227,7 +235,8 @@ the file into `Presets\` (rename `.obsidian` to `.json`).
 
 * **STUDIO** (the mini recorder) is shown only in the standalone app, and recording there is still the
   demo. The engine side (recording the DI and re-amping takes) is the next step.
-* **Pedal graphics**: pedals still show as plain cards; their faces come next.
+* Overdrive, Clean Boost, Compressor, Glue, Limiter, Sweep Filter, Looper and NAM Pedal have no design yet,
+  so they show as plain cards.
 * The in-house amps show a plain panel (with each amp's own slight tint); only the capture amps have faces.
 
 Licences of the libraries used: [LICENSES.md](LICENSES.md).

@@ -30,12 +30,13 @@ def main():
     i = html.lower().find('<head>') + len('<head>')
     html = html[:i] + '\n' + head + html[i:]
     css = (run.PLUGIN / 'WebUI' / 'obsidian-native.css').read_text(encoding='utf-8')
-    js = (run.PLUGIN / 'WebUI' / 'obsidian-bridge.js').read_text(encoding='utf-8')
+    js = (run.PLUGIN / 'WebUI' / 'obsidian-pedals.js').read_text(encoding='utf-8') + '\n' + (run.PLUGIN / 'WebUI' / 'obsidian-bridge.js').read_text(encoding='utf-8')
     tail = '<style>\n' + css + '\n</style>\n<script>\n' + js + '\n</script>\n'
     j = html.lower().rfind('</body>')
     html = html[:j] + tail + html[j:]
     (WEB / 'index.html').write_text(html, encoding='utf-8')
     shutil.copy(run.UI / 'grain.png', WEB / 'grain.png')
+    for f in (run.PLUGIN / 'WebUI' / 'pedals').glob('*.webp'): shutil.copy(f, WEB / f.name)
     shutil.copytree(run.UI / 'fonts', WEB / 'fonts', dirs_exist_ok=True)
     if (WEB / 'faces').is_symlink(): (WEB / 'faces').unlink()
     shutil.copytree(run.CONTENT / 'Faces' / 'img', WEB / 'faces' / 'img', dirs_exist_ok=True)

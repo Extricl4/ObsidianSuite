@@ -119,6 +119,7 @@ juce::String ObsidianEditor::mimeFor (const juce::String& path)
     if (ext == "js")   return "text/javascript";
     if (ext == "css")  return "text/css";
     if (ext == "png")  return "image/png";
+    if (ext == "webp") return "image/webp";
     if (ext == "jpg" || ext == "jpeg") return "image/jpeg";
     if (ext == "svg")  return "image/svg+xml";
     if (ext == "json") return "application/json";
@@ -177,7 +178,7 @@ std::optional<juce::WebBrowserComponent::Resource> ObsidianEditor::provide (cons
     {
         // Inject the native bridge into the shared UI file (the browser demo runs without it).
         auto html = mb.toString();
-        const juce::String inject = "<link rel=\"stylesheet\" href=\"obsidian-native.css\">\n<script src=\"obsidian-bridge.js\"></script>\n";
+        const juce::String inject = "<link rel=\"stylesheet\" href=\"obsidian-native.css\">\n<script src=\"obsidian-pedals.js\"></script>\n<script src=\"obsidian-bridge.js\"></script>\n";
         const int at = html.lastIndexOfIgnoreCase ("</body>");
         html = at >= 0 ? html.substring (0, at) + inject + html.substring (at) : html + inject;
         const auto utf8 = html.toUTF8();

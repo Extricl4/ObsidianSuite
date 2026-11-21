@@ -140,3 +140,22 @@
 .obs-tilepic { position: absolute; left: 0; right: 0; top: 0; height: 44px; background-size: cover; background-position: center 35%; opacity: .85; pointer-events: none;
   -webkit-mask: linear-gradient(#000 60%, transparent); mask: linear-gradient(#000 60%, transparent); }
 .obs-tile.haspic:hover .obs-tilepic { opacity: 1; }
+
+/* ---- pedal faces on the board (tools/faces/build_pedals.py) ---------------------- */
+.obs-slot.obs-filled.pfslot { background: none !important; border-color: transparent !important; }
+.obs-slot.obs-filled.pfslot.obs-sel { border-color: transparent !important; box-shadow: none !important; }
+.obs-card.face { padding: 0; justify-content: center; gap: 4px; }
+.obs-pface { position: relative; flex: none; filter: drop-shadow(0 10px 14px rgba(0,0,0,calc(.65*var(--sh,1)))) drop-shadow(0 2px 3px rgba(0,0,0,.6)); transition: transform .15s; }
+.obs-pface img { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; user-select: none; -webkit-user-drag: none; }
+.obs-pface .pf-on { opacity: 0; transition: opacity .25s; }
+.obs-card.face.on .pf-on { opacity: 1; }
+.obs-slot.pfslot:hover .obs-pface { transform: translateY(-2px); }
+.obs-slot.pfslot.obs-sel .obs-pface { filter: drop-shadow(0 0 0 var(--accent)) drop-shadow(0 0 1.5px var(--accent)) drop-shadow(0 0 10px color-mix(in srgb, var(--accent) 55%, transparent)) drop-shadow(0 10px 14px rgba(0,0,0,.6)); }
+.obs-card.face .pf-foot { position: absolute; width: auto; height: auto; border-radius: 50%; background: none; box-shadow: none; }
+.obs-card.face .pf-foot:hover { box-shadow: 0 0 0 2px rgba(255,255,255,.25); }
+.obs-card.face .pf-foot:active { transform: scale(.95); }
+.obs-card.face .obs-x { z-index: 2; top: 0; right: 0; background: rgba(10,10,12,.7); }
+.obs-card.face .obs-file { position: absolute; bottom: -16px; left: 0; right: 0; }
+.obs-tile.pedpic { position: relative; padding-left: 58px !important; }
+.obs-pedpic { position: absolute; left: 10px; top: 50%; transform: translateY(-50%) rotate(-4deg); max-width: 38px; max-height: 70px; filter: drop-shadow(0 4px 6px rgba(0,0,0,.6)); pointer-events: none; transition: transform .15s; }
+.obs-tile.pedpic:hover .obs-pedpic { transform: translateY(-52%) rotate(0deg) scale(1.06); }
