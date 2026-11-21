@@ -25,6 +25,35 @@ rep("const ACC0='#f3ead8';","var ACC0='#f3ead8';")
 rep("""const td=$('[aria-label="Transpose down"]'); if(td) td.parentElement.children[1].children[0].textContent='0';""","""if(window.setTranspose) setTranspose(0);""")
 rep("setInterval(()=>{ meters.forEach(","setInterval(()=>{ if(window.__JUCE__) return; meters.forEach(")
 rep("setInterval(()=>{ const c=Math.round(Math.random()*8-5);","setInterval(()=>{ if(window.__JUCE__) return; const c=Math.round(Math.random()*8-5);")
+# the Obsidian gem, as on the app icon: four facets (light top-left / top-right, dark below) and a soft glow.
+# rgb() colours on purpose: the theme step below only rewrites #hex and rgba() greys, the logo keeps its shades.
+def gem(w, glow):
+    h = round(w * 32 / 30)
+    return ('<svg class="obs-gem" aria-hidden="true" width="%d" height="%d" viewBox="0 0 30 32" style="flex: none; overflow: visible; '
+            'filter: drop-shadow(0 0 %spx rgba(243,234,216,.32)) drop-shadow(0 1px 1px rgba(0,0,0,.6))">'
+            '<path d="M15 0L0 16h15z" style="fill: rgb(190,184,170)"/><path d="M15 0l15 16H15z" style="fill: rgb(243,234,216)"/>'
+            '<path d="M0 16l15 16V16z" style="fill: rgb(70,68,64)"/><path d="M30 16L15 32V16z" style="fill: rgb(120,116,108)"/>'
+            '<path d="M15 .6L.8 16" style="stroke: rgb(255,250,240); stroke-width: .7; opacity: .55; fill: none"/>'
+            '<path d="M15 .6l14.2 15.4" style="stroke: rgb(255,252,244); stroke-width: .7; opacity: .7; fill: none"/></svg>') % (w, h, glow)
+rep('<div style="width: 13px; height: 13px; transform: rotate(45deg); background: linear-gradient(135deg, #f1ede4, #6d6a64); box-shadow: 0 0 12px rgba(255,255,255,.25)" aria-hidden="true"></div>', gem(18, 5), 3)
+rep('<div style="width: 26px; height: 26px; transform: rotate(45deg); background: linear-gradient(135deg, #f1ede4, #6d6a64); box-shadow: 0 0 20px rgba(255,255,255,.25)" aria-hidden="true"></div>', gem(36, 9))
+# SPECIAL FX is called SFX (shorter in the tab row)
+rep('white-space: nowrap">SPECIAL FX</span>', 'white-space: nowrap">SFX</span>')
+rep('<div class="page" data-page="SPECIAL FX"', '<div class="page" data-page="SFX"')
+rep("const TABS=['SPECIAL FX','PEDALS','SYNTH','AMP','CAB','EQ','FX'];", "const TABS=['SFX','PEDALS','SYNTH','AMP','CAB','EQ','FX'];")
+rep("const TABTIP={'SPECIAL FX':", "const TABTIP={'SFX':")
+# HARMONY tab (harmony.js): only in the preview build until it is approved (OBS_HARMONY=1)
+HARMONY = os.environ.get('OBS_HARMONY') == '1'
+if HARMONY:
+    m = re.search(r'<button style="min-width: 62px;[^>]*>(?:(?!</button>).)*?>SYNTH</span><span style="width: 18px; height: 2px"></span></button>', h)
+    assert m, 'SYNTH tab'
+    hb = m.group(0).replace('>SYNTH</span>', '>HARMONY</span>')
+    hb = re.sub(r'<svg aria-hidden="true" width="28".*?</svg>', '<svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 18V5.5l11-2.5v12.5"/><path d="M8.5 9.5l11-2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="17" cy="15.5" r="2.5"/></svg>', hb, count=1, flags=re.S)
+    h = h[:m.end()] + hb + h[m.end():]
+    rep("const TABS=['SFX','PEDALS','SYNTH','AMP','CAB','EQ','FX'];", "const TABS=['SFX','PEDALS','SYNTH','HARMONY','AMP','CAB','EQ','FX'];")
+    rep("const TABTIP={'SFX':", "const TABTIP={'HARMONY':'Smart harmonies that follow your key and mode','SFX':")
+    a = h.find('<div class="page" data-page="AMP"')
+    h = h[:a] + '<div class="page" data-page="HARMONY" style="flex: 1; min-height: 0; flex-direction: column; position: relative; display: none"></div>' + h[a:]
 # the SYNTH page is built by synth.js: drop the old static markup of that page
 a=h.find('<div class="page" data-page="SYNTH"'); assert a>0
 b=h.find('>',a)+1; depth=1; i=b
@@ -33,7 +62,7 @@ while depth:
     if o!=-1 and o<c: depth+=1; i=o+4
     else: depth-=1; i=c+6
 h=h[:b]+h[i-6:]
-i=h.rfind('</body>'); h=h[:i]+open('synth_presets.js').read()+'\n'+open('synth.js').read()+'\n'+open('header.js').read()+'\n'+open('studio.js').read()+'\n'+h[i:]
+i=h.rfind('</body>'); h=h[:i]+open('synth_presets.js').read()+'\n'+open('synth.js').read()+('\n'+open('harmony.js').read() if HARMONY else '')+'\n'+open('header.js').read()+'\n'+open('studio.js').read()+'\n'+h[i:]
 
 # ---------- theme: greys -> CSS variables ----------
 DATA=[]; 

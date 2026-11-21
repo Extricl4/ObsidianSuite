@@ -90,7 +90,7 @@ target_include_directories(ObsidianSuite PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/So
 
 # The web UI and factory presets are compiled into the plugin.
 # UI files live in ../ui (shared with the browser demo); the bridge script lives here.
-file(GLOB OBSIDIAN_FACTORY_PRESETS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Presets/*.json")
+file(GLOB_RECURSE OBSIDIAN_FACTORY_PRESETS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Presets/*.json")   # tools/presets/make_presets.py
 file(GLOB OBSIDIAN_UI_FONTS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/../ui/fonts/*.woff2")   # theme fonts (OFL)
 file(GLOB OBSIDIAN_PEDAL_FACES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/WebUI/pedals/*.webp")  # tools/faces/build_pedals.py
 juce_add_binary_data(ObsidianAssets

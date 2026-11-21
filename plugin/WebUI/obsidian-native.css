@@ -110,6 +110,13 @@
 .obs-maprow button { width: 24px; height: 24px; border: none; border-radius: 6px; background: none; color: rgb(var(--cf_8d8d93)); cursor: pointer; font-size: 14px; }
 .obs-maprow button:hover { background: rgba(255,255,255,.08); color: rgb(var(--cf_e9e6df)); }
 
+/* ---- preset folders: Factory / Artists / My presets with their sub-folders ---- */
+.obs-folder.obs-fgroup span:first-of-type { font-weight: 600; letter-spacing: .04em; }
+.obs-folder.obs-fgroup svg { transition: transform .15s; }
+.obs-folder.obs-fsub { height: 28px !important; padding-left: 36px !important; font-size: 12px !important; flex: none; }
+.obs-folder.obs-fsub svg { display: none; }
+.obs-folder { flex: none; }
+
 /* ---- capture amp faces (the amp pack) --------------------------------------------- */
 /* The AMP page shows only the amp (cabs are picked on the CAB page), in the middle of the page. */
 .obs-ampbox { top: 50% !important; transform: translate(-50%, -50%) !important; }

@@ -31,7 +31,7 @@ If an ASIO driver is installed the app picks it by itself on the first start. In
 | Synth, played by the guitar or MIDI (see below) | `Source/DSP/GuitarSynth.h`, parameters in `SynthDefs.h`, page in `ui/src/synth.js` |
 | Themes: colours, fonts, bands and moving details | `ui/src/themes.js`, fonts in `ui/fonts` (OFL) |
 | Parameters (one list: DAW automation, presets and UI all use it) | `Source/Core/Params.cpp` |
-| Presets (yours: `Documents\Obsidian Amp Suite\Presets\*.obsidian`; factory presets go in `Presets/*.json`, none yet) | `Source/Core/PresetManager.*` |
+| Presets (yours: `Documents\Obsidian Amp Suite\Presets\*.obsidian`; factory presets: `Presets/Factory` and `Presets/Artists/<artist>`, 360 of them) | `Source/Core/PresetManager.*` |
 | Amp / cab / pedal choices, loading files in the background | `Source/Core/Rig.*` |
 | Your settings (theme, folders, MIDI, audio options) | `Source/Core/AppSettings.h` → `%APPDATA%\Obsidian Amp Suite\settings.xml` |
 | MIDI learn / CC mapping / program change | `Source/Core/MidiMapper.*` |
@@ -212,9 +212,12 @@ Live editing without rebuilding the plugin: set *uiDevFolder* in `settings.xml` 
 variable `OBSIDIAN_UI_DEV`) to your `ui` folder and reopen the plugin window. Files found there win over the
 built-in copies (copy `WebUI/obsidian-bridge.js` in too if you're editing the bridge).
 
-**Factory presets**: change the sounds in `writeFactoryPresets()` (`Source/Tests/SelfTest.cpp`) and run
-`"Obsidian Amp Suite.exe" --write-factory-presets plugin\Presets`, or save a preset in the plugin and copy
-the file into `Presets\` (rename `.obsidian` to `.json`).
+**Factory presets**: the sounds are written in `tools/presets/factory.py` (the Factory folder) and
+`tools/presets/artists.py` (one `artist("Name")` block per artist folder). Run
+`python3 plugin/tools/presets/make_presets.py [path to the standalone]`: it builds every preset on the real
+plugin, plays a test riff through it and sets the output so they all play about equally loud (needs the amp
+and pedal packs). Or save a preset in the plugin and copy the file into `Presets\Factory\` (rename
+`.obsidian` to `.json`). File names must be unique across all folders.
 
 **Version**: change `VERSION`.
 

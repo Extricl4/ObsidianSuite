@@ -17,7 +17,7 @@
 namespace obs
 {
 int runSelfTest (const juce::StringArray& args);
-int writeFactoryPresets (const juce::File& dir);
+int writeFactoryPresets (const juce::File& dir, const juce::File& spec, float targetDb);
 int renderSynthDemos (const juce::File& dir);
 
 class MainWindow : public juce::DocumentWindow
@@ -81,7 +81,9 @@ public:
         const auto args = juce::StringArray::fromTokens (commandLine, true);
         if (const int i = args.indexOf ("--write-factory-presets"); i >= 0)
         {
-            setApplicationReturnValue (writeFactoryPresets (juce::File::getCurrentWorkingDirectory().getChildFile (args[i + 1].unquoted())));
+            const auto cwd = juce::File::getCurrentWorkingDirectory();
+            setApplicationReturnValue (writeFactoryPresets (cwd.getChildFile (args[i + 1].unquoted()), cwd.getChildFile (args[i + 2].unquoted()),
+                                                            args.size() > i + 3 && ! args[i + 3].startsWith ("--") ? args[i + 3].getFloatValue() : -20.f));
             quit();
             return;
         }

@@ -658,9 +658,28 @@ int runSelfTest (const juce::StringArray& args)
         const auto oldFolder = p.settings().get ("presetFolder");
         const auto oldLast = p.settings().get ("lastPreset");      // the test must not change your settings
         p.presetManager().setFolder (tmp);
-        int factory = 0, loaded = 0;
-        for (auto& pr : p.presetManager().list()) if (pr.factory) { ++factory; if (p.presetManager().load (pr.id)) ++loaded; }
+        int factory = 0, loaded = 0, artists = 0, ampOk = 0;
+        juce::StringArray badAmp;
+        // Load every factory preset without starting the background capture/pedal file loads
+        // (360 of them would each queue a load); the amp key and its fallback are still checked.
+        obs::Rig::asyncFileLoads = false;
+        for (auto& pr : p.presetManager().list())
+            if (pr.factory)
+            {
+                ++factory;
+                if (pr.category.startsWith ("Artists/")) ++artists;
+                if (p.presetManager().load (pr.id)) ++loaded;
+                const auto amp = p.rig().toJson()["amp"]["key"].toString();
+                if (amp.isNotEmpty() && (obs::Rig::captureAmpInstalled (amp) || ! obs::Rig::findInLibrary (obs::Rig::ampLibrary(), amp).isVoid())) ++ampOk;
+                else badAmp.add (pr.name + " (" + amp + ")");
+                if (factory % 40 == 0) p.engine().collectGarbage (true);
+            }
+        obs::Rig::asyncFileLoads = true;
+        p.engine().collectGarbage (true);
         r.check (loaded == factory, juce::String (loaded) + " of " + juce::String (factory) + " factory presets load");
+        r.check (factory >= 300 && artists >= 250, juce::String (factory) + " factory presets, " + juce::String (artists) + " in Artists folders");
+        r.check (ampOk == factory, juce::String (ampOk) + " of " + juce::String (factory) + " presets end on an amp you have"
+                                   + (badAmp.isEmpty() ? juce::String() : ": " + badAmp.joinIntoString (", ").substring (0, 200)));
 
         setReal (p, "amp.gain", 7.3f); setReal (p, "eq.b3", -4.5f); p.rig().setModule (1, 2, "tide");
         r.check (p.presetManager().saveAs ("Selftest Sound"), "save as");
@@ -714,163 +733,136 @@ int runSelfTest (const juce::StringArray& args)
 } // namespace obs
 
 // =============================================================================
-//  Factory preset generator. Run:  "Obsidian Amp Suite" --write-factory-presets <folder>
-//  Writes plugin/Presets/*.json. Edit the sounds below, run it, rebuild.
-//  (Presets can also be made in the plugin with SAVE AS and copied in by hand.)
+//  Factory preset writer. Run:
+//      "Obsidian Amp Suite" --write-factory-presets <out folder> <spec.json> [target dB]
+//  The spec (made by tools/presets/make_presets.py) lists every preset: amp, its buttons and
+//  knobs, cab, pedals and effects in each rack, plugin settings, synth and arp steps. Each one is
+//  built on the real plugin, every file it needs is loaded, a test riff is played through it and
+//  the output level is set so all presets play about equally loud. Writes <out>/<file>.json.
 // =============================================================================
 namespace obs
 {
-namespace
+int writeFactoryPresets (const juce::File& dir, const juce::File& specFile, float targetDb)
 {
-struct PresetBuilder
-{
-    ObsidianProcessor& p;
-    void reset()                                   { p.presetManager().loadInit(); }
-    void set (const juce::String& id, float real)  { setReal (p, id, real); }
-    void on (const juce::String& id, bool b)       { setNorm (p, id, b ? 1.f : 0.f); }
-    void module (int rack, int slot, const juce::String& key, std::initializer_list<std::pair<const char*, float>> values = {})
-    {
-        p.rig().setModule (rack, slot, key, true);
-        const auto* type = dsp::findModule (key);
-        if (type == nullptr) return;
-        for (auto& kv : values)
-            for (int i = 0; i < (int) type->params.size(); ++i)
-                if (type->params[(size_t) i].name == kv.first)
-                    setNorm (p, slotParamId (rack, slot, i), type->params[(size_t) i].toNorm (kv.second));
-    }
-    void eq (std::initializer_list<float> gains, const juce::String& name = "Custom")
-    {
-        int b = 1; for (auto g : gains) set ("eq.b" + juce::String (b++), g);
-        p.rig().setMisc ("eqPreset", name);
-    }
-    bool write (const juce::File& dir, const juce::String& name, const juce::String& category)
-    {
-        auto v = p.presetManager().captureCurrent (name, category);
-        return dir.getChildFile (name + ".json").replaceWithText (juce::JSON::toString (v, false));
-    }
-};
-} // namespace
-
-int writeFactoryPresets (const juce::File& dir)
-{
+    const auto spec = Rig::readJson (specFile);
+    auto* list = spec.getArray();
+    if (list == nullptr) { std::cout << "Can't read the preset spec " << specFile.getFullPathName() << std::endl; return 1; }
     dir.createDirectory();
+    Rig::asyncFileLoads = false;                       // load captures and pedal files right away
     auto proc = std::make_unique<ObsidianProcessor>();
-    proc->setPlayConfigDetails (2, 2, 48000, 256);
-    proc->prepareToPlay (48000, 256);
-    PresetBuilder b { *proc };
-    int written = 0;
-    const int PRE = 0, POST = 1, SFX = 2;
+    auto& p = *proc;
+    const double SR = 48000; const int BLOCK = 256;
+    p.setPlayConfigDetails (2, 2, SR, BLOCK);
+    p.prepareToPlay (SR, BLOCK);
+    std::vector<float> riff;
+    dsp::CaptureAmp::testRiff (riff, SR, 3.0);
+    auto input = [&] (int i) { return riff[(size_t) i % riff.size()] * 0.9f; };
+    int written = 0, failed = 0;
+    juce::StringArray report;
 
-    // ---- Rhythm ----------------------------------------------------------------------------
-    b.reset();
-    b.set ("amp.gain", 7.6f); b.set ("amp.bass", 6.0f); b.set ("amp.mid", 5.4f); b.set ("amp.treble", 6.4f);
-    b.set ("amp.presence", 6.2f); b.set ("amp.depth", 6.6f); b.set ("amp.master", 5.0f);
-    b.on ("gate.on", true); b.set ("gate.thresh", -54.f);
-    b.module (PRE, 0, "overdrive", { { "Drive", 1.2f }, { "Tone", 6.5f }, { "Level", 6.f } });
-    b.eq ({ -1.f, 1.f, 0.f, -2.f, 0.f, 0.5f, 1.5f, 0.f, -1.f }, "Tight Rhythm");
-    b.on ("doubler.on", true); b.set ("doubler.time", 8.f); b.set ("width", 120.f);
-    written += b.write (dir, "Tight Wall", "Rhythm");
+    for (auto& e : *list)
+    {
+        const auto name = e["name"].toString();
+        juce::StringArray problems;
+        p.presetManager().loadInit();
 
-    b.reset();
-    b.set ("amp.gain", 5.2f); b.set ("amp.bass", 5.2f); b.set ("amp.mid", 6.6f); b.set ("amp.treble", 6.0f); b.set ("amp.presence", 5.6f);
-    b.on ("gate.on", true); b.set ("gate.thresh", -62.f);
-    b.module (PRE, 0, "overdrive", { { "Drive", 4.f }, { "Tone", 5.5f }, { "Level", 2.f } });
-    b.module (POST, 0, "crypt", { { "Decay", 1.4f }, { "Size", 40.f }, { "Mix", 12.f } });
-    b.on ("doubler.on", true); b.set ("doubler.time", 6.f);
-    written += b.write (dir, "Legion Crunch", "Rhythm");
+        // amp: buttons first (the channel brings its own knobs), then knobs, then switches
+        const auto amp = e["amp"];
+        const auto ampKey = amp["key"].toString();
+        if (ampKey.isNotEmpty()) p.rig().setAmp (ampKey);
+        if (p.rig().toJson()["amp"]["key"].toString() != ampKey && ampKey.isNotEmpty()) problems.add ("amp " + ampKey + " not found");
+        std::shared_ptr<dsp::CaptureAmpMap> map;
+        if (Rig::readAmpFile (ampKey).isObject())
+        {
+            juce::String err;
+            map = dsp::CaptureAmpMap::compile (Rig::readAmpFile (ampKey)["map"], Rig::readFaceFile (ampKey), err);
+        }
+        if (auto* dims = amp["dims"].getArray())
+            for (auto& d : *dims) p.rig().setAmpDim ((int) d[0], (int) d[1]);
+        if (auto* knobs = amp["knobs"].getDynamicObject())
+            for (auto& kv : knobs->getProperties())
+            {
+                const float v = (float) (double) kv.value;
+                if (map == nullptr) { setReal (p, "amp." + kv.name.toString(), v); continue; }          // in-house amp: amp.gain...
+                const int j = map->knobLabels.indexOf (kv.name.toString(), true);
+                if (j < 0) { problems.add ("no knob " + kv.name.toString()); continue; }
+                const juce::String pid (dsp::CaptureAmpMap::paramFor (map->roles[(size_t) j]));
+                if (pid.isNotEmpty()) setReal (p, pid, v);
+                else p.rig().setAmpKnob (j, juce::jlimit (0.f, 1.f, v / 10.f));
+            }
+        if (auto* sw = amp["switches"].getArray())
+            for (auto& x : *sw) p.rig().setAmpSwitch ((int) x, true);
 
-    b.reset();
-    b.set ("amp.gain", 8.4f); b.set ("amp.bass", 6.6f); b.set ("amp.mid", 4.4f); b.set ("amp.treble", 6.2f); b.set ("amp.depth", 7.f);
-    b.on ("gate.on", true); b.set ("gate.thresh", -50.f);
-    b.module (PRE, 0, "boost", { { "Gain", 7.f }, { "Tight", 150.f } });
-    b.eq ({ 0.f, 1.5f, -1.f, -3.f, -1.f, 1.f, 2.f, 0.f, -2.f }, "Djent");
-    b.on ("doubler.on", true); b.set ("doubler.time", 9.f); b.set ("width", 130.f);
-    written += b.write (dir, "Styx Chug", "Rhythm");
+        if (e["cab"].toString().isNotEmpty()) p.rig().setCab (e["cab"].toString());
 
-    b.reset();
-    b.set ("amp.gain", 8.f); b.set ("amp.bass", 5.6f); b.set ("amp.mid", 5.f); b.set ("amp.treble", 6.f); b.set ("amp.depth", 7.4f); b.set ("amp.presence", 6.6f);
-    b.on ("gate.on", true); b.set ("gate.thresh", -46.f);
-    b.module (PRE, 0, "compressor", { { "Threshold", -20.f }, { "Ratio", 3.f }, { "Attack", 15.f }, { "Makeup", 3.f } });
-    b.module (PRE, 1, "boost", { { "Gain", 8.f }, { "Tight", 190.f } });
-    b.eq ({ 1.f, 0.f, -1.5f, -2.f, 0.f, 1.f, 1.f, -0.5f, -2.f }, "Thrash");
-    b.on ("doubler.on", true); b.set ("doubler.time", 7.f);
-    written += b.write (dir, "War Drum", "Rhythm");
+        // pedals and effects: racks[0] = before the amp, [1] = after it, [2] = special FX
+        if (auto* racks = e["racks"].getArray())
+            for (int r = 0; r < juce::jmin (kNumRacks, racks->size()); ++r)
+                if (auto* slots = (*racks)[r].getArray())
+                    for (int sl = 0; sl < juce::jmin (kSlotsPerRack, slots->size()); ++sl)
+                    {
+                        const auto m = (*slots)[sl];
+                        const auto key = m["key"].toString();
+                        if (key.isEmpty()) continue;
+                        const auto* type = dsp::findModule (key);
+                        if (type == nullptr) { problems.add ("no effect " + key); continue; }
+                        p.rig().setModule (r, sl, key, true);
+                        if (auto* vals = m["values"].getDynamicObject())
+                            for (auto& kv : vals->getProperties())
+                            {
+                                int k = -1;
+                                for (int i = 0; i < (int) type->params.size(); ++i) if (type->params[(size_t) i].name == kv.name.toString()) k = i;
+                                if (k < 0) { problems.add (key + " has no " + kv.name.toString()); continue; }
+                                setNorm (p, slotParamId (r, sl, k), type->params[(size_t) k].toNorm ((float) (double) kv.value));
+                            }
+                        if (m.hasProperty ("on") && ! (bool) m["on"]) setNorm (p, slotOnId (r, sl), 0.f);
+                    }
 
-    // ---- Clean / ambient -------------------------------------------------------------------
-    b.reset();
-    b.set ("amp.gain", 1.8f); b.set ("amp.bass", 5.6f); b.set ("amp.mid", 4.6f); b.set ("amp.treble", 6.6f); b.set ("amp.presence", 5.6f); b.set ("amp.master", 6.f);
-    b.on ("gate.on", false);
-    b.module (PRE, 0, "compressor", { { "Threshold", -26.f }, { "Ratio", 4.f }, { "Makeup", 7.f }, { "Blend", 70.f } });
-    b.module (POST, 0, "tide", { { "Rate", 0.7f }, { "Depth", 45.f }, { "Mix", 45.f } });
-    b.module (POST, 1, "crypt", { { "Decay", 2.4f }, { "Mix", 24.f } });
-    b.on ("doubler.on", false);
-    written += b.write (dir, "Glass Clean", "Clean");
+        // plugin settings (gate, doubler, EQ, cab mics, synth...): real values
+        if (auto* prm = e["params"].getDynamicObject())
+            for (auto& kv : prm->getProperties())
+            {
+                if (p.state().getParameter (kv.name.toString()) == nullptr) { problems.add ("no setting " + kv.name.toString()); continue; }
+                setReal (p, kv.name.toString(), (float) (double) kv.value);
+            }
+        if (e["synSteps"].isArray()) p.rig().setSynthSteps (e["synSteps"]);
+        if (e["eqName"].toString().isNotEmpty()) p.rig().setMisc ("eqPreset", e["eqName"].toString());
 
-    b.reset();
-    b.set ("amp.gain", 2.6f); b.set ("amp.mid", 4.4f); b.set ("amp.treble", 6.2f);
-    b.on ("gate.on", false);
-    b.module (POST, 0, "tide", { { "Rate", 0.35f }, { "Depth", 55.f }, { "Mix", 40.f } });
-    b.module (POST, 1, "lethe", { { "Time", 480.f }, { "Feedback", 45.f }, { "Mix", 30.f }, { "Mode", 1.f } });
-    b.module (POST, 2, "crypt", { { "Decay", 5.f }, { "Size", 80.f }, { "Mix", 35.f } });
-    b.on ("doubler.on", true); b.set ("doubler.time", 12.f); b.set ("width", 140.f);
-    written += b.write (dir, "Night Drive", "Ambient");
+        // play it: every file loaded, a riff through it, the output level set to the target
+        p.rig().loadFilesNow();
+        for (int i = 0; i < 4; ++i) render (p, SR, BLOCK, 0.25, [] (int) { return 0.f; });   // let smoothing and loads settle
+        auto st = render (p, SR, BLOCK, 3.0, input);
+        float level = juce::Decibels::gainToDecibels (st.rms, -120.f), peak = juce::Decibels::gainToDecibels (st.peak, -120.f);
+        float outGain = 0.f;
+        if (! st.finite || st.rms < 1.0e-4f) problems.add ("no sound");
+        else if (! e.hasProperty ("level") || (bool) e["level"])
+        {
+            outGain = juce::jlimit (-12.f, 12.f, targetDb + (float) (double) e.getProperty ("levelOffset", 0.0) - level);
+            outGain = juce::jmin (outGain, -2.f - peak);                       // and keep the peaks under -2 dBFS
+            setReal (p, "out.gain", outGain);
+        }
 
-    b.reset();
-    b.set ("amp.gain", 2.2f); b.set ("amp.treble", 6.f);
-    b.on ("gate.on", false);
-    b.module (POST, 0, "aurora", { { "Attack", 500.f }, { "Reverb", 45.f } });
-    b.module (SFX, 0, "seraph", { { "Decay", 8.f }, { "Shimmer", 60.f }, { "Mix", 40.f } });
-    b.on ("doubler.on", false);
-    written += b.write (dir, "Cathedral Swell", "Ambient");
-
-    // ---- Lead ------------------------------------------------------------------------------
-    b.reset();
-    b.set ("amp.gain", 8.2f); b.set ("amp.bass", 5.2f); b.set ("amp.mid", 7.2f); b.set ("amp.treble", 6.2f); b.set ("amp.presence", 6.f);
-    b.on ("gate.on", true); b.set ("gate.thresh", -60.f);
-    b.module (PRE, 0, "overdrive", { { "Drive", 2.5f }, { "Tone", 6.f }, { "Level", 4.f } });
-    b.module (POST, 0, "lethe", { { "Time", 380.f }, { "Feedback", 30.f }, { "Mix", 22.f }, { "Mode", 2.f } });
-    b.module (POST, 1, "crypt", { { "Decay", 2.f }, { "Mix", 18.f } });
-    b.eq ({ 0.f, 0.f, 0.5f, 1.f, 1.5f, 1.f, 0.f, -1.f, -2.f }, "Lead");
-    b.on ("doubler.on", false);
-    written += b.write (dir, "Solo Burn", "Lead");
-
-    b.reset();
-    b.set ("amp.gain", 7.f); b.set ("amp.mid", 6.6f); b.set ("amp.treble", 5.8f);
-    b.on ("gate.on", true); b.set ("gate.thresh", -64.f);
-    b.module (PRE, 0, "overdrive", { { "Drive", 3.f }, { "Level", 3.f } });
-    b.module (POST, 0, "lethe", { { "Time", 520.f }, { "Feedback", 40.f }, { "Mix", 25.f } });
-    b.module (SFX, 0, "seraph", { { "Decay", 6.f }, { "Shimmer", 35.f }, { "Mix", 22.f } });
-    b.on ("doubler.on", false);
-    written += b.write (dir, "Halo Lead", "Lead");
-
-    b.reset();
-    b.set ("amp.gain", 7.4f); b.set ("amp.mid", 6.f);
-    b.on ("gate.on", true); b.set ("gate.thresh", -58.f);
-    b.module (PRE, 0, "legion", { { "Voice 1", 5.f }, { "Key", 4.f }, { "Scale", 1.f }, { "Mix", 60.f } });
-    b.module (POST, 0, "lethe", { { "Time", 400.f }, { "Feedback", 30.f }, { "Mix", 20.f } });
-    b.module (POST, 1, "crypt", { { "Mix", 16.f } });
-    b.on ("doubler.on", false);
-    written += b.write (dir, "Twin Harmony", "Lead");
-
-    // ---- Synth -----------------------------------------------------------------------------
-    b.reset();
-    b.on ("synth.on", true); b.on ("syn.arp.on", false); b.set ("syn.mix", 70.f); b.on ("syn.post", true);
-    b.set ("syn.flt.cutoff", 2400.f); b.set ("syn.flt.res", 35.f); b.set ("syn.flt.env", 45.f); b.set ("syn.glide", 40.f);
-    b.set ("amp.gain", 3.f);
-    b.module (POST, 0, "lethe", { { "Time", 350.f }, { "Feedback", 35.f }, { "Mix", 25.f }, { "Mode", 2.f } });
-    b.module (POST, 1, "crypt", { { "Decay", 3.f }, { "Mix", 25.f } });
-    written += b.write (dir, "Neon Lead Synth", "Synth");
-
-    b.reset();
-    b.on ("synth.on", true); b.on ("syn.arp.on", true); b.set ("syn.mix", 55.f);
-    b.set ("syn.arp.rate", 3.f); b.set ("syn.chord", 3.f);
-    b.set ("amp.gain", 2.6f);
-    b.module (POST, 0, "crypt", { { "Decay", 4.f }, { "Mix", 30.f } });
-    written += b.write (dir, "Arp Machine", "Synth");
-
+        auto v = p.presetManager().captureCurrent (name, e["category"].toString());
+        if (auto* o = v.getDynamicObject())
+        {
+            o->setProperty ("type", e["type"]);
+            o->setProperty ("note", e["note"]);
+            if (e["fallbackAmp"].toString().isNotEmpty()) o->setProperty ("fallbackAmp", e["fallbackAmp"]);
+        }
+        const auto out = dir.getChildFile (e["file"].toString());
+        out.getParentDirectory().createDirectory();
+        const bool ok = problems.isEmpty() && out.replaceWithText (juce::JSON::toString (v, true));
+        written += ok ? 1 : 0; failed += ok ? 0 : 1;
+        report.add ((ok ? "  ok   " : "  FAIL ") + name.paddedRight (' ', 34) + " " + juce::String (level, 1).paddedLeft (' ', 6) + " dB  peak "
+                    + juce::String (peak, 1).paddedLeft (' ', 5) + "  out " + juce::String (outGain, 1).paddedLeft (' ', 5)
+                    + (problems.isEmpty() ? juce::String() : "   " + problems.joinIntoString ("; ")));
+        std::cout << report[report.size() - 1] << std::endl;
+        p.engine().collectGarbage (true);              // free the amp and pedal files this preset loaded
+    }
     proc->releaseResources();
-    std::cout << "Wrote " << written << " presets to " << dir.getFullPathName() << std::endl;
-    return written > 0 ? 0 : 1;
+    std::cout << "Wrote " << written << " presets to " << dir.getFullPathName()
+              << (failed ? " (" + juce::String (failed) + " FAILED)" : juce::String()) << std::endl;
+    return failed == 0 && written > 0 ? 0 : 1;
 }
 
 // =============================================================================

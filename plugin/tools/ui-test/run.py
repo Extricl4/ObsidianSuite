@@ -31,6 +31,7 @@ def build_page(standalone):
     state['standalone'] = standalone
     # three amps from the amp pack, with their faces (images served from Content/Faces like the plugin does)
     state['amps'] += [capture_entry(k) for k in ('umbra', 'moirai', 'kratos')]
+    state['presets'] = factory_presets() + state['presets']
     faces = OUT / 'faces'
     if faces.is_symlink() or faces.exists():
         faces.unlink() if faces.is_symlink() else shutil.rmtree(faces)
@@ -45,6 +46,18 @@ def build_page(standalone):
     return state
 
 CONTENT = PLUGIN / 'Content'
+
+def factory_presets():
+    """The built-in presets (plugin/Presets/**), listed like PresetManager::listJson does."""
+    out = []
+    for f in (PLUGIN / 'Presets').rglob('*.json'):
+        v = json.loads(f.read_text(encoding='utf-8'))
+        e = {'id': 'factory:' + v['name'], 'name': v['name'], 'category': v.get('category', ''), 'factory': True}
+        if v.get('type') and v.get('type') != e['category']: e['type'] = v['type']
+        if v.get('note'): e['note'] = v['note']
+        out.append(e)
+    key = lambda e: (('1' if e['category'].startswith('Artists/') else '0') + e['category'] + '\n' + e['name']).lower()
+    return sorted(out, key=key)
 PARAM_OF = {'gain': 'amp.gain', 'bass': 'amp.bass', 'mid': 'amp.mid', 'treble': 'amp.treble', 'presence': 'amp.presence', 'depth': 'amp.depth', 'master': 'amp.master'}
 
 def capture_entry(key):
@@ -296,7 +309,7 @@ async def run(standalone):
         check(L and L[-1][1:] == [0, 1, 3], f'dragging a pedal reorders it ({L[-1] if L else None})')
 
         # ---- FX + special FX libraries
-        for page, want in (('FX', 'crypt'), ('SPECIAL FX', 'seraph')):
+        for page, want in (('FX', 'crypt'), ('SFX', 'seraph')):
             await pg.evaluate(f"setTab('{page}')")
             await pg.locator(f'.page[data-page="{page}"] .obs-slot').first.click()
             await pg.wait_for_timeout(120)
@@ -410,11 +423,28 @@ async def run(standalone):
         await pg.locator('[aria-label="Previous preset"]').evaluate('b=>b.nextElementSibling.click()')
         await pg.wait_for_timeout(200)
         rows = await pg.locator('.obs-prow').count()
-        check(rows == len(state['presets']), f'preset browser lists {rows} presets')
+        n_fac = sum(1 for e in state['presets'] if e['factory'] and not e['category'].startswith('Artists/'))
+        n_art = sum(1 for e in state['presets'] if e['category'].startswith('Artists/'))
+        folders = await pg.evaluate("[...document.querySelectorAll('.obs-folder')].map(f=>f.dataset.folder)")
+        check(rows == n_fac >= 50 and 'All presets' not in folders and folders[:1] == ['FACTORY'] and 'ARTISTS' in folders and 'MY' in folders,
+              f'preset browser opens on Factory ({rows} presets, its types as sub-folders), no "All presets" folder')
+        await pg.locator('.obs-folder[data-folder="ARTISTS"]').click(); await pg.wait_for_timeout(150)
+        arts = await pg.evaluate("[...document.querySelectorAll('.obs-folder.obs-fsub')].filter(f=>f.dataset.folder.startsWith('ARTISTS/')).length")
+        rows_all = await pg.locator('.obs-prow').count()
+        await pg.locator('.obs-folder[data-folder="ARTISTS/Metallica"]').click(); await pg.wait_for_timeout(150)
+        met = await pg.evaluate("[...document.querySelectorAll('.obs-prow')].map(r=>r.children[1].textContent)")
+        check(arts >= 40 and rows_all == n_art and 'Enter Sandman' in met and 'Master of Puppets' in met and len(met) >= 10,
+              f'ARTISTS has {arts} artist folders ({rows_all} presets); Metallica lists {len(met)} (Enter Sandman, Master of Puppets...)')
         await pg.screenshot(path=str(OUT / 'presets.png'))
+        await pg.locator('#preset-search').fill('sandman'); await pg.wait_for_timeout(120)
+        hits = await pg.evaluate("[...document.querySelectorAll('.obs-prow')].map(r=>r.children[1].textContent)")
+        check(hits == ['Enter Sandman'], f'search looks in every folder ({hits})')
+        await pg.locator('#preset-search').fill(''); await pg.wait_for_timeout(80)
+        await pg.locator('.obs-folder[data-folder="ARTISTS/Metallica"]').click(); await pg.wait_for_timeout(100)
+        want = met[2]
         await pg.locator('.obs-prow').nth(2).dblclick(); await pg.wait_for_timeout(200)
         name = await pg.evaluate("document.querySelector('[aria-label=\"Previous preset\"]').nextElementSibling.textContent.trim()")
-        check(name == state['presets'][2]['name'], f'double-click loads a preset ({name})')
+        check(name == want, f'double-click loads a preset ({name})')
         await pg.evaluate("window.__mock.log.length=0")
         await pg.locator('[aria-label="Next preset"]').click(); await pg.wait_for_timeout(150)
         check(await pg.evaluate("window.__mock.log.some(x=>x[0]==='presetNext'&&x[1]===1)"), 'next-preset arrow')

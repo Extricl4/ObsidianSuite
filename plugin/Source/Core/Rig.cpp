@@ -400,7 +400,7 @@ Rig::CaptureAmpFiles Rig::loadCaptureAmp (std::shared_ptr<const CaptureAmpMap> m
 void Rig::startCaptureAmpLoad (const juce::String& key)
 {
     auto map = ampMap;
-    if (map == nullptr) return;
+    if (map == nullptr || ! asyncFileLoads) return;
     loadingAmpKey = key;
     const double rate = engine.currentSampleRate();
     const int block = engine.currentBlockSize();
@@ -574,6 +574,7 @@ void Rig::loadModuleFile (int rack, int slot, const juce::File& file)
 
 void Rig::startModuleFileLoad (int rack, int slot, const juce::File& f)
 {
+    if (! asyncFileLoads) return;
     const double rate = engine.currentSampleRate();
     const int block = engine.currentBlockSize();
     const auto key = slotTree (rack, slot)["key"].toString();
@@ -649,7 +650,7 @@ void Rig::startPackLoad (int rack, int slot)
     auto* m = engine.rack (rack).moduleAt (slot);
     const auto key = slotTree (rack, slot)["key"].toString();
     const auto* type = findModule (key);
-    if (m == nullptr || type == nullptr) return;
+    if (m == nullptr || type == nullptr || ! asyncFileLoads) return;
     m->packRequested = true;
     const double rate = engine.currentSampleRate();
     const int block = engine.currentBlockSize();
@@ -674,6 +675,44 @@ void Rig::startPackLoad (int rack, int slot)
             notifyChanged();
         });
     });
+}
+
+bool Rig::captureAmpInstalled (const juce::String& key)
+{
+    const auto amp = readAmpFile (key);
+    if (! amp.isObject()) return false;
+    if (auto* sets = amp["map"]["settings"].getDynamicObject())
+        for (auto& st : sets->getProperties())
+            if (auto* files = st.value["files"].getArray())
+                for (auto& f : *files)
+                {
+                    const auto first = f.isArray() ? (f.size() > 0 ? f[0].toString() : juce::String()) : f.toString();
+                    if (first.isNotEmpty()) return contentFolder().getChildFile ("Captures").getChildFile (first).existsAsFile();
+                }
+    return false;
+}
+
+void Rig::loadFilesNow()
+{
+    const double rate = engine.currentSampleRate();
+    const int block = engine.currentBlockSize();
+    auto amp = rig.getChildWithName ("AMP");
+    if (amp["type"].toString() == "capture" && ampMap != nullptr)
+    {
+        auto* cur = engine.amp().captureSlot().get();
+        if (cur == nullptr || cur->key != ampMapKey)
+            engine.amp().captureSlot().set (std::move (loadCaptureAmp (ampMap, ampMapKey, rate, block).amp));
+    }
+    for (int r = 0; r < kNumRacks; ++r)
+        for (int sl = 0; sl < kSlotsPerRack; ++sl)
+        {
+            const auto* type = findModule (slotTree (r, sl)["key"].toString());
+            auto* m = engine.rack (r).moduleAt (sl);
+            if (type == nullptr || m == nullptr || (type->captures.empty() && type->irs.empty()) || m->packRequested) continue;
+            m->packRequested = true;
+            auto files = loadPackFiles (*type, rate, block);
+            installPack (*m, *files);
+        }
 }
 
 // ---------------------------------------------------------------------------------- misc

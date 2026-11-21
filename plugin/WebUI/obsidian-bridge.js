@@ -214,7 +214,7 @@ function setupBindings() {
 
   /* ---- page tabs: double-click bypasses a whole section ---- */
   safe('tabs', () => {
-  const SECTIONS = { 'SPECIAL FX': 'sfx.on', 'PEDALS': 'pre.on', 'SYNTH': 'synth.on', 'AMP': 'amp.on', 'CAB': 'cab.on', 'EQ': 'eq.on', 'FX': 'post.on' };
+  const SECTIONS = { 'SFX': 'sfx.on', 'PEDALS': 'pre.on', 'SYNTH': 'synth.on', 'AMP': 'amp.on', 'CAB': 'cab.on', 'EQ': 'eq.on', 'FX': 'post.on' };
   for (const name in SECTIONS)
     single(SECTIONS[name], () => bypassed.has(name) ? 0 : 1, n => { if (n >= .5) bypassed.delete(name); else bypassed.add(name); styleTabs(); });
   });
@@ -461,7 +461,16 @@ function showTuner(t) {
 }
 
 /* ================================================================= presets */
-let presetList = [], presetCur = {}, presetSel = null, presetFolder = 'All presets', presetQuery = '';
+let presetList = [], presetCur = {}, presetSel = null, presetFolder = 'FACTORY', presetQuery = '';
+/* Preset folders: FACTORY (by type), ARTISTS (one folder per artist), MY PRESETS (your saves, by type).
+   A factory preset whose category is "Artists/<name>" lives in that artist's folder. */
+const presetOpen = new Set(['FACTORY']);
+const presetGroup = p => !p.factory ? 'MY' : /^Artists\//.test(p.category || '') ? 'ARTISTS' : 'FACTORY';
+const presetSub = p => presetGroup(p) === 'ARTISTS' ? p.category.slice(8) : (p.type || p.category || '');
+const presetType = p => p.type || (/^Artists\//.test(p.category || '') ? '' : p.category) || '—';
+const presetIn = (p, f) => { const [g, sub] = f.split('/'); return presetGroup(p) === g && (sub === undefined || presetSub(p) === f.slice(g.length + 1)); };
+const GROUP_NAME = { FACTORY: 'Factory', ARTISTS: 'Artists', MY: 'My presets' };
+const TYPE_ORDER = ['Clean', 'Crunch', 'Rhythm', 'Lead', 'Ambient', 'Synth', 'FX', 'Acoustic'];
 function setupPresets(st) {
   presetList = st.presets || [];
   presetCur = st.preset || {};
@@ -491,7 +500,11 @@ function setupPresets(st) {
   const nf = byText('button', 'NEW FOLDER', ov); if (nf) nf.classList.add('obs-hidden');
   const search = $('#preset-search', ov);
   if (search) search.addEventListener('input', () => { presetQuery = search.value.trim().toLowerCase(); renderPresetList(); });
-  intercept(b => b.classList.contains('obs-folder'), b => { presetFolder = b.dataset.folder; renderPresetList(); });
+  intercept(b => b.classList.contains('obs-folder'), b => {
+    const f = b.dataset.folder;
+    if (!f.includes('/')) { if (presetFolder === f && presetOpen.has(f)) presetOpen.delete(f); else presetOpen.add(f); }
+    presetFolder = f; presetQuery = ''; const se = $('#preset-search'); if (se) se.value = '';
+    renderPresetList(); if (ov._rowBox) ov._rowBox.scrollTop = 0; });
   intercept(b => b.classList.contains('obs-prow'), b => { presetSel = b.dataset.id; markPresetSel(); });
   ov.addEventListener('dblclick', e => { const r = e.target.closest('.obs-prow'); if (r) guardSwitch(() => { call('presetLoad', r.dataset.id); closeOv(); }); });
   const sel = () => presetList.find(p => p.id === presetSel);
@@ -516,8 +529,14 @@ function guardSwitch(go) {
     confirmDialog('UNSAVED CHANGES', '"' + presetCur.name + '" has changes that aren\'t saved. Switch anyway?', 'SWITCH').then(ok => { if (ok) go(); });
   else go();
 }
+let presetShownId = null;
 function showPreset(p) {
   if (!p) return; presetCur = p;
+  if (p.id !== presetShownId) {             // the browser opens on the loaded preset's folder
+    presetShownId = p.id;
+    const e = presetList.find(x => x.id === p.id);
+    if (e) { const g = presetGroup(e), sb = presetSub(e); presetFolder = sb ? g + '/' + sb : g; presetOpen.add(g); }
+  }
   const mark = !INIT || !INIT.settings || INIT.settings.markUnsaved !== false;
   if (typeof setPreset === 'function') setPreset(esc(p.name), p.dirty && mark);
   if (!presetSel) presetSel = p.id;
@@ -525,31 +544,41 @@ function showPreset(p) {
 }
 function renderPresetList() {
   const ov = $('.ov[data-ov="presets"]'); if (!ov || !ov._rowTpl) return;
-  const cats = [...new Set(presetList.map(p => p.category).filter(Boolean))].sort();
-  const folders = [['All presets', presetList.length], ['Factory', presetList.filter(p => p.factory).length], ['My presets', presetList.filter(p => !p.factory).length]]
-    .concat(cats.map(c => [c, presetList.filter(p => p.category === c).length]));
   if (ov._folderTpl && ov._folderBox) {
     $$('.obs-folder', ov._folderBox).forEach(x => x.remove());
+    ov._folderBox.style.overflowY = 'auto'; ov._folderBox.style.minHeight = '0';
     const anchor = ov._folderAnchor && ov._folderAnchor.parentNode === ov._folderBox ? ov._folderAnchor : byText('button', 'NEW FOLDER', ov._folderBox);
-    folders.forEach(([name, count]) => {
-      const f = ov._folderTpl.cloneNode(true); f.classList.remove('folder'); f.classList.add('obs-folder'); f.dataset.folder = name;
-      const sp = f.querySelectorAll('span'); sp[0].textContent = name; sp[sp.length - 1].textContent = count;
-      const onF = name === presetFolder;
+    const row = (key, label, count, sub) => {
+      const f = ov._folderTpl.cloneNode(true); f.classList.remove('folder'); f.classList.add('obs-folder'); f.dataset.folder = key;
+      if (sub) f.classList.add('obs-fsub'); else { f.classList.add('obs-fgroup'); f.classList.toggle('open', presetOpen.has(key)); }
+      const sp = f.querySelectorAll('span'); sp[0].textContent = label; sp[sp.length - 1].textContent = count;
+      const onF = key === presetFolder;
       f.style.background = onF ? 'rgba(255,255,255,.07)' : 'none';
-      f.style.color = onF ? 'rgb(var(--cf_f4f1ea))' : 'rgb(var(--cf_a3a3a8))';
+      f.style.color = onF ? 'rgb(var(--cf_f4f1ea))' : sub ? 'rgb(var(--cf_8d8d93))' : 'rgb(var(--cf_c9c7c1))';
+      f.title = sub ? '' : (presetOpen.has(key) ? 'Click again to fold' : 'Click to open');
       ov._folderBox.insertBefore(f, anchor || null);
-    });
+    };
+    for (const g of ['FACTORY', 'ARTISTS', 'MY']) {
+      const inG = presetList.filter(p => presetGroup(p) === g);
+      if (g === 'ARTISTS' && !inG.length) continue;
+      row(g, GROUP_NAME[g], inG.length, false);
+      if (!presetOpen.has(g)) continue;
+      let subs = [...new Set(inG.map(presetSub).filter(Boolean))];
+      subs.sort(g === 'ARTISTS' ? (a, b) => a.localeCompare(b) : (a, b) => ((TYPE_ORDER.indexOf(a) + 99) % 99) - ((TYPE_ORDER.indexOf(b) + 99) % 99) || a.localeCompare(b));
+      subs.forEach(sb => row(g + '/' + sb, sb, inG.filter(p => presetSub(p) === sb).length, true));
+    }
   }
-  const show = presetList.filter(p => (presetFolder === 'All presets' || (presetFolder === 'Factory' && p.factory) || (presetFolder === 'My presets' && !p.factory) || p.category === presetFolder)
-    && (!presetQuery || (p.name + ' ' + p.category).toLowerCase().includes(presetQuery)));
+  // searching looks everywhere; otherwise the open folder
+  const show = presetList.filter(p => presetQuery ? (p.name + ' ' + p.category + ' ' + (p.type || '') + ' ' + (p.note || '')).toLowerCase().includes(presetQuery) : presetIn(p, presetFolder));
   $$('.obs-prow', ov._rowBox).forEach(x => x.remove());
   $$('.obs-empty', ov._rowBox).forEach(x => x.remove());
   show.forEach(p => {
     const r = ov._rowTpl.cloneNode(true); r.classList.add('obs-prow'); r.dataset.id = p.id;
     const sp = r.querySelectorAll(':scope > span');
     if (sp[1]) sp[1].textContent = p.name;
-    if (sp[2]) sp[2].textContent = p.category || '—';
-    if (sp[3]) sp[3].textContent = p.factory ? 'Factory' : 'My preset';
+    if (sp[2]) sp[2].textContent = presetType(p);
+    if (sp[3]) sp[3].textContent = presetGroup(p) === 'ARTISTS' ? presetSub(p) : p.factory ? 'Factory' : 'My preset';
+    if (p.note) r.title = p.note;
     if (sp[0]) sp[0].style.visibility = p.id === presetCur.id ? 'visible' : 'hidden';
     ov._rowBox.appendChild(r);
   });
@@ -570,17 +599,19 @@ function markPresetSel() {
     const nameEl = selLbl.nextElementSibling; if (nameEl) nameEl.textContent = p.name || '';
     const info = nameEl && nameEl.nextElementSibling;
     if (info) {
-      const lines = ['Folder · ' + (p.factory ? 'Factory' : 'My presets'), 'Type · ' + (p.category || '—'),
-                     p.id === presetCur.id ? 'Loaded now' + (presetCur.dirty ? ' · edited' : '') : 'Double-click to load', ''];
+      const g = presetGroup(p), folder = g === 'ARTISTS' ? 'Artists · ' + presetSub(p) : GROUP_NAME[g];
+      const lines = ['Folder · ' + folder, 'Type · ' + presetType(p), p.note || '',
+                     p.id === presetCur.id ? 'Loaded now' + (presetCur.dirty ? ' · edited' : '') : 'Double-click to load'];
       [...info.children].forEach((c, i) => { c.textContent = lines[i] || ''; c.style.display = lines[i] ? '' : 'none'; });
     }
   }
 }
 async function saveAsDialog() {
-  const cats = [...new Set(['Rhythm', 'Lead', 'Clean', 'Ambient', 'Synth'].concat(presetList.map(p => p.category).filter(Boolean)))];
+  const cats = [...new Set(TYPE_ORDER.concat(presetList.filter(p => !p.factory).map(p => p.category).filter(c => c && !/^Artists\//.test(c))))];
+  const cur = presetList.find(p => p.id === presetCur.id) || presetCur, curType = cur.type || (/^Artists\//.test(cur.category || '') ? '' : cur.category);
   const r = await formDialog('SAVE AS', [
     { key: 'name', label: 'Name', value: presetCur.factory || !presetCur.name ? (presetCur.name ? presetCur.name + ' (mine)' : 'My Preset') : presetCur.name },
-    { key: 'category', label: 'Type', value: presetCur.category || 'Rhythm', options: cats }], 'SAVE');
+    { key: 'category', label: 'Type', value: curType || 'Rhythm', options: cats }], 'SAVE');
   if (r && r.name) call('presetSaveAs', r.name, r.category);
 }
 
@@ -618,7 +649,7 @@ function confirmDialog(title, text, okText) {
 }
 
 /* =================================================== racks (pedals / FX / special) */
-const RACKS = [{ page: 'PEDALS', key: 'pre', add: 'ADD PEDAL', mask: 'pre' }, { page: 'FX', key: 'post', add: 'ADD EFFECT', mask: 'post' }, { page: 'SPECIAL FX', key: 'sfx', add: 'ADD SPECIAL FX', mask: 'sfx' }];
+const RACKS = [{ page: 'PEDALS', key: 'pre', add: 'ADD PEDAL', mask: 'pre' }, { page: 'FX', key: 'post', add: 'ADD EFFECT', mask: 'post' }, { page: 'SFX', key: 'sfx', add: 'ADD SPECIAL FX', mask: 'sfx' }];
 const MODS = {};            // key -> module type
 let rig = null;
 const rackUi = [];          // per rack: { page, slots:[button], pop, grid, editor, sel, addSlot }

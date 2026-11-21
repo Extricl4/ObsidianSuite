@@ -79,10 +79,13 @@ void PresetManager::rescan()
         if (data == nullptr || ! juce::JSON::parse (juce::String::fromUTF8 (data, size), v).wasOk()) continue;
         if (v["format"].toString() != "obsidian-preset") continue;
         Info inf; inf.name = v["name"].toString(); inf.category = v["category"].toString(); inf.factory = true;
-        inf.id = "factory:" + inf.name;
+        inf.type = v["type"].toString().isNotEmpty() ? v["type"].toString() : inf.category; inf.note = v["note"].toString();
+        inf.id = "factory:" + inf.name; inf.resource = i;
         presets.add (inf);
     }
-    std::sort (presets.begin(), presets.end(), [] (const Info& a, const Info& b) { return a.category + a.name < b.category + b.name; });
+    // factory sounds first, then the artists' folders, each sorted by folder and name
+    auto order = [] (const Info& i) { return (i.category.startsWith ("Artists/") ? "1" : "0") + i.category + "\n" + i.name; };
+    std::stable_sort (presets.begin(), presets.end(), [&] (const Info& a, const Info& b) { return order (a).compareNatural (order (b)) < 0; });
 
     // Your presets.
     juce::Array<Info> user;
@@ -94,6 +97,7 @@ void PresetManager::rescan()
         {
             inf.name = v["name"].toString().isNotEmpty() ? v["name"].toString() : f.getFileNameWithoutExtension();
             inf.category = v["category"].toString();
+            inf.type = v["type"].toString().isNotEmpty() ? v["type"].toString() : inf.category; inf.note = v["note"].toString();
         }
         else inf.name = f.getFileNameWithoutExtension();
         inf.id = "user:" + f.getFullPathName();
@@ -141,7 +145,24 @@ bool PresetManager::applyPresetVar (const juce::var& v)
         real = juce::jlimit (d.min, d.max, real);
         prm->setValueNotifyingHost (prm->convertTo0to1 (real));
     }
-    rig.restore (varToTree (v["rig"]));
+    // a capture amp that isn't installed (no amp pack): the preset's in-house stand-in plays instead
+    auto tree = varToTree (v["rig"]);
+    auto amp = tree.getChildWithName ("AMP");
+    const auto fallback = v["fallbackAmp"].toString();
+    if (amp.isValid() && amp["type"].toString() == "capture" && fallback.isNotEmpty() && ! Rig::captureAmpInstalled (amp["key"].toString()))
+    {
+        const auto entry = Rig::findInLibrary (Rig::ampLibrary(), fallback);
+        if (! entry.isVoid())
+        {
+            for (int i = amp.getNumProperties(); --i >= 0;)
+            {
+                const auto n = amp.getPropertyName (i).toString();
+                if (n.startsWith ("fd") || n.startsWith ("fx") || n.startsWith ("fs") || n.startsWith ("fk")) amp.removeProperty (n, nullptr);
+            }
+            amp.setProperty ("key", fallback, nullptr).setProperty ("type", entry["type"], nullptr).setProperty ("name", entry["name"], nullptr);
+        }
+    }
+    rig.restore (tree);
     --suppress;
     return true;
 }
@@ -154,7 +175,13 @@ bool PresetManager::load (const juce::String& id)
     for (auto& p : presets) if (p.id == id) found = p;
     if (found.id.isEmpty()) { error = "Preset not found"; return false; }
 
-    if (found.factory)
+    if (found.factory && found.resource >= 0)
+    {
+        int size = 0;
+        const char* data = ObsidianAssets::getNamedResource (ObsidianAssets::namedResourceList[found.resource], size);
+        if (data == nullptr || ! juce::JSON::parse (juce::String::fromUTF8 (data, size), v).wasOk()) { error = "Couldn't read the preset"; return false; }
+    }
+    else if (found.factory)
     {
         for (int i = 0; i < ObsidianAssets::namedResourceListSize; ++i)
         {
@@ -328,6 +355,8 @@ juce::var PresetManager::listJson() const
     {
         auto o = new juce::DynamicObject();
         o->setProperty ("id", p.id); o->setProperty ("name", p.name); o->setProperty ("category", p.category); o->setProperty ("factory", p.factory);
+        if (p.type.isNotEmpty() && p.type != p.category) o->setProperty ("type", p.type);
+        if (p.note.isNotEmpty()) o->setProperty ("note", p.note);
         a.add (juce::var (o));
     }
     return a;

@@ -84,6 +84,12 @@ public:
 
     static juce::var ampLibrary();
     static juce::var cabLibrary();
+    static juce::var findInLibrary (const juce::var& lib, const juce::String& key);
+    /** True when a capture amp's amp file and its first capture are installed (the amp pack is optional). */
+    static bool captureAmpInstalled (const juce::String& key);
+    /** Tools (the factory preset writer) load files right away instead of on the loader thread. */
+    static inline bool asyncFileLoads = true;
+    void loadFilesNow();
     static juce::File contentFolder();              // Documents\Obsidian Amp Suite
 
     void addListener (Listener* l)                  { listeners.add (l); }
@@ -105,7 +111,6 @@ private:
     void startModuleFileLoad (int rack, int slot, const juce::File& f);
     void startPackLoad (int rack, int slot);
     juce::ValueTree slotTree (int rack, int slot);
-    static juce::var findInLibrary (const juce::var& lib, const juce::String& key);
 
     Engine& engine;
     juce::AudioProcessorValueTreeState& state;

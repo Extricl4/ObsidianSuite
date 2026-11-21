@@ -9,6 +9,8 @@
 //      "rig": { ...amp/cab/pedal slots... } }
 //  Unknown params are ignored and missing ones get defaults, so presets keep
 //  working when parameters are added or ranges change.
+//  Factory presets also carry "type", "note" and "fallbackAmp": an in-house amp used
+//  when the preset's capture amp isn't installed (the amp pack is optional).
 // =============================================================================
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "Rig.h"
@@ -19,7 +21,9 @@ namespace obs
 class PresetManager : private juce::AudioProcessorValueTreeState::Listener
 {
 public:
-    struct Info { juce::String id, name, category; bool factory = false; juce::File file; };
+    /** category: the folder ("Rhythm", or "Artists/Metallica" for the artist presets);
+        type: what kind of sound (Rhythm, Lead, Clean...); note: one line about it. */
+    struct Info { juce::String id, name, category, type, note; bool factory = false; juce::File file; int resource = -1; };
     struct Listener { virtual ~Listener() = default; virtual void presetStateChanged() = 0; virtual void presetListChanged() = 0; };
 
     PresetManager (juce::AudioProcessorValueTreeState& s, Rig& r, AppSettings& settings);
