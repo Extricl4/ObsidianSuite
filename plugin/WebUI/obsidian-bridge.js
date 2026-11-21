@@ -910,7 +910,7 @@ function setupAmpCab(st) {
   intercept(b => b.dataset.ampFolder !== undefined, b => { const p = b.closest('.pop'); p._folder = b.dataset.ampFolder; renderLib(p); p._grid.scrollTop = 0; });
   intercept(b => b.classList.contains('obs-crumb-back'), b => { const p = b.closest('.pop'); p._folder = ''; renderLib(p); });
   intercept(b => b.classList.contains('obs-tile') && b.dataset.amp !== undefined, b => { call('setAmp', b.dataset.amp).then(r => r && applyRig(r)); $$('.pop').forEach(p => p.style.display = 'none'); });
-  intercept(b => (b === ampUi.cabBtn || b === ampUi.cabBig) && rig && rig.cab && rig.cab.key && rig.cab.key !== 'none', b => {
+  intercept(b => b === ampUi.cabBig && rig && rig.cab && rig.cab.key && rig.cab.key !== 'none', b => {
     const page = b.closest('.page'); const pop = $$('.pop', page).find(p => txt($('span', p)) === 'CHOOSE CAB');
     $$('.pop').forEach(p => p.style.display = 'none'); if (pop) pop.style.display = 'block';
   });
@@ -927,8 +927,11 @@ function setupAmpCab(st) {
       box.appendChild(ampUi.panel);
       buildAmpPanel();
     }
+    // The AMP page is just the amp: the cab is picked on the CAB page only. The amp sits in the middle.
     const addCab = $$('button', AP).find(x => txt(x).startsWith('ADD CAB'));
-    if (addCab) { ampUi.cabBtn = addCab; ampUi.cabHtml = addCab.innerHTML; }
+    if (addCab) addCab.parentElement.classList.add('obs-hidden');
+    $$('.pop', AP).forEach(p => { if (txt($('span', p)) === 'CHOOSE CAB') p.classList.add('obs-hidden'); });
+    if (ampUi.box) ampUi.box.classList.add('obs-ampbox');
   }
   if (CP) {
     const addCab = $$('button', CP).find(x => txt(x).startsWith('ADD CAB'));
@@ -966,7 +969,7 @@ function renderLib(p) {
         return '<button class="obs-tile obs-ampfolder' + (here ? ' has' : '') + '" data-amp-folder="' + esc(f) + '"><i>' + inF.length + ' AMPS</i><b>' + esc(f) + '</b><small>' + esc(here ? 'Playing now: ' + here.name : sub) + '</small></button>';
       }).join('');
     }
-    const pic = a => a.face && a.face.skins ? '<span class="obs-tilepic" style="background-image:url(\'faces/img/' + esc(a.face.skins[a.face.dims && a.face.dims[0] && a.face.dims[0].skin ? Math.min(a.face.skins.length - 1, a.face.dims[0].start || 0) : 0].id) + '_on.jpg\')"></span>' : '';
+    const pic = a => a.face && a.face.skins ? '<span class="obs-tilepic" style="background-image:url(\'faces/img/' + esc(a.face.skins[a.face.dims && a.face.dims[0] && a.face.dims[0].skin ? Math.min(a.face.skins.length - 1, a.face.dims[0].start || 0) : 0].id) + '_on.webp\')"></span>' : '';
     p._grid.innerHTML = head + list.map(a => '<button class="obs-tile' + (a.key === cur ? ' on' : '') + (a.face ? ' haspic' : '') + '" data-amp="' + esc(a.key) + '" title="' + esc(a.description) + '">' + pic(a) + '<i>' + esc(a.role || a.type) + '</i><b>' + esc(a.name) + '</b><small>' + esc(a.basedOn ? (/^Obsidian original/i.test(a.basedOn) ? a.basedOn : 'Based on ' + a.basedOn) : a.description) + '</small></button>').join('') + (list.length || (!folder && !flat && head) ? '' : '<div class="obs-empty">No amps match.</div>');
   } else {
     const cur = rig && rig.cab ? rig.cab.key : '';
@@ -1029,7 +1032,12 @@ function renderAmp() {
    learn and presets follow); the other knobs go to the Rig (ampKnob), buttons pick channels and modes
    (ampDim), switches toggle (ampSwitch), and the amp's lamp is the AMP section's on / off. */
 const faceUi = { key: '', info: null, stage: null, box: null, read: null, meters: {}, sendT: {}, readHtml: '' };
-const FACE_MAX_W = 1160, FACE_MAX_H = 428;
+const FACE_BAR = 64;          // the name / readout bar under the amp, with its gap
+/** The amp is as large as the AMP page allows (the page has nothing else on it now). */
+function faceMax() {
+  const pg = ampUi.box && ampUi.box.parentElement, w = (pg && pg.clientWidth) || 1376, h = (pg && pg.clientHeight) || 592;
+  return [Math.min(1300, w - 70), h - 36 - FACE_BAR];
+}
 function stdKnob(id) { return ampUi.panel ? $$('.obs-knobs .kn', ampUi.panel).find(k => k.dataset.param === id) : null; }
 function faceCh() { return Math.round(clamp(vals['amp.channel'] || 0, 0, 1) * 3); }
 function faceOn() { return !(typeof bypassed !== 'undefined' && bypassed.has('AMP')); }
@@ -1110,7 +1118,7 @@ function buildFace() {
   const I = faceUi.info, F = I.face, W = F.W, H = F.H, pc = (v, t) => (v / t * 100).toFixed(4) + '%';
   const st = faceUi.stage, nd = ' alt="" draggable="false"';
   let h = '';
-  F.skins.forEach((sk, i) => { h += '<img class="ff-base off" data-s="' + i + '" src="faces/img/' + sk.id + '_off.jpg"' + nd + '><img class="ff-base on" data-s="' + i + '" src="faces/img/' + sk.id + '_on.jpg"' + nd + '>'; });
+  F.skins.forEach((sk, i) => { h += '<img class="ff-base off" data-s="' + i + '" src="faces/img/' + sk.id + '_off.webp"' + nd + '><img class="ff-base on" data-s="' + i + '" src="faces/img/' + sk.id + '_on.webp"' + nd + '>'; });
   F.skins.forEach((sk, i) => F.knobs.forEach((k, j) => {
     const [x, y, w, hh] = k.b, pos = 'left:' + pc(x, W) + ';top:' + pc(y, H) + ';width:' + pc(w, W) + ';height:' + pc(hh, H) + ';transform-origin:' + k.o[0] + '% ' + k.o[1] + '%';
     h += '<img class="ff-ptr" data-s="' + i + '" data-k="' + j + '" data-v="on" src="faces/img/' + sk.id + '_k' + j + '.png" style="' + pos + '"' + nd + '>';
@@ -1122,7 +1130,7 @@ function buildFace() {
   const [px, py, pr] = F.power, R = pr * 1.25;
   h += '<button class="ff-hot ff-pw" title="Power: the AMP section on / off" style="left:' + pc(px - R, W) + ';top:' + pc(py - R, H) + ';width:' + pc(2 * R, W) + ';height:' + pc(2 * R, H) + '"></button><div class="ff-tip"></div>';
   st.innerHTML = h;
-  const sc = Math.min(FACE_MAX_W / W, FACE_MAX_H / H);
+  const [mw, mh] = faceMax(), sc = Math.min(mw / W, mh / H);
   st.style.width = Math.round(W * sc) + 'px'; st.style.height = Math.round(H * sc) + 'px';
   $$('.ff-hot[data-k]', st).forEach(b => {
     const j = +b.dataset.k; let y0 = 0, v0 = 0, pid = null;
@@ -1197,32 +1205,18 @@ function renderFace(a, info) {
     setInterval(() => { if (faceUi.info && p.offsetParent && !p.classList.contains('obs-hidden')) drawFace(); }, 120);
   }
   faceUi.box.classList.toggle('obs-hidden', !isFace);
-  if (!isFace) { faceUi.info = null; faceUi.key = ''; placeCab(false); return; }
+  if (!isFace) { faceUi.info = null; faceUi.key = ''; return; }
   faceUi.info = info;
   if (faceUi.key !== a.key) { faceUi.key = a.key; faceUi.readHtml = ''; buildFace(); }
   $('.obs-faceinfo i', faceUi.box).textContent = (info.face.name || info.name || '').toUpperCase() + '  ·  ' + (info.basedOn ? 'BASED ON ' + info.basedOn.toUpperCase() : 'CAPTURE AMP');
   $('.obs-faceinfo i', faceUi.box).title = info.description || '';
   drawFace();
-  placeCab(true);
-}
-/** The cab sits under the amp: move it down while a (taller) amp face is shown. */
-function placeCab(face) {
-  const c = ampUi.cabBtn && ampUi.cabBtn.parentElement; if (!c) return;
-  if (c._top === undefined) c._top = c.style.top;
-  if (!face) { c.style.top = c._top; return; }
-  requestAnimationFrame(() => {
-    const box = ampUi.box, b = box.getBoundingClientRect(), pr = ampUi.panel.getBoundingClientRect(), par = c.offsetParent || c.parentElement;
-    const sc = b.width / (box.offsetWidth || b.width) || 1;
-    const bottom = (pr.bottom - par.getBoundingClientRect().top) / sc;
-    c.style.top = Math.max(parseFloat(c._top) || 0, Math.round(bottom + 18)) + 'px';
-  });
 }
 function renderCab() {
   if (!rig) return;
   const c = rig.cab || {}, has = c.key && c.key !== 'none';
   const label = (c.irAName || c.irBName) ? [c.irAName, c.irBName].filter(Boolean).join(' + ') : (c.name || '');
   const card = (big) => '<span style="display:flex;flex-direction:column;align-items:center;gap:' + (big ? 10 : 6) + 'px"><span style="font-size:' + (big ? 10 : 9) + 'px;letter-spacing:.24em;color:var(--accent)">CAB</span><span style="font-size:' + (big ? 20 : 15) + 'px;font-weight:600;letter-spacing:.14em">' + esc(c.name || 'Cab') + '</span><span style="font-size:11px;color:rgb(var(--cf_8d8d93))">' + esc(label !== c.name ? label : 'Click to change') + '</span></span>';
-  if (ampUi.cabBtn) ampUi.cabBtn.innerHTML = has ? card(false) : ampUi.cabHtml;
   if (ampUi.cabBig) ampUi.cabBig.innerHTML = has ? card(true) : ampUi.cabBigHtml;
   if (ampUi.micNote) ampUi.micNote.textContent = has ? 'TWO MICS, BLENDED · LOAD IR TO USE YOUR OWN' : 'MICS APPEAR ONCE A CAB IS CHOSEN';
   if (ampUi.mics) ampUi.mics.style.opacity = has ? '1' : '.4';

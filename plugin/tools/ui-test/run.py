@@ -185,23 +185,74 @@ async def run(standalone):
         playing = await pg.evaluate("[...document.querySelectorAll('.sy-st')].findIndex(s=>s.classList.contains('play'))")
         check(note == 'A2' and playing == 4, f'note display and arp lane follow the engine ({note}, step {playing})')
         await pg.evaluate("window.__mock.meterExtra = null")
-        # AUDITION plays the engine (and switches the synth on)
+        # computer keys play the engine (and switch the synth on); no AUDITION button any more
         await pg.evaluate("window.__mock.log.length=0; window.__mock.engineNotes = true")
-        await pg.locator('.sy-bot .sy-btn').first.click(); await pg.wait_for_timeout(200)
-        L = await pg.evaluate("window.__mock.log.filter(x=>x[0]==='synthNote'||(x[0]==='setParam'&&x[1]==='synth.on'))")
-        check(any(x[0] == 'synthNote' and x[2] for x in L), 'AUDITION sends notes to the engine')
-        await pg.locator('.sy-bot .sy-btn').first.click(); await pg.wait_for_timeout(150)
-        offs = await pg.evaluate("window.__mock.log.filter(x=>x[0]==='synthNote'&&!x[2]).length")
-        check(offs >= 1, 'stopping AUDITION releases the note')
+        await pg.keyboard.down('a'); await pg.wait_for_timeout(120); await pg.keyboard.up('a'); await pg.wait_for_timeout(120)
+        L = await pg.evaluate("window.__mock.log.filter(x=>x[0]==='synthNote')")
+        check(any(x[2] for x in L) and any(not x[2] for x in L), 'computer key A plays and releases a note in the engine')
+        check(await pg.evaluate("![...document.querySelectorAll('.sy-dev .tx b')].some(b=>/AUDITION/.test(b.textContent))"), 'no AUDITION button on the synth')
+        # presets: the browser lists them, loading one sends the sound (not mix / output / key)
+        n_pr = await pg.evaluate("obsSynth.presets.length")
+        await pg.locator('.sy-prbtn').click(); await pg.wait_for_timeout(150)
+        tiles = await pg.locator('.sy-pr').count()
+        await pg.locator('.sy-prs-cats button[data-c="ARCADE"]').click(); await pg.wait_for_timeout(100)
+        arcade = await pg.locator('.sy-pr').count()
+        check(n_pr >= 50 and tiles == n_pr and 0 < arcade < n_pr, f'synth preset browser: {n_pr} presets, ARCADE shows {arcade}')
+        await pg.evaluate("window.__mock.log.length=0")
+        await pg.locator('.sy-pr').first.click(); await pg.wait_for_timeout(200)
+        sent = await pg.evaluate("Object.fromEntries(window.__mock.log.filter(x=>x[0]==='setParam'&&x[1].startsWith('syn.')).map(x=>[x[1],x[2]]))")
+        name = await pg.evaluate("document.querySelector('.sy-prname').textContent")
+        r = await pg.evaluate("obsSynth.read()")
+        check(name == 'Waka Chomp' and abs(sent.get('syn.char', -1) - 2 / 3) < 1e-6 and r['syn.arp.on'] == 1 and abs(r['syn.arp.rate'] - 1) < 1e-6 and len(sent) > 10 and not any(k in sent for k in ('syn.mix', 'syn.level', 'syn.key')),
+              f'loading "Waka Chomp" sends its sound to the engine (8-bit, arp at 1/32), keeps mix / output / key ({name}, {len(sent)} settings)')
+        steps_sent = await pg.evaluate("(window.__mock.log.filter(x=>x[0]==='setSynthSteps').pop()||[])[1]")
+        check(isinstance(steps_sent, list) and len(steps_sent) == 16 and (steps_sent[8] & 1) == 0, 'the preset\'s arpeggiator steps go to the engine too')
+        bad = await pg.evaluate("""() => { const D = Object.fromEntries(obsSynth.defs.map(d => [d[0], d])), out = [];
+          obsSynth.presets.forEach(p => { for (const k in p.v) { const d = D['syn.' + k], v = p.v[k];
+            if (!d) out.push(p.name + ': ' + k); else if (typeof v === 'string' ? !(d[5] || '').split('|').some(o => o.toLowerCase() === v.toLowerCase()) : (v < d[2] || v > d[3])) out.push(p.name + ': ' + k + '=' + v); } });
+          return out; }""")
+        check(not bad, 'every synth preset uses real settings and choices' + (f' ({bad[:4]})' if bad else ''))
+        await pg.locator('.sy-prnav button').nth(1).click(); await pg.wait_for_timeout(150)
+        name2 = await pg.evaluate("document.querySelector('.sy-prname').textContent")
+        check(name2 == 'Ghost Siren', f'the next-preset arrow loads the next one ({name2})')
+        await pg.locator('.sy-prs .x').click(); await pg.wait_for_timeout(100)
+        # RESET: everything back to default (key and tuning stay), UNDO brings the preset back
+        await pg.evaluate("window.__mock.emit('obs:params', {'syn.key': 9/11, 'syn.mix': 0.9})"); await pg.wait_for_timeout(150)
+        await pg.evaluate("window.__mock.log.length=0")
+        await pg.locator('.sy-reset').click(); await pg.wait_for_timeout(200)
+        r = await pg.evaluate("obsSynth.read()")
+        check(abs(r['syn.mix'] - 0.5) < 1e-6 and abs(r['syn.key'] - 9 / 11) < 1e-6 and r['syn.arp.on'] == 0 and abs(r['syn.char'] - 1 / 3) < 1e-6
+              and await pg.evaluate("document.querySelector('.sy-prname').textContent") == 'Init', 'RESET puts the synth back to default (key stays)')
+        await pg.locator('.sy-undo').click(); await pg.wait_for_timeout(150)
+        r = await pg.evaluate("obsSynth.read()")
+        check(abs(r['syn.mix'] - 0.9) < 1e-6 and abs(r['syn.char'] - 2 / 3) < 1e-6 and abs(r['syn.lfo.depth'] - 1) < 1e-6, 'UNDO brings back the sound from before RESET')
+        # every number and label of the synth stays inside its box, at default, lowest and highest values
+        fit = await pg.evaluate("""async () => {
+          const out = [], dev = document.querySelector('.sy-dev'), wait = () => new Promise(r => setTimeout(r, 30));
+          const views = [() => document.querySelectorAll('.sy-tab')[0].click(), () => document.querySelectorAll('.sy-tab')[1].click(), () => document.querySelectorAll('.sy-tab')[2].click(),
+                         () => document.querySelectorAll('.sy-tab')[4].click(), () => document.querySelectorAll('.sy-tab')[3].click()];
+          for (const v of views) { v();
+            for (const n of [null, 0, 1, .37]) {
+              if (n !== null) obsSynth.write(Object.fromEntries(obsSynth.ids.map(id => [id, n]))); else obsSynth.reset();
+              await wait();
+              dev.querySelectorAll('.sy-kv,.sy-kl,.sy-val,.sy-eng,.sy-pbv,.sy-seg button,.sy-tab,.sy-chip,.sy-hint,.sy-lbl,.sy-tg,.sy-sh h3').forEach(e => {
+                if (!e.offsetParent) return; const box = (e.closest('.sy-sec') || dev).getBoundingClientRect(), r = e.getBoundingClientRect();
+                if (r.left < box.left + 3 || r.right > box.right - 3 || r.top < box.top + 2 || r.bottom > box.bottom - 3) out.push((e.textContent || '').trim() + ' @' + n);
+              }); } }
+          obsSynth.reset(); return [...new Set(out)]; }""")
+        check(not fit, 'every synth number and label stays inside its box (all settings low, high, default)' + (f' ({fit[:5]})' if fit else ''))
         # DICE rolls a new sound and UNDO brings the old one back
+        await pg.wait_for_timeout(400)        # let the UNDO above reach the engine first
         before = await pg.evaluate("JSON.stringify(obsSynth.read())")
         await pg.evaluate("window.__mock.log.length=0")
-        await pg.locator('.sy-btn.r').click(); await pg.wait_for_timeout(150)
+        await pg.locator('.sy-btn.r:not(.sy-reset)').click(); await pg.wait_for_timeout(150)
         n_sent = await pg.evaluate("window.__mock.log.filter(x=>x[0]==='setParam'&&x[1].startsWith('syn.')).length")
-        kept = await pg.evaluate("window.__mock.log.filter(x=>x[0]==='setParam'&&['syn.mix','syn.level','syn.key','syn.tune'].includes(x[1])).length")
+        rolled = await pg.evaluate("obsSynth.read()")
+        kept = sum(1 for k in ('syn.mix', 'syn.level', 'syn.key', 'syn.tune') if abs(rolled[k] - json.loads(before)[k]) > 1e-6)
         await pg.locator('.sy-undo').click(); await pg.wait_for_timeout(150)
         after = await pg.evaluate("JSON.stringify(obsSynth.read())")
-        check(n_sent > 15 and kept == 0 and before == after, f'DICE changes {n_sent} settings (not mix/level/key), UNDO restores them')
+        diff = [k for k, v in json.loads(before).items() if abs(v - json.loads(after)[k]) > 1e-6]
+        check(n_sent > 15 and kept == 0 and not diff, f'DICE changes {n_sent} settings (not mix/level/key), UNDO restores them' + (f' (kept {kept}, differ {diff[:5]})' if kept or diff else ''))
         await pg.screenshot(path=str(OUT / 'synth.png'))
 
         # ---- pedals: add, edit, footswitch, remove
@@ -259,6 +310,8 @@ async def run(standalone):
         await pg.evaluate("setTab('AMP')")
         await pg.wait_for_timeout(150)
         check(await pg.locator('.obs-amp:not(.obs-hidden)').count() == 1, 'AMP page shows the loaded amp')
+        cab_on_amp = await pg.evaluate("[...document.querySelectorAll('.page[data-page=\"AMP\"] button')].filter(b=>b.offsetParent && /ADD CAB|CAB/.test(b.textContent) && !/CHANGE AMP/.test(b.textContent)).length")
+        check(cab_on_amp == 0, f'AMP page has no cab section (cabs are picked on the CAB page)')
         based = await pg.evaluate("document.querySelector('.obs-amp .obs-based').textContent")
         check(len(based.strip()) > 12, f'amp says what it is based on ({based.strip()})')
         tint = await pg.evaluate("getComputedStyle(document.querySelector('.obs-amp')).backgroundColor")

@@ -111,14 +111,14 @@
 .obs-maprow button:hover { background: rgba(255,255,255,.08); color: rgb(var(--cf_e9e6df)); }
 
 /* ---- capture amp faces (the amp pack) --------------------------------------------- */
+/* The AMP page shows only the amp (cabs are picked on the CAB page), in the middle of the page. */
+.obs-ampbox { top: 50% !important; transform: translate(-50%, -50%) !important; }
 .obs-amp.face { width: auto; height: auto; padding: 0; background: none; box-shadow: none; gap: 0; }
 .obs-amp.face > :not(.obs-facewrap) { display: none !important; }
-.obs-facewrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.obs-facewrap { display: flex; flex-direction: column; align-items: center; gap: 14px; }
 .obs-face { position: relative; user-select: none; touch-action: none; filter: drop-shadow(0 22px 28px rgba(0,0,0,calc(.6*var(--sh,1)))); }
 .obs-face img { position: absolute; pointer-events: none; -webkit-user-drag: none; user-select: none; }
-.obs-face .ff-base { left: 0; top: 0; width: 100%; height: 100%;
-  -webkit-mask: linear-gradient(90deg, transparent, #000 3%, #000 97%, transparent), linear-gradient(transparent, #000 2%, #000 98%, transparent);
-  -webkit-mask-composite: source-in; mask: linear-gradient(90deg, transparent, #000 3%, #000 97%, transparent), linear-gradient(transparent, #000 2%, #000 98%, transparent); mask-composite: intersect; }
+.obs-face .ff-base { left: 0; top: 0; width: 100%; height: 100%; }   /* the pictures are cut to the amp (transparent around it) */
 .obs-face .ff-led { transition: opacity .15s; }
 .obs-face .ff-hot { position: absolute; border: none; background: none; padding: 0; margin: 0; cursor: ns-resize; border-radius: 50%; outline: none; }
 .obs-face .ff-hot:hover, .obs-face .ff-hot:focus-visible { box-shadow: 0 0 0 1.5px rgba(255,255,255,.22), 0 0 14px rgba(255,255,255,.08); }
@@ -127,7 +127,7 @@
 .obs-face .ff-tip { position: absolute; z-index: 3; transform: translate(-50%, -135%); padding: 5px 9px; border-radius: 8px; white-space: nowrap; pointer-events: none;
   background: rgba(10,10,12,.92); color: #e9e6df; font-size: 11px; letter-spacing: .08em; box-shadow: 0 6px 16px rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,255,255,.1); opacity: 0; transition: opacity .12s; }
 .obs-face .ff-tip.on { opacity: 1; }
-.obs-facebar { width: 100%; max-width: 1160px; display: flex; align-items: center; gap: 10px; }
+.obs-facebar { width: 100%; display: flex; align-items: center; gap: 10px; }
 .obs-faceinfo { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 .obs-faceinfo > i { font-style: normal; font-size: 9.5px; letter-spacing: .22em; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: default; }
 .obs-faceread { display: flex; align-items: baseline; gap: 12px; min-width: 0; font-size: 11px; color: rgb(var(--cf_a3a3a8)); white-space: nowrap; overflow: hidden; }

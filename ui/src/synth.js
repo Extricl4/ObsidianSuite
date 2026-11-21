@@ -6,7 +6,7 @@
    and below: ARPEGGIATOR, LFO, OUTPUT.
    * In the plugin, plugin/WebUI/obsidian-bridge.js connects it to the engine
      through window.obsSynth (read / write / steps / live / noteOut).
-   * In a browser it plays by itself (Web Audio): keys A-K, or AUDITION.
+   * In a browser it plays by itself (Web Audio): keys A-K.
    The parameter list mirrors plugin/Source/DSP/SynthDefs.h.
    ============================================================================= */
 (function () {
@@ -254,6 +254,7 @@ css.textContent = `
 .sy-seg button:hover { color: #e9e6df; }
 .sy-seg button.on { color: #e9e6df; background: linear-gradient(#34343a, #25252a); box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 1px 2px rgba(0,0,0,.5), inset 0 -2px 0 var(--sc, var(--accent)); }
 .sy-seg.small button { height: 19px; font-size: 8px; }
+.sy-seg.tight button { padding: 0 1px; letter-spacing: 0; }
 .sy-chip { height: 20px; padding: 0 8px; flex: none; border-radius: 6px; border: 1px solid rgba(255,255,255,.1); background: none; color: #8d8d93; font: inherit; font-size: 8px; font-weight: 600; letter-spacing: .14em; cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
 .sy-chip:hover { color: #e9e6df; border-color: rgba(255,255,255,.18); }
 .sy-chip.on { background: var(--sc, var(--accent)); border-color: transparent; color: #111113; }
@@ -281,14 +282,47 @@ css.textContent = `
 .sy-st.out { opacity: .25; }
 .sy-st.play .cell { box-shadow: inset 0 0 0 1px #fff, 0 0 10px var(--h-mot); }
 .sy-st.beat .num { color: #a3a3a8; }
-/* bottom band: audition, name badge, dice */
+/* bottom band: presets, name badge, reset, dice */
 .sy-bot { position: absolute; left: 40px; right: 40px; bottom: 22px; height: 70px; display: flex; align-items: center; justify-content: space-between; }
 .sy-badge { position: absolute; left: 50%; top: 4px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; pointer-events: none; }
 .sy-badge b { font-family: 'Cinzel', 'Saira', serif; font-size: 30px; font-weight: 700; letter-spacing: .32em; margin-right: -.32em; line-height: 1; color: transparent;
   background: linear-gradient(180deg, #f4f1ea 0%, #a7a49c 55%, #e9e6df 100%); -webkit-background-clip: text; background-clip: text; filter: drop-shadow(0 2px 0 rgba(0,0,0,.9)); }
 .sy-badge span { margin-top: 6px; font-size: 8.5px; font-weight: 600; letter-spacing: .5em; margin-right: -.5em; color: #8d8d93; }
-.sy-wave { position: absolute; top: 18px; width: 230px; height: 24px; opacity: .45; color: var(--accent); }
-.sy-wave.l { right: calc(50% + 140px); } .sy-wave.r { left: calc(50% + 140px); transform: scaleX(-1); }
+.sy-wave { position: absolute; top: 18px; width: 150px; height: 24px; opacity: .45; color: var(--accent); }
+.sy-wave.l { right: calc(50% + 136px); } .sy-wave.r { left: calc(50% + 136px); transform: scaleX(-1); }
+.sy-prwrap { display: flex; align-items: center; gap: 12px; }
+.sy-prbtn .tx small { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--accent); opacity: .9; }
+.sy-prnav { display: flex; gap: 4px; }
+.sy-prnav button { width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgba(255,255,255,.12); background: none; color: #8d8d93; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; }
+.sy-prnav button:hover { color: #e9e6df; border-color: rgba(255,255,255,.24); }
+.sy-prnav svg { width: 12px; height: 12px; }
+.sy-prbtn.on .round { color: var(--accent); box-shadow: 0 0 0 2px var(--accent), 0 0 0 3px #232326, 0 0 18px var(--accent), inset 0 1px 1px rgba(255,255,255,.25); }
+/* preset browser: lies over the screen */
+.sy-prs { position: absolute; z-index: 15; left: 22px; right: 22px; top: 158px; height: 316px; border-radius: 16px; display: none; flex-direction: column; box-sizing: border-box; padding: 12px 14px 12px;
+  background: radial-gradient(120% 90% at 50% 0%, #141418, #09090b 70%); box-shadow: inset 0 0 0 1px rgba(255,255,255,.07), inset 0 1px 0 rgba(255,255,255,.1), 0 18px 40px rgba(0,0,0,.75); }
+.sy-prs.show { display: flex; }
+.sy-prs-h { display: flex; align-items: center; gap: 14px; height: 26px; flex: none; margin-bottom: 10px; }
+.sy-prs-h b { font-size: 10.5px; font-weight: 600; letter-spacing: .24em; color: #e9e6df; }
+.sy-prs-h span { font-size: 9.5px; color: #6f6f76; letter-spacing: .04em; }
+.sy-prs-h .x { margin-left: auto; width: 26px; height: 26px; border-radius: 8px; border: 1px solid rgba(255,255,255,.1); background: none; color: #a3a3a8; cursor: pointer; font: inherit; font-size: 13px; padding: 0; }
+.sy-prs-h .x:hover { color: #e9e6df; border-color: rgba(255,255,255,.22); }
+.sy-prs-b { display: flex; gap: 12px; flex: 1; min-height: 0; }
+.sy-prs-cats { width: 138px; flex: none; display: flex; flex-direction: column; gap: 3px; }
+.sy-prs-cats button { height: 25px; border: none; border-radius: 7px; background: none; color: #8d8d93; font: inherit; font-size: 9px; font-weight: 600; letter-spacing: .16em; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 0 9px; text-align: left; white-space: nowrap; }
+.sy-prs-cats button i { width: 6px; height: 6px; border-radius: 50%; flex: none; background: var(--cc); box-shadow: 0 0 6px var(--cc); }
+.sy-prs-cats button em { margin-left: auto; font-style: normal; font-size: 8.5px; color: #55555b; letter-spacing: 0; }
+.sy-prs-cats button:hover { color: #e9e6df; }
+.sy-prs-cats button.on { color: #e9e6df; background: #1b1b1f; box-shadow: inset 0 0 0 1px rgba(255,255,255,.07), inset 2px 0 0 var(--cc); }
+.sy-prs-list { flex: 1; min-width: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: 50px; gap: 6px; overflow-y: auto; padding-right: 4px; align-content: start; }
+.sy-prs-list::-webkit-scrollbar { width: 6px; } .sy-prs-list::-webkit-scrollbar-thumb { background: #2a2a2f; border-radius: 3px; }
+.sy-pr { position: relative; border: none; border-radius: 9px; padding: 7px 10px 0 12px; text-align: left; cursor: pointer; font: inherit; color: #e9e6df; min-width: 0; overflow: hidden;
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.015)), #0f0f12; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06), inset 0 1px 0 rgba(255,255,255,.07); display: flex; flex-direction: column; gap: 3px; }
+.sy-pr::before { content: ''; position: absolute; left: 0; top: 8px; bottom: 8px; width: 2px; border-radius: 0 2px 2px 0; background: var(--cc); opacity: .75; }
+.sy-pr b { font-size: 11px; font-weight: 600; letter-spacing: .04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sy-pr small { font-size: 9px; color: #7d7d84; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sy-pr:hover { box-shadow: inset 0 0 0 1px rgba(255,255,255,.16), inset 0 1px 0 rgba(255,255,255,.07); }
+.sy-pr.on { box-shadow: inset 0 0 0 1px var(--cc), 0 0 14px color-mix(in srgb, var(--cc) 30%, transparent); }
+.sy-pr.on b { color: var(--cc); }
 .sy-btn { display: flex; align-items: center; gap: 12px; cursor: pointer; border: none; background: none; padding: 0; font: inherit; color: inherit; }
 .sy-btn .round { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #e9e6df;
   background: radial-gradient(circle at 38% 30%, #4a4a50, #1a1a1d 62%, #0c0c0d); box-shadow: 0 0 0 2px #8f8e89, 0 0 0 3px #232326, 0 6px 12px rgba(0,0,0,.8), inset 0 1px 1px rgba(255,255,255,.25); transition: box-shadow .15s, color .15s; }
@@ -299,7 +333,7 @@ css.textContent = `
 .sy-btn .tx b { font-size: 10px; font-weight: 600; letter-spacing: .22em; color: #e9e6df; }
 .sy-btn .tx small { font-size: 9px; color: #6f6f76; letter-spacing: .04em; }
 .sy-btn.r { flex-direction: row-reverse; } .sy-btn.r .tx { text-align: right; }
-.sy-undo { width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgba(255,255,255,.12); background: none; color: #8d8d93; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; margin-right: 14px; }
+.sy-undo { width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgba(255,255,255,.12); background: none; color: #8d8d93; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; margin-right: -8px; }
 .sy-undo:disabled { opacity: .25; cursor: default; }
 .sy-undo svg { width: 12px; height: 12px; }
 .sy-hint { font-size: 9px; color: #6f6f76; letter-spacing: .04em; }
@@ -325,8 +359,10 @@ const IC = {
   steps: '<svg width="14" height="14" viewBox="0 0 24 24"><rect x="3" y="13" width="4" height="7" rx="1" fill="currentColor"/><rect x="10" y="7" width="4" height="13" rx="1" fill="currentColor"/><rect x="17" y="10" width="4" height="10" rx="1" fill="currentColor"/></svg>',
   dice: '<svg width="13" height="13" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="8.5" cy="8.5" r="1.6" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.6" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1.6" fill="currentColor"/></svg>',
   undo: '<svg width="13" height="13" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5M4 9h10a6 6 0 010 12h-3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-  play: '<svg viewBox="0 0 10 10"><path d="M2 1l7 4-7 4z" fill="currentColor"/></svg>',
-  stop: '<svg viewBox="0 0 10 10"><rect x="2" y="2" width="6" height="6" rx="1" fill="currentColor"/></svg>',
+  list: '<svg viewBox="0 0 24 24"><path d="M4 6h11M4 12h11M4 18h7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="19" cy="17" r="2.6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M21.6 17V6.5L18 5.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  reset: '<svg viewBox="0 0 24 24"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3M4.5 4.5v4.2h4.2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  prev: '<svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  next: '<svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 };
 const WAVE_IC = ['saw', 'pulse', 'tri', 'sine', 'super'];
 
@@ -584,13 +620,13 @@ cSnd._h.append(tabs, el('span', 'sy-sp'), tabRight);
 const sndBody = cSnd._b;
 const oscViews = ['a', 'b'].map((x, oi) => {
   const v = el('div'); v.style.cssText = 'display: flex; flex-direction: column; flex: 1';
-  const sc = el('div', 'sy-vis'); sc.style.height = '64px'; const cv = el('canvas'); sc.appendChild(cv); v._cv = cv;
-  v.append(seg('syn.' + x + '.wave', null, { icons: WAVE_IC }), gapV(8), sc, gapV(12));
+  const sc = el('div', 'sy-vis'); sc.style.height = '54px'; const cv = el('canvas'); sc.appendChild(cv); v._cv = cv;
+  v.append(seg('syn.' + x + '.wave', null, { icons: WAVE_IC }), gapV(8), sc, gapV(10));
   const k = el('div', 'sy-knobs');
   k.append(knob('syn.' + x + '.pitch', { label: 'PITCH', tip: 'Pitch in semitones (12 = one octave)' }), knob('syn.' + x + '.fine', { label: 'FINE', tip: 'Fine tune in cents' }),
     knob('syn.' + x + '.shape', { label: 'SHAPE', tip: 'Saw: a second saw for a hollow, brighter tone · Pulse: width · Triangle: wavefolding · Sine: FM growl · Super: side voices' }),
     knob('syn.' + x + '.level', { label: 'LEVEL' }));
-  v.append(k, gapV(10));
+  v.append(k, gapV(8));
   const uni = el('div', 'sy-knobs'); uni.style.alignItems = 'center';
   const useg = seg('syn.' + x + '.voices', null, { small: true, width: 118 });
   const ucol = el('div'); ucol.style.cssText = 'display: flex; flex-direction: column; align-items: center; gap: 6px'; ucol.append(useg, el('span', 'sy-kl', 'UNISON VOICES'));
@@ -602,7 +638,7 @@ const oscViews = ['a', 'b'].map((x, oi) => {
 });
 const subView = (() => {
   const v = el('div'); v.style.cssText = 'display: flex; flex-direction: column; flex: 1';
-  const sc = el('div', 'sy-vis'); sc.style.height = '64px'; const cv = el('canvas'); sc.appendChild(cv); v._cv = cv;
+  const sc = el('div', 'sy-vis'); sc.style.height = '54px'; const cv = el('canvas'); sc.appendChild(cv); v._cv = cv;
   const cols = el('div'); cols.style.cssText = 'display: flex; gap: 12px; flex: 1; margin-top: 12px';
   const mk = (title, kids) => { const c = el('div'); c.style.cssText = 'flex: 1; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 12px 8px; border-radius: 10px; background: #0e0e10; box-shadow: inset 0 0 0 1px rgba(255,255,255,.04)';
     c.appendChild(el('span', 'sy-lbl', title)); kids.forEach(k => c.appendChild(k)); return c; };
@@ -633,12 +669,13 @@ onChange(i => { if (/^syn\.(a|b)\.(on|level)$|^syn\.(sub|noise)\.level$/.test(i)
 const cFlt = section('FILTER', 282, 'var(--h-flt)');
 cFlt._h.append(el('span', 'sy-sp'), toggle('syn.flt.on', 'Filter on'));
 dimWhen(cFlt, 'syn.flt.on');
-const fScr = el('div', 'sy-vis'); fScr.style.height = '64px'; fScr.style.cursor = 'crosshair'; const fCv = el('canvas'); fScr.appendChild(fCv);
+const fScr = el('div', 'sy-vis'); fScr.style.height = '52px'; fScr.style.cursor = 'crosshair'; const fCv = el('canvas'); fScr.appendChild(fCv);
 fScr.title = 'Drag: left/right = cutoff, up/down = resonance'; fScr.dataset.param = 'syn.flt.cutoff';
-cFlt._b.append(seg('syn.flt.type', ['LDR24', 'LDR12', 'LP', 'BP', 'HP', 'NOTCH', 'VOWEL']), gapV(8), fScr, gapV(12),
+const fType = seg('syn.flt.type', ['LDR24', 'LDR12', 'LP', 'BP', 'HP', 'NOTCH', 'VOWEL']); fType.classList.add('tight');
+cFlt._b.append(fType, gapV(8), fScr, gapV(8),
   (() => { const k = el('div', 'sy-knobs'); k.style.alignItems = 'flex-end';
-    k.append(knob('syn.flt.cutoff', { label: 'CUTOFF', size: 46, tip: 'Brightness. With VOWEL it moves through A-E-I-O-U' }), knob('syn.flt.res', { label: 'RESONANCE' })); return k; })(),
-  gapV(10),
+    k.append(knob('syn.flt.cutoff', { label: 'CUTOFF', size: 42, tip: 'Brightness. With VOWEL it moves through A-E-I-O-U' }), knob('syn.flt.res', { label: 'RESONANCE' })); return k; })(),
+  gapV(6),
   (() => { const k = el('div', 'sy-knobs'); k.append(knob('syn.flt.drive', { label: 'DRIVE', size: 32 }), knob('syn.flt.env', { label: 'ENV AMOUNT', size: 32, tip: 'How far the filter envelope opens (or closes) the filter' }), knob('syn.flt.key', { label: 'KEY TRACK', size: 32, tip: 'Higher notes open the filter more' })); return k; })());
 { let d = null;
   const at = e => { const r = fScr.getBoundingClientRect(); return [clamp((e.clientX - r.left) / r.width, 0, 1), clamp(1 - (e.clientY - r.top) / r.height, 0, 1)]; };
@@ -687,9 +724,10 @@ lane.title = PROP_TIPS[0];
 const arpKnobs = el('div', 'sy-knobs');
 arpKnobs.append(knob('syn.arp.gate', { label: 'GATE', size: 30 }), knob('syn.arp.swing', { label: 'SWING', size: 30 }), knob('syn.arp.len', { label: 'STEPS', size: 30, fmt: id => String(Math.round(S[id])) }),
   (() => { const c = el('div', 'sy-ctl'); c.append(seg('syn.arp.oct', null, { small: true, width: 76 })); const l = el('span', 'sy-kl', 'OCTAVES'); l.style.marginTop = '8px'; c.append(l); return c; })());
-arpView.append(row([seg('syn.arp.pattern', null, { icons: ['up', 'down', 'updn', 'shuffle', 'steps'], width: 124 }), el('span', 'sy-sp'), seg('syn.arp.rate', ['1/4', '1/8', '1/8T', '1/16', '1/16T', '1/32'], { small: true, width: 176 })], 'gap: 6px'),
+arpView.append(row([seg('syn.arp.pattern', null, { icons: ['up', 'down', 'updn', 'shuffle', 'steps'], width: 112 }), el('span', 'sy-sp'), seg('syn.arp.rate', ['1/4', '1/8', '1/8T', '1/16', '1/16T', '1/32'], { small: true, width: 184 })], 'gap: 4px'),
   gapV(8), propSeg, gapV(6), lane, gapV(10), arpKnobs);
 arpView.querySelector('.sy-seg[data-param="syn.arp.rate"]').title = 'Note value of each step';
+arpView.querySelector('.sy-seg[data-param="syn.arp.rate"]').classList.add('tight');
 /* lfo view */
 const lfoView = el('div'); lfoView.style.cssText = 'display: flex; flex-direction: column; flex: 1';
 const lScr = el('div', 'sy-vis'); lScr.style.height = '48px'; const lCv = el('canvas'); lScr.appendChild(lCv);
@@ -754,19 +792,23 @@ function drawLane() {
 }
 onChange(i => { if (i === 'syn.arp.len') drawLane(); });
 
-/* ---- bottom band: audition, name badge, dice ---- */
+/* ---- bottom band: presets, name badge, reset and dice ---- */
 const bot = el('div', 'sy-bot'); dev.appendChild(bot);
-const audition = el('button', 'sy-btn', '<span class="round">' + IC.play + '</span><span class="tx"><b>AUDITION</b><small>or play keys A–K</small></span>');
-audition.title = 'Hear the synth without playing';
+const prBtn = el('button', 'sy-btn sy-prbtn', '<span class="round">' + IC.list + '</span><span class="tx"><b>PRESETS</b><small class="sy-prname">Init</small></span>');
+prBtn.title = 'Browse the synth sounds';
+const prNav = el('div', 'sy-prnav', '<button aria-label="Previous synth preset">' + IC.prev + '</button><button aria-label="Next synth preset">' + IC.next + '</button>');
+const prWrap = el('div', 'sy-prwrap'); prWrap.append(prBtn, prNav);
 const waveSvg = '<svg viewBox="0 0 380 24" preserveAspectRatio="none"><path d="' + Array.from({ length: 77 }, (_, i) => (i ? 'L' : 'M') + (i * 5) + ' ' + (12 + Math.sin(i * .42) * 9 * Math.pow(i / 76, 1.6)).toFixed(1)).join(' ') + '" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>';
 const badge = el('div', 'sy-badge', '<b>SIREN</b><span>OBSIDIAN SYNTH</span>');
 const wl = el('div', 'sy-wave l', waveSvg), wr = el('div', 'sy-wave r', waveSvg);
-const diceWrap = el('div'); diceWrap.style.cssText = 'display: flex; align-items: center';
-const undo = el('button', 'sy-undo', IC.undo); undo.title = 'Undo the last dice roll'; undo.disabled = true;
+const diceWrap = el('div'); diceWrap.style.cssText = 'display: flex; align-items: center; gap: 22px';
+const undo = el('button', 'sy-undo', IC.undo); undo.title = 'Undo (dice, reset or preset)'; undo.disabled = true;
+const reset = el('button', 'sy-btn r sy-reset', '<span class="round">' + IC.reset + '</span><span class="tx"><b>RESET</b><small>back to default</small></span>');
+reset.title = 'Every synth setting back to its default (your key and tuning stay)';
 const dice = el('button', 'sy-btn r', '<span class="round">' + IC.dice + '</span><span class="tx"><b>DICE</b><small>roll a new sound</small></span>');
 dice.title = 'Roll a new sound. Keeps your mix, output, key and playing settings.';
-diceWrap.append(undo, dice);
-bot.append(audition, wl, badge, wr, diceWrap);
+diceWrap.append(undo, reset, dice);
+bot.append(prWrap, wl, badge, wr, diceWrap);
 
 /* ------------------------------------------------------------ drawings */
 function hue(name, a = 1) {
@@ -821,7 +863,7 @@ function drawFilter() {
   g.beginPath(); g.moveTo(0, h); pts.forEach(([x, y]) => g.lineTo(x, y)); g.lineTo(w, h); g.closePath(); g.fillStyle = gr; g.fill();
   g.beginPath(); pts.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y));
   g.strokeStyle = live ? hue('flt') : tc('e9e6df', .3); g.lineWidth = 1.9; g.shadowColor = hue('flt', .5); g.shadowBlur = live ? 8 : 0; g.stroke(); g.shadowBlur = 0;
-  const nx = toN('syn.flt.cutoff') * w, ny = h - 8 - (S['syn.flt.res'] / 100 * .8 + .1) * (h - 16);
+  const nx = clamp(toN('syn.flt.cutoff') * w, 10, w - 10), ny = h - 8 - (S['syn.flt.res'] / 100 * .8 + .1) * (h - 16);
   g.fillStyle = '#ffffff'; g.beginPath(); g.arc(nx, clamp(ny, 6, h - 6), 4, 0, 7); g.fill();
   g.strokeStyle = hue('flt', .6); g.beginPath(); g.arc(nx, clamp(ny, 6, h - 6), 9, 0, 7); g.stroke();
   g.fillStyle = tc('e9e6df', .3); g.font = '9px ' + FONT();
@@ -913,8 +955,10 @@ let undoState = null;
 const rr = (a, b) => a + Math.random() * (b - a), ri = (a, b) => Math.floor(rr(a, b + 1)), pick = a => a[Math.floor(Math.random() * a.length)];
 const wpick = ws => { let t = Math.random() * ws.reduce((x, y) => x + y, 0); for (let i = 0; i < ws.length; i++) { t -= ws[i]; if (t <= 0) return i; } return ws.length - 1; };
 const KEEP = ['syn.sens', 'syn.gate', 'syn.dyn', 'syn.key', 'syn.scale', 'syn.tune', 'syn.mix', 'syn.level', 'syn.post'];
+function keepUndo() { undoState = { S: { ...S }, steps: steps.map(s => ({ ...s })), name: prName }; undo.disabled = false; }
+function flash() { screen.classList.remove('sy-flash'); void screen.offsetWidth; screen.classList.add('sy-flash'); }
 function roll() {
-  undoState = { S: { ...S }, steps: steps.map(s => ({ ...s })) };
+  keepUndo();
   const v = {};
   const type = wpick([4, 3, 2, 2, 1.5]);                                   // lead, bass, pad, pluck, weird
   v['syn.a.on'] = 1; v['syn.a.wave'] = wpick([4, 2, 1, 1, 2]); v['syn.a.pitch'] = 0; v['syn.a.fine'] = 0; v['syn.a.shape'] = pick([0, 0, rr(10, 70)]);
@@ -942,11 +986,83 @@ function roll() {
     oct: Math.random() < .18 ? pick([1, 1, -1, 2]) : 0, ratchet: Math.random() < .1 ? pick([2, 3]) : 1, chance: Math.random() < .15 ? pick([50, 75]) : 100, note: pick([0, 0, 2, 4, 4, 7, 9, 11]) }));
   for (const id in v) if (!KEEP.includes(id)) set(id, v[id], 'dice');
   drawLane(); stepsChanged('dice');
-  undo.disabled = false;
-  screen.classList.remove('sy-flash'); void screen.offsetWidth; screen.classList.add('sy-flash');
+  showPreset('Dice roll', -1);
+  flash();
 }
 dice.addEventListener('click', roll);
-undo.addEventListener('click', () => { if (!undoState) return; for (const id in undoState.S) set(id, undoState.S[id], 'dice'); steps = undoState.steps; drawLane(); stepsChanged('dice'); undoState = null; undo.disabled = true; });
+undo.addEventListener('click', () => { if (!undoState) return; const u = undoState; for (const id in u.S) set(id, u.S[id], 'dice'); steps = u.steps; drawLane(); stepsChanged('dice');
+  showPreset(u.name, PRESETS.findIndex(p => p.name === u.name)); undoState = null; undo.disabled = true; });
+
+/* ------------------------------------------------------------ presets and reset */
+/* Presets (synth_presets.js) give only what differs from the defaults. They change the sound and
+   the arpeggiator steps; your mix, output, key, tuning and playing settings (like DICE) stay. */
+const PRESETS = window.OBS_SYNTH_PRESETS || [];
+const PKEEP = KEEP.concat(['syn.hold']);
+const RESET_KEEP = ['syn.key', 'syn.scale', 'syn.tune'];
+let prName = 'Init', prIdx = -1;
+const prNameEl = prBtn.querySelector('.sy-prname');
+function showPreset(name, i) { prName = name; prIdx = i; prNameEl.textContent = name; prNameEl.title = name; markPr(); }
+// mark the loaded one (no rebuild: the tile that was clicked stays in the page)
+function markPr() { if (prList) [...prList.children].forEach(t => t.classList.toggle('on', +t.dataset.i === prIdx)); }
+/** A preset value: a number, or one of the setting's choices by name ('Pulse', '1/16', '8-bit'). */
+function presetValue(id, v) {
+  const p = P[id]; if (!p) return undefined;
+  if (typeof v === 'string') { const i = (p.opts || []).findIndex(o => o.toLowerCase() === v.toLowerCase()); return i < 0 ? undefined : i; }
+  return v;
+}
+/** Steps in short form: on / acc / tie as 'x.x.', note / oct / rat / ch as lists; the rest default. */
+function presetSteps(st) {
+  if (!st) return Array.from({ length: 16 }, (_, i) => STEP_DEF(i));
+  const f = (s, i) => s && s[i] === 'x' ? 1 : 0, a = (l, i, d) => l && l[i] != null ? l[i] : d;
+  return Array.from({ length: 16 }, (_, i) => ({ on: st.on ? f(st.on, i) : 1, acc: f(st.acc, i), tie: f(st.tie, i), oct: a(st.oct, i, 0), ratchet: a(st.rat, i, 1), chance: a(st.ch, i, 100), note: a(st.note, i, 0) }));
+}
+function loadPreset(i) {
+  const pr = PRESETS[i]; if (!pr) return;
+  keepUndo();
+  const want = {};
+  for (const k in pr.v) { const id = 'syn.' + k, v = presetValue(id, pr.v[k]); if (v !== undefined) want[id] = v; }
+  for (const id in P) if (!PKEEP.includes(id)) set(id, id in want ? want[id] : P[id].def, 'preset');
+  steps = presetSteps(pr.steps); drawLane(); stepsChanged('preset');
+  showPreset(pr.name, i); flash();
+}
+function resetAll() {
+  keepUndo();
+  for (const id in P) if (!RESET_KEEP.includes(id)) set(id, P[id].def, 'preset');
+  steps = presetSteps(null); drawLane(); stepsChanged('preset');
+  showPreset('Init', -1); flash();
+}
+reset.addEventListener('click', resetAll);
+// a knob you turn marks the preset as edited (*); a sound that comes from the plugin (a rig preset, automation) is "Custom"
+onChange((id, v, from) => { if (PKEEP.includes(id)) return;
+  if (from === 'ui' && !/\*$/.test(prName)) { prName += ' *'; prNameEl.textContent = prName; }
+  else if (from === 'plugin' && prName !== 'Custom') { prName = 'Custom'; prIdx = -1; prNameEl.textContent = prName; markPr(); } });
+stepListeners.push(from => { if (from === 'ui' && !/\*$/.test(prName)) { prName += ' *'; prNameEl.textContent = prName; } });
+/* the browser */
+const CATS = [['ALL', 'var(--accent)'], ['ARCADE', '#ffd23f'], ['CARTOON', '#ff9ec7'], ['SYN', '#ff5d5d'], ['LEADS', 'var(--h-osc)'], ['BASS', 'var(--h-sub)'], ['PADS & KEYS', 'var(--h-mot)'], ['ARPS', 'var(--h-flt)'], ['FX & WEIRD', '#9dff8a']];
+const catCol = c => (CATS.find(x => x[0] === c) || CATS[0])[1];
+let prCat = 'ALL';
+const prs = el('div', 'sy-prs');
+prs.innerHTML = '<div class="sy-prs-h"><b>SYNTH PRESETS</b><span>' + PRESETS.length + ' sounds · click one and play, the window stays open</span><button class="x" aria-label="Close">✕</button></div><div class="sy-prs-b"><div class="sy-prs-cats"></div><div class="sy-prs-list"></div></div>';
+dev.appendChild(prs);
+const prCats = prs.querySelector('.sy-prs-cats'), prList = prs.querySelector('.sy-prs-list');
+prCats.innerHTML = CATS.map(([c, col]) => '<button data-c="' + c + '" style="--cc:' + col + '"><i></i>' + c + '<em>' + (c === 'ALL' ? PRESETS.length : PRESETS.filter(p => p.cat === c).length) + '</em></button>').join('');
+function drawPrList() {
+  if (!prList) return;
+  [...prCats.children].forEach(b => b.classList.toggle('on', b.dataset.c === prCat));
+  prList.innerHTML = PRESETS.map((p, i) => [p, i]).filter(([p]) => prCat === 'ALL' || p.cat === prCat)
+    .map(([p, i]) => '<button class="sy-pr' + (i === prIdx ? ' on' : '') + '" data-i="' + i + '" style="--cc:' + catCol(p.cat) + '" title="' + p.note.replace(/"/g, '&quot;') + '"><b>' + p.name + '</b><small>' + p.note + '</small></button>').join('');
+}
+prCats.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; prCat = b.dataset.c; drawPrList(); prList.scrollTop = 0; });
+prList.addEventListener('click', e => { const b = e.target.closest('.sy-pr'); if (b) loadPreset(+b.dataset.i); });
+const prOpen = open => { prs.classList.toggle('show', open); prBtn.classList.toggle('on', open); if (open) { pop.classList.remove('show'); drawPrList(); const o = prList.querySelector('.on'); if (o) o.scrollIntoView({ block: 'nearest' }); } };
+prBtn.addEventListener('click', e => { e.stopPropagation(); prOpen(!prs.classList.contains('show')); });
+prs.querySelector('.x').addEventListener('click', () => prOpen(false));
+document.addEventListener('pointerdown', e => { if (prs.classList.contains('show') && !prs.contains(e.target) && !prWrap.contains(e.target)) prOpen(false); });
+const stepPreset = d => { if (!PRESETS.length) return; const list = PRESETS.map((p, i) => i).filter(i => prCat === 'ALL' || PRESETS[i].cat === prCat);
+  const at = list.indexOf(prIdx); loadPreset(list[at < 0 ? (d > 0 ? 0 : list.length - 1) : (at + d + list.length) % list.length]); };
+prNav.children[0].addEventListener('click', () => stepPreset(-1));
+prNav.children[1].addEventListener('click', () => stepPreset(1));
+drawPrList();
 
 /* ============================================================ preview engine (browser only) */
 /* In the plugin the C++ engine plays; here a small Web Audio version does, so the page can be tried anywhere. */
@@ -1165,19 +1281,6 @@ function releaseKey(m) {
   if (on('syn.arp.on')) { stopArp(); live.note = null; } else { noteOff(); live.note = null; }
 }
 onChange(id => { if (inPlugin() || !ac) return; if (id === 'syn.arp.on') { if (!on(id)) { stopArp(); if (held == null) noteOff(); } else if (held != null) { noteOff(); startArp(); } } });
-/* AUDITION: a short riff the way a guitarist would play it */
-let demoT = null;
-function demo(onOff) {
-  audition.classList.toggle('on', onOff); audition.innerHTML = '<span class="round">' + (onOff ? IC.stop : IC.play) + '</span><span class="tx"><b>' + (onOff ? 'STOP' : 'AUDITION') + '</b><small>' + (onOff ? 'playing a demo riff' : 'or play keys A–K') + '</small></span>';
-  if (!onOff) { clearTimeout(demoT); demoT = null; if (held != null) releaseKey(held); if (!inPlugin()) { stopArp(); noteOff(); live.note = null; } return; }
-  const riff = [40, 43, 45, 47, 40, 50, 48, 45]; let i = 0;
-  const next = () => { const beat = 60 / bpm; if (held != null) releaseKey(held);
-    const m = riff[i % riff.length]; press(m, 'AUDITION'); i++;
-    const dur = on('syn.arp.on') ? beat * 2 : beat * (i % 2 ? 1.5 : .5);
-    demoT = setTimeout(() => { if (!on('syn.arp.on')) releaseKey(m); demoT = setTimeout(next, on('syn.arp.on') ? 0 : beat * 1000 * .02); }, dur * 1000 * .96); };
-  next();
-}
-audition.addEventListener('click', () => demo(!demoT));
 const KEYS = { a: 40, w: 41, s: 42, e: 43, d: 43, f: 45, t: 46, g: 47, h: 48, u: 49, j: 50, k: 52, o: 51, l: 53 };
 const down = new Set();
 addEventListener('keydown', e => { if (SP.style.display === 'none' || e.repeat || e.ctrlKey || e.metaKey || e.altKey || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
@@ -1205,6 +1308,9 @@ window.obsSynth = {
   powerOut: null,             // set by the bridge: turns the synth section on
   setPower(isOn) { if (!!isOn !== powered) setPowerUi(isOn); },
   dice: roll,
+  reset: resetAll,
+  presets: PRESETS,
+  loadPreset,
 };
 
 /* ------------------------------------------------------------ start */

@@ -10,12 +10,18 @@ data block with every knob, button, LED and power-switch position. Writes:
     plugin/Content/Faces/<key>.json   positions, knob names and defaults, buttons, LEDs, setting names
     plugin/Content/Faces/img/*        the images those files use
 
+The face pictures are trimmed on the way (trim.py): no carrying handle, no studio backdrop, so the
+plugin's own background shows right up to the amp. They're saved as .webp with transparency.
+
 The plugin finds them in Documents\\Obsidian Amp Suite\\Faces (the pack installs them there).
 Which capture plays for which knob/button setting is NOT here: that's the amp's own file,
 plugin/Content/Amps/<key>.json ("map"), which the engine reads.
 """
 import json, shutil, sys
 from pathlib import Path
+from PIL import Image
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from trim import trim, move
 
 ROOT = Path(__file__).resolve().parents[3]
 SITE = ROOT / 'visuals' / 'finished' / 'site'
@@ -54,15 +60,21 @@ def main():
         }
         if a.get('sel'):
             face['sel'] = {x: a['sel'][x] for x in ('knob', 'label', 'names', 'note') if x in a['sel']}
-        imgs = []
+        bases = [f"{s['id']}_{v}" for s in a['skins'] for v in ('on', 'off')]
+        imgs = [b + '.webp' for b in bases]
         for s in a['skins']:
-            imgs += [s['id'] + '_on.jpg', s['id'] + '_off.jpg'] + [f"{s['id']}_k{j}.png" for j in range(len(knobs))]
+            imgs += [f"{s['id']}_k{j}.png" for j in range(len(knobs))]
             if s.get('ptrOff'): imgs += [f"{s['id']}_k{j}o.png" for j in range(len(knobs))]
         imgs += [f"{a['key']}_led_{l}.png" for l in a['leds']]
-        missing = [f for f in imgs if not (SITE / 'img' / f).exists()]
+        src = [b + '.jpg' for b in bases] + imgs[len(bases):]
+        missing = [f for f in src if not (SITE / 'img' / f).exists()]
         if missing:
             sys.exit(f"{a['key']}: missing images {missing[:5]}")
-        for f in imgs:
+        cut, (dx, dy), (W, H) = trim(a['key'], {b: Image.open(SITE / 'img' / (b + '.jpg')) for b in bases})
+        for b, im in cut.items():
+            im.save(OUT / 'img' / (b + '.webp'), 'WEBP', quality=90, method=6); used.add(b + '.webp')
+        move(face, dx, dy, W, H)
+        for f in imgs[len(bases):]:
             shutil.copy2(SITE / 'img' / f, OUT / 'img' / f); used.add(f)
         face['images'] = imgs
         (OUT / (a['key'] + '.json')).write_text(json.dumps(face, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
