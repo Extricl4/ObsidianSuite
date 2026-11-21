@@ -19,7 +19,7 @@ WEB = HERE / 'web'
 
 def main():
     state = run.build_page(standalone=True)
-    state['presets'] = []                       # the real app ships with no presets
+    state['presets'] = run.factory_presets()    # the 390 built-in presets (Factory + Artists), as the app lists them
     # every amp of the amp pack, with its face
     state['amps'] = [a for a in state['amps'] if a.get('type') != 'capture']
     state['amps'] += [run.capture_entry(f.stem) for f in sorted((run.CONTENT / 'Amps').glob('*.json'))]
