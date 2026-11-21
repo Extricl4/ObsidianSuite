@@ -883,7 +883,7 @@ function renderLib(p) {
     const cur = rig && rig.amp ? rig.amp.key : '';
     const roles = { 'CLEAN': /clean/i, 'CRUNCH': /crunch/i, 'HIGH GAIN': /high|lead|metal/i };
     const list = AMPS.filter(a => (filter === 'ALL' || (roles[filter] && roles[filter].test(a.role + ' ' + a.description))) && (!q || (a.name + ' ' + a.role + ' ' + a.description).toLowerCase().includes(q)));
-    p._grid.innerHTML = list.map(a => '<button class="obs-tile' + (a.key === cur ? ' on' : '') + '" data-amp="' + esc(a.key) + '" title="' + esc(a.description) + '"><i>' + esc(a.role || a.type) + '</i><b>' + esc(a.name) + '</b><small>' + esc(a.basedOn ? 'Based on ' + a.basedOn : a.description) + '</small></button>').join('') || '<div class="obs-empty">No amps match.</div>';
+    p._grid.innerHTML = list.map(a => '<button class="obs-tile' + (a.key === cur ? ' on' : '') + '" data-amp="' + esc(a.key) + '" title="' + esc(a.description) + '"><i>' + esc(a.role || a.type) + '</i><b>' + esc(a.name) + '</b><small>' + esc(a.basedOn ? (/^Obsidian original/i.test(a.basedOn) ? a.basedOn : 'Based on ' + a.basedOn) : a.description) + '</small></button>').join('') || '<div class="obs-empty">No amps match.</div>';
   } else {
     const cur = rig && rig.cab ? rig.cab.key : '';
     const list = CABS.filter(c => (filter === 'ALL' || (c.size || '').replace('x', '×') === filter) && (!q || (c.name + ' ' + (c.size || '')).toLowerCase().includes(q)));
@@ -920,7 +920,8 @@ function renderAmp() {
   $('.obs-ampname', ampUi.panel).textContent = a.name || info.name || 'Amp';
   $('.obs-role', ampUi.panel).textContent = info.role || (a.type === 'nam' ? 'Capture' : 'Built in');
   const based = $('.obs-based', ampUi.panel);
-  based.textContent = info.basedOn ? 'BASED ON  ' + info.basedOn : (a.type === 'nam' ? 'NAM CAPTURES · KNOBS ARE AN EQ AFTER THE CAPTURE' : '');
+  const own = /^Obsidian original/i.test(info.basedOn || '');
+  based.textContent = info.basedOn ? (own ? info.basedOn : 'BASED ON  ' + info.basedOn) : (a.type === 'nam' ? 'NAM CAPTURES · KNOBS ARE AN EQ AFTER THE CAPTURE' : '');
   based.title = info.description || '';
   ampUi.panel.style.setProperty('--amp-tint', info.tint ? '#' + info.tint : 'transparent');
   $('.obs-busy', ampUi.panel).style.display = rig.busy ? '' : 'none';

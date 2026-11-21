@@ -147,7 +147,7 @@ async def run(standalone):
         await pg.wait_for_timeout(150)
         check(await pg.locator('.obs-amp:not(.obs-hidden)').count() == 1, 'AMP page shows the loaded amp')
         based = await pg.evaluate("document.querySelector('.obs-amp .obs-based').textContent")
-        check(based.startswith('BASED ON') and len(based) > 12, f'amp says what it is based on ({based.strip()})')
+        check(len(based.strip()) > 12, f'amp says what it is based on ({based.strip()})')
         tint = await pg.evaluate("getComputedStyle(document.querySelector('.obs-amp')).backgroundColor")
         check(tint not in ('', 'rgba(0, 0, 0, 0)', 'transparent'), f'amp panel has its own tint ({tint})')
         await pg.screenshot(path=str(OUT / 'amp.png'))

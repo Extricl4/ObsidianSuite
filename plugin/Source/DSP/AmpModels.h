@@ -421,7 +421,7 @@ inline const std::vector<AmpDef>& models()
           1, 4, 0.6f, modern, 2.f,
           6.f, 0.f, 14.f, 2.8f, 0.2f, 110.f, 4000.f, 6.f, 90.f, 5.f, 60.f, 7800.f, -11.7f },
 
-        { "core", "OBSIDIAN CORE", "Our own design (modern high gain)", "high gain",
+        { "core", "OBSIDIAN CORE", "Obsidian original (modern high gain)", "high gain",
           "Obsidian's own amp: tight like a 5150, smooth like an SLO, with a clearer top end.",
           0x121214, 0.f, 95.f, 4.f, 2400.f, 60.f,
           4, { { 12.f, 0.1f, 800.f, -5.f, 65.f, 12000.f }, { 26.f, 0.12f, 500.f, -4.f, 95.f, 10500.f }, { 24.f, 0.15f, 350.f, -2.f, 70.f, 9500.f }, { 20.f, 0.2f, 220.f, -1.f, 40.f, 8000.f } },

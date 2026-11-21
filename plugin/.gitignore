@@ -1,3 +1,4 @@
 # builds and test output (never committed)
 build*/
 tools/ui-test/out/
+tools/ui-test/web/
