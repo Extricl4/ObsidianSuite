@@ -67,7 +67,6 @@ public:
             s.set ("midiMappings", "[]");
             s.set ("metronomeVolume", 0.7);
             s.set ("uiDevFolder", "");
-            s.set ("liveUi", false);            // load the look from Downloads\ObsidianUI when it's newer than this build
             s.set ("checkUpdates", true);       // look for a newer build when the window opens (at most every few hours)
             s.set ("lastUpdateCheck", 0.0);
             return s;
