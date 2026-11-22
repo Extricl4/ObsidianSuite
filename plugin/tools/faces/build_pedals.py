@@ -9,6 +9,12 @@ engraved top, and <key>_glow.png, the parts that light up). The 3D renders need 
 same design flat with shading: enclosure with sheen and bevel, the artwork, machined knobs at their real
 positions and values, toggles, buttons, LEDs, screws and the footswitch.
 
+The plugin's own designs (plugin/tools/faces/pedals/<key>.json, art made by make_art.py there) are read
+the same way; they may also have "screens": [{"at": [x, y], "w": cm, "h": cm, "color": [r, g, b]}], a glass
+display the board writes live text on (its place goes into obsidian-pedals.js as "screen").
+
+    python3 plugin/tools/faces/build_pedals.py nampedal     # just these pedals (the others stay as they are)
+
 Writes, for every pedal the plugin has:
     plugin/WebUI/pedals/<key>_off.webp   the pedal switched off
     plugin/WebUI/pedals/<key>_on.webp    switched on: LED lit, glowing artwork
@@ -21,6 +27,7 @@ from PIL import Image, ImageFilter
 
 ROOT = Path(__file__).resolve().parents[3]
 VIS = ROOT / 'visuals'
+OWN = ROOT / 'plugin' / 'tools' / 'faces' / 'pedals'       # the plugin's own designs (not the visuals chat's)
 OUT = ROOT / 'plugin' / 'WebUI' / 'pedals'
 JS = ROOT / 'plugin' / 'WebUI' / 'obsidian-pedals.js'
 PX_PER_CM = 40            # output scale (a standard 6.6 x 12 cm pedal -> 264 x 480 px)
@@ -130,7 +137,7 @@ def render(key, spec, lit):
     cv.rgb = body; cv.a = m
     # artwork (+ glow when lit)
     def art(path):
-        p = VIS / path
+        p = Path(spec.get('_dir', VIS)) / path
         return Image.open(p).convert('RGBA').resize((w, h), Image.LANCZOS) if p.exists() else None
     a = art(spec['art'].replace('art/', 'art/')) if spec.get('art') else None
     if a is not None:
@@ -185,6 +192,24 @@ def render(key, spec, lit):
         for i in range(int(ln)):
             cv.disc(x, y + d * i, .07 * s, chrome)
         cv.disc(x, y + d * ln, .11 * s, chrome)
+    # screens: a bezel and dark glass (the board writes on it), faintly backlit when on
+    for sc in spec.get('screens', []):
+        x, y = P(*sc['at']); sw, sh = sc['w'] * s, sc['h'] * s; bz = .14 * s
+        fr = Image.new('RGBA', (int(sw + 2 * bz), int(sh + 2 * bz)), (0, 0, 0, 0))
+        ImageDraw.Draw(fr).rounded_rectangle([0, 0, fr.width - 1, fr.height - 1], int(.2 * s), fill=(30, 30, 35, 255))
+        fa = np.asarray(fr, float) / 255
+        fa[..., :3] = np.clip(fa[..., :3] * np.linspace(1.5, .7, fa.shape[0])[:, None, None], 0, 1)
+        cv.image(Image.fromarray((fa * 255).astype(np.uint8)), x - sw / 2 - bz, y - sh / 2 - bz)
+        gl = Image.new('RGBA', (int(sw), int(sh)), (0, 0, 0, 0))
+        ImageDraw.Draw(gl).rounded_rectangle([0, 0, int(sw) - 1, int(sh) - 1], int(.09 * s), fill=(5, 7, 9, 255))
+        ga = np.asarray(gl, float) / 255
+        gy, gx = np.mgrid[0:ga.shape[0], 0:ga.shape[1]].astype(float); gy /= ga.shape[0]; gx /= ga.shape[1]
+        tint = srgb(sc.get('color', [.35, .88, 1]))
+        glass = .05 * np.exp(-((gx - .55 * gy - .05) ** 2) / .004)[..., None]                      # diagonal reflection
+        glass = glass - .05 * np.exp(-gy / .08)[..., None]                                          # recessed top edge
+        if lit: glass = glass + tint[None, None] * .07 * np.exp(-((gx - .5) ** 2 / .3 + (gy - .5) ** 2 / .3))[..., None]
+        ga[..., :3] = np.clip(ga[..., :3] + glass, 0, 1)
+        cv.image(Image.fromarray((ga * 255).astype(np.uint8)), x - sw / 2, y - sh / 2)
     # knobs
     for k in spec.get('knobs', []):
         x, y = P(*k['at']); r = k['r'] * s; st = k.get('style', 'black')
@@ -217,29 +242,37 @@ def render(key, spec, lit):
     pos = {'w': w // SS, 'h': h // SS,
            'led': [[round(l['at'][0] / (Wc * artpx), 4), round(l['at'][1] / (Lc * artpx), 4), '#%02x%02x%02x' % tuple(int(v * 255) for v in srgb(l['color']))] for l in spec.get('leds', [])],
            'fs': [[round(f[0] / (Wc * artpx), 4), round(f[1] / (Lc * artpx), 4), round(.62 * f[2] / Wc, 4)] for f in spec.get('footswitches', [])]}
+    for sc in spec.get('screens', [])[:1]:   # the glass, as fractions: left, top, width, height
+        pos['screen'] = [round((sc['at'][0] / artpx - sc['w'] / 2) / Wc, 4), round((sc['at'][1] / artpx - sc['h'] / 2) / Lc, 4), round(sc['w'] / Wc, 4), round(sc['h'] / Lc, 4)]
     return img, pos
 
 def main():
+    import sys
+    only = set(sys.argv[1:])               # just these pedals; the others keep their pictures and entries
     keys = plugin_keys()
     OUT.mkdir(parents=True, exist_ok=True)
     data, made = {}, []
-    for f in sorted((VIS / 'pedals').glob('*.json')):
-        key = f.stem
-        if key not in keys: continue
+    if only and JS.exists():
+        txt = JS.read_text(encoding='utf-8'); data = json.loads(txt[txt.index('{'):txt.rindex('}') + 1])
+    designs = {f.stem: f for f in sorted((VIS / 'pedals').glob('*.json'))}
+    designs.update({f.stem: f for f in sorted(OWN.glob('*.json'))})      # the plugin's own designs
+    for key, f in sorted(designs.items()):
+        if key not in keys or (only and key not in only): continue
         spec = json.loads(f.read_text())
+        if f.parent == OWN: spec['_dir'] = str(OWN)
         off, pos = render(key, spec, False)
         on, _ = render(key, spec, True)
         off.save(OUT / f'{key}_off.webp', 'WEBP', quality=86, method=6)
         on.save(OUT / f'{key}_on.webp', 'WEBP', quality=86, method=6)
         data[key] = pos; made.append(key)
     for old in OUT.glob('*.webp'):
-        if old.stem.rsplit('_', 1)[0] not in data: old.unlink()
+        if not only and old.stem.rsplit('_', 1)[0] not in data: old.unlink()
     JS.write_text('/* Generated by plugin/tools/faces/build_pedals.py: pedal face sizes, LED and footswitch positions (fractions). */\n'
                   'window.OBS_PEDALS = ' + json.dumps(data, separators=(',', ':')) + ';\n', encoding='utf-8')
     size = sum(p.stat().st_size for p in OUT.glob('*.webp'))
     print(f'{len(made)} pedal faces ({size / 1e6:.1f} MB): {" ".join(made)}')
     missing = sorted(keys - set(made))
-    if missing: print('plugin modules without a pedal design:', ' '.join(missing))
+    if missing and not only: print('plugin modules without a pedal design:', ' '.join(missing))
 
 if __name__ == '__main__':
     main()

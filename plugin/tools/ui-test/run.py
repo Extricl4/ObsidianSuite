@@ -437,6 +437,23 @@ async def run(standalone):
         await pg.evaluate("window.__mock.emit('obs:rig', window.__mock.state.rig)"); await pg.wait_for_timeout(100)
         await face.locator('.pf-foot').click(); await pg.wait_for_timeout(200)
         await pg.screenshot(path=str(OUT / 'pedals-faces.png'))
+        # WRAITH (the NAM pedal): its screen shows the capture, a click on it loads one
+        await pg.evaluate("(()=>{const r=JSON.parse(JSON.stringify(window.__mock.state.rig)); r.racks[0][4]={key:'nampedal',name:'NAM Pedal',file:'',fileName:''}; window.__mock.emit('obs:rig', r);})()")
+        await pg.wait_for_timeout(200)
+        wr = pg.locator('.page[data-page="PEDALS"] .obs-slot').nth(4)
+        empty = await wr.evaluate("b=>(b.querySelector('.obs-pfscreen')||{}).textContent||''")
+        await pg.evaluate("window.__mock.log.length=0")
+        await wr.locator('.obs-pfscreen').click(); await pg.wait_for_timeout(150)
+        asked = await pg.evaluate("window.__mock.log.some(x=>x[0]==='loadModuleFile'&&x[1]===0&&x[2]===4)")
+        await pg.evaluate("""(()=>{const r=JSON.parse(JSON.stringify(window.__mock.state.rig)); r.racks[0][4]={key:'nampedal',name:'NAM Pedal',file:'C:/c/KOT OD Gain=5.nam',fileName:'KOT OD Gain=5',
+            title:'KOT OD Gain=5', gear:'Various Pedal Companies', by:'frank67'}; window.__mock.emit('obs:rig', r);})()""")
+        await pg.wait_for_timeout(200)
+        full = await wr.evaluate("b=>[...b.querySelector('.obs-pfscreen').children].map(c=>c.textContent)")
+        inside = await wr.evaluate("""b=>{ const s=b.querySelector('.obs-pfscreen').getBoundingClientRect(), f=b.querySelector('.obs-pface').getBoundingClientRect(); return s.left>f.left && s.right<f.right && s.top>f.top && s.bottom<f.bottom; }""")
+        check(empty.startswith('NO CAPTURE') and asked and full == ['KOT OD Gain=5', 'Various Pedal Companies', 'by frank67'] and inside,
+              f'WRAITH (NAM pedal): its screen says NO CAPTURE, a click loads one, then it shows the capture, gear and maker ({full})')
+        await wr.screenshot(path=str(OUT / 'wraith.png'))
+        await pg.evaluate("window.__mock.emit('obs:rig', window.__mock.state.rig)"); await pg.wait_for_timeout(100)
         # drag slot 2 onto slot 4
         a = await pg.locator('.page[data-page="PEDALS"] .obs-slot').nth(1).bounding_box()
         c = await pg.locator('.page[data-page="PEDALS"] .obs-slot').nth(3).bounding_box()

@@ -1,0 +1,117 @@
+{
+  "_about": "WRAITH, the NAM capture pedal: a mini enclosure (3.9 x 9.3 cm) with a screen that shows the loaded capture. Units: 200 per cm. Drawn by plugin/tools/faces/build_pedals.py; art by make_art.py.",
+  "size": [
+    3.9,
+    9.3
+  ],
+  "art": "art/nampedal_art.png",
+  "glow": "art/nampedal_glow.png",
+  "glow_strength": 1.2,
+  "artmat": {
+    "rough": 0.3,
+    "metal": 0.4
+  },
+  "enclosure": {
+    "color": [
+      0.03,
+      0.03,
+      0.038
+    ],
+    "metal": 0.35,
+    "rough": 0.3,
+    "coat": 0.7,
+    "bump": [
+      "noise",
+      900,
+      0.05
+    ]
+  },
+  "knobs": [
+    {
+      "at": [
+        150,
+        270
+      ],
+      "r": 0.32,
+      "style": "alu",
+      "v": 0.5
+    },
+    {
+      "at": [
+        390,
+        270
+      ],
+      "r": 0.32,
+      "style": "alu",
+      "v": 0.5
+    },
+    {
+      "at": [
+        630,
+        270
+      ],
+      "r": 0.32,
+      "style": "alu",
+      "v": 0.85
+    }
+  ],
+  "screens": [
+    {
+      "at": [
+        390,
+        760
+      ],
+      "w": 3.4,
+      "h": 2.7,
+      "color": [
+        0.35,
+        0.88,
+        1.0
+      ]
+    }
+  ],
+  "leds": [
+    {
+      "at": [
+        390,
+        1335
+      ],
+      "color": [
+        0.35,
+        0.88,
+        1.0
+      ],
+      "strength": 40
+    }
+  ],
+  "footswitches": [
+    [
+      390,
+      1590,
+      0.85
+    ]
+  ],
+  "screws": [
+    [
+      80,
+      80
+    ],
+    [
+      700,
+      80
+    ],
+    [
+      80,
+      1780
+    ],
+    [
+      700,
+      1780
+    ]
+  ],
+  "rimcolor": [
+    0.6,
+    0.8,
+    1.0
+  ]
+}

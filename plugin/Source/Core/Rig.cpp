@@ -970,6 +970,11 @@ juce::var Rig::toJson() const
             so->setProperty ("file", t["file"]);
             auto* m = const_cast<Engine&> (engine).rack (r).moduleAt (s);
             so->setProperty ("fileName", m != nullptr ? m->fileName() : juce::String());
+            if (type != nullptr && type->fileKind == "nam" && t["file"].toString().isNotEmpty())   // the NAM pedal's screen
+            {
+                const auto info = namInfo (t["file"].toString());
+                for (auto k : { "title", "gear", "by" }) if (info[k].toString().isNotEmpty()) so->setProperty (k, info[k]);
+            }
             slots.add (juce::var (so));
         }
         racks.add (slots);
