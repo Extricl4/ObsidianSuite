@@ -45,12 +45,13 @@ col.querySelector('span').textContent='TRANSPOSE'; col.style.minWidth='0';
 gateG.after(g);
 /* tighter spacing: GATE sits closer to INPUT, and both sides of the bar match */
 const right=hk[2].parentElement.parentElement;
-[left,right].forEach(c=>c.style.gap='9px'); right.style.gap='7px';
+[left,right].forEach(c=>c.style.gap='8px'); right.style.gap='5px';
 hk.concat([k]).forEach(x=>{ x.style.width=x.style.height='54px'; x.parentElement.style.gap='8px';
   const c=x.parentElement.children[1]; if(c&&c!==col) c.style.minWidth='60px'; });
-/* tabs a little tighter so both sides fit three dials */
-const tabs=$('#app button[aria-label],#app button') && hk[0].closest('div[style*="height: 100px"]').children[1];
-[...tabs.children].forEach(b=>{ b.style.minWidth='52px'; b.style.padding='0 4px'; }); tabs.style.gap='0px';
+/* tabs a little tighter so both sides fit three dials (eight tabs since HARMONY: the meters must stay inside the bar) */
+const hbar=hk[0].closest('div[style*="height: 100px"]'), tabs=hbar.children[1];
+[...tabs.children].forEach(b=>{ b.style.minWidth='46px'; b.style.padding='0 3px'; }); tabs.style.gap='0px';
+hbar.style.padding='0 14px';
 /* right side: OUTPUT hugs the meter, DOUBLER follows, and an open slot waits for a 3rd dial */
 right.style.justifyContent='flex-end';
 /* WIDTH dial between DOUBLER and OUTPUT: 0% mono, 100% normal, 200% extra wide */

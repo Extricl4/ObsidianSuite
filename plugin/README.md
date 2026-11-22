@@ -137,7 +137,7 @@ PLACE: after the amp (harmonies of your amp sound, stereo) or before it (the voi
   attack (a voice with some DELAY gets it exactly on the attack: notes are time-stamped). Splices never
   repeat or skip a pick attack. Hammer-ons jump, bends glide.
 * **CHORDS** finds the notes of a chord (up to six) and gives every partial the interval of the note it
-  belongs to (Signalsmith Stretch with a frequency map). It is about 85 ms behind.
+  belongs to (Signalsmith Stretch with a frequency map). It is about 64 ms behind (shorter windows start getting chords wrong).
 
 `tools/harmony/bench.cpp` (`tools/harmony/run.sh`) is its test bench: synthetic guitar parts (held notes over the
 neck, picked phrases, fast runs, legato, bends, low riffs, a distorted amp, chords, every sample rate) with

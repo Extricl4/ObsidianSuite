@@ -202,8 +202,8 @@ class GraphicEq
 {
 public:
     static constexpr int kBands = 9;
-    void prepare (double s)             { sr = s; for (auto& c : cache) c = 999.f; lcCache = hcCache = -1.f; reset(); }
-    void reset()                        { for (auto& ch : bands) for (auto& b : ch) b.reset(); for (auto& f : lc) f.reset(); for (auto& f : hc) f.reset(); }
+    void prepare (double s)             { sr = s; for (auto& c : cache) c = 999.f; lcCache = hcCache = -1.f; step = (float) (1.0 / (0.02 * sr)); reset(); }
+    void reset()                        { for (auto& ch : bands) for (auto& b : ch) b.reset(); for (auto& f : lc) f.reset(); for (auto& f : hc) f.reset(); lcMix = lcWant; hcMix = hcWant; }
 
     void setBand (int i, float freq, float gainDb)
     {
@@ -211,14 +211,21 @@ public:
         cache[i] = gainDb;
         for (auto& ch : bands) ch[i].set (Biquad::Peak, sr, freq, 1.4f, gainDb);
     }
-    void setCuts (float lcHz, float hcHz)
+    /** lcOn / hcOn: the cuts' own switches. A cut at its end (20 Hz / 20 kHz) is off too.
+        Switching fades the cut in or out over 20 ms, so it never clicks. */
+    void setCuts (float lcHz, float hcHz, bool lcOn = true, bool hcOn = true)
     {
         if (lcHz != lcCache) { lcCache = lcHz; for (auto& f : lc) f.set (Biquad::HP, sr, lcHz, 0.707f); }
         if (hcHz != hcCache) { hcCache = hcHz; for (auto& f : hc) f.set (Biquad::LP, sr, hcHz, 0.707f); }
+        lcWant = lcOn && lcHz > 21.f ? 1.f : 0.f;
+        hcWant = hcOn && hcHz < 19500.f ? 1.f : 0.f;
     }
     void process (float* const* ch, int numCh, int n)
     {
-        const bool useLc = lcCache > 21.f, useHc = hcCache < 19500.f;
+        // a cut that starts fading in begins from a clean filter state
+        if (lcMix <= 0.f && lcWant > 0.f) for (auto& f : lc) f.reset();
+        if (hcMix <= 0.f && hcWant > 0.f) for (auto& f : hc) f.reset();
+        float lcEnd = lcMix, hcEnd = hcMix;
         for (int c = 0; c < juce::jmin (2, numCh); ++c)
         {
             float* x = ch[c];
@@ -228,16 +235,34 @@ public:
                 auto& bq = bands[c][b];
                 for (int i = 0; i < n; ++i) x[i] = bq.process (x[i]);
             }
-            if (useLc) for (int i = 0; i < n; ++i) x[i] = lc[c].process (x[i]);
-            if (useHc) for (int i = 0; i < n; ++i) x[i] = hc[c].process (x[i]);
+            lcEnd = cut (lc[c], x, n, lcMix, lcWant);
+            hcEnd = cut (hc[c], x, n, hcMix, hcWant);
         }
+        lcMix = lcEnd; hcMix = hcEnd;
     }
+    float lowCutAmount() const          { return lcMix; }       // 0 off .. 1 in (for tests)
+    float highCutAmount() const         { return hcMix; }
 private:
     double sr = 48000;
     Biquad bands[2][kBands];
     Biquad lc[2], hc[2];
     float cache[kBands] {};
     float lcCache = -1.f, hcCache = -1.f;
+    float lcWant = 0.f, hcWant = 0.f, lcMix = 0.f, hcMix = 0.f, step = 1.f / 960.f;
+
+    /** One cut on one channel, faded by mix (0..1) towards want. Returns where the fade ended. */
+    float cut (Biquad& f, float* x, int n, float mix, float want) const
+    {
+        if (mix <= 0.f && want <= 0.f) return 0.f;                       // off: nothing to do
+        if (mix >= 1.f && want >= 1.f) { for (int i = 0; i < n; ++i) x[i] = f.process (x[i]); return 1.f; }
+        for (int i = 0; i < n; ++i)
+        {
+            mix = want > mix ? juce::jmin (want, mix + step) : juce::jmax (want, mix - step);
+            const float y = f.process (x[i]);
+            x[i] += mix * (y - x[i]);
+        }
+        return mix;
+    }
 };
 
 // ---------------------------------------------------------------------------

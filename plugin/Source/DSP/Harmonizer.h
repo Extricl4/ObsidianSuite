@@ -985,7 +985,7 @@ public:
     void prepare (double s, int maxBlock)
     {
         sr = s;
-        st.configure (1, (int) (sr * 0.085), (int) (sr * 0.021));
+        st.configure (1, (int) (sr * 0.064), (int) (sr * 0.016));        // 64 ms: shorter starts getting chords wrong (tools/harmony bench)
         st.reset();
         out.assign ((size_t) std::max (maxBlock, 64), 0.f);
         lat = st.inputLatency() + st.outputLatency();

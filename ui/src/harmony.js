@@ -216,13 +216,20 @@ css.textContent = `
 .hm-keys button { height: 34px; border: none; border-radius: 8px; background: #0e0e10; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); color: #d6d3cc; font: inherit; font-size: 12px; cursor: pointer; }
 .hm-keys button:hover { box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
 .hm-keys button.on { background: var(--accent); color: #111113; font-weight: 600; }
-.hm-prs { display: grid; grid-template-columns: repeat(3, 210px); gap: 6px; }
-.hm-prs button { border: none; border-radius: 9px; padding: 8px 10px; text-align: left; cursor: pointer; font: inherit; color: #e9e6df; display: flex; flex-direction: column; gap: 3px;
-  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.015)), #0f0f12; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); }
-.hm-prs button b { font-size: 11px; font-weight: 600; letter-spacing: .03em; }
-.hm-prs button small { font-size: 9px; color: #7d7d84; }
-.hm-prs button:hover { box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
-.hm-prs button.on { box-shadow: inset 0 0 0 1px var(--accent); }
+.hm-prcols { display: grid; grid-template-columns: repeat(4, 208px); gap: 10px; align-items: start; }
+.hm-prcol { --cc: #888; border-radius: 12px; padding: 8px; display: flex; flex-direction: column; gap: 5px; max-height: 440px; overflow-y: auto;
+  background: linear-gradient(color-mix(in srgb, var(--cc) 9%, #141416), #111113 60%); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cc) 30%, transparent); }
+.hm-prcol h4 { margin: 0; padding: 4px 6px 0; display: flex; justify-content: space-between; align-items: baseline; font-size: 10px; font-weight: 700; letter-spacing: .2em; color: var(--cc); text-shadow: 0 0 10px color-mix(in srgb, var(--cc) 45%, transparent); }
+.hm-prcol h4 em { font-style: normal; font-size: 9px; color: #6f6f76; letter-spacing: .1em; text-shadow: none; }
+.hm-prcol p { margin: 0 0 4px; padding: 0 6px 7px; font-size: 8.5px; color: #77777e; letter-spacing: .04em; border-bottom: 1px solid color-mix(in srgb, var(--cc) 25%, transparent); }
+.hm-prcol button { border: none; border-radius: 9px; padding: 7px 9px 8px; text-align: left; cursor: pointer; font: inherit; color: #e9e6df; display: flex; flex-direction: column; gap: 3px; flex: none;
+  background: #0f0f12; box-shadow: inset 2px 0 0 color-mix(in srgb, var(--cc) 55%, transparent), inset 0 0 0 1px rgba(255,255,255,.05); }
+.hm-prcol button b { font-size: 11px; font-weight: 600; letter-spacing: .03em; }
+.hm-prcol button small { font-size: 8.5px; color: #7d7d84; line-height: 1.3; }
+.hm-prcol button:hover { background: #17171b; box-shadow: inset 2px 0 0 var(--cc), inset 0 0 0 1px rgba(255,255,255,.14); }
+.hm-prcol button.on { background: color-mix(in srgb, var(--cc) 14%, #111114); box-shadow: inset 3px 0 0 var(--cc), inset 0 0 0 1px color-mix(in srgb, var(--cc) 60%, transparent); }
+.hm-chips { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 2px; }
+.hm-chips i { font-style: normal; font-size: 7.5px; font-weight: 700; letter-spacing: .06em; padding: 1px 5px; border-radius: 5px; color: var(--c); background: color-mix(in srgb, var(--c) 13%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 30%, transparent); }
 `;
 document.head.appendChild(css);
 
@@ -286,7 +293,7 @@ const seg = (label, opts, get, set, tip) => { const c = el('div', 'hm-col'); c.t
   opts.forEach((t, i) => { const b = el('button', null, t); b.onclick = () => { set(i); changed(); }; s.appendChild(b); });
   redraws.push(() => [...s.children].forEach((b, i) => b.classList.toggle('on', get() === i)));
   c.append(el('span', 'hm-eng', label), s); return c; };
-const colTrack = seg('TRACKING', ['LEAD', 'CHORDS'], () => S.track, i => { S.track = i; stop(); }, 'LEAD: the fastest, follows single notes (solos, melodies, riffs), only a few ms behind you · CHORDS: listens longer (the voices are about 85 ms behind) and gives every note of a chord its own harmony');
+const colTrack = seg('TRACKING', ['LEAD', 'CHORDS'], () => S.track, i => { S.track = i; stop(); }, 'LEAD: the fastest, follows single notes (solos, melodies, riffs), only a few ms behind you · CHORDS: listens longer (the voices are about 64 ms behind) and gives every note of a chord its own harmony');
 const colPlace = seg('PLACE', ['AFTER AMP', 'BEFORE AMP'], () => S.place, i => S.place = i, 'AFTER: harmonies of your amp sound, like a second guitarist (in stereo, with the pans) · BEFORE: the voices go through the amp with you (mono)');
 const chroma = el('div', 'hm-chroma', '<span>OFF-KEY NOTES</span><button>FOLLOW</button><button>HOLD</button>');
 chroma.title = 'Notes outside the mode: FOLLOW uses the interval of the nearest scale note · HOLD keeps the last harmony';
@@ -386,19 +393,33 @@ const modeMenu = menu(modeBtn, m => {
   q.addEventListener('input', draw); m._open = () => { q.value = ''; draw(); setTimeout(() => q.focus(), 0); };
   m.append(q, list);
 }, 290, 84, 720);
+/* HYDRA presets, in four groups. A voice: [on, smart, step (smart), semitones (fixed), level, pan, detune]. */
+const HCATS = [['TWIN LEADS', '#6fd3ff', 'Two guitars, one melody'], ['STACKS AND CHOIRS', '#ffd36e', 'Three parts and up'],
+               ['POWER AND OCTAVES', '#9cf07a', 'Fixed intervals: work on chords too'], ['DARK AND STRANGE', '#b48cff', 'Unsettling colours']];
 const HPRE = [
-  ['Twin Thirds', 'A third above, like a second guitar', { voices: [[1, 1, 2]], mode: 1 }],
-  ['Thirds and Fifths', 'Classic three-part metal harmony', { voices: [[1, 1, 2], [1, 1, 4]] }],
-  ['Maiden Gallop', 'Twin leads a third apart, panned wide', { voices: [[1, 1, 2, 0, 85, -70], [1, 1, 0, 0, 0, 0]], mode: 1 }],
-  ['Queen Choir', 'Stacked voices up to the octave', { voices: [[1, 1, 2], [1, 1, 4], [1, 1, 7], [1, 1, 9]], mode: 0 }],
-  ['Power Fifths', 'Fixed fifth and octave below: chords too', { voices: [[1, 0, 0, 7], [1, 0, 0, -12]] }],
-  ['Octave Stack', 'Octave down and up, organ-like', { voices: [[1, 0, 0, -12], [1, 0, 0, 12]] }],
-  ['Neo-Classical', 'Harmonic minor thirds and sixths', { voices: [[1, 1, 2], [1, 1, 5]], mode: 2 }],
-  ['Diminished Horror', 'Stacked minor thirds, unsettling', { voices: [[1, 1, 2], [1, 1, 4], [1, 1, 6]], mode: 22 }],
-  ['Eastern Gold', 'Phrygian dominant thirds', { voices: [[1, 1, 2], [1, 1, -3]], mode: 14 }],
-  ['Doom Choir', 'Octaves below, slightly detuned', { voices: [[1, 0, 0, -12, 80, -40, 8], [1, 0, 0, -24, 60, 40, -8]] }],
-  ['Angel Wings', 'An octave and two octaves above', { voices: [[1, 1, 7, 0, 60, -50], [1, 1, 14, 0, 40, 50]], mode: 0 }],
-  ['Six Heads', 'All six voices: a wall of harmony', { voices: [[1, 1, 2], [1, 1, 4], [1, 1, 7], [1, 1, -3], [1, 1, -5], [1, 1, 9]] }],
+  ['Twin Thirds', 'A third above, like a second guitar', { voices: [[1, 1, 2]], mode: 1 }, 0],
+  ['Maiden Gallop', 'Twin leads a third apart, panned wide', { voices: [[1, 1, 2, 0, 85, -70], [1, 1, 0, 0, 0, 0]], mode: 1 }, 0],
+  ['Thirds Below', 'A third under the melody: warmer', { voices: [[1, 1, -2, 0, 75, 40]], mode: 1 }, 0],
+  ['Sweet Sixths', 'A sixth under the lead, southern-rock style', { voices: [[1, 1, -5, 0, 75, -45]], mode: 0 }, 0],
+  ['Open Fourths', 'A fourth above: open and modern', { voices: [[1, 1, 3, 0, 75, 45]], mode: 1 }, 0],
+  ['Neo-Classical', 'Harmonic minor thirds and sixths', { voices: [[1, 1, 2], [1, 1, 5]], mode: 2 }, 0],
+  ['Eastern Gold', 'Phrygian dominant thirds', { voices: [[1, 1, 2], [1, 1, -3]], mode: 14 }, 0],
+  ['Thirds and Fifths', 'Classic three-part metal harmony', { voices: [[1, 1, 2], [1, 1, 4]] }, 1],
+  ['Queen Choir', 'Stacked voices up to the octave', { voices: [[1, 1, 2], [1, 1, 4], [1, 1, 7], [1, 1, 9]], mode: 0 }, 1],
+  ['Triad Below', 'A third and a fifth under you', { voices: [[1, 1, -2, 0, 70, -40], [1, 1, -4, 0, 60, 40]], mode: 1 }, 1],
+  ['Seventh Heaven', 'Third, fifth and seventh: four-part, jazzy', { voices: [[1, 1, 2], [1, 1, 4], [1, 1, 6]], mode: 0 }, 1],
+  ['Angel Wings', 'An octave and two octaves above', { voices: [[1, 1, 7, 0, 60, -50], [1, 1, 14, 0, 40, 50]], mode: 0 }, 1],
+  ['Six Heads', 'All six voices: a wall of harmony', { voices: [[1, 1, 2], [1, 1, 4], [1, 1, 7], [1, 1, -3], [1, 1, -5], [1, 1, 9]] }, 1],
+  ['Power Fifths', 'Fixed fifth and octave below: chords too', { voices: [[1, 0, 0, 7], [1, 0, 0, -12]] }, 2],
+  ['Octave Stack', 'Octave down and up, organ-like', { voices: [[1, 0, 0, -12], [1, 0, 0, 12]] }, 2],
+  ['Octave Up', 'Just the octave above: 12-string shimmer', { voices: [[1, 0, 0, 12, 65, 0]] }, 2],
+  ['Fifth Below', 'A fixed fifth under you: huge and dark', { voices: [[1, 0, 0, -7, 80, 0]] }, 2],
+  ['Doom Choir', 'Octaves below, slightly detuned', { voices: [[1, 0, 0, -12, 80, -40, 8], [1, 0, 0, -24, 60, 40, -8]] }, 2],
+  ['Diminished Horror', 'Stacked minor thirds, unsettling', { voices: [[1, 1, 2], [1, 1, 4], [1, 1, 6]], mode: 22 }, 3],
+  ['Tritone Ghost', 'A tritone above, slightly out of tune', { voices: [[1, 0, 0, 6, 65, 30, 12]] }, 3],
+  ['Hungarian Night', 'Hungarian minor thirds and fifths', { voices: [[1, 1, 2], [1, 1, 4]], mode: 15 }, 3],
+  ['Whole-Tone Dream', 'Whole-tone thirds: floating, unresolved', { voices: [[1, 1, 2, 0, 70, -50], [1, 1, 4, 0, 55, 50]], mode: 24 }, 3],
+  ['Byzantine', 'Double harmonic thirds below and above', { voices: [[1, 1, 2], [1, 1, -2]], mode: 16 }, 3],
 ];
 let prIdx = 0;
 const prName = n => { prBtn.querySelector('small').textContent = n; };
@@ -409,10 +430,26 @@ function loadPre(i) {
   if (p.mode != null) S.mode = p.mode;
   prName(n); changed();
 }
+// a voice as a short chip: "3RD ▲", "+7 ST"
+const ORD = ['UNI', '2ND', '3RD', '4TH', '5TH', '6TH', '7TH', '8VA', '9TH', '10TH', '11TH', '12TH', '13TH', '14TH', '2 OCT'];
+const chip = d => d[1] ? (ORD[Math.abs(d[2])] || Math.abs(d[2]) + ' ST') + (d[2] > 0 ? ' ▲' : d[2] < 0 ? ' ▼' : '') : sgn(d[3]) + ' ST';
 const prMenu = menu(prBtn, m => {
-  const g = el('div', 'hm-prs'); HPRE.forEach(([n, d], i) => { const b = el('button', null, '<b>' + n + '</b><small>' + d + '</small>'); b.onclick = () => loadPre(i); g.appendChild(b); });
-  m.appendChild(g); redraws.push(() => [...g.children].forEach((b, i) => b.classList.toggle('on', i === prIdx)));
-}, 40, 250);
+  // one column per group, each in its own colour; every preset shows its voices as coloured chips
+  const g = el('div', 'hm-prcols'), btns = [];
+  HCATS.forEach(([cat, col, sub], ci) => {
+    const c = el('div', 'hm-prcol'); c.style.setProperty('--cc', col);
+    const mine = HPRE.map((p, i) => [p, i]).filter(([p]) => p[3] === ci);
+    c.innerHTML = '<h4><span>' + cat + '</span><em>' + mine.length + '</em></h4><p>' + sub + '</p>';
+    mine.forEach(([[n, d, p], i]) => {
+      const b = el('button', null, '<b>' + n + '</b><small>' + d + '</small><span class="hm-chips">'
+        + p.voices.map((v, k) => v[0] ? '<i style="--c:' + VC[k] + '">' + chip(v) + '</i>' : '').join('') + '</span>');
+      b.onclick = () => loadPre(i); b.dataset.i = i; c.appendChild(b); btns.push(b);
+    });
+    g.appendChild(c);
+  });
+  m.appendChild(g); redraws.push(() => btns.forEach(b => b.classList.toggle('on', +b.dataset.i === prIdx)));
+}, 40, 0);
+prMenu.style.top = 'auto'; prMenu.style.bottom = '74px';
 prNav.children[0].onclick = () => loadPre(prIdx - 1); prNav.children[1].onclick = () => loadPre(prIdx + 1);
 
 /* ---- draw everything ---- */
@@ -431,7 +468,10 @@ redraws.push(() => {
     e.iv.querySelector('b').textContent = v.smart ? stepName(v.step) : sgn(v.semi) + ' ST';
     const ref = lead() != null ? lead() : 52 + S.key - 4;
     const out = voiceNote(ref, i);
-    e.iv.querySelector('.live').innerHTML = v.smart ? (played.length ? (played.length > 1 ? 'now <em>' + played.map(p => sgn(voiceNote(p, i) - p)).join(' ') + ' st</em>' : 'now <em>' + sgn(out - ref) + ' st · ' + nn(out) + '</em>') : 'follows the ' + (sc.length === 7 ? 'mode' : 'scale')) : semiName(v.semi);
+    // smart voices: the semitones change with the key and mode, so show them (on the key's root when nothing is played)
+    const root = 52 + ((S.key - 4) % 12 + 12) % 12, onRoot = voiceNote(root, i) - root;
+    e.iv.querySelector('.live').innerHTML = v.smart ? (played.length ? (played.length > 1 ? 'now <em>' + played.map(p => sgn(voiceNote(p, i) - p)).join(' ') + ' st</em>' : 'now <em>' + sgn(out - ref) + ' st · ' + nn(out) + '</em>')
+      : 'on ' + NOTE[S.key] + ' <em>' + sgn(onRoot) + ' st · ' + semiName(onRoot) + '</em>') : semiName(v.semi);
     heads[i].style.background = v.on && S.on ? VC[i] : ''; heads[i].style.boxShadow = v.on && S.on ? '0 0 8px ' + VC[i] : '';
   });
   let nd = 0;
@@ -450,11 +490,14 @@ redraws.push(() => {
 /* ============================================================ preview sound (browser only) */
 let ac = null, nodes = [];
 let userHeld = false;          // a key held on the page (the plugin's live notes don't wipe it)
+let liveWant = null, liveN = 0;   // CHORDS: the chord the engine reports, waiting to hold steady
 function toggleChord(m) {
   userHeld = true;
-  played = played.includes(m) ? played.filter(x => x !== m) : played.concat([m]).slice(-6);
+  const had = played.includes(m);
+  played = had ? played.filter(x => x !== m) : played.concat([m]);
+  if (played.length > 6) { const gone = played.shift(); stopNote(gone); }
   if (!played.length) { stop(); return; }
-  sound(played);
+  if (had) { stopNote(m); changed(); } else { changed(); startNote(m, Math.max(3, played.length)); }
 }
 function play(m) { userHeld = true; played = [m]; sound(played); }
 function sound(notes) {
@@ -462,22 +505,28 @@ function sound(notes) {
   if (window.__JUCE__) return;
   try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; }
   stopSound();
-  const t = ac.currentTime, hz = n => 440 * Math.pow(2, (n - 69) / 12);
+  notes.forEach(m => startNote(m, notes.length));
+}
+/** One played note and its harmonies (browser preview). n: how many notes share the level. */
+function startNote(m, count) {
+  if (window.__JUCE__) return;
+  try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; }
+  const t = ac.currentTime, hz = n => 440 * Math.pow(2, (n - 69) / 12), mine = [];
   const voice = (n, lvl, p, det, dl) => {
     const o = ac.createOscillator(), g = ac.createGain(), f = ac.createBiquadFilter(), pn = ac.createStereoPanner ? ac.createStereoPanner() : null;
     o.type = 'sawtooth'; o.frequency.value = hz(n) * Math.pow(2, det / 1200); f.type = 'lowpass'; f.frequency.value = 2400;
     const st = t + dl / 1000; g.gain.setValueAtTime(0, st); g.gain.linearRampToValueAtTime(lvl * .09, st + .012); g.gain.setTargetAtTime(lvl * .05, st + .05, .4);
     o.connect(f); f.connect(g); if (pn) { pn.pan.value = clamp(p, -1, 1); g.connect(pn); pn.connect(ac.destination); } else g.connect(ac.destination);
-    o.start(st); nodes.push([o, g]); };
+    o.start(st); const nd = [o, g, m]; nodes.push(nd); mine.push(nd); };
   const mx = S.mix / 100, dryG = mx <= .5 ? 1 : 2 * (1 - mx), wetG = mx >= .5 ? 1 : 2 * mx;   // both at full in the middle (as in the plugin)
-  const dry = dryG / Math.sqrt(notes.length), lag = S.track ? 85 : 0;      // CHORDS listens longer
-  notes.forEach(m => {
-    voice(m, dry, 0, 0, 0);
-    if (S.on) S.voices.forEach((v, i) => { if (!v.on) return; const n = voiceNote(m, i); const sp = S.spread / 50;
-      voice(n, v.level / 100 * wetG / Math.sqrt(notes.length), v.pan / 100 * sp, v.detune + (Math.random() - .5) * S.human * .3, lag + v.delay + Math.random() * S.human * .25); });
-  });
+  const dry = dryG / Math.sqrt(count), lag = S.track ? 64 : 0;      // CHORDS listens longer (the plugin's chord voices are 64 ms behind)
+  voice(m, dry, 0, 0, 0);
+  if (S.on) S.voices.forEach((v, i) => { if (!v.on) return; const n = voiceNote(m, i); const sp = S.spread / 50;
+    voice(n, v.level / 100 * wetG / Math.sqrt(count), v.pan / 100 * sp, v.detune + (Math.random() - .5) * S.human * .3, lag + v.delay + Math.random() * S.human * .25); });
 }
-function stopSound() { if (!ac) return; const t = ac.currentTime; nodes.forEach(([o, g]) => { g.gain.cancelScheduledValues(t); g.gain.setTargetAtTime(0, t, .06); o.stop(t + .4); }); nodes = []; }
+function fadeOut(list) { const t = ac.currentTime; list.forEach(([o, g]) => { g.gain.cancelScheduledValues(t); g.gain.setTargetAtTime(0, t, .06); o.stop(t + .4); }); }
+function stopNote(m) { if (!ac) return; fadeOut(nodes.filter(x => x[2] === m)); nodes = nodes.filter(x => x[2] !== m); }
+function stopSound() { if (!ac) return; fadeOut(nodes); nodes = []; }
 function stop() { userHeld = false; played = []; stopSound(); changed(); }
 const KEYMAP = { a: 52, w: 53, s: 54, e: 55, d: 55, f: 57, t: 58, g: 59, h: 60, u: 61, j: 62, k: 64 };
 const down = new Set();
@@ -499,14 +548,22 @@ S.voices.forEach((vc, i) => VDEF.forEach(([key, lo, hi]) => params.push({ id: 'h
 const byId = {}; params.forEach(q => byId[q.id] = q);
 window.obsHarmony = { state: S, modes: MODE_LIST, play, stop, voiceNote, redraw: changed,
   ids: params.map(q => q.id).filter(id => id !== 'harm.on'),       // harm.on is the section switch: powerOut / setPower
-  read() { const o = {}; params.forEach(q => o[q.id] = clamp((q.get() - q.lo) / (q.hi - q.lo), 0, 1)); return o; },
+  // harm.on is not reported here: the HARMONY tab owns it (two owners made double-click flicker on/off/on/off)
+  read() { const o = {}; params.forEach(q => { if (q.id !== 'harm.on') o[q.id] = clamp((q.get() - q.lo) / (q.hi - q.lo), 0, 1); }); return o; },
   write(vals) { let any = false; for (const id in vals) { const q = byId[id]; if (!q) continue; let v = q.lo + clamp(+vals[id], 0, 1) * (q.hi - q.lo); if (!q.cont) v = Math.round(v); q.set(v); any = true; } if (any) changed(); },
   /* live from the engine: { note: midi or -1, chord: [midi...] } */
   live(l) {
     if (!l) return;
     const eng = S.track ? (l.chord || []).slice().sort((a, b) => a - b) : (l.note >= 0 ? [l.note] : []);
     const next = eng.length ? eng : (userHeld ? played : []);
-    if (next.join(',') !== played.join(',')) { played = next; changed(); }
+    const key = next.join(',');
+    if (key === played.join(',')) { liveWant = null; return; }
+    // CHORDS: a new chord shows once it holds for 2 updates, an empty one after 5, so the keys don't flicker
+    if (S.track && !userHeld) {
+      if (liveWant !== key) { liveWant = key; liveN = 0; }
+      if (++liveN < (next.length ? 2 : 5)) return;
+    }
+    liveWant = null; played = next; changed();
   },
   powerOut: null,             // set by the bridge: switches the HARMONY section
   setPower(isOn) { if (!!isOn !== !!S.on) { S.on = !!isOn; changed(); } },

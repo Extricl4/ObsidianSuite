@@ -129,7 +129,7 @@ private:
         std::atomic<float>* transposeHq, *inGain, *gateOn, *gateThresh, *transpose, *doublerOn, *doublerTime, *width, *outGain;
         std::atomic<float>* preOn, *synthOn, *ampOn, *cabOn, *eqOn, *postOn, *sfxOn;
         std::atomic<float>* ampGain, *ampBass, *ampMid, *ampTreble, *ampPresence, *ampDepth, *ampMaster, *ampChannel;
-        std::atomic<float>* eqBand[kEqBands], *eqLc, *eqHc;
+        std::atomic<float>* eqBand[kEqBands], *eqLc, *eqHc, *eqLcOn, *eqHcOn;
         struct Mic { std::atomic<float>* model, *pos, *dist, *level, *pan, *solo, *mute, *phase; } mic[2];
         std::atomic<float>* cabLc, *cabHc;
         // synth: every parameter, by SynthDefs index

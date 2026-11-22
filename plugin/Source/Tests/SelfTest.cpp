@@ -467,6 +467,31 @@ int runSelfTest (const juce::StringArray& args)
     }
 
     // ---------------------------------------------------------------- 5c. updates
+    r.head ("EQ: low / high cut switches");
+    {
+        obs::dsp::GraphicEq eq; const double sr = 48000; eq.prepare (sr);
+        for (int b = 0; b < 9; ++b) eq.setBand (b, 1000.f, 0.f);
+        std::vector<float> L (480), R (480); double ph = 0; float lastY = 0, maxStep = 0;
+        auto run = [&] (int blocks, float hz) {      // returns the RMS of the last block
+            double e = 0;
+            for (int k = 0; k < blocks; ++k)
+            {
+                for (size_t i = 0; i < L.size(); ++i) { L[i] = R[i] = (float) (0.5 * std::sin (ph)); ph += 2 * juce::MathConstants<double>::pi * hz / sr; }
+                float* ch[2] = { L.data(), R.data() }; eq.process (ch, 2, (int) L.size());
+                e = 0; for (float y : L) { maxStep = std::max (maxStep, std::abs (y - lastY)); lastY = y; e += y * y; }
+            }
+            return std::sqrt (e / L.size()); };
+        eq.setCuts (400.f, 20000.f, true, true);  const double cutOn = run (20, 60.f);
+        maxStep = 0;
+        eq.setCuts (400.f, 20000.f, false, true); const double cutOff = run (20, 60.f);
+        const float stepOff = maxStep; maxStep = 0;
+        eq.setCuts (400.f, 2000.f, true, false);  const double hcOff = run (20, 6000.f);
+        eq.setCuts (400.f, 2000.f, true, true);   const double hcOn = run (20, 6000.f);
+        r.check (cutOn < 0.05 && cutOff > 0.33 && hcOff > 0.33 && hcOn < 0.05,
+                 juce::String::formatted ("LOW CUT / HIGH CUT switch off and on (60 Hz: %.3f in, %.3f off; 6 kHz: %.3f off, %.3f in)", cutOn, cutOff, hcOff, hcOn));
+        r.check (stepOff < 0.03f, juce::String::formatted ("switching a cut fades it, no click (largest sample step %.4f, a 60 Hz sine moves 0.0039)", stepOff));
+    }
+
     r.head ("In-app updates (Settings > About)");
     {
         const juce::String hexA = juce::String::repeatedString ("ab", 32), hexB = juce::String::repeatedString ("cd", 32);

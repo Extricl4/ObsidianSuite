@@ -148,6 +148,23 @@ async def run(standalone):
         check(not echo, 'values from the engine are not echoed back' + (f' (echoed {echo})' if echo else ''))
         fd = await pg.evaluate("document.querySelectorAll('.fd')[2].dataset.g")
         check(fd == '6', f'EQ band 3 fader follows the engine (+{fd} dB)')
+        # ---- EQ: double-click a fader resets it; low / high cut switches; RESET puts everything back
+        await pg.evaluate("setTab('EQ')"); await pg.wait_for_timeout(150)
+        await pg.evaluate("window.__mock.log.length=0")
+        await pg.locator('.fd').nth(2).dblclick(); await pg.wait_for_timeout(200)
+        g3 = await pg.evaluate("document.querySelectorAll('.fd')[2].dataset.g")
+        check(g3 == '0' and await pg.evaluate("window.__mock.sent('eq.b3')") == 0.5, f'double-clicking an EQ fader puts it back to 0 dB ({g3})')
+        cuts = await pg.evaluate("[...document.querySelectorAll('.obs-cutsw .tog')].map(t=>[t.getAttribute('aria-label'), t.dataset.on])")
+        await pg.evaluate("window.__mock.log.length=0")
+        await pg.locator('.obs-cutsw .tog').first.click(); await pg.wait_for_timeout(200)
+        lc_off = await pg.evaluate("window.__mock.sent('eq.lc.on')"); dim = await pg.evaluate("document.querySelector('.obs-cutsw').parentElement.classList.contains('obs-cutoff')")
+        check(cuts == [['low cut on', '1'], ['high cut on', '1']] and lc_off == 0 and dim, f'LOW CUT / HIGH CUT have on/off switches ({cuts}; low cut off sends {lc_off})')
+        await pg.evaluate("setFader(document.querySelectorAll('.fd')[5], 8); document.dispatchEvent(new Event('change'))"); await pg.wait_for_timeout(200)
+        await pg.evaluate("window.__mock.log.length=0")
+        await pg.locator('.eqreset').click(); await pg.wait_for_timeout(250)
+        check(await pg.evaluate("window.__mock.sent('eq.b6')") == 0.5 and await pg.evaluate("window.__mock.sent('eq.lc.on')") == 1
+              and await pg.evaluate("document.querySelector('.obs-cutsw .tog').dataset.on") == '1', 'EQ RESET: every band flat and both cut switches back on')
+        await pg.screenshot(path=str(OUT / 'eq.png'))
 
         # ---- synth page
         await pg.evaluate("setTab('SYNTH')")
@@ -325,6 +342,23 @@ async def run(standalone):
         await pg.evaluate("document.dispatchEvent(new Event('change'))"); await pg.wait_for_timeout(200)
         q4 = await pg.evaluate("window.__mock.sent('harm.v4.on')"); qm = await pg.evaluate("window.__mock.sent('harm.mode')")
         check(q4 == 1 and qm is not None and abs(qm) < 1e-6, f'a HYDRA preset (Queen Choir) sets the voices and the mode in the engine ({q4}, {qm})')
+        # double-clicking the HARMONY tab switches the section, once per double-click (no flicker)
+        htab = pg.locator('button', has_text='HARMONY').first
+        on0 = await pg.evaluate("obsHarmony.state.on")
+        flips = []
+        for _ in range(2):
+            await pg.evaluate("window.__mock.log.length=0")
+            await htab.dblclick(); await pg.wait_for_timeout(450)
+            flips.append([await pg.evaluate("JSON.stringify(window.__mock.log.filter(x=>x[0]==='setParam'&&x[1]==='harm.on').map(x=>x[2]))"), await pg.evaluate("obsHarmony.state.on")])
+        want = [[json.dumps([0 if on0 else 1]).replace(' ', ''), not on0], [json.dumps([1 if on0 else 0]).replace(' ', ''), on0]]
+        check(flips == want, f'double-clicking the HARMONY tab turns it off and on, once each ({flips})')
+        # a smart voice's screen shows its semitones, and they change with the mode
+        live1 = "document.querySelector('.hm-int .live').textContent"
+        await pg.evaluate("(()=>{const S=obsHarmony.state; S.voices[0].smart=1; S.voices[0].step=2; S.key=0; S.mode=obsHarmony.modes.findIndex(m=>/^(major|ionian)/i.test(m.name)); obsHarmony.redraw();})()")
+        a = await pg.evaluate(live1)
+        await pg.evaluate("(()=>{obsHarmony.state.mode=obsHarmony.modes.findIndex(m=>/^(natural )?minor|aeolian/i.test(m.name)); obsHarmony.redraw();})()")
+        b2 = await pg.evaluate(live1)
+        check('+4' in a and '+3' in b2, f'a smart voice shows its semitones and they change with the mode ({a} -> {b2})')
         tab = await pg.evaluate("[...document.querySelectorAll('nav span, .tab span, button span')].some(e=>e.textContent.trim()==='HARMONY')")
         check(tab, 'HARMONY tab in the chain')
 
@@ -354,9 +388,17 @@ async def run(standalone):
         face = pg.locator('.page[data-page="PEDALS"] .obs-slot').nth(2)
         imgs = await face.evaluate("b=>[...b.querySelectorAll('.obs-pface img')].filter(i=>i.complete&&i.naturalWidth>0).length")
         lit = await face.evaluate("b=>getComputedStyle(b.querySelector('.pf-on')).opacity")
-        await face.locator('.pf-foot').click(); await pg.wait_for_timeout(400)
+        await face.locator('.pf-foot').click(); await pg.wait_for_timeout(700)
         unlit = await face.evaluate("b=>getComputedStyle(b.querySelector('.pf-on')).opacity")
         check(imgs == 2 and lit == '1' and unlit == '0' and await pg.evaluate("window.__mock.sent('pre.3.on')") == 0, f'EMBER shows its own face, lit when on; its drawn footswitch turns it off ({imgs} images, {lit} -> {unlit})')
+        # a pedal that arrives while another tab is showing (a preset loaded from the AMP page) is full size too
+        w_vis = await face.evaluate("b=>b.querySelector('.obs-pface').offsetWidth")
+        await pg.evaluate("setTab('AMP')"); await pg.wait_for_timeout(100)
+        await pg.evaluate("(()=>{const r=JSON.parse(JSON.stringify(window.__mock.state.rig)); r.racks[0][3]={key:'ember',name:'Ember Fuzz',file:'',fileName:''}; window.__mock.emit('obs:rig', r);})()")
+        await pg.wait_for_timeout(150); await pg.evaluate("setTab('PEDALS')"); await pg.wait_for_timeout(200)
+        w_hid = await pg.locator('.page[data-page="PEDALS"] .obs-slot').nth(3).evaluate("b=>(b.querySelector('.obs-pface')||{}).offsetWidth")
+        check(w_vis >= 100 and w_hid == w_vis, f'a pedal loaded while another tab shows is full size ({w_hid} px, like {w_vis} px)')
+        await pg.evaluate("window.__mock.emit('obs:rig', window.__mock.state.rig)"); await pg.wait_for_timeout(100)
         await face.locator('.pf-foot').click(); await pg.wait_for_timeout(200)
         await pg.screenshot(path=str(OUT / 'pedals-faces.png'))
         # drag slot 2 onto slot 4
@@ -393,20 +435,36 @@ async def run(standalone):
         await pg.evaluate("window.__mock.log.length=0")
         await pg.locator('.obs-ampchange').click(); await pg.wait_for_timeout(150)
         inhouse = [a for a in state['amps'] if a.get('folder') == 'OBSIDIAN AMPS']
-        top = await pg.locator('.obs-tile[data-amp]:visible').count()
-        check(await pg.locator('.obs-ampfolder[data-amp-folder="OBSIDIAN AMPS"]:visible').count() == 1 and top == len([a for a in state['amps'] if not a.get('folder')]),
-              f'amp chooser: in-house amps sit in an OBSIDIAN AMPS folder ({top} loose)')
+        folders = await pg.evaluate("[...document.querySelectorAll('.obs-ampfolder')].filter(b=>b.offsetParent).map(b=>b.dataset.ampFolder)")
+        top = await pg.evaluate("[...document.querySelectorAll('.obs-tile[data-amp]')].filter(b=>b.offsetParent).map(b=>b.dataset.amp)")
+        check(folders[:4] == ['CLEAN', 'CRUNCH', 'RHYTHM', 'LEAD'] and 'ALL AMPS' in folders and top == ['nam-loader'],
+              f'amp chooser opens on folders by sound ({folders}), the NAM loader on its own')
         await pg.screenshot(path=str(OUT / 'amp-library.png'))
-        await pg.locator('.obs-ampfolder[data-amp-folder="OBSIDIAN AMPS"]:visible').click(); await pg.wait_for_timeout(150)
-        inside = await pg.locator('.obs-tile[data-amp]:visible').count()
-        check(inside == len(inhouse) == 9, f'OBSIDIAN AMPS folder opens with all {inside} amps')
+        await pg.locator('.obs-ampfolder[data-amp-folder="CLEAN"]:visible').click(); await pg.wait_for_timeout(150)
+        clean = await pg.evaluate("[...document.querySelectorAll('.obs-tile[data-amp]')].filter(b=>b.offsetParent).map(b=>b.dataset.amp+':'+b.querySelector('i').textContent)")
+        check(any(x.startswith('glass65') for x in clean) and any(x.startswith('moirai:') and 'clean' in x.lower() for x in clean) and not any(x.startswith('kratos') for x in clean),
+              f'CLEAN holds the clean amps and the clean channels of bigger amps ({len(clean)}: {clean[:4]}...)')
         await pg.screenshot(path=str(OUT / 'amp-folder.png'))
-        await pg.locator('.obs-crumb-back:visible').click(); await pg.wait_for_timeout(150)
-        check(await pg.locator('.obs-ampfolder:visible').count() == 2, 'back button returns to all amps (two folders)')
+        await pg.locator('.obs-tile[data-amp="moirai"]:visible').click(); await pg.wait_for_timeout(300)
+        log = await pg.evaluate("window.__mock.log.filter(x=>['setAmp','ampDim'].includes(x[0])).map(x=>x.join(':'))")
+        check(log[-2:] == ['setAmp:moirai', 'ampDim:0:0'], f'picking MOIRAI from CLEAN starts it on its clean channel ({log[-2:]})')
+        await pg.evaluate("window.__mock.log.length=0")
+        await pg.locator('.obs-fchange').click(); await pg.wait_for_timeout(150)
+        await pg.locator('.obs-ampfolder[data-amp-folder="LEAD"]:visible').click(); await pg.wait_for_timeout(150)
+        await pg.locator('.obs-tile[data-amp="moirai"]:visible').click(); await pg.wait_for_timeout(300)
+        log = await pg.evaluate("window.__mock.log.filter(x=>['setAmp','ampDim','setParam'].includes(x[0])).map(x=>x.slice(0,3).join(':'))")
+        check('setAmp:moirai' in log and 'ampDim:0:2' in log and any(x.startswith('setParam:amp.gain') for x in log), f'from LEAD it starts on the lead channel with more gain ({log})')
+        await pg.evaluate("window.__mock.log.length=0")
+        await pg.locator('.obs-fchange').click(); await pg.wait_for_timeout(150)
         await pg.locator('.pop:visible input').fill('jcm'); await pg.wait_for_timeout(150)
-        check(await pg.locator('.obs-tile[data-amp]:visible').count() == 1, 'search finds amps inside folders (jcm)')
+        check(await pg.locator('.obs-tile[data-amp]:visible').count() == 1, 'search finds an amp once, whatever its folders (jcm)')
         await pg.locator('.pop:visible input').fill(''); await pg.wait_for_timeout(100)
-        await pg.locator('.obs-ampfolder[data-amp-folder="OBSIDIAN AMPS"]:visible').click(); await pg.wait_for_timeout(150)
+        await pg.locator('.obs-ampfolder[data-amp-folder="ALL AMPS"]:visible').click(); await pg.wait_for_timeout(150)
+        allin = await pg.locator('.obs-tile[data-amp]:visible').count()
+        check(allin == len(state['amps']), f'ALL AMPS lists every amp once ({allin})')
+        await pg.locator('.obs-crumb-back:visible').click(); await pg.wait_for_timeout(150)
+        check(await pg.locator('.obs-ampfolder:visible').count() == len(folders), 'the back button returns to the folders')
+        await pg.locator('.obs-ampfolder[data-amp-folder="ALL AMPS"]:visible').click(); await pg.wait_for_timeout(150)
         await pg.locator('.obs-tile[data-amp="brit800"]:visible').click(); await pg.wait_for_timeout(250)
         check(await pg.evaluate("window.__mock.log.some(x=>x[0]==='setAmp'&&x[1]==='brit800')"), 'choosing BRIT 800 in the amp list')
         check('JCM800' in await pg.evaluate("document.querySelector('.obs-amp .obs-based').textContent"), 'panel switches to BRIT 800')
@@ -420,9 +478,9 @@ async def run(standalone):
 
         # ---- capture amps: the real faces
         await pg.locator('.obs-ampchange').click(); await pg.wait_for_timeout(150)
-        await pg.locator('.obs-ampfolder[data-amp-folder="CAPTURE AMPS"]:visible').click(); await pg.wait_for_timeout(300)
+        await pg.locator('.obs-ampfolder[data-amp-folder="ALL AMPS"]:visible').click(); await pg.wait_for_timeout(300)
         pics = await pg.evaluate("[...document.querySelectorAll('.obs-tile[data-amp] .obs-tilepic')].filter(e=>e.offsetParent).length")
-        check(pics == 3, f'CAPTURE AMPS folder shows each amp with a picture of its face ({pics})')
+        check(pics == 3, f'capture amps show a picture of their face ({pics})')
         await pg.screenshot(path=str(OUT / 'amp-capture-folder.png'))
         await pg.locator('.obs-tile[data-amp="umbra"]:visible').click(); await pg.wait_for_timeout(600)
         loaded = await pg.evaluate("[...document.querySelectorAll('.obs-face img')].filter(i=>i.complete&&i.naturalWidth>0).length")
@@ -459,7 +517,7 @@ async def run(standalone):
         await pg.locator('.obs-face .ff-pw').click(); await pg.wait_for_timeout(200)
         await pg.evaluate("window.__mock.meterExtra = null")
         await pg.locator('.obs-fchange').click(); await pg.wait_for_timeout(150)
-        await pg.locator('.obs-ampfolder[data-amp-folder="CAPTURE AMPS"]:visible').click(); await pg.wait_for_timeout(200)
+        await pg.locator('.obs-ampfolder[data-amp-folder="ALL AMPS"]:visible').click(); await pg.wait_for_timeout(200)
         await pg.locator('.obs-tile[data-amp="moirai"]:visible').click(); await pg.wait_for_timeout(600)
         skin0 = await pg.evaluate("[...document.querySelectorAll('.obs-face .ff-base.off')].findIndex(i=>i.style.opacity==='1')")
         await pg.locator('.obs-face .ff-btn[data-b="ch1"]').click(); await pg.wait_for_timeout(250)
@@ -467,7 +525,7 @@ async def run(standalone):
         check(skin0 == 2 and skin1 == 0, f'MOIRAI changes colour with the channel (red -> green: skin {skin0} -> {skin1})')
         await pg.screenshot(path=str(OUT / 'amp-face-moirai.png'))
         await pg.locator('.obs-fchange').click(); await pg.wait_for_timeout(150)
-        await pg.locator('.obs-ampfolder[data-amp-folder="CAPTURE AMPS"]:visible').click(); await pg.wait_for_timeout(200)
+        await pg.locator('.obs-ampfolder[data-amp-folder="ALL AMPS"]:visible').click(); await pg.wait_for_timeout(200)
         await pg.locator('.obs-tile[data-amp="kratos"]:visible').click(); await pg.wait_for_timeout(600)
         await pg.evaluate("window.__mock.log.length=0")
         await pg.locator('.obs-face .ff-btn[data-b="crunch"]').click(); await pg.wait_for_timeout(200)
@@ -479,6 +537,10 @@ async def run(standalone):
         txtpos = await pg.evaluate("document.querySelector('[data-param=\"cab.a.level\"]').parentElement.querySelector('.kn-val').textContent")
         check('dB' in txtpos, f'cab mic level shows dB ({txtpos})')
 
+        # the level meters sit inside the top bar, both sides the same distance from its edge
+        mt = await pg.evaluate("""(()=>{const bar=[...document.querySelectorAll('.kn')].find(k=>!k.closest('.page')&&!k.closest('.ov')).closest('div[style*="height: 100px"]').getBoundingClientRect();
+          const ms=meters.map(m=>m.d.parentElement.getBoundingClientRect()); return [Math.round(ms[0].left-bar.left), Math.round(bar.right-ms[ms.length-1].right)]})()""")
+        check(mt[0] >= 8 and mt[1] >= 8 and abs(mt[0] - mt[1]) <= 3, f'the in/out meters are inside the top bar ({mt[0]} px / {mt[1]} px from its edges)')
         # ---- presets
         await pg.locator('[aria-label="Previous preset"]').evaluate('b=>b.nextElementSibling.click()')
         await pg.wait_for_timeout(200)

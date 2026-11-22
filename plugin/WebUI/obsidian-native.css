@@ -190,9 +190,21 @@
 .obs-upd-auto { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 11px; color: rgb(var(--cf_8d8d93)); }
 
 /* preset browser: a top folder lists its folders; inside one, a way back up */
-.obs-pdir { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto 16px; align-items: center; gap: 12px; width: 100%; min-height: 46px; flex: none;
-  padding: 0 14px 0 12px; border: none; border-radius: 10px; background: none; color: rgb(var(--cf_e9e6df)); font: inherit; text-align: left; cursor: pointer; }
-.obs-pdir:hover { background: rgba(255,255,255,.05); }
+.obs-pdir { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto 16px; align-items: center; gap: 12px; width: 100%; min-height: 48px; flex: none;
+  margin: 0 0 6px; padding: 0 14px 0 12px; box-sizing: border-box; border: 1px solid rgba(255,255,255,.075); border-radius: 11px;
+  background: linear-gradient(rgba(255,255,255,.04), rgba(255,255,255,.012)); box-shadow: 0 2px 6px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.04);
+  color: rgb(var(--cf_e9e6df)); font: inherit; text-align: left; cursor: pointer; transition: border-color .12s, background .12s; }
+.obs-pdir:hover { border-color: rgba(255,255,255,.18); background: linear-gradient(rgba(255,255,255,.07), rgba(255,255,255,.025)); }
+.obs-pdir.cur { border-color: color-mix(in srgb, var(--accent) 50%, transparent); }
+.obs-pdir + .obs-prow { margin-top: 10px; }
+/* the sidebar: sub-folders hang off their folder on a guide line, folders are spaced apart */
+.ov .obs-folder.obs-fgroup { margin-top: 6px; font-weight: 600; }
+.ov .obs-folder.obs-fgroup:first-of-type { margin-top: 0; }
+.ov .obs-folder.obs-fsub { height: 32px !important; margin: 0 0 2px 18px; width: calc(100% - 18px); padding-left: 12px !important; border-radius: 0 8px 8px 0 !important;
+  border-left: 1px solid rgba(255,255,255,.12) !important; font-size: 12.5px !important; }
+.ov .obs-folder.obs-fsub svg { display: none; }
+.ov .obs-folder.obs-fsub:hover { border-left-color: rgba(255,255,255,.3) !important; }
+.ov .obs-folder.obs-fsub.obs-fon { border-left: 2px solid var(--accent) !important; }
 .obs-pdir .ic { color: rgb(var(--cf_8d8d93)); display: flex; }
 .obs-pdir.cur .ic { color: var(--accent); }
 .obs-pdir b { font-size: 14px; font-weight: 600; letter-spacing: .02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -224,3 +236,13 @@
 button.obs-locked { opacity: .32; cursor: not-allowed; }
 .obs-flabel { display: block; margin: 10px 0 5px; font-size: 10px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: rgb(var(--cf_8d8d93)); }
 .obs-dialog h3 + .obs-flabel { margin-top: 2px; }
+/* EQ: the cuts' on / off switches */
+.obs-cutsw { display: flex; justify-content: center; margin-top: 8px; }
+.obs-cutoff > .kn { opacity: .35; filter: grayscale(1); }
+.obs-cutoff > .kn-val { opacity: .45; }
+/* amp chooser: the sound folders each have a colour */
+.obs-ampfolder { --fc: rgba(255,255,255,.35); box-shadow: inset 3px 0 0 var(--fc) !important; }
+.obs-ampfolder b { color: rgb(var(--cf_f4f1ea)); }
+.obs-ampfolder i { color: var(--fc) !important; }
+.obs-af-clean { --fc: #6fd3ff; } .obs-af-crunch { --fc: #ffb547; } .obs-af-rhythm { --fc: #ff6b5a; } .obs-af-lead { --fc: #ff7ba6; }
+.obs-af-acoustic { --fc: #c9a06b; } .obs-af-all-amps { --fc: rgba(255,255,255,.45); }

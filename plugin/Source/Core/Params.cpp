@@ -152,6 +152,8 @@ std::vector<ParamDef> build()
     }
     p.lg ("eq.lc", "EQ Low Cut",  20.f, 20000.f, 20.f);       // 20 Hz = off
     p.lg ("eq.hc", "EQ High Cut", 20.f, 20000.f, 20000.f);    // 20 kHz = off
+    p.b  ("eq.lc.on", "EQ Low Cut On",  true);                 // the cut's own switch (on: the knob decides)
+    p.b  ("eq.hc.on", "EQ High Cut On", true);
 
     // ---- Racks: pedals, FX, special FX -------------------------------------------------------
     p.group = "rack";

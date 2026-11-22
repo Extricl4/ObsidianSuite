@@ -16,7 +16,7 @@ void Engine::attach (juce::AudioProcessorValueTreeState& state)
     p.ampGain = g ("amp.gain"); p.ampBass = g ("amp.bass"); p.ampMid = g ("amp.mid"); p.ampTreble = g ("amp.treble");
     p.ampPresence = g ("amp.presence"); p.ampDepth = g ("amp.depth"); p.ampMaster = g ("amp.master"); p.ampChannel = g ("amp.channel");
     for (int b = 0; b < kEqBands; ++b) p.eqBand[b] = g ("eq.b" + juce::String (b + 1));
-    p.eqLc = g ("eq.lc"); p.eqHc = g ("eq.hc");
+    p.eqLc = g ("eq.lc"); p.eqHc = g ("eq.hc"); p.eqLcOn = g ("eq.lc.on"); p.eqHcOn = g ("eq.hc.on");
     for (int m = 0; m < 2; ++m)
     {
         const juce::String k = "cab." + juce::String (m == 0 ? "a" : "b") + ".";
@@ -226,7 +226,7 @@ void Engine::process (juce::AudioBuffer<float>& buffer, int numIn, const HostInf
         if (v (p.eqOn) > 0.5f)
         {
             for (int b = 0; b < kEqBands; ++b) eq.setBand (b, kEqFreqs[b], v (p.eqBand[b]));
-            eq.setCuts (v (p.eqLc), v (p.eqHc));
+            eq.setCuts (v (p.eqLc), v (p.eqHc), v (p.eqLcOn) > 0.5f, v (p.eqHcOn) > 0.5f);
             eq.process (st, 2, n);
         }
 

@@ -293,10 +293,48 @@ function setupBindings() {
   });
   const EP = $('.page[data-page="EQ"]');
   if (EP) {
-    [['LOW CUT', 'eq.lc', 'LC'], ['HIGH CUT', 'eq.hc', 'HC']].forEach(([label, id, which]) => {
+    const cutOff = { LC: false, HC: false }, cutTogs = [];
+    const redrawEq = () => { if (typeof eqRedraw === 'function') eqRedraw(); };
+    [['LOW CUT', 'eq.lc', 'LC', 'eq.lc.on'], ['HIGH CUT', 'eq.hc', 'HC', 'eq.hc.on']].forEach(([label, id, which, onId]) => {
       const k = $$('.kn', EP).find(x => knobLabel(x) === label); if (!k) return;
       k.dataset.param = id;
       single(id, () => +k.dataset.v, n => { const f = toReal(id, n); setCut(which, ex(f)); cutKnob(label, f); });
+      // the cut's own on / off switch, under its knob
+      const tpl = $('.tog[aria-label="Gate on"]'); if (!tpl || !META[onId]) return;
+      const col = k.parentElement, tg = tpl.cloneNode(true);
+      tg.setAttribute('aria-label', label.toLowerCase() + ' on'); tg.title = label + ' on / off (off: the knob is ignored)';
+      const row = document.createElement('div'); row.className = 'obs-cutsw'; row.appendChild(tg); col.appendChild(row);
+      const show = () => {
+        cutOff[which] = tg.dataset.on !== '1'; col.classList.toggle('obs-cutoff', cutOff[which]);
+        const svg = typeof eqSvg === 'function' && eqSvg(), r = svg && svg.querySelectorAll('rect')[which === 'LC' ? 0 : 1];
+        if (r) { r.style.opacity = cutOff[which] ? .3 : ''; if (r.nextElementSibling) r.nextElementSibling.style.opacity = cutOff[which] ? .3 : ''; }
+        redrawEq();
+      };
+      tog(onId, tg, show);
+      tg.addEventListener('click', () => setTimeout(show, 0));
+      setTog(tg, (vals[onId] ?? 1) >= .5); show();
+      cutTogs.push([tg, show]);
+    });
+    // the curve leaves out a cut that is switched off
+    if (typeof eqRedraw === 'function') {
+      const draw = eqRedraw;
+      window.eqRedraw = function () { const lc = LCF, hc = HCF; if (cutOff.LC) LCF = 20; if (cutOff.HC) HCF = 20000; try { draw(); } finally { LCF = lc; HCF = hc; } };
+    }
+    // RESET: every band flat, both cuts off and their switches back on
+    const rs = $('.eqreset', EP);
+    if (rs) rs.addEventListener('click', () => setTimeout(() => { cutTogs.forEach(([t, show]) => { if (t.dataset.on !== '1') { setTog(t, true); show(); } }); queueScan(); }, 0));
+    // double-click a fader, or its dot on the curve, to put that band back to 0 dB
+    EP.addEventListener('dblclick', e => {
+      const fd = e.target.closest('.fd');
+      let band = fd ? $$('.fd').indexOf(fd) : -1;
+      const svg = typeof eqSvg === 'function' && eqSvg();
+      if (band < 0 && svg && svg.contains(e.target)) {
+        const dots = [...svg.querySelectorAll('circle[r="9"]')]; let best = 1e9;
+        dots.forEach((c, i) => { const r = c.getBoundingClientRect(), d = Math.hypot(e.clientX - (r.left + r.width / 2), e.clientY - (r.top + r.height / 2)); if (d < 18 && d < best) { best = d; band = i; } });
+      }
+      if (band < 0) return;
+      const f = $$('.fd')[band]; if (!f) return;
+      setFader(f, 0); redrawEq(); queueScan();
     });
   }
   });
@@ -737,6 +775,7 @@ function renderPresetList() {
       if (sub) f.classList.add('obs-fsub'); else { f.classList.add('obs-fgroup'); f.classList.toggle('open', presetOpen.has(key)); }
       const sp = f.querySelectorAll('span'); sp[0].textContent = label; sp[sp.length - 1].textContent = count;
       const onF = key === presetFolder;
+      f.classList.toggle('obs-fon', onF);
       f.style.background = onF ? 'rgba(255,255,255,.07)' : 'none';
       f.style.color = onF ? 'rgb(var(--cf_f4f1ea))' : sub ? 'rgb(var(--cf_8d8d93))' : 'rgb(var(--cf_c9c7c1))';
       f.title = sub ? '' : (presetOpen.has(key) ? 'Click again to fold' : 'Click to open');
@@ -756,6 +795,9 @@ function renderPresetList() {
   if (presetFolder.includes('/')) sub = presetFolder.slice(grp.length + 1);
   if (sub !== undefined && !presetSubs(grp).includes(sub)) { presetFolder = grp; sub = undefined; }   // that folder is gone
   const loose = [];
+  // the NAME / TYPE / SOURCE header only over preset rows
+  if (ov._colHdr === undefined) { const n = $$('span', ov).find(x => txt(x) === 'NAME'); ov._colHdr = n ? n.parentElement : null; }
+  if (ov._colHdr) ov._colHdr.style.visibility = !presetQuery && sub === undefined && grp !== 'MY' ? 'hidden' : '';
   // a top folder shows its folders, not every preset at once (My presets: your folders, then the loose ones)
   if (!presetQuery && sub === undefined)
   {
@@ -984,7 +1026,10 @@ function renderRack(ri) {
     const pf = (window.OBS_PEDALS || {})[s.key];
     if (pf && (b.dataset.sig !== sig || !b.classList.contains('obs-filled'))) {
       // the pedal's own face (tools/faces/build_pedals.py): lit when on, the drawn footswitch switches it
-      const sw = Math.max(40, b.clientWidth - 10), sh = Math.max(60, b.clientHeight - 10), k = Math.min(sw / pf.w, sh / pf.h);
+      // size from the slot's own size: on a hidden page (a preset loaded from another tab) it measures 0
+      const cs = getComputedStyle(b), bx = parseFloat(cs.borderLeftWidth) + parseFloat(cs.borderRightWidth) || 0, by = parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth) || 0;
+      const bw = b.clientWidth || (parseFloat(cs.width) || 150) - bx, bh = b.clientHeight || (parseFloat(cs.height) || 214) - by;
+      const sw = Math.max(40, bw - 10), sh = Math.max(60, bh - 10), k = Math.min(sw / pf.w, sh / pf.h);
       const W = Math.round(pf.w * k), H = Math.round(pf.h * k), f = (pf.fs || [])[pf.fs.length - 1] || [.5, .9, .1];
       const r = f[2] * W * 1.15;
       b.innerHTML = '<div class="obs-card face"><span class="obs-x" title="Remove">×</span><div class="obs-pface" style="width:' + W + 'px;height:' + H + 'px">'
@@ -1155,6 +1200,7 @@ function setupAmpCab(st) {
     const note = $$('span', p).find(s => /will show up here/.test(txt(s)));
     if (note) note.textContent = title === 'CHOOSE AMP' ? 'Your own amps: put .nam captures in Documents\\Obsidian Amp Suite\\Captures, or describe an amp in …\\Amps (see the README).' : 'Your own cabs: IR files (.wav) in Documents\\Obsidian Amp Suite\\IRs, or click LOAD IR on the CAB page.';
     p._grid = grid; p._kind = title === 'CHOOSE AMP' ? 'amp' : 'cab';
+    if (p._kind === 'amp') { const rd = $('.radio', p); if (rd) rd.classList.add('obs-hidden'); }
     const search = $('input', p); if (search) search.addEventListener('input', () => renderLib(p));
     p.addEventListener('click', () => setTimeout(() => renderLib(p), 0));
     new MutationObserver(() => {
@@ -1166,7 +1212,9 @@ function setupAmpCab(st) {
   });
   intercept(b => b.dataset.ampFolder !== undefined, b => { const p = b.closest('.pop'); p._folder = b.dataset.ampFolder; renderLib(p); p._grid.scrollTop = 0; });
   intercept(b => b.classList.contains('obs-crumb-back'), b => { const p = b.closest('.pop'); p._folder = ''; renderLib(p); });
-  intercept(b => b.classList.contains('obs-tile') && b.dataset.amp !== undefined, b => { call('setAmp', b.dataset.amp).then(r => r && applyRig(r)); $$('.pop').forEach(p => p.style.display = 'none'); });
+  intercept(b => b.classList.contains('obs-tile') && b.dataset.amp !== undefined, b => {
+    const p = b.closest('.pop'), t = p && p._tiles && p._tiles[+b.dataset.tile];
+    spawnAmp(b.dataset.amp, t ? t[1] : null); $$('.pop').forEach(x => x.style.display = 'none'); });
   intercept(b => b === ampUi.cabBig && rig && rig.cab && rig.cab.key && rig.cab.key !== 'none', b => {
     const page = b.closest('.page'); const pop = $$('.pop', page).find(p => txt($('span', p)) === 'CHOOSE CAB');
     $$('.pop').forEach(p => p.style.display = 'none'); if (pop) pop.style.display = 'block';
@@ -1200,6 +1248,74 @@ function setupAmpCab(st) {
     ampUi.irNote = $$('span', CP).find(s => /Or load your own impulse/.test(txt(s)));
   }
 }
+/* ---- amp folders by sound ----------------------------------------------------------------
+   Each amp sits in the folder(s) of the sounds it makes: an amp with a clean and a lead channel is in
+   CLEAN and in LEAD, and picking it in a folder starts it on that channel (dims: face button -> position)
+   and, for the in-house amps, at a gain that suits the sound (gain 0-10). lead: a touch more gain than
+   the amp's own start, for a channel that does rhythm and lead. */
+const SOUND_FOLDERS = [['CLEAN', 'Glassy, warm and sparkly cleans'], ['CRUNCH', 'Edge of breakup to classic rock'],
+  ['RHYTHM', 'High gain for riffs and chugs'], ['LEAD', 'Solos: more gain, more sustain'], ['ACOUSTIC', 'Acoustic guitar sounds']];
+const HG = [['RHYTHM', null, 6.5], ['LEAD', null, 8]];
+const AMP_SOUNDS = {
+  glass65: [['CLEAN', null, 4]], top30: [['CLEAN', null, 3], ['CRUNCH', null, 7]], plexi68: [['CRUNCH', null, 5.5], ['LEAD', null, 8.5]],
+  brit800: [['CRUNCH', null, 4], ['RHYTHM', null, 7], ['LEAD', null, 8.5]], slo100: [['RHYTHM', null, 6], ['LEAD', null, 8]],
+  styx51: HG, recto: HG, vh4: HG, core: HG,
+  achlys: [['CLEAN', { 0: 0 }], ['RHYTHM', { 0: 1 }], ['LEAD', { 0: 2 }]],
+  ares: [['CRUNCH', { 0: 0 }], ['RHYTHM', { 0: 1 }], ['LEAD', { 0: 1 }, 'lead']],
+  astraea: [['CLEAN', { 0: 0 }], ['CRUNCH', { 0: 1 }]],
+  belial: [['RHYTHM'], ['LEAD', null, 'lead']], erebus: [['RHYTHM'], ['LEAD', null, 'lead']], hecate: [['RHYTHM'], ['LEAD', null, 'lead']],
+  nihil: [['RHYTHM'], ['LEAD', null, 'lead']], thanatos: [['RHYTHM'], ['LEAD', null, 'lead']],
+  chrysaor: [['CRUNCH'], ['RHYTHM', null, 'lead']],
+  citadel: [['CRUNCH', { 0: 0 }], ['RHYTHM', { 0: 1 }], ['LEAD', { 0: 1 }, 'lead']],
+  dionysus: [['CLEAN', { 0: 0 }], ['CRUNCH', { 0: 1 }], ['LEAD', { 0: 2 }]],
+  eos: [['CLEAN', { 0: 0 }], ['CRUNCH', { 0: 2, 1: 1 }], ['LEAD', { 0: 2, 1: 3 }]],
+  eris: [['CLEAN', { 0: 0 }], ['CRUNCH', { 0: 1 }], ['RHYTHM', { 0: 2 }], ['LEAD', { 0: 2 }, 'lead']],
+  hyperion: [['CLEAN', { 0: 0 }], ['CRUNCH', { 0: 1 }], ['LEAD', { 0: 1 }, 'lead']],
+  kratos: [['RHYTHM', { 0: 0 }], ['LEAD', { 0: 1 }]],
+  lamia: [['CLEAN', { 0: 0 }], ['CRUNCH', { 0: 1 }], ['RHYTHM', { 0: 2 }], ['LEAD', { 0: 2 }, 'lead']],
+  lyssa: [['RHYTHM', { 0: 0 }], ['LEAD', { 0: 1 }]],
+  melinoe: [['CLEAN']], persephone: [['CLEAN']], orpheus: [['ACOUSTIC']], tyche: [['CRUNCH']],
+  moirai: [['CLEAN', { 0: 0 }], ['CRUNCH', { 0: 1 }], ['RHYTHM', { 0: 2 }], ['LEAD', { 0: 2 }, 'lead']],
+  moros: [['RHYTHM', { 0: 0 }], ['LEAD', { 0: 2 }]],
+  niflheim: [['CRUNCH', { 0: 0 }], ['RHYTHM', { 0: 1 }], ['LEAD', { 0: 1, 1: 1 }]],
+  nyx: [['CLEAN', { 0: 0 }], ['RHYTHM', { 0: 1 }], ['LEAD', { 0: 1 }, 'lead']],
+  strix: [['CLEAN', { 0: 0 }], ['RHYTHM', { 0: 1 }], ['LEAD', { 0: 1 }, 'lead']],
+  talos: [['RHYTHM', { 0: 0 }], ['LEAD', { 0: 1 }]],
+  typhon: [['CLEAN', { 0: 0 }], ['CRUNCH', { 0: 1 }], ['RHYTHM', { 0: 2 }], ['LEAD', { 0: 2 }, 'lead']],
+  umbra: [['CLEAN', { 0: 0 }], ['CRUNCH', { 0: 1 }], ['RHYTHM', { 0: 2 }], ['LEAD', { 0: 2 }, 'lead']],
+  vulcan: [['CLEAN', { 0: 0 }], ['CRUNCH', { 0: 1 }], ['RHYTHM', { 0: 2 }], ['LEAD', { 0: 3 }]],
+};
+/** The sounds an amp makes: [folder, dims, gain] from the table, or from its role for amps not in it. */
+function ampSounds(a) {
+  if (a.type === 'nam' || a.key === 'none') return [];
+  if (AMP_SOUNDS[a.key]) return AMP_SOUNDS[a.key];
+  const r = (a.role || '') + ' ' + (a.description || ''), out = [];
+  if (/clean/i.test(r)) out.push(['CLEAN']); if (/crunch/i.test(r)) out.push(['CRUNCH']);
+  if (/high gain|metal/i.test(r)) out.push(['RHYTHM']); if (/lead|high gain/i.test(r)) out.push(['LEAD', null, /high gain/i.test(r) ? 'lead' : null]);
+  if (/acoustic/i.test(r)) out.push(['ACOUSTIC']);
+  return out;
+}
+/** What the tile says about the sound: the channel's name on the amp, or the gain it starts at. */
+function soundLabel(a, snd) {
+  const dims = (a.face && a.face.dims) || [], parts = [];
+  for (const i in (snd[1] || {})) { const d = dims[+i]; const n = d && d.names && d.names[snd[1][i]]; if (n) parts.push(n); }
+  if (snd[2] === 'lead') parts.push('more gain');
+  else if (typeof snd[2] === 'number') parts.push('gain ' + snd[2]);
+  return parts.join(' · ');
+}
+/** Start an amp the way a folder means it: its channel / buttons and gain. */
+async function spawnAmp(key, snd) {
+  let r = await call('setAmp', key);
+  if (snd) {
+    for (const i in (snd[1] || {})) { const rr = await call('ampDim', +i, snd[1][i]); if (rr) r = rr; }
+    const a = AMPS.find(x => x.key === key) || {};
+    let g = null;
+    if (typeof snd[2] === 'number') g = toNorm('amp.gain', snd[2]);
+    else if (snd[2] === 'lead') { const k = (a.knobs || []).find(k => k.param === 'amp.gain'); g = Math.min(1, (k ? +k.def : vals['amp.gain'] || .5) + .15); }
+    if (g != null) { await new Promise(res => setTimeout(res, 40)); applyParams({ 'amp.gain': g }); call('setParam', 'amp.gain', g); }
+  }
+  if (r) applyRig(r);
+}
 function renderLib(p) {
   if (!p._grid) return;
   const radio = $('.radio', p);
@@ -1210,24 +1326,41 @@ function renderLib(p) {
     const cur = rig && rig.amp ? rig.amp.key : '';
     const roles = { 'CLEAN': /clean/i, 'CRUNCH': /crunch/i, 'HIGH GAIN': /high|lead|metal/i };
     const match = a => (filter === 'ALL' || (roles[filter] && roles[filter].test(a.role + ' ' + a.description))) && (!q || (a.name + ' ' + a.role + ' ' + a.description + ' ' + (a.basedOn || '')).toLowerCase().includes(q));
-    // Folders: amps with a "folder" are grouped (OBSIDIAN AMPS = the in-house amps). Searching or
-    // filtering at the top level shows matching amps from every folder.
+    // Folders by sound (CLEAN, CRUNCH, RHYTHM, LEAD...), ALL AMPS, and the folders of amps you added.
+    // The NAM loader sits on its own at the top. Searching shows matching amps from everywhere.
     const folder = p._folder || '';
-    const flat = !folder && (q || filter !== 'ALL');
-    let list = AMPS.filter(a => (folder ? a.folder === folder : (flat || !a.folder)) && match(a));
+    const flat = !folder && !!q;
+    const own = AMPS.filter(a => a.folder && a.folder !== 'OBSIDIAN AMPS' && a.folder !== 'CAPTURE AMPS');
+    const tiles = [];                                        // [amp, sound or null]
     let head = '';
     if (folder) {
-      head = '<div class="obs-crumb"><button class="obs-btn obs-crumb-back">‹  ALL AMPS</button><span>' + esc(folder) + '</span><em>' + AMPS.filter(a => a.folder === folder).length + ' amps</em></div>';
-    } else if (!flat) {
-      const folders = [...new Set(AMPS.map(a => a.folder).filter(Boolean))];
-      head = folders.map(f => {
-        const inF = AMPS.filter(a => a.folder === f), here = inF.find(a => a.key === cur);
-        const sub = f === 'OBSIDIAN AMPS' ? 'Our in-house amps, each modelled on a classic' : f === 'CAPTURE AMPS' ? 'Amps made from NAM captures' : 'Amps you added';
-        return '<button class="obs-tile obs-ampfolder' + (here ? ' has' : '') + '" data-amp-folder="' + esc(f) + '"><i>' + inF.length + ' AMPS</i><b>' + esc(f) + '</b><small>' + esc(here ? 'Playing now: ' + here.name : sub) + '</small></button>';
-      }).join('');
+      const sf = SOUND_FOLDERS.find(f => f[0] === folder);
+      if (sf) AMPS.forEach(a => ampSounds(a).forEach(snd => { if (snd[0] === folder) tiles.push([a, snd]); }));
+      else if (folder === 'ALL AMPS') AMPS.filter(a => a.key !== 'none').slice().sort((x, y) => x.name.localeCompare(y.name)).forEach(a => tiles.push([a, null]));
+      else AMPS.filter(a => a.folder === folder).forEach(a => tiles.push([a, null]));
+      head = '<div class="obs-crumb"><button class="obs-btn obs-crumb-back">‹  FOLDERS</button><span>' + esc(folder) + '</span><em>' + tiles.length + (tiles.length === 1 ? ' amp' : ' amps') + '</em></div>';
+    } else if (flat) {
+      AMPS.filter(a => a.key !== 'none' && match(a)).forEach(a => tiles.push([a, null]));
+    } else {
+      const fold = (f, sub, list) => {
+        const here = list.find(x => (x[0] || x).key === cur);
+        return '<button class="obs-tile obs-ampfolder obs-af-' + esc(f.toLowerCase().replace(/[^a-z]+/g, '-')) + (here ? ' has' : '') + '" data-amp-folder="' + esc(f) + '"><i>' + list.length + ' AMPS</i><b>' + esc(f) + '</b><small>'
+          + esc(here ? 'Playing now: ' + (here[0] || here).name : sub) + '</small></button>'; };
+      head = SOUND_FOLDERS.map(([f, sub]) => { const list = []; AMPS.forEach(a => ampSounds(a).forEach(snd => { if (snd[0] === f) list.push([a, snd]); })); return list.length ? fold(f, sub, list) : ''; }).join('')
+        + fold('ALL AMPS', 'Every amp, A to Z', AMPS.filter(a => a.key !== 'none'))
+        + [...new Set(own.map(a => a.folder))].map(f => fold(f, 'Amps you added', own.filter(a => a.folder === f))).join('');
+      AMPS.filter(a => a.type === 'nam').forEach(a => tiles.push([a, null]));          // the NAM loader
     }
-    const pic = a => a.face && a.face.skins ? '<span class="obs-tilepic" style="background-image:url(\'faces/img/' + esc(a.face.skins[a.face.dims && a.face.dims[0] && a.face.dims[0].skin ? Math.min(a.face.skins.length - 1, a.face.dims[0].start || 0) : 0].id) + '_on.webp\')"></span>' : '';
-    p._grid.innerHTML = head + list.map(a => '<button class="obs-tile' + (a.key === cur ? ' on' : '') + (a.face ? ' haspic' : '') + '" data-amp="' + esc(a.key) + '" title="' + esc(a.description) + '">' + pic(a) + '<i>' + esc(a.role || a.type) + '</i><b>' + esc(a.name) + '</b><small>' + esc(a.basedOn ? (/^Obsidian original/i.test(a.basedOn) ? a.basedOn : 'Based on ' + a.basedOn) : a.description) + '</small></button>').join('') + (list.length || (!folder && !flat && head) ? '' : '<div class="obs-empty">No amps match.</div>');
+    const pic = (a, snd) => {
+      if (!a.face || !a.face.skins) return '';
+      const d0 = a.face.dims && a.face.dims[0], pos = snd && snd[1] && snd[1][0] != null ? snd[1][0] : d0 && d0.start || 0;
+      return '<span class="obs-tilepic" style="background-image:url(\'faces/img/' + esc(a.face.skins[d0 && d0.skin ? Math.min(a.face.skins.length - 1, pos) : 0].id) + '_on.webp\')"></span>'; };
+    p._tiles = tiles;
+    p._grid.innerHTML = head + tiles.map(([a, snd], i) => {
+      const lbl = snd ? soundLabel(a, snd) : '';
+      return '<button class="obs-tile' + (a.key === cur ? ' on' : '') + (a.face ? ' haspic' : '') + '" data-amp="' + esc(a.key) + '" data-tile="' + i + '" title="' + esc(a.description) + '">' + pic(a, snd)
+        + '<i>' + esc(lbl || a.role || a.type) + '</i><b>' + esc(a.name) + '</b><small>' + esc(a.basedOn ? (/^Obsidian original/i.test(a.basedOn) ? a.basedOn : 'Based on ' + a.basedOn) : a.description) + '</small></button>'; }).join('')
+      + (tiles.length || (!folder && !flat && head) ? '' : '<div class="obs-empty">No amps match.</div>');
   } else {
     const cur = rig && rig.cab ? rig.cab.key : '';
     const list = CABS.filter(c => (filter === 'ALL' || (c.size || '').replace('x', '×') === filter) && (!q || (c.name + ' ' + (c.size || '')).toLowerCase().includes(q)));
