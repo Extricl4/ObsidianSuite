@@ -29,6 +29,64 @@ struct Report
     void check (bool cond, const juce::String& s) { cond ? ok (s) : fail (s); }
 };
 
+
+
+/** Noise gate bench: DI-like guitar situations, the gate's gain on every sample. */
+namespace gatebench
+{
+constexpr double kSR = 48000.0;
+inline float noise (uint32_t& s) { float a = 0; for (int k = 0; k < 4; ++k) { s = s * 1664525u + 1013904223u; a += (float) (s >> 8) / 16777216.f - .5f; } return a * 1.732f; }
+inline float tone (double t, double f, int harm) { float v = 0; for (int k = 1; k <= harm; ++k) v += (float) std::sin (juce::MathConstants<double>::twoPi * f * k * t) / (float) k; return v; }
+inline float db (float d) { return std::pow (10.f, d / 20.f); }
+
+/** A held lead note: starts at peakDb, fades fadeDbPerSec, +-3 dB vibrato swell at 5.5 Hz, over hiss at noiseDb. */
+inline std::vector<float> lead (float peakDb, float fadeDbPerSec, float noiseDb, double secs)
+{
+    std::vector<float> x ((size_t) (secs * kSR)); uint32_t s = 11u;
+    for (size_t i = 0; i < x.size(); ++i)
+    {
+        const double t = (double) i / kSR;
+        const float lv = peakDb - fadeDbPerSec * (float) t + 3.f * (float) std::sin (juce::MathConstants<double>::twoPi * 5.5 * t);
+        x[i] = tone (t, 330.0, 4) * db (lv) * (float) std::min (1.0, t / 0.003) * .6f + noise (s) * db (noiseDb);
+    }
+    return x;
+}
+/** Palm-muted chugs on a low string: count x (onMs on, gapMs off), stopped dead, over hiss. Onsets go to starts. */
+inline std::vector<float> chugs (int count, double onMs, double gapMs, float peakDb, float noiseDb, std::vector<int>& starts, std::vector<int>& stops)
+{
+    const int on = (int) (onMs * kSR / 1000), per = on + (int) (gapMs * kSR / 1000);
+    std::vector<float> x ((size_t) (count * per + kSR * .3)); uint32_t s = 5u;
+    for (int c = 0; c < count; ++c) { starts.push_back (c * per + (int) (kSR * .05)); stops.push_back (c * per + (int) (kSR * .05) + on); }
+    for (size_t i = 0; i < x.size(); ++i)
+    {
+        float v = noise (s) * db (noiseDb);
+        for (size_t c = 0; c < starts.size(); ++c)
+        {
+            const int k = (int) i - starts[c]; if (k < 0 || k > on + (int) (kSR * .004)) continue;
+            const double t = k / kSR; float e = (float) std::min (1.0, t / 0.001);
+            if (k > on) e *= 1.f - (float) (k - on) / (float) (kSR * .004);          // stopped in 4 ms
+            v += tone (t, 82.4, 8) * .45f * db (peakDb) * e;
+        }
+        x[i] = v;
+    }
+    return x;
+}
+template <class G> std::vector<float> run (const std::vector<float>& in, float thresh)
+{
+    G g; g.prepare (kSR); std::vector<float> gain (in.size());
+    for (size_t i = 0; i < in.size(); ++i) { float v = in[i]; g.process (&v, 1, thresh, true); gain[i] = g.currentGain(); }
+    return gain;
+}
+inline double firstBelow (const std::vector<float>& g, float lim, double fromSec)
+{ for (size_t i = (size_t) (fromSec * kSR); i < g.size(); ++i) if (g[i] < lim) return (double) i / kSR; return (double) g.size() / kSR; }
+/** Times the gain fell under 0.5 and came back over 0.9 (chopping) from fromSec on. */
+inline int chops (const std::vector<float>& g, double fromSec)
+{ int n = 0; bool down = false; for (size_t i = (size_t) (fromSec * kSR); i < g.size(); ++i) { if (g[i] < .5f) down = true; else if (down && g[i] > .9f) { ++n; down = false; } } return n; }
+inline float mean (const std::vector<float>& g, double a, double b) { double s = 0; int n = 0; for (size_t i = (size_t) (a * kSR); i < (size_t) (b * kSR) && i < g.size(); ++i) { s += g[i]; ++n; } return n ? (float) (s / n) : 0.f; }
+inline float meanAt (const std::vector<float>& g, int at, int a, int b) { double s = 0; for (int i = at + a; i < at + b; ++i) s += g[(size_t) i]; return (float) (s / (b - a)); }
+inline float maxStep (const std::vector<float>& g, bool fallingOnly) { float m = 0; for (size_t i = 1; i < g.size(); ++i) { const float d = g[i] - g[i - 1]; if (! fallingOnly || d < 0) m = std::max (m, std::abs (d)); } return m; }
+} // namespace gatebench
+
 /** Karplus-Strong plucked string: a reasonable stand-in for a DI guitar. */
 class Guitar
 {
@@ -227,6 +285,53 @@ int runSelfTest (const juce::StringArray& args)
         r.check (st.rms > 0.003f, "sound passes through (rms " + juce::String (juce::Decibels::gainToDecibels (st.rms), 1) + " dB)");
         r.check (st.peak <= 2.0f, "peak stays under the safety ceiling (" + juce::String (st.peak, 2) + ")");
         r.info ("CPU: avg " + juce::String (st.avgLoad * 100, 2) + "% of real time, worst block " + juce::String (st.maxBlockLoad * 100, 1) + "%");
+    }
+
+    // ---------------------------------------------------------------- 1a0. noise gate
+    r.head ("Noise gate (held leads, fading leads, chugs, hiss)");
+    {
+        using namespace gatebench;
+        struct M { double sustain; int chop; float attack, tight, gaps, silent, barely, step; };
+        auto measure = [&] (auto tag) {
+            using G = decltype (tag);
+            M m {};
+            // a lead held at a normal level, and a quiet one (neck pickup, volume down) fading through the threshold
+            const auto quiet = lead (-30.f, 6.f, -72.f, 7.0);
+            const auto gq = run<G> (quiet, -52.f);
+            m.sustain = firstBelow (gq, .5f, .05); m.chop = chops (gq, .05);
+            // chugs: pick attack kept, stops tight, the hiss between them gone
+            std::vector<int> on, off; const auto ch = chugs (8, 110, 110, -8.f, -68.f, on, off);
+            const auto gc = run<G> (ch, -50.f);
+            float att = 1, tight = 0, gaps = 0;
+            for (size_t c = 1; c < on.size(); ++c) { att = std::min (att, meanAt (gc, on[c], 48, 144)); tight = std::max (tight, meanAt (gc, off[c], 2880 - 48, 2880 + 48)); gaps = std::max (gaps, meanAt (gc, off[c], 3840, 4800)); }
+            m.attack = att; m.tight = tight; m.gaps = gaps; m.step = maxStep (gc, true);
+            // hiss alone: shut; barely on (threshold under the hiss): never touches a lead
+            std::vector<float> hiss ((size_t) (1.5 * kSR)); { uint32_t s = 3u; for (auto& v : hiss) v = noise (s) * db (-68.f); }
+            m.silent = mean (run<G> (hiss, -50.f), 1.0, 1.5);
+            const auto held = lead (-10.f, 9.f, -72.f, 4.0);
+            m.barely = 1.f; { const auto gb = run<G> (held, -78.f); for (size_t i = (size_t) (.01 * kSR); i < gb.size(); ++i) m.barely = std::min (m.barely, gb[i]); }
+            return m; };
+        const M n = measure (dsp::NoiseGate());
+        // the old gate on the same bench (2026-11-22): quiet lead cut at 4.56 s, chugs never closed between notes
+        r.check (n.sustain > 6.0 && n.chop == 0, juce::String::formatted ("a quiet lead fading through the threshold rings on (%.2f s; the old gate cut it at 4.56 s) and never chops (%d)", n.sustain, n.chop));
+        r.check (n.attack > 0.95f, juce::String::formatted ("palm-muted chugs keep their pick attack (gain %.2f 1-3 ms into each)", n.attack));
+        r.check (n.tight < 0.01f && n.gaps < 0.001f, juce::String::formatted ("chugs stop tight: gain %.3f 60 ms after each stop, %.4f in the gaps (the old gate stayed open)", n.tight, n.gaps));
+        r.check (n.silent < 0.001f, juce::String::formatted ("hiss alone is shut (gain %.5f)", n.silent));
+        r.check (n.barely > 0.99f, juce::String::formatted ("barely on (threshold under the hiss): a lead is never touched (min gain %.2f)", n.barely));
+        r.check (n.step < 0.01f, juce::String::formatted ("closing is smooth: largest gain step %.4f per sample", n.step));
+        {
+            const auto held = lead (-10.f, 9.f, -72.f, 4.0);
+            const auto g = run<dsp::NoiseGate> (held, -52.f);
+            float mn = 1.f; for (size_t i = (size_t) (.01 * kSR); i < g.size(); ++i) mn = std::min (mn, g[i]);
+            r.check (mn > 0.99f, juce::String::formatted ("a held lead with vibrato at the default threshold is never touched (min gain %.3f)", mn));
+        }
+        {   // closed on hiss, then switched off: back to unity at once, without a click
+            dsp::NoiseGate g; g.prepare (kSR); uint32_t sd = 9u; float step = 0, prev = 1.f, last = 0.f;
+            for (int i = 0; i < (int) kSR; ++i) { float v = noise (sd) * db (-68.f); g.process (&v, 1, -50.f, true); prev = g.currentGain(); }
+            const float closed = prev;
+            for (int i = 0; i < (int) (0.03 * kSR); ++i) { float v = noise (sd) * db (-68.f); g.process (&v, 1, -50.f, false); last = g.currentGain(); step = std::max (step, std::abs (last - prev)); prev = last; }
+            r.check (closed < 0.001f && last > 0.99f && step < 0.02f, juce::String::formatted ("switched off while closed: back to unity in 30 ms without a click (largest step %.4f)", step));
+        }
     }
 
     // ---------------------------------------------------------------- 1a. levels and switching
