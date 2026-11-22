@@ -40,7 +40,8 @@ def main():
     have = {p.stem for p in AMPS.glob('*.json')}
     used, n = set(), 0
     for a in amps:
-        if a['key'] not in have:            # the loader (Eidolon) and anything without captures
+        loader = bool(a.get('loader'))      # Eidolon: the NAM loader's face (it has no captures of its own)
+        if a['key'] not in have and not loader:
             continue
         knobs = []
         for k in a['knobs']:
@@ -58,6 +59,9 @@ def main():
             'dims': a['dims'], 'switches': a.get('switches', []), 'caps': caps,
             'gain': a['gain'], 'mid': a.get('mid'), 'master': a.get('master'),
         }
+        if loader:
+            face['loader'] = True
+            face['screen'] = a['screen']      # [x, y, w, h]: the screen with the capture's name and the knob values
         if a.get('sel'):
             face['sel'] = {x: a['sel'][x] for x in ('knob', 'label', 'names', 'note') if x in a['sel']}
         bases = [f"{s['id']}_{v}" for s in a['skins'] for v in ('on', 'off')]
@@ -74,11 +78,12 @@ def main():
         for b, im in cut.items():
             im.save(OUT / 'img' / (b + '.webp'), 'WEBP', quality=90, method=6); used.add(b + '.webp')
         move(face, dx, dy, W, H)
+        if loader: face['screen'] = [round(face['screen'][0] - dx, 1), round(face['screen'][1] - dy, 1)] + list(face['screen'][2:])
         for f in imgs[len(bases):]:
             shutil.copy2(SITE / 'img' / f, OUT / 'img' / f); used.add(f)
         face['images'] = imgs
         (OUT / (a['key'] + '.json')).write_text(json.dumps(face, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
-        n += 1
+        n += 0 if loader else 1
     for f in (OUT / 'img').iterdir():     # images of amps that are gone
         if f.name not in used: f.unlink()
     size = sum(f.stat().st_size for f in (OUT / 'img').iterdir())

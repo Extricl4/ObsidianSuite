@@ -8,7 +8,7 @@
 //  installed lock-free, so loading never interrupts the audio.
 //
 //  Libraries (what ADD AMP / ADD CAB list):
-//    built-in : Obsidian Core amp, NAM Loader amp, three generated cabs
+//    built-in : Obsidian Core amp, Eidolon (the NAM loader amp), three generated cabs
 //    yours    : JSON files in  Documents\Obsidian Amp Suite\Amps  and  ...\Cabs
 //               (see Content/README.md for the format)
 //
@@ -52,6 +52,8 @@ public:
     /** The amp file of a capture amp (Documents\Obsidian Amp Suite\Amps\<key>.json), or void. */
     static juce::var readAmpFile (const juce::String& key);
     static juce::var readFaceFile (const juce::String& key);
+    /** A .nam file's own description ({title, gear, kind, by}), read once per file and kept. */
+    static juce::var namInfo (const juce::String& path);
     static juce::var readJson (const juce::File& f);          // JSON file, tolerant of "" keys
     /** Loads every capture of a capture amp (call off the audio thread; the Rig's loader and the self-test use it). */
     struct CaptureAmpFiles { std::unique_ptr<dsp::CaptureAmp> amp; juce::StringArray missing, broken; };

@@ -101,6 +101,11 @@
     updateCancel: () => { clearInterval(updTimer); setUpd({ state: 'available', progress: 0 }); return true; },
     updateInstall: () => { if (S.update.state !== 'ready') return { ok: false, message: 'Nothing downloaded yet' };
       setUpd({ state: 'installing' }); return { ok: true, message: 'This is the web preview: in the app the installer runs now and the app opens again on the new build.' }; },
+    // the NAM loader (Eidolon): a .nam per slot; the file dialog is the plugin's, so this one just fills the slot
+    loadCapture: ch => { const a = S.rig.amp; if (a.type !== 'nam') { const e = (S.amps || []).find(x => x.key === 'nam-loader') || {}; S.rig.amp = { key: 'nam-loader', type: 'nam', name: e.name || 'Eidolon', channels: [0, 1, 2, 3].map(() => ({ file: '', name: '', loaded: false })) }; }
+      const n = ch + 1; S.rig.amp.channels[ch] = { file: 'C:/Captures/Example ' + n + '.nam', name: 'Example ' + n, title: ['5150 Red Lead', 'Plexi Crunch', 'Twin Clean', 'Uberschall Rhythm'][ch], gear: ['Peavey 5150', 'Marshall 1959', 'Fender Twin Reverb', 'Bogner Uberschall'][ch], kind: ch % 2 ? 'Full rig' : 'Amp only', by: 'Example', loaded: true };
+      later('obs:rig', S.rig, 30); return true; },
+    clearCapture: ch => { if (S.rig.amp.channels && S.rig.amp.channels[ch]) S.rig.amp.channels[ch] = { file: '', name: '', loaded: false }; later('obs:rig', S.rig, 10); return true; },
     getSettings: () => S.settings,
     setSetting: (k, v) => { S.settings[k] = v; return true; },
     midiMappings: () => S.midi, midiRemove: i => { S.midi.splice(i, 1); return S.midi; },

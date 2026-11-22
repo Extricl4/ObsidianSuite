@@ -1,3 +1,4 @@
+#include <map>
 #include "Rig.h"
 #include <juce_audio_formats/juce_audio_formats.h>
 #include "../DSP/SynthDefs.h"
@@ -231,7 +232,7 @@ void Rig::loadCapture (int channel, const juce::File& file)
     channel = juce::jlimit (0, AmpSection::kChannels - 1, channel);
     auto amp = rig.getChildWithName ("AMP");
     if (amp["type"].toString() != "nam")
-        amp.setProperty ("key", "nam-loader", nullptr).setProperty ("type", "nam", nullptr).setProperty ("name", "NAM Loader", nullptr);
+        amp.setProperty ("key", "nam-loader", nullptr).setProperty ("type", "nam", nullptr).setProperty ("name", "Eidolon", nullptr);
     amp.setProperty ("ch" + juce::String (channel), file.getFullPathName(), nullptr);
     engine.amp().setType (AmpSection::Nam);
     startCaptureLoad (channel, file, true);
@@ -277,6 +278,28 @@ void Rig::startCaptureLoad (int channel, const juce::File& f, bool notifyOk)
 
 // ------------------------------------------------------------------------- capture amps
 juce::var Rig::readJson (const juce::File& f) { return readJsonFile (f); }
+
+/** A .nam file's own description (its "metadata": name, gear, amp only or full rig), read once per file. */
+juce::var Rig::namInfo (const juce::String& path)
+{
+    static juce::CriticalSection lock;
+    static std::map<juce::String, juce::var> cache;
+    const juce::ScopedLock sl (lock);
+    if (auto it = cache.find (path); it != cache.end()) return it->second;
+    auto o = new juce::DynamicObject();
+    const juce::File f (path);
+    juce::var v;
+    if (f.existsAsFile() && f.getSize() < 64 * 1024 * 1024 && juce::JSON::parse (f.loadFileAsString(), v).wasOk() && v["metadata"].isObject())
+    {
+        const auto m = v["metadata"];
+        o->setProperty ("title", m["name"].toString().trim());
+        o->setProperty ("gear", (m["gear_make"].toString().trim() + " " + m["gear_model"].toString().trim()).trim());
+        const auto t = m["gear_type"].toString().toLowerCase();
+        o->setProperty ("kind", t.isEmpty() ? juce::String() : t.contains ("cab") ? juce::String ("Full rig") : t == "pedal" ? juce::String ("Pedal") : juce::String ("Amp only"));
+        o->setProperty ("by", m["modeled_by"].toString().trim());
+    }
+    return cache[path] = juce::var (o);
+}
 
 juce::var Rig::readAmpFile (const juce::String& key)
 {
@@ -769,7 +792,32 @@ juce::var Rig::ampLibrary()
         o->setProperty ("tint", juce::String::toHexString ((int) m.tint).paddedLeft ('0', 6));
         o->setProperty ("folder", "OBSIDIAN AMPS");      // the amp chooser groups these in one folder
     }
-    add ("nam-loader", "NAM Loader", "nam", "capture", "Load your own .nam captures, one per channel.", 4);
+    // Eidolon, the NAM loader: your own captures (up to four), with the rack face from the finished-amps page
+    add ("nam-loader", "Eidolon", "nam", "NAM loader", "Load your own .nam captures (up to four) and step through them with PREV / NEXT or BROWSE.", 4);
+    {
+        auto* o = list.getReference (list.size() - 1).getDynamicObject();
+        o->setProperty ("basedOn", "Your own NAM captures");
+        const auto face = readFaceFile ("eidolon");
+        if (face.isObject())
+        {
+            o->setProperty ("face", face);
+            static const char* params[] = { "amp.gain", "amp.bass", "amp.mid", "amp.treble", "amp.presence", "amp.master" };
+            juce::Array<juce::var> knobs;
+            if (auto* fk = face["knobs"].getArray())
+                for (int j = 0; j < fk->size(); ++j)
+                {
+                    const bool tone = j < 6;        // the last knob is BROWSE: it picks the capture
+                    auto k = new juce::DynamicObject();
+                    k->setProperty ("label", (*fk)[j]["label"]);
+                    k->setProperty ("role", tone ? "tone" : "browse");
+                    k->setProperty ("param", tone ? juce::String (params[j]) : juce::String());
+                    k->setProperty ("def", 0.5);
+                    k->setProperty ("steps", tone ? 0 : AmpSection::kChannels);
+                    knobs.add (juce::var (k));
+                }
+            o->setProperty ("knobs", knobs);
+        }
+    }
 
     // Your amps: Documents\Obsidian Suite\Amps\*.json
     for (const auto& f : contentFolder().getChildFile ("Amps").findChildFiles (juce::File::findFiles, false, "*.json"))
@@ -865,6 +913,11 @@ juce::var Rig::toJson() const
         const juce::String path = amp["ch" + juce::String (c)].toString();
         ch->setProperty ("file", path);
         ch->setProperty ("name", path.isEmpty() ? juce::String() : juce::File (path).getFileNameWithoutExtension());
+        if (path.isNotEmpty())          // what the capture says about itself (Eidolon's screen)
+        {
+            const auto info = namInfo (path);
+            for (auto k : { "title", "gear", "kind", "by" }) if (info[k].toString().isNotEmpty()) ch->setProperty (k, info[k]);
+        }
         auto* e = const_cast<Engine&> (engine).amp().channelSlot (c).get();
         ch->setProperty ("loaded", e != nullptr);
         if (e != nullptr) ch->setProperty ("trainedRate", e->trainedRate());

@@ -615,6 +615,21 @@ int runSelfTest (const juce::StringArray& args)
 
     // ---------------------------------------------------------------- 7. NAM
     r.head ("NAM captures");
+    {
+        bool eid = false;
+        const auto library = obs::Rig::ampLibrary();
+        if (auto* lib = library.getArray())
+            for (auto& a : *lib)
+                if (a["key"].toString() == "nam-loader")
+                    eid = a["name"].toString() == "Eidolon" && a["face"].isObject() && a["face"]["loader"] && a["knobs"].size() == 7 && a["knobs"][6]["role"].toString() == "browse";
+        r.check (eid, "the NAM loader is Eidolon: its face, six tone knobs and BROWSE");
+        const auto f = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("obsidian-selftest-meta.nam");
+        f.replaceWithText (R"J({"version":"0.5.4","metadata":{"name":"Red Lead 7","modeled_by":"Tester","gear_type":"amp_cab","gear_make":"Peavey","gear_model":"5150"},"architecture":"WaveNet","weights":[]})J");
+        const auto info = obs::Rig::namInfo (f.getFullPathName());
+        r.check (info["title"].toString() == "Red Lead 7" && info["gear"].toString() == "Peavey 5150" && info["kind"].toString() == "Full rig" && info["by"].toString() == "Tester",
+                 "a capture's own name, gear and type show on Eidolon's screen (" + info["title"].toString() + " / " + info["gear"].toString() + " / " + info["kind"].toString() + ")");
+        f.deleteFile();
+    }
     if (namFile.existsAsFile())
     {
         juce::String err;

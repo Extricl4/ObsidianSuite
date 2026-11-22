@@ -246,3 +246,27 @@ button.obs-locked { opacity: .32; cursor: not-allowed; }
 .obs-ampfolder i { color: var(--fc) !important; }
 .obs-af-clean { --fc: #6fd3ff; } .obs-af-crunch { --fc: #ffb547; } .obs-af-rhythm { --fc: #ff6b5a; } .obs-af-lead { --fc: #ff7ba6; }
 .obs-af-acoustic { --fc: #c9a06b; } .obs-af-all-amps { --fc: rgba(255,255,255,.45); }
+/* Eidolon (the NAM loader): its screen, and the capture slots under it */
+.ff-screen { position: absolute; container-type: inline-size; box-sizing: border-box; padding: 3.2cqw 3.6cqw 0; pointer-events: none; font-family: 'Saira', 'Inter', sans-serif; color: #bfe9ff;
+  text-shadow: 0 0 1.2cqw rgba(110,205,255,.55); transition: opacity .5s; }
+.ff-screen.off { opacity: 0; }
+.ff-screen .sc-top { display: flex; flex-direction: column; gap: .9cqw; }
+.ff-screen .sc-slot { font-size: 1.55cqw; letter-spacing: .3em; color: #6ecdff; opacity: .85; }
+.ff-screen .sc-name { font-size: 4.3cqw; font-weight: 600; letter-spacing: .03em; color: #e8f7ff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.15; }
+.ff-screen .sc-gear { font-size: 1.9cqw; color: #8fc9e8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ff-screen .sc-kind { font-size: 1.5cqw; letter-spacing: .26em; color: #6ecdff; }
+.ff-screen .sc-vals { position: absolute; left: 0; right: 0; bottom: 3.4cqw; height: 6cqw; border-top: 1px solid rgba(110,205,255,.22); }
+.ff-screen .sc-vals span { position: absolute; top: 1.2cqw; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: .3cqw; opacity: .7; transition: opacity .15s, color .15s; }
+.ff-screen .sc-vals span em { font-style: normal; font-size: 1.15cqw; letter-spacing: .22em; color: #6ecdff; }
+.ff-screen .sc-vals span b { font-size: 2.6cqw; font-weight: 600; color: #dff4ff; font-variant-numeric: tabular-nums; }
+.ff-screen .sc-vals span.hot { opacity: 1; }
+.ff-screen .sc-vals span.hot b { color: #fff; text-shadow: 0 0 1.6cqw #6ecdff; }
+.obs-fslots { display: flex; gap: 6px; flex-wrap: wrap; }
+.obs-fslots .sl { display: inline-flex; align-items: center; gap: 6px; height: 24px; max-width: 190px; padding: 0 8px; border-radius: 7px; font-size: 11px; color: rgb(var(--cf_8d8d93));
+  background: rgba(255,255,255,.03); box-shadow: inset 0 0 0 1px rgba(255,255,255,.07); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.obs-fslots .sl i { font-style: normal; font-weight: 700; color: rgb(var(--cf_a3a3a8)); }
+.obs-fslots .sl.full { color: rgb(var(--cf_e9e6df)); }
+.obs-fslots .sl.on { box-shadow: inset 0 0 0 1px #6ecdff; background: rgba(110,205,255,.08); }
+.obs-fslots .sl.on i { color: #6ecdff; }
+.obs-fslots .sl u { text-decoration: none; margin-left: 2px; opacity: .5; padding: 0 2px; }
+.obs-fslots .sl u:hover { opacity: 1; color: #ff8a80; }

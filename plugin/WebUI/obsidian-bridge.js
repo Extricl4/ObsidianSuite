@@ -1306,6 +1306,8 @@ function soundLabel(a, snd) {
 /** Start an amp the way a folder means it: its channel / buttons and gain. */
 async function spawnAmp(key, snd) {
   let r = await call('setAmp', key);
+  // Eidolon starts with empty slots: start on slot 1
+  if ((AMPS.find(x => x.key === key) || {}).type === 'nam' && ampUi.panel) { ampUi.panel.dataset.ch = 0; vals['amp.channel'] = 0; queueScan(); }
   if (snd) {
     for (const i in (snd[1] || {})) { const rr = await call('ampDim', +i, snd[1][i]); if (rr) r = rr; }
     const a = AMPS.find(x => x.key === key) || {};
@@ -1434,6 +1436,7 @@ function faceOn() { return !(typeof bypassed !== 'undefined' && bypassed.has('AM
 function faceState() { return (rig && rig.amp && rig.amp.face) || {}; }
 function faceKnobVal(j) {
   const k = faceUi.info.knobs[j];
+  if (k.role === 'browse') return faceCh() / 3;            // Eidolon: BROWSE sweeps the four capture slots
   if (k.param) { const n = vals[k.param]; return n === undefined ? k.def : clamp(toReal(k.param, n) / 10, 0, 1); }
   const f = faceState(), v = f.knobs ? f.knobs[j] : undefined;
   return v === undefined || v === null ? k.def : +v;
@@ -1453,7 +1456,9 @@ function faceDimCount(i) {
 function faceCap() { const F = faceUi.info.face, k = F.dims.map((d, i) => faceDimVal(i)).join('|'); return F.caps[k] || F.caps[k || '_'] || {}; }
 function faceDimName(i) { const d = faceUi.info.face.dims[i]; return d.names ? (d.names[faceDimVal(i)] || '') : (faceCap().name || ''); }
 function faceBtnLabel(id) {
-  const F = faceUi.info.face, w = (F.switches || []).find(w => w.button === id);
+  const F = faceUi.info.face;
+  if (F.loader) return { load: 'LOAD: open a .nam capture into this slot (or the next empty one)', prev: 'PREV: the capture before', next: 'NEXT: the next capture' }[id] || id;
+  const w = (F.switches || []).find(w => w.button === id);
   if (w) return w.label;
   const d = F.dims.find(d => d.button === id || (d.buttons || []).includes(id));
   return d ? (d.buttons ? d.names[d.buttons.indexOf(id)] : d.id[0].toUpperCase() + d.id.slice(1)) : id;
@@ -1466,6 +1471,7 @@ function faceThrottle(key, fn) {
 function faceSetKnob(j, v) {
   const k = faceUi.info.knobs[j];
   v = clamp(v, 0, 1); if (k.steps > 1) v = Math.round(v * (k.steps - 1)) / (k.steps - 1);
+  if (k.role === 'browse') { loaderSlot(Math.round(v * 3)); return; }
   if (k.param) {
     const el = stdKnob(k.param), n = clamp(toNorm(k.param, v * 10), 0, 1);
     if (el) { setKnob(el, n); if (window.knobHook) window.knobHook(el, n); }
@@ -1477,8 +1483,26 @@ function faceSetKnob(j, v) {
   }
   drawFace();
 }
+/* ---- Eidolon (the NAM loader): four capture slots ---- */
+function loaderSlots() { return (rig && rig.amp && rig.amp.channels) || []; }
+function loaderSlot(ch) {
+  ch = clamp(ch, 0, 3); if (ch === faceCh()) return;
+  ampUi.panel.dataset.ch = ch; vals['amp.channel'] = ch / 3; queueScan(); drawFace();
+}
+function loaderPress(id) {
+  const sl = loaderSlots(), cur = faceCh(), full = sl.map((c, i) => c && c.file ? i : -1).filter(i => i >= 0);
+  if (id === 'load') {                       // the slot you're on if it's empty, else the next empty one, else replace this one
+    const empty = [0, 1, 2, 3].map(i => (cur + i) % 4).find(i => !(sl[i] && sl[i].file));
+    const to = empty === undefined ? cur : empty;
+    loaderSlot(to); call('loadCapture', to); return;
+  }
+  if (!full.length) { say('No captures yet: press LOAD to open a .nam file'); return; }
+  const d = id === 'prev' ? -1 : 1;
+  for (let i = 1; i <= 4; i++) { const c = (cur + d * i + 8) % 4; if (full.includes(c)) { loaderSlot(c); return; } }
+}
 function facePress(id) {
   const F = faceUi.info.face, f = faceState();
+  if (F.loader) { loaderPress(id); return; }
   const si = (F.switches || []).findIndex(w => w.button === id);
   if (si >= 0) {
     const on = !(f.switches && f.switches[si]); if (f.switches) f.switches[si] = on;
@@ -1517,6 +1541,11 @@ function buildFace() {
   for (const id in F.leds) { const [x, y, w, hh] = F.leds[id]; h += '<img class="ff-led" data-l="' + esc(id) + '" src="faces/img/' + F.key + '_led_' + id + '.png" style="left:' + pc(x, W) + ';top:' + pc(y, H) + ';width:' + pc(w, W) + ';height:' + pc(hh, H) + '"' + nd + '>'; }
   F.knobs.forEach((k, j) => { const r = k.r * 1.15; h += '<button class="ff-hot" data-k="' + j + '" aria-label="' + esc(k.label) + '" style="left:' + pc(k.c[0] - r, W) + ';top:' + pc(k.c[1] - r, H) + ';width:' + pc(2 * r, W) + ';height:' + pc(2 * r, H) + '"></button>'; });
   for (const id in F.buttons) { const [x, y, w, hh] = F.buttons[id]; h += '<button class="ff-hot ff-btn" data-b="' + esc(id) + '" title="' + esc(faceBtnLabel(id)) + '" style="left:' + pc(x - 6, W) + ';top:' + pc(y - 6, H) + ';width:' + pc(w + 12, W) + ';height:' + pc(hh + 12, H) + '"></button>'; }
+  if (F.loader && F.screen) {               // Eidolon's screen: the slot and capture up top, each knob's value above its knob
+    const [sx, sy, sw, sh] = F.screen;
+    h += '<div class="ff-screen" style="left:' + pc(sx, W) + ';top:' + pc(sy, H) + ';width:' + pc(sw, W) + ';height:' + pc(sh, H) + '"><div class="sc-top"><span class="sc-slot"></span><b class="sc-name"></b><span class="sc-gear"></span><span class="sc-kind"></span></div><div class="sc-vals">'
+      + F.knobs.map((k, j) => I.knobs[j] && I.knobs[j].role === 'browse' ? '' : '<span data-k="' + j + '" style="left:' + ((k.c[0] - sx) / sw * 100).toFixed(3) + '%"><em>' + esc(k.label.toUpperCase()) + '</em><b></b></span>').join('') + '</div></div>';
+  }
   const [px, py, pr] = F.power, R = pr * 1.25;
   h += '<button class="ff-hot ff-pw" title="Power: the AMP section on / off" style="left:' + pc(px - R, W) + ';top:' + pc(py - R, H) + ';width:' + pc(2 * R, W) + ';height:' + pc(2 * R, H) + '"></button><div class="ff-tip"></div>';
   st.innerHTML = h;
@@ -1525,9 +1554,9 @@ function buildFace() {
   $$('.ff-hot[data-k]', st).forEach(b => {
     const j = +b.dataset.k; let y0 = 0, v0 = 0, pid = null;
     b.title = F.knobs[j].label + (I.knobs[j] && I.knobs[j].param ? '' : '') + ' · drag up or down, double-click to reset';
-    b.addEventListener('pointerdown', e => { if (e.button !== 0) return; pid = e.pointerId; b.setPointerCapture(pid); y0 = e.clientY; v0 = faceKnobVal(j); st.classList.add('drag'); faceTip(j); e.preventDefault(); });
+    b.addEventListener('pointerdown', e => { if (e.button !== 0) return; pid = e.pointerId; b.setPointerCapture(pid); y0 = e.clientY; v0 = faceKnobVal(j); st.classList.add('drag'); faceUi.dragK = j; faceTip(j); e.preventDefault(); });
     b.addEventListener('pointermove', e => { if (pid !== e.pointerId) return; faceSetKnob(j, v0 + (y0 - e.clientY) / (e.shiftKey ? 900 : 260)); faceTip(j); });
-    const end = e => { if (pid !== e.pointerId) return; pid = null; st.classList.remove('drag'); $('.ff-tip', st).classList.remove('on'); };
+    const end = e => { if (pid !== e.pointerId) return; pid = null; st.classList.remove('drag'); faceUi.dragK = -1; $('.ff-tip', st).classList.remove('on'); drawFace(); };
     b.addEventListener('pointerup', end); b.addEventListener('pointercancel', end);
     b.addEventListener('wheel', e => { e.preventDefault(); const ns = I.knobs[j].steps; faceSetKnob(j, faceKnobVal(j) - Math.sign(e.deltaY) * (ns > 1 ? 1 / (ns - 1) : .02)); faceTip(j);
       clearTimeout(faceUi.tipT); faceUi.tipT = setTimeout(() => $('.ff-tip', st).classList.remove('on'), 700); }, { passive: false });
@@ -1555,11 +1584,35 @@ function drawFace(pwr) {
   F.dims.forEach((d, i) => ((d.leds || [])[faceDimVal(i)] || []).forEach(l => lit.add(l)));
   (F.switches || []).forEach((w, i) => { if (f.switches && f.switches[i]) lit.add(w.led); });
   $$('.ff-led', st).forEach(im => { im.style.opacity = on && lit.has(im.dataset.l) ? 1 : 0; });
+  if (F.loader) loaderScreen(on);
   faceReadout();
+}
+function loaderScreen(on) {
+  const sc = $('.ff-screen', faceUi.stage); if (!sc) return;
+  const sl = loaderSlots(), ch = faceCh(), c = sl[ch] || {}, n = sl.filter(x => x && x.file).length;
+  sc.classList.toggle('off', !on);
+  const set = (q, t) => { const e = $(q, sc); if (e.textContent !== t) e.textContent = t; };
+  set('.sc-slot', 'SLOT ' + (ch + 1) + ' / 4' + (n ? '  ·  ' + n + ' LOADED' : ''));
+  set('.sc-name', c.file ? (c.title || c.name || 'Capture') : 'Empty slot');
+  set('.sc-gear', c.file ? (c.gear ? c.gear + (c.by ? '  ·  by ' + c.by : '') : (c.title && c.name !== c.title ? c.name : '')) : 'Press LOAD to open a .nam capture');
+  set('.sc-kind', c.file ? (c.kind || '').toUpperCase() : '');
+  $$('.sc-vals span', sc).forEach(v => { const j = +v.dataset.k, b = v.querySelector('b'), t = (faceKnobVal(j) * 10).toFixed(1); if (b.textContent !== t) b.textContent = t; v.classList.toggle('hot', faceUi.dragK === j); });
 }
 function faceReadout() {
   const el = faceUi.read; if (!el || !faceUi.info) return;
   const I = faceUi.info, F = I.face, f = faceState(), m = faceUi.meters;
+  if (F.loader) {                            // Eidolon: the slots, each one you can pick or empty
+    const sl = loaderSlots(), ch = faceCh();
+    const html = '<span class="obs-fslots">' + [0, 1, 2, 3].map(i => { const c = sl[i] || {};
+      return '<span class="sl' + (i === ch ? ' on' : '') + (c.file ? ' full' : '') + '" data-slot="' + i + '" title="' + esc(c.file || 'Empty: press LOAD') + '"><i>' + (i + 1) + '</i>' + esc(c.file ? (c.title || c.name) : 'empty')
+        + (c.file ? '<u data-clear="' + i + '" title="Empty this slot">✕</u>' : '') + '</span>'; }).join('') + '</span>';
+    if (html !== faceUi.readHtml) {
+      faceUi.readHtml = html; el.innerHTML = html;
+      el.onclick = e => { const x = e.target.closest('[data-clear]'), s = e.target.closest('[data-slot]'); e.stopPropagation();
+        if (x) { call('clearCapture', +x.dataset.clear); return; } if (s) loaderSlot(+s.dataset.slot); };
+    }
+    return;
+  }
   // what you'd read on the amp itself: channel, mode / voice, switches. No file names.
   let ch = F.dims.length ? F.dims.map((d, i) => (d.id === 'boost' && d.names && faceDimVal(i) === 0) ? '' : faceDimName(i)).filter(Boolean).join(' · ') : 'Single channel';
   if (F.sel) { const si = Math.round(faceKnobVal(F.sel.knob) * (F.sel.names.length - 1)); if (si > 0) ch = F.sel.label + ' · ' + F.sel.names[si]; }
@@ -1582,7 +1635,7 @@ function faceMeters(m) {
 }
 /** Called from renderAmp: shows the face for a capture amp, the plain panel for everything else. */
 function renderFace(a, info) {
-  const p = ampUi.panel, isFace = a.type === 'capture' && info && info.face && info.knobs;
+  const p = ampUi.panel, isFace = (a.type === 'capture' || a.type === 'nam') && info && info.face && info.knobs;
   p.classList.toggle('face', !!isFace);
   if (!faceUi.box) {
     faceUi.box = document.createElement('div'); faceUi.box.className = 'obs-facewrap';
@@ -1598,7 +1651,7 @@ function renderFace(a, info) {
   if (!isFace) { faceUi.info = null; faceUi.key = ''; return; }
   faceUi.info = info;
   if (faceUi.key !== a.key) { faceUi.key = a.key; faceUi.readHtml = ''; buildFace(); }
-  $('.obs-faceinfo i', faceUi.box).textContent = (info.face.name || info.name || '').toUpperCase() + '  ·  ' + (info.basedOn ? 'BASED ON ' + info.basedOn.toUpperCase() : 'CAPTURE AMP');
+  $('.obs-faceinfo i', faceUi.box).textContent = (info.face.name || info.name || '').toUpperCase() + '  ·  ' + (info.face.loader ? 'NAM LOADER · YOUR OWN CAPTURES' : info.basedOn ? 'BASED ON ' + info.basedOn.toUpperCase() : 'CAPTURE AMP');
   $('.obs-faceinfo i', faceUi.box).title = info.description || '';
   drawFace();
 }
