@@ -242,6 +242,8 @@ def render(key, spec, lit):
     pos = {'w': w // SS, 'h': h // SS,
            'led': [[round(l['at'][0] / (Wc * artpx), 4), round(l['at'][1] / (Lc * artpx), 4), '#%02x%02x%02x' % tuple(int(v * 255) for v in srgb(l['color']))] for l in spec.get('leds', [])],
            'fs': [[round(f[0] / (Wc * artpx), 4), round(f[1] / (Lc * artpx), 4), round(.62 * f[2] / Wc, 4)] for f in spec.get('footswitches', [])]}
+    for hs in spec.get('hotspots', []):     # drawn controls the board makes clickable (e.g. LOAD), as fractions
+        pos.setdefault('hot', []).append([hs['action'], round((hs['at'][0] / artpx - hs['w'] / 2) / Wc, 4), round((hs['at'][1] / artpx - hs['h'] / 2) / Lc, 4), round(hs['w'] / Wc, 4), round(hs['h'] / Lc, 4)])
     for sc in spec.get('screens', [])[:1]:   # the glass, as fractions: left, top, width, height
         pos['screen'] = [round((sc['at'][0] / artpx - sc['w'] / 2) / Wc, 4), round((sc['at'][1] / artpx - sc['h'] / 2) / Lc, 4), round(sc['w'] / Wc, 4), round(sc['h'] / Lc, 4)]
     return img, pos

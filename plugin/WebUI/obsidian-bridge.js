@@ -976,7 +976,7 @@ function setupRacks(st) {
     const ri = +b.dataset.rack, si = +b.dataset.slot, ui = rackUi[ri], s = rig && rig.racks[ri][si];
     if (e.target.closest('.obs-x')) { call('setModule', ri, si, ''); if (ui.sel === si) ui.sel = -1; return; }
     if (e.target.closest('.obs-foot')) { const id = RACKS[ri].key + '.' + (si + 1) + '.on'; const n = ((vals[id] ?? 1) >= .5) ? 0 : 1; vals[id] = n; last[id] = n; call('setParam', id, n); refreshSlotStates(); return; }
-    if (e.target.closest('.obs-loadfile,.obs-pfscreen')) { call('loadModuleFile', ri, si); return; }
+    if (e.target.closest('.obs-loadfile,.obs-pfscreen,.obs-pfhot[data-act="load"]')) { call('loadModuleFile', ri, si); return; }
     if (s && s.key) { ui.sel = si; renderRack(ri); renderEditor(ri); return; }
     openLibrary(ri, si);
   });
@@ -1060,6 +1060,8 @@ function renderRack(ri) {
       b.innerHTML = '<div class="obs-card face"><span class="obs-x" title="Remove">×</span><div class="obs-pface" style="width:' + W + 'px;height:' + H + 'px">'
         + '<img class="pf-off" src="' + s.key + '_off.webp" alt="" draggable="false"><img class="pf-on" src="' + s.key + '_on.webp" alt="" draggable="false">'
         + '<span class="obs-foot pf-foot" title="Footswitch: on / off" style="left:' + (f[0] * W - r) + 'px;top:' + (f[1] * H - r) + 'px;width:' + 2 * r + 'px;height:' + 2 * r + 'px"></span>'
+        // drawn controls that work (WRAITH's LOAD)
+        + (pf.hot || []).map(h => '<span class="obs-pfhot" data-act="' + h[0] + '" title="' + (h[0] === 'load' ? 'Load a .nam capture' : '') + '" style="left:' + h[1] * W + 'px;top:' + h[2] * H + 'px;width:' + h[3] * W + 'px;height:' + h[4] * H + 'px"></span>').join('')
         // a pedal with a screen (WRAITH, the NAM pedal): the capture it plays, what it was made from, who made it
         + (pf.screen ? '<div class="obs-pfscreen" title="Load a .nam capture" style="left:' + pf.screen[0] * W + 'px;top:' + pf.screen[1] * H + 'px;width:' + pf.screen[2] * W + 'px;height:' + pf.screen[3] * H + 'px;font-size:' + Math.max(8, H * .03).toFixed(1) + 'px">'
           + (s.fileName ? '<b>' + esc(s.title || s.fileName) + '</b>' + (s.gear ? '<span>' + esc(s.gear) + '</span>' : '') + (s.by ? '<i>by ' + esc(s.by) + '</i>' : '')
@@ -1183,7 +1185,7 @@ function setupDrag() {
   let d = null;
   document.addEventListener('pointerdown', e => {
     const b = e.target.closest('.obs-slot.obs-filled');
-    if (!b || e.target.closest('.obs-x,.obs-foot,.obs-loadfile,.obs-pfscreen') || e.button !== 0) return;
+    if (!b || e.target.closest('.obs-x,.obs-foot,.obs-loadfile,.obs-pfscreen,.obs-pfhot') || e.button !== 0) return;
     d = { b, x: e.clientX, y: e.clientY, ri: +b.dataset.rack, from: +b.dataset.slot, moved: false };
   });
   addEventListener('pointermove', e => {

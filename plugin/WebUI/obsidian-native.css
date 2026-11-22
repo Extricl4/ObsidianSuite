@@ -284,3 +284,5 @@ button.obs-locked { opacity: .32; cursor: not-allowed; }
 .obs-pfscreen span, .obs-pfscreen i { max-width: 100%; font-size: .78em; font-style: normal; color: rgba(127,228,255,.62); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .obs-pfscreen:hover { background: rgba(90,225,255,.07); }
 .obs-card.face:not(.on) .obs-pfscreen { opacity: .35; }
+.obs-pfhot { position: absolute; cursor: pointer; border-radius: 4px; }
+.obs-pfhot:hover { box-shadow: 0 0 0 1px rgba(110,205,255,.5), 0 0 8px rgba(110,205,255,.35); }

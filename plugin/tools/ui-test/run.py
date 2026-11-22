@@ -450,8 +450,11 @@ async def run(standalone):
         await pg.wait_for_timeout(200)
         full = await wr.evaluate("b=>[...b.querySelector('.obs-pfscreen').children].map(c=>c.textContent)")
         inside = await wr.evaluate("""b=>{ const s=b.querySelector('.obs-pfscreen').getBoundingClientRect(), f=b.querySelector('.obs-pface').getBoundingClientRect(); return s.left>f.left && s.right<f.right && s.top>f.top && s.bottom<f.bottom; }""")
+        await pg.evaluate("window.__mock.log.length=0")
+        await wr.locator('.obs-pfhot[data-act="load"]').click(); await pg.wait_for_timeout(150)
+        asked = asked and await pg.evaluate("window.__mock.log.some(x=>x[0]==='loadModuleFile'&&x[1]===0&&x[2]===4)")
         check(empty.startswith('NO CAPTURE') and asked and full == ['KOT OD Gain=5', 'Various Pedal Companies', 'by frank67'] and inside,
-              f'WRAITH (NAM pedal): its screen says NO CAPTURE, a click loads one, then it shows the capture, gear and maker ({full})')
+              f'WRAITH (NAM pedal): its screen says NO CAPTURE, the screen and LOAD load one, then it shows the capture, gear and maker ({full})')
         await wr.screenshot(path=str(OUT / 'wraith.png'))
         await pg.evaluate("window.__mock.emit('obs:rig', window.__mock.state.rig)"); await pg.wait_for_timeout(100)
         # drag slot 2 onto slot 4

@@ -1,56 +1,56 @@
 {
-  "_about": "WRAITH, the NAM capture pedal: a mini enclosure (3.9 x 9.3 cm) with a screen that shows the loaded capture. Units: 200 per cm. Drawn by plugin/tools/faces/build_pedals.py; art by make_art.py.",
+  "_about": "WRAITH, the NAM capture pedal: a tiny rack-style box in Eidolon's look (6.0 x 8.4 cm), mostly screen. The board writes the loaded capture on the screen; the screen and LOAD open a capture. Units: 200 per cm. Drawn by plugin/tools/faces/build_pedals.py; art by make_art.py.",
   "size": [
-    3.9,
-    9.3
+    6.0,
+    8.4
   ],
   "art": "art/nampedal_art.png",
   "glow": "art/nampedal_glow.png",
-  "glow_strength": 1.2,
+  "glow_strength": 1.4,
   "artmat": {
     "rough": 0.3,
-    "metal": 0.4
+    "metal": 0.2
   },
   "enclosure": {
     "color": [
-      0.03,
-      0.03,
-      0.038
+      0.006,
+      0.006,
+      0.008
     ],
-    "metal": 0.35,
-    "rough": 0.3,
-    "coat": 0.7,
+    "metal": 0.25,
+    "rough": 0.4,
+    "coat": 0.35,
     "bump": [
       "noise",
       900,
-      0.05
+      0.04
     ]
   },
   "knobs": [
     {
       "at": [
-        150,
-        270
+        300,
+        1095
       ],
-      "r": 0.32,
+      "r": 0.3,
       "style": "alu",
       "v": 0.5
     },
     {
       "at": [
-        390,
-        270
+        600,
+        1095
       ],
-      "r": 0.32,
+      "r": 0.3,
       "style": "alu",
       "v": 0.5
     },
     {
       "at": [
-        630,
-        270
+        900,
+        1095
       ],
-      "r": 0.32,
+      "r": 0.3,
       "style": "alu",
       "v": 0.85
     }
@@ -58,27 +58,38 @@
   "screens": [
     {
       "at": [
-        390,
-        760
+        600,
+        590
       ],
-      "w": 3.4,
-      "h": 2.7,
+      "w": 4.9,
+      "h": 3.0,
       "color": [
-        0.35,
-        0.88,
+        0.43,
+        0.8,
         1.0
       ]
+    }
+  ],
+  "hotspots": [
+    {
+      "action": "load",
+      "at": [
+        905,
+        173
+      ],
+      "w": 1.4,
+      "h": 0.55
     }
   ],
   "leds": [
     {
       "at": [
-        390,
-        1335
+        930,
+        1440
       ],
       "color": [
-        0.35,
-        0.88,
+        0.43,
+        0.8,
         1.0
       ],
       "strength": 40
@@ -86,32 +97,32 @@
   ],
   "footswitches": [
     [
-      390,
-      1590,
-      0.85
+      600,
+      1440,
+      0.78
     ]
   ],
   "screws": [
     [
-      80,
-      80
+      110,
+      60
     ],
     [
-      700,
-      80
+      1090,
+      60
     ],
     [
-      80,
-      1780
+      110,
+      1620
     ],
     [
-      700,
-      1780
+      1090,
+      1620
     ]
   ],
   "rimcolor": [
-    0.6,
-    0.8,
+    0.55,
+    0.75,
     1.0
   ]
 }
