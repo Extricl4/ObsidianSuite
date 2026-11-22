@@ -119,9 +119,7 @@ public:
         {
             if (eng == nullptr)
             {
-                // Channel selected but no capture loaded yet: play the in-house amp so you still hear an amp.
-                if (model.model() != wanted) model.setModel (wanted);
-                model.process (x, n, gain, bass, mid, treble, presence, depth, master);
+                // Eidolon with no capture in this slot: the guitar goes through untouched (no amp of our own)
             }
             else
             {

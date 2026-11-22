@@ -969,6 +969,20 @@ int runSelfTest (const juce::StringArray& args)
                 if (a["key"].toString() == "nam-loader")
                     eid = a["name"].toString() == "Eidolon" && a["face"].isObject() && a["face"]["loader"] && a["knobs"].size() == 7 && a["knobs"][6]["role"].toString() == "browse";
         r.check (eid, "the NAM loader is Eidolon: its face, six tone knobs and BROWSE");
+        {   // Eidolon with no capture loaded adds nothing: what goes in comes out
+            auto& amp = p.engine().amp();
+            dsp::AmpSection a; a.prepare (SR, BLOCK); a.setType (dsp::AmpSection::Nam);
+            std::vector<float> buf ((size_t) BLOCK); double diff = 0, level = 0;
+            for (int b = 0; b < 60; ++b)
+            {
+                for (int i = 0; i < BLOCK; ++i) buf[(size_t) i] = 0.3f * (float) std::sin (2.0 * juce::MathConstants<double>::pi * 110.0 * (b * BLOCK + i) / SR);
+                const auto in = buf;
+                a.process (buf.data(), BLOCK, true, 0, 10.f, 5.f, 5.f, 5.f, 5.f, 5.f, 10.f);
+                if (b >= 10) for (int i = 0; i < BLOCK; ++i) { diff = std::max (diff, (double) std::abs (buf[(size_t) i] - in[(size_t) i])); level = std::max (level, (double) std::abs (in[(size_t) i])); }
+            }
+            juce::ignoreUnused (amp);
+            r.check (diff < 1.0e-5, juce::String::formatted ("Eidolon with no capture loaded adds nothing (gain 10, master 10: largest difference %.1e)", diff));
+        }
         const auto f = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("obsidian-selftest-meta.nam");
         f.replaceWithText (R"J({"version":"0.5.4","metadata":{"name":"Red Lead 7","modeled_by":"Tester","gear_type":"amp_cab","gear_make":"Peavey","gear_model":"5150"},"architecture":"WaveNet","weights":[]})J");
         const auto info = obs::Rig::namInfo (f.getFullPathName());
