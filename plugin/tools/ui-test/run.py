@@ -179,6 +179,12 @@ async def run(standalone):
 
         # ---- synth page
         await pg.evaluate("setTab('SYNTH')")
+        # the loaded synth preset shows under the SIREN plate (name + category) and under PRESETS
+        pi = await pg.evaluate("obsSynth.presets.findIndex(p => p.name === 'Coin Bling')")
+        await pg.evaluate(f"obsSynth.loadPreset({pi})"); await pg.wait_for_timeout(150)
+        pn = await pg.evaluate("[document.querySelector('.sy-badge .pn u').textContent, document.querySelector('.sy-badge .pn em').textContent, document.querySelector('.sy-prname').textContent]")
+        check(pn == ['Coin Bling', 'ARCADE', 'Coin Bling'], f'SYNTH shows the loaded preset under SIREN and under PRESETS ({pn})')
+        await pg.evaluate("obsSynth.reset && obsSynth.reset()"); await pg.wait_for_timeout(100)
         defs = await pg.evaluate("obsSynth.defs")
         meta = {q['id']: q for q in state['params'] if q['id'].startswith('syn.')}
         bad = []
@@ -334,6 +340,15 @@ async def run(standalone):
         await pg.locator('.hm-menu.show .hm-modes button', has_text='Dorian').first.click(); await pg.wait_for_timeout(150)
         mv = await pg.evaluate("window.__mock.sent('harm.mode')")
         check(mv is not None and abs(mv - 4 / 44) < 1e-6, f'the MODE menu picks Dorian (harm.mode = {mv})')
+        # after RESET the voice switches still work (RESET used to swap the voices out from under their controls)
+        await pg.locator('.hm-btn.r').click(); await pg.wait_for_timeout(150)
+        await pg.evaluate("window.__mock.log.length=0")
+        b4 = await pg.evaluate("document.querySelectorAll('.hm-tg')[3].classList.contains('on')")
+        await pg.locator('.hm-tg').nth(3).click(); await pg.wait_for_timeout(200)
+        af = await pg.evaluate("document.querySelectorAll('.hm-tg')[3].classList.contains('on')")
+        sv = await pg.evaluate("window.__mock.sent('harm.v4.on')")
+        check(af != b4 and sv == (1 if af else 0), f'after RESET the voice ON switches still work (voice 4: {b4} -> {af}, sent {sv})')
+        await pg.locator('.hm-tg').nth(3).click(); await pg.wait_for_timeout(150)
         await pg.evaluate("window.__mock.log.length=0; window.__mock.emit('obs:params', {'harm.key': 9/11, 'harm.v2.step': 19/28, 'harm.v3.on': 1})")
         await pg.wait_for_timeout(150)
         keytxt = await pg.evaluate("document.querySelectorAll('.hm-dd b')[0].textContent")

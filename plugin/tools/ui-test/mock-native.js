@@ -52,7 +52,7 @@
   const commands = {
     ready: () => { startMeters(); return S; },
     init: () => S,
-    setParam: (id, v) => { params[id] = v; return true; },
+    setParam: (id, v) => { params[id] = v; if (window.__mock.echo) later('obs:params', { [id]: v }, 33); return true; },
     beginGesture: () => true, endGesture: () => true,
     getRig: () => S.rig,
     setModule: (r, s, k) => setModule(r, s, k),

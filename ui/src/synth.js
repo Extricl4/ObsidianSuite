@@ -288,10 +288,15 @@ css.textContent = `
 .sy-badge b { font-family: 'Cinzel', 'Saira', serif; font-size: 30px; font-weight: 700; letter-spacing: .32em; margin-right: -.32em; line-height: 1; color: transparent;
   background: linear-gradient(180deg, #f4f1ea 0%, #a7a49c 55%, #e9e6df 100%); -webkit-background-clip: text; background-clip: text; filter: drop-shadow(0 2px 0 rgba(0,0,0,.9)); }
 .sy-badge span { margin-top: 6px; font-size: 8.5px; font-weight: 600; letter-spacing: .5em; margin-right: -.5em; color: #8d8d93; }
+.sy-badge .pn { --pc: var(--accent); display: flex; align-items: center; gap: 8px; margin-top: 7px; max-width: 380px; font-size: 11px; font-weight: 600; letter-spacing: .26em; margin-right: -.26em;
+  color: #f1eee7; text-transform: uppercase; white-space: nowrap; }
+.sy-badge .pn i { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--pc); box-shadow: 0 0 8px var(--pc); }
+.sy-badge .pn u { overflow: hidden; text-overflow: ellipsis; text-decoration: none; }
+.sy-badge .pn em { flex: none; font-style: normal; font-size: 8px; letter-spacing: .2em; color: var(--pc); opacity: .85; }
 .sy-wave { position: absolute; top: 18px; width: 150px; height: 24px; opacity: .45; color: var(--accent); }
 .sy-wave.l { right: calc(50% + 136px); } .sy-wave.r { left: calc(50% + 136px); transform: scaleX(-1); }
 .sy-prwrap { display: flex; align-items: center; gap: 12px; }
-.sy-prbtn .tx small { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--accent); opacity: .9; }
+.sy-prbtn .tx small { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--accent); opacity: .95; font-size: 11px; font-weight: 600; letter-spacing: .04em; }
 .sy-prnav { display: flex; gap: 4px; }
 .sy-prnav button { width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgba(255,255,255,.12); background: none; color: #8d8d93; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; }
 .sy-prnav button:hover { color: #e9e6df; border-color: rgba(255,255,255,.24); }
@@ -799,7 +804,7 @@ prBtn.title = 'Browse the synth sounds';
 const prNav = el('div', 'sy-prnav', '<button aria-label="Previous synth preset">' + IC.prev + '</button><button aria-label="Next synth preset">' + IC.next + '</button>');
 const prWrap = el('div', 'sy-prwrap'); prWrap.append(prBtn, prNav);
 const waveSvg = '<svg viewBox="0 0 380 24" preserveAspectRatio="none"><path d="' + Array.from({ length: 77 }, (_, i) => (i ? 'L' : 'M') + (i * 5) + ' ' + (12 + Math.sin(i * .42) * 9 * Math.pow(i / 76, 1.6)).toFixed(1)).join(' ') + '" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>';
-const badge = el('div', 'sy-badge', '<b>SIREN</b><span>OBSIDIAN SYNTH</span>');
+const badge = el('div', 'sy-badge', '<b>SIREN</b><div class="pn" title="The loaded synth preset"><i></i><u>INIT</u><em></em></div>');
 const wl = el('div', 'sy-wave l', waveSvg), wr = el('div', 'sy-wave r', waveSvg);
 const diceWrap = el('div'); diceWrap.style.cssText = 'display: flex; align-items: center; gap: 22px';
 const undo = el('button', 'sy-undo', IC.undo); undo.title = 'Undo (dice, reset or preset)'; undo.disabled = true;
@@ -1001,7 +1006,13 @@ const PKEEP = KEEP.concat(['syn.hold']);
 const RESET_KEEP = ['syn.key', 'syn.scale', 'syn.tune'];
 let prName = 'Init', prIdx = -1;
 const prNameEl = prBtn.querySelector('.sy-prname');
-function showPreset(name, i) { prName = name; prIdx = i; prNameEl.textContent = name; prNameEl.title = name; markPr(); }
+function drawPrName() {
+  prNameEl.textContent = prName; prNameEl.title = prName;
+  const pn = badge.querySelector('.pn'), pr = PRESETS[prIdx], col = prName === 'Custom' ? '#8d8d93' : pr ? catCol(pr.cat) : 'var(--accent)';
+  pn.style.setProperty('--pc', col); pn.querySelector('u').textContent = prName;
+  pn.querySelector('em').textContent = prName === 'Custom' ? 'FROM THE MAIN PRESET' : pr ? pr.cat : '';
+}
+function showPreset(name, i) { prName = name; prIdx = i; drawPrName(); markPr(); }
 // mark the loaded one (no rebuild: the tile that was clicked stays in the page)
 function markPr() { if (prList) [...prList.children].forEach(t => t.classList.toggle('on', +t.dataset.i === prIdx)); }
 /** A preset value: a number, or one of the setting's choices by name ('Pulse', '1/16', '8-bit'). */
@@ -1034,9 +1045,9 @@ function resetAll() {
 reset.addEventListener('click', resetAll);
 // a knob you turn marks the preset as edited (*); a sound that comes from the plugin (a rig preset, automation) is "Custom"
 onChange((id, v, from) => { if (PKEEP.includes(id)) return;
-  if (from === 'ui' && !/\*$/.test(prName)) { prName += ' *'; prNameEl.textContent = prName; }
-  else if (from === 'plugin' && prName !== 'Custom') { prName = 'Custom'; prIdx = -1; prNameEl.textContent = prName; markPr(); } });
-stepListeners.push(from => { if (from === 'ui' && !/\*$/.test(prName)) { prName += ' *'; prNameEl.textContent = prName; } });
+  if (from === 'ui' && !/\*$/.test(prName)) { prName += ' *'; drawPrName(); }
+  else if (from === 'plugin' && prName !== 'Custom') { prName = 'Custom'; prIdx = -1; drawPrName(); markPr(); } });
+stepListeners.push(from => { if (from === 'ui' && !/\*$/.test(prName)) { prName += ' *'; drawPrName(); } });
 /* the browser */
 const CATS = [['ALL', 'var(--accent)'], ['ARCADE', '#ffd23f'], ['CARTOON', '#ff9ec7'], ['SYN', '#ff5d5d'], ['LEADS', 'var(--h-osc)'], ['BASS', 'var(--h-sub)'], ['PADS & KEYS', 'var(--h-mot)'], ['ARPS', 'var(--h-flt)'], ['FX & WEIRD', '#9dff8a']];
 const catCol = c => (CATS.find(x => x[0] === c) || CATS[0])[1];

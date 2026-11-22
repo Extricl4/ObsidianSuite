@@ -385,7 +385,9 @@ const prWrap = el('div'); prWrap.style.cssText = 'display: flex; align-items: ce
 const badge = el('div', 'hm-badge', '<b>HYDRA</b><span>OBSIDIAN HARMONIZER</span>');
 const headsL = el('div', 'hm-heads l', '<i></i><i></i><i></i>'), headsR = el('div', 'hm-heads r', '<i></i><i></i><i></i>');
 const resetB = el('button', 'hm-btn r', '<span class="round">' + IC.reset + '</span><span class="tx"><b>RESET</b><small>back to default</small></span>');
-resetB.onclick = () => { const d = JSON.parse(JSON.stringify(DEF)); Object.assign(S, d); prName('Twin Thirds'); changed(); };
+// RESET: defaults copied into the existing voice objects (every voice control and the engine link hold on to them;
+// replacing them made the voice switches, SMART / FIXED and the interval arrows stop working after a reset)
+resetB.onclick = () => { const d = JSON.parse(JSON.stringify(DEF)), vs = d.voices; delete d.voices; Object.assign(S, d); S.voices.forEach((v, i) => Object.assign(v, vs[i])); prName('Twin Thirds'); changed(); };
 bot.append(prWrap, headsL, badge, headsR, resetB);
 const heads = [...headsL.children, ...headsR.children];
 
