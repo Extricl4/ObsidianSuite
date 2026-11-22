@@ -71,6 +71,8 @@ const css=document.createElement('style'); css.textContent=`
 .st-name{flex:1;min-width:0;font-size:12px;font-weight:500;letter-spacing:.02em;color:#e9e6df;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;outline:none;border-radius:3px;padding:2px 4px}
 .st-name:focus{background:#0a0a0b;box-shadow:0 0 0 1px var(--tc);text-overflow:clip}
 .st-name.val{color:var(--accent)}
+.st-panv{flex:none;min-width:26px;height:16px;padding:0 5px;box-sizing:border-box;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;letter-spacing:.06em;font-variant-numeric:tabular-nums;color:var(--tc);background:color-mix(in srgb, var(--tc) 14%, transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--tc) 35%, transparent)}
+.st-panv.c{color:#8d8d93;background:rgba(255,255,255,.04);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
 .st-hgap{flex:1}
 .st-vol,.st-pan{width:100%;box-sizing:border-box;height:22px;flex:none;display:flex;align-items:center;gap:5px;padding:0 6px;border-radius:4px;border:1px solid #2e2e33;background:#111113;box-shadow:inset 0 1px 3px rgba(0,0,0,.8);cursor:ew-resize;touch-action:none}
 .st-vol svg,.st-pan svg{flex:none}
@@ -255,6 +257,7 @@ function render(){
       <div class="st-hrow">
        <button class="st-sw" data-a="color" title="Track colour (click to change)" aria-label="Track colour"></button>
        <span class="st-name" spellcheck="false" title="Double-click to rename">${t.name}</span>
+       <span class="st-panv${Math.abs(t.pan)<.02?' c':''}" title="Pan (double-click the pan slider to centre it)">${fmtPan(t.pan)}</span>
       </div>
       <div class="st-hrow">
        <div class="st-grp">
@@ -374,10 +377,12 @@ scroller.addEventListener('wheel',e=>{ if(e.ctrlKey){ e.preventDefault(); ppb=Ma
 
 /* pointer: clips, ruler, loop, knobs, overview */
 let drag=null; const sc=()=>app.getBoundingClientRect().width/1360;
+let lastPress=null;
+const twice=(k,t)=>{ const now=performance.now(), d=!!lastPress&&lastPress.k===k&&lastPress.t===t&&now-lastPress.at<400; lastPress=d?null:{k,t,at:now}; return d; };
 S.addEventListener('pointerdown',e=>{ if(e.button!==0) return;
   if(!e.target.closest('.st-menu')&&!e.target.closest('.st-pop')) hideMenus();
-  const vs=e.target.closest('.st-vol'); if(vs){ drag={k:'vol',t:+vs.closest('.st-head').dataset.t,el:vs}; volMove(e); e.preventDefault(); return; }
-  const ps=e.target.closest('.st-pan'); if(ps){ drag={k:'pan',t:+ps.closest('.st-head').dataset.t,el:ps}; panMove(e); e.preventDefault(); return; }
+  const vs=e.target.closest('.st-vol'); if(vs){ const ti=+vs.closest('.st-head').dataset.t; e.preventDefault(); if(twice('vol',ti)){ tracks[ti].vol=.8; render(); return; } drag={k:'vol',t:ti,el:vs}; volMove(e); return; }
+  const ps=e.target.closest('.st-pan'); if(ps){ const ti=+ps.closest('.st-head').dataset.t; e.preventDefault(); if(twice('pan',ti)){ tracks[ti].pan=0; render(); return; } drag={k:'pan',t:ti,el:ps}; panMove(e); return; }
   if(ovw&&e.target.closest('#st-ovw')){ drag={k:'ovw'}; ovwMove(e); e.preventDefault(); return; }
   const lp=e.target.closest('.st-loop'); if(lp){ const i=[...lp.children].indexOf(e.target); drag={k:i===0?'ls':i===1?'le':'lm',x:e.clientX,s:loopS,e:loopE}; e.preventDefault(); return; }
   if(e.target.closest('#st-ruler')){ seek(e); drag={k:'seek'}; e.preventDefault(); return; }
@@ -393,7 +398,7 @@ function volMove(e){ const tr=drag.el.querySelector('.trk').getBoundingClientRec
   const n=drag.el.closest('.st-head').querySelector('.st-name'); n.textContent=fmtVol(t.vol); n.classList.add('val'); }
 function panMove(e){ const tr=drag.el.querySelector('.trk').getBoundingClientRect(); const t=tracks[drag.t]; let p=((e.clientX-tr.left)/tr.width)*2-1; p=Math.max(-1,Math.min(1,p)); if(Math.abs(p)<.05) p=0; t.pan=p;
   drag.el.querySelector('.f').setAttribute('style',panFill(p)); drag.el.querySelector('.k').style.left=((p+1)*50)+'%'; drag.el.title='Pan '+fmtPan(p);
-  const n=drag.el.closest('.st-head').querySelector('.st-name'); n.textContent='Pan '+fmtPan(p); n.classList.add('val'); }
+  const v=drag.el.closest('.st-head').querySelector('.st-panv'); if(v){ v.textContent=fmtPan(p); v.classList.toggle('c',Math.abs(p)<.02); } }
 function knobSet(){ const t=tracks[drag.t], k=drag.el, h=k.closest('.st-head');
   const v=drag.which==='vol'?t.vol:(t.pan+1)/2; k.querySelector('.ring').style.background=ring(v,t.c,drag.which==='pan'); k.querySelector('.cap').style.transform='rotate('+(-135+270*v)+'deg)';
   if(drag.which==='vol') h.querySelector('.st-db').textContent=fmtVol(t.vol); else k.nextElementSibling.textContent=fmtPan(t.pan); }

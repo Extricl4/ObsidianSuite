@@ -745,6 +745,18 @@ async def run(standalone):
         else:
             check(await pg.locator('#f0 button', has_text='STUDIO').is_hidden(), 'STUDIO is hidden inside a DAW')
         await pg.evaluate("closeOv()")
+        if standalone:
+            # ---- STUDIO: each track shows its pan; a double-click on the pan slider centres it
+            await pg.locator('#f0 button', has_text='STUDIO').click(); await pg.wait_for_timeout(300)
+            pan = pg.locator('#studio .st-head').first.locator('.st-pan'); box = await pan.bounding_box()
+            await pg.mouse.click(box['x'] + box['width'] * .9, box['y'] + box['height'] / 2); await pg.wait_for_timeout(500)
+            v1 = await pg.locator('#studio .st-head').first.locator('.st-panv').text_content()
+            await pg.mouse.dblclick(box['x'] + box['width'] * .9, box['y'] + box['height'] / 2); await pg.wait_for_timeout(200)
+            v2 = await pg.locator('#studio .st-head').first.locator('.st-panv').text_content()
+            nm = await pg.locator('#studio .st-head').first.locator('.st-name').text_content()
+            check(v1.startswith('R') and v2 == 'C' and not nm.startswith('Pan'), f'STUDIO: the pan shows next to the track name ({v1}), double-click centres it ({v2})')
+            await pg.screenshot(path=str(OUT / 'studio.png'))
+            await pg.evaluate("closeOv()")
 
         # ---- tuner + meters
         await pg.evaluate("openOv('tuner')"); await pg.wait_for_timeout(250)
