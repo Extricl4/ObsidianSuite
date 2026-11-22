@@ -65,6 +65,7 @@ document.addEventListener('click',e=>{
   const ovb=e.target.classList && e.target.parentElement && e.target.parentElement.classList.contains('ov') && e.target===e.target.parentElement.firstElementChild; if(ovb){ closeOv(); return; }
   const b=e.target.closest('button'); if(!b) return;
   if(b.closest('#ddmenu')){ ddPick(b); return; }
+  if(b.closest('#studio')) return;   // STUDIO handles its own buttons (its EXPORT isn't the preset EXPORT)
   const t=b.textContent.trim(), al=b.getAttribute('aria-label')||'';
   if(tabBtns.includes(b)) return setTab(t);
   if(b.classList.contains('tog')){ const on=b.dataset.on!=='1';

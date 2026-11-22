@@ -117,10 +117,12 @@ jobs:
           $old = gh release list --limit 100 --json tagName,createdAt | ConvertFrom-Json | Where-Object { $_.tagName -like 'build-*' } | Sort-Object createdAt -Descending | Select-Object -Skip 8
           foreach ($r in $old) { gh release delete $r.tagName --cleanup-tag --yes }
 
+      # not "latest": older builds' UPDATE button reads GitHub's latest release and needs a build-<n> one
       - name: Release (tags only)
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
+          make_latest: false
           files: |
             dist/*.zip
             dist/*.exe

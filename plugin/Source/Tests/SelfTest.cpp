@@ -348,6 +348,34 @@ int runSelfTest (const juce::StringArray& args)
             auto st = render (p, rate, blk, 0.6, [&g2, rate] (int i) { if (i % (int) (rate * 0.2) == 0) g2.pluck (110.f, 0.4f); return g2.next(); });
             r.check (st.finite && st.rms > 0.001f && st.peak <= 2.0f, juce::String (rate / 1000.0, 1) + " kHz / " + juce::String (blk) + " samples");
         }
+    {
+        auto pluckAt = [] (Guitar& gg, double rate) { return [&gg, rate] (int i) { if (i % (int) (rate * 0.2) == 0) gg.pluck (110.f, 0.4f); return gg.next(); }; };
+        p.prepareToPlay (192000.0, 512); Guitar g3 (192000.0);
+        auto st = render (p, 192000.0, 512, 0.6, pluckAt (g3, 192000.0));
+        r.check (st.finite && st.rms > 0.001f && st.peak <= 2.0f, "192 kHz / 512 samples");
+        p.prepareToPlay (SR, 1); Guitar g4 (SR);
+        st = render (p, SR, 1, 0.3, pluckAt (g4, SR));
+        r.check (st.finite && st.rms > 0.001f && st.peak <= 2.0f, "1-sample blocks");
+        p.prepareToPlay (SR, 256); Guitar g5 (SR);
+        st = render (p, SR, 2048, 0.6, pluckAt (g5, SR));
+        r.check (st.finite && st.rms > 0.001f && st.peak <= 2.0f, "a host that sends bigger blocks than it announced (256 -> 2048)");
+        // FL Studio style: a different block size every call
+        p.prepareToPlay (SR, 512); Guitar g6 (SR);
+        auto in6 = pluckAt (g6, SR);
+        juce::MidiBuffer midi; uint32_t seed = 7u; int idx = 0; double acc = 0; float peak = 0; bool finite = true;
+        while (idx < (int) (SR * 0.6))
+        {
+            seed = seed * 1664525u + 1013904223u;
+            const int n = 1 + (int) ((seed >> 8) % 512u);
+            juce::AudioBuffer<float> b (2, n);
+            for (int i = 0; i < n; ++i) { b.setSample (0, i, in6 (idx + i)); b.setSample (1, i, 0.f); }
+            p.processBlock (b, midi);
+            for (int i = 0; i < n; ++i) { const float v = b.getSample (0, i); finite = finite && std::isfinite (v); acc += (double) v * v; peak = std::max (peak, std::abs (v)); }
+            idx += n;
+        }
+        const float rms = (float) std::sqrt (acc / idx);
+        r.check (finite && rms > 0.001f && peak <= 2.0f, juce::String::formatted ("a different block size every call (1..512, like FL Studio): rms %.3f, peak %.2f", rms, peak));
+    }
     p.prepareToPlay (SR, BLOCK);
 
     // ---------------------------------------------------------------- 5. transpose accuracy
@@ -637,6 +665,17 @@ int runSelfTest (const juce::StringArray& args)
                  "reads a GitHub release: build " + juce::String (rel.build) + ", pack, notes without the hidden block");
         r.check (rel.full.sha == hexA && rel.update.sha == hexB && rel.full.size == 90000000 && rel.update.url.endsWith ("-Update.exe"),
                  "finds both installers with their sizes and checksums");
+        // GitHub's list: a tagged release (no build block) is newest, then builds 145 and 140: build 145 is picked
+        juce::Array<juce::var> rels;
+        rels.add (juce::JSON::parse (R"J({ "tag_name": "v0.2.0", "name": "Obsidian Amp Suite 0.2.0", "body": "First release",
+            "assets": [ { "name": "ObsidianAmpSuite-0.2.0-Setup.exe", "size": 90000000, "browser_download_url": "https://github.com/Extricl4/ObsidianSuite/releases/download/v0.2.0/ObsidianAmpSuite-0.2.0-Setup.exe" } ] })J"));
+        rels.add (json);
+        auto older = juce::JSON::parse (juce::JSON::toString (json)); older.getDynamicObject()->setProperty ("tag_name", "build-140");
+        older.getDynamicObject()->setProperty ("body", older["body"].toString().replace ("build: 145", "build: 140"));
+        rels.add (older);
+        const auto best = Updater::newestBuild (juce::var (rels));
+        r.check (best.ok && best.build == 145 && Updater::newestBuild (juce::var (juce::Array<juce::var> { rels[0] })).ok == false,
+                 "picks the newest build from GitHub's list, not a tagged release without one (build " + juce::String (best.build) + ")");
         r.check (! Updater::trustedUrl ("https://example.com/x.exe") && ! Updater::trustedUrl ("https://github.com/someone/else/releases/download/a/x.exe")
                  && Updater::trustedUrl (rel.full.url), "downloads only from this project's own GitHub releases");
         r.info ("this build: " + juce::String (Updater::ownBuild() > 0 ? "build " + juce::String (Updater::ownBuild()) : juce::String ("made by hand"))

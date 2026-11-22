@@ -1903,6 +1903,18 @@ function setupMidi(st) {
   M._list = head ? head.parentElement.parentElement : null;
   if (M._list) M._headRow = head.parentElement;
   watchDD($$('button', M).find(b => DD[8] && DD[8].includes(ddText(b))), t => call('setSetting', 'midiChannel', t === 'Omni' ? 0 : parseInt(t)));
+  // standalone: latency compensation lines STUDIO takes up (there's no DAW to report to)
+  if (st.standalone) { const d = $$('.spanel[data-panel="Audio"] span').find(s => txt(s) === 'Report latency to your DAW'); if (d) d.textContent = 'Lines STUDIO takes up with the beat you heard'; }
+  // standalone: nothing renders offline, so "Quality when rendering" has nothing to do
+  if (st.standalone) { const q = $$('.spanel[data-panel="Audio"] span').find(s => txt(s) === 'Quality when rendering'); const row = q && q.parentElement && q.parentElement.parentElement; if (row && !row.classList.contains('spanel')) row.style.display = 'none'; }
+  // inside a DAW, MIDI comes in on the plugin's track: no device to pick here
+  if (!st.standalone) {
+    const lab = $$('span', M).find(s => txt(s) === 'Input device');
+    const row = lab && lab.parentElement && lab.parentElement.parentElement;
+    const dd = row && $$('button', row).find(b => b.querySelector('path[d="M6 9l6 6 6-6"]'));
+    if (dd) { const n = document.createElement('span'); n.className = 'obs-midi-daw'; n.textContent = 'From your DAW'; dd.replaceWith(n); }
+    const sub = lab && lab.nextElementSibling; if (sub) sub.textContent = "Send MIDI to this plugin's track in your DAW";
+  }
   intercept(b => M.contains(b) && txt(b) === 'MIDI LEARN', () => { learnArmed = true; learnTarget = null; document.body.classList.add('obs-learn'); closeOv(); say('MIDI learn: touch a knob or switch, then move a control on your MIDI controller'); });
   intercept(b => M.contains(b) && txt(b) === 'CLEAR ALL', async () => { const list = await call('midiMappings') || []; for (let i = list.length - 1; i >= 0; --i) await call('midiRemove', i); renderMappings(await call('midiMappings')); say('All MIDI mappings removed'); });
   intercept(b => b.classList.contains('obs-unmap'), b => call('midiRemove', +b.dataset.i).then(renderMappings));

@@ -67,6 +67,9 @@ public:
         bool ok = false;
     };
     static Release parseRelease (const juce::var& json);
+    /** The newest published build in GitHub's release list (a list, or one release). Releases without
+        our hidden block (a "v0.2.0" tag release), pre-releases and drafts are skipped. */
+    static Release newestBuild (const juce::var& json);
     /** True when this download URL really is one of our release files. */
     static bool trustedUrl (const juce::String& url);
 

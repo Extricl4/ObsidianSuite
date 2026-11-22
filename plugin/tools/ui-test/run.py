@@ -46,7 +46,7 @@ def build_page(standalone):
             'deviceName': 'Focusrite USB ASIO', 'sampleRates': [44100, 48000, 96000], 'bufferSizes': [32, 64, 128, 256, 512],
             'inputChannels': ['Analogue 1', 'Analogue 2'], 'outputChannels': ['Playback 1', 'Playback 2'], 'inputsOn': [True, False], 'outputsOn': [True, True],
             'sampleRate': 48000, 'bufferSize': 128, 'bitDepth': 24, 'inputLatencyMs': 3.2, 'outputLatencyMs': 3.9, 'hasControlPanel': True, 'cpu': 0.05,
-            'midiInputs': [{'name': 'USB MIDI Pedal', 'id': 'usb1', 'enabled': True}]}
+            'midiInputs': [{'name': 'USB MIDI Pedal', 'id': 'usb1', 'enabled': True}, {'name': 'Keystation 49', 'id': 'ks49', 'enabled': True}]}
     return state
 
 CONTENT = PLUGIN / 'Content'
@@ -748,12 +748,36 @@ async def run(standalone):
         check(await pg.evaluate("window.__mock.log.some(x=>x[0]==='setSetting'&&x[1]==='checkUpdates'&&x[2]===false)"), '"Check when it opens" can be switched off')
         await pg.locator('.obs-upd-tog').click(); await pg.wait_for_timeout(60)
         if standalone:
+            await pg.locator('.setnav button', has_text='Audio').click(); await pg.wait_for_timeout(100)
+            check(await pg.locator('.spanel[data-panel="Audio"] span', has_text='Quality when rendering').is_hidden()
+                  and await pg.locator('.spanel[data-panel="Audio"] span', has_text='Lines STUDIO takes up').is_visible(),
+                  'standalone Settings > Audio: no render-quality row; latency compensation says what it does here')
+            # Settings > MIDI > Input device: picking one device listens to that one only; "All devices" turns them all on
+            await pg.locator('.setnav button', has_text='MIDI').click(); await pg.wait_for_timeout(120)
+            dd = pg.locator('.spanel[data-panel="MIDI"] button', has_text='All devices').first
+            await pg.evaluate("window.__mock.log.length=0")
+            await dd.click(); await pg.wait_for_timeout(100)
+            await pg.locator('#ddmenu button', has_text='USB MIDI Pedal').click(); await pg.wait_for_timeout(250)
+            en = await pg.evaluate("window.__mock.log.filter(x=>x[0]==='midiInputEnable').map(x=>x[1]+'='+x[2])")
+            saved = await pg.evaluate("window.__mock.log.some(x=>x[0]==='setSetting'&&x[1]==='midiInput'&&x[2]==='USB MIDI Pedal')")
+            check(saved and en == ['usb1=true', 'ks49=false'], f'Settings > MIDI: picking one input device listens to it only ({en})')
+            await pg.evaluate("window.__mock.log.length=0")
+            await pg.locator('.spanel[data-panel="MIDI"] button', has_text='USB MIDI Pedal').first.click(); await pg.wait_for_timeout(100)
+            await pg.locator('#ddmenu button', has_text='All devices').click(); await pg.wait_for_timeout(250)
+            en = await pg.evaluate("window.__mock.log.filter(x=>x[0]==='midiInputEnable').map(x=>x[1]+'='+x[2])")
+            check(en == ['usb1=true', 'ks49=true'], f'"All devices" turns every MIDI input on ({en})')
             await pg.locator('.setnav button', has_text='Device').click(); await pg.wait_for_timeout(100)
             dd = await pg.evaluate("[...document.querySelectorAll('.spanel[data-panel=Device] button')].map(b=>b.textContent.trim()).filter(Boolean)")
             check(any('128 samples' in x for x in dd) and any('Focusrite' in x for x in dd), 'Device panel shows the real interface + buffer')
             check(await pg.locator('.obs-chk-in').count() == 2, 'Device panel lists the real input channels')
         else:
             check(await pg.locator('#f0 button', has_text='STUDIO').is_hidden(), 'STUDIO is hidden inside a DAW')
+            await pg.locator('.setnav button', has_text='MIDI').click(); await pg.wait_for_timeout(100)
+            check(await pg.locator('.spanel[data-panel="MIDI"] .obs-midi-daw').is_visible()
+                  and await pg.locator('.spanel[data-panel="MIDI"] button', has_text='All devices').count() == 0,
+                  'Settings > MIDI inside a DAW: no input-device menu (MIDI comes from the DAW track)')
+            await pg.locator('.setnav button', has_text='Audio').click(); await pg.wait_for_timeout(100)
+            check(await pg.locator('.spanel[data-panel="Audio"] span', has_text='Quality when rendering').is_visible(), 'inside a DAW, Settings > Audio has the render-quality row')
         await pg.evaluate("closeOv()")
         if standalone:
             # ---- STUDIO: each track shows its pan; a double-click on the pan slider centres it
@@ -785,8 +809,10 @@ async def run(standalone):
             await pg.locator('#studio .st-head').first.locator('[data-a="mute"]').click(); await pg.wait_for_timeout(100)
             check(last and last['tracks'][0]['on'] is False, 'muting a track reaches the engine')
             await pg.evaluate("window.__mock.log.length=0")
+            await pg.evaluate("document.getElementById('toast') && (document.getElementById('toast').textContent = '')")
             await pg.locator('#studio [data-a="export"]').click(); await pg.wait_for_timeout(150)
-            check(await pg.evaluate("window.__mock.log.some(x=>x[0]==='studioExport')"), 'EXPORT asks the engine for a WAV of the mix')
+            tt = await pg.evaluate("(document.getElementById('toast')||{}).textContent||''")
+            check(await pg.evaluate("window.__mock.log.some(x=>x[0]==='studioExport')") and 'preset' not in tt.lower(), f'EXPORT asks the engine for a WAV of the mix (no preset message: "{tt}")')
             await pg.screenshot(path=str(OUT / 'studio.png'))
             await pg.evaluate("closeOv()")
 
@@ -796,6 +822,19 @@ async def run(standalone):
         check(note == 'E', f'tuner shows the note from the engine ({note})')
         check(await pg.evaluate("window.__mock.log.some(x=>x[0]==='tunerOpen'&&x[1]===true)"), 'opening the tuner tells the engine')
         await pg.screenshot(path=str(OUT / 'tuner.png'))
+        await pg.evaluate("closeOv()"); await pg.wait_for_timeout(100)
+        # tempo pop-up: click volume
+        await pg.locator('button', has_text='BPM').first.click(); await pg.wait_for_timeout(200)
+        cv = pg.locator('.obs-clickvol input')
+        vis = await cv.is_visible()
+        await pg.evaluate("window.__mock.log.length=0")
+        await cv.evaluate("r => { r.value = 40; r.dispatchEvent(new Event('input')); r.dispatchEvent(new Event('change')); }"); await pg.wait_for_timeout(100)
+        shown = await pg.locator('.obs-clickvol b').text_content()
+        check(vis and shown == '40%' and await pg.evaluate("window.__mock.log.some(x=>x[0]==='setSetting'&&x[1]==='metronomeVolume'&&Math.abs(x[2]-.4)<1e-6)"),
+              f'tempo pop-up: click volume is saved ({shown})')
+        await pg.screenshot(path=str(OUT / 'tempo.png'))
+        await pg.locator('button', has_text='BPM').first.click(); await pg.wait_for_timeout(100)
+        await pg.evaluate("openOv('tuner')"); await pg.wait_for_timeout(200)
         # the tuner box must not move when notes change (or when nothing is played)
         geo = "(()=>{const ov=document.querySelector('.ov[data-ov=tuner]'); const big=[...ov.querySelectorAll('span')].find(s=>s.style.fontSize==='110px'); const box=big.closest('div[style*=\"width: 700px\"]'); const r=e=>{const b=e.getBoundingClientRect(); return [Math.round(b.left*2)/2,Math.round(b.top*2)/2,Math.round(b.width*2)/2,Math.round(b.height*2)/2].join(',');}; return [r(box), r(big), r(big.previousElementSibling), r(big.nextElementSibling), r(big.parentElement.nextElementSibling)].join(' | '); })()"
         shapes = []

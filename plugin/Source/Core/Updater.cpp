@@ -21,7 +21,8 @@ const char* stateName (Updater::State s)
     }
     return "idle";
 }
-juce::String apiUrl()       { return juce::String ("https://api.github.com/repos/") + Updater::repo + "/releases/latest"; }
+// the list, not ".../releases/latest": GitHub's "latest" can be a tagged release (v0.2.0) that isn't a build
+juce::String apiUrl()       { return juce::String ("https://api.github.com/repos/") + Updater::repo + "/releases?per_page=20"; }
 } // namespace
 
 Updater::Updater() : juce::Thread ("Obsidian updater") {}
@@ -92,6 +93,20 @@ Updater::Release Updater::parseRelease (const juce::var& j)
     return r;
 }
 
+Updater::Release Updater::newestBuild (const juce::var& j)
+{
+    auto* a = j.getArray();                       // (a JUCE array is an "object" too: test for the list first)
+    if (a == nullptr) return parseRelease (j);
+    Release best;
+    for (auto& e : *a)
+    {
+        if ((bool) e["prerelease"] || (bool) e["draft"]) continue;
+        auto r = parseRelease (e);
+        if (r.ok && r.build > best.build) best = r;
+    }
+    return best;
+}
+
 const Updater::Release::Asset& Updater::chosen() const
 {
     // the small installer leaves the capture / IR pack alone: only when it's the same pack
@@ -142,8 +157,8 @@ void Updater::doCheck()
     if (status == 404) { set (State::failed, "No builds are published yet."); return; }
     if (status == 403 || status == 429) { set (State::failed, "GitHub says to wait a little (too many checks). Try again later."); return; }
     if (status != 0 && status != 200) { set (State::failed, "GitHub answered " + juce::String (status) + "."); return; }
-    const auto r = parseRelease (juce::JSON::parse (in->readEntireStreamAsString()));
-    if (! r.ok) { set (State::failed, "The newest build has no installer yet (it may still be building)."); return; }
+    const auto r = newestBuild (juce::JSON::parse (in->readEntireStreamAsString()));
+    if (! r.ok) { set (State::failed, "No build with an installer is published yet (the newest may still be building)."); return; }
     { const juce::ScopedLock sl (lock); latest = r; }
     set (ownBuild() > 0 && r.build <= ownBuild() ? State::upToDate : State::available);
 }
