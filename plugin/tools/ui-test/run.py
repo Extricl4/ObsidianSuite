@@ -391,6 +391,16 @@ async def run(standalone):
         await face.locator('.pf-foot').click(); await pg.wait_for_timeout(700)
         unlit = await face.evaluate("b=>getComputedStyle(b.querySelector('.pf-on')).opacity")
         check(imgs == 2 and lit == '1' and unlit == '0' and await pg.evaluate("window.__mock.sent('pre.3.on')") == 0, f'EMBER shows its own face, lit when on; its drawn footswitch turns it off ({imgs} images, {lit} -> {unlit})')
+        # the ADD PEDAL menu covers the open pedal's knobs (they used to show through it)
+        await face.click(); await pg.wait_for_timeout(200)
+        await pg.locator('.page[data-page="PEDALS"] .obs-slot').nth(4).click(); await pg.wait_for_timeout(300)
+        cover = await pg.evaluate("""(()=>{ const pop=[...document.querySelectorAll('.page[data-page="PEDALS"] .pop')].find(p=>p.offsetParent);
+          const r=pop.getBoundingClientRect(); const ks=[...document.querySelectorAll('.page[data-page="PEDALS"] .obs-editor .kn')].filter(k=>k.offsetParent);
+          let under=0, over=0; ks.forEach(k=>{ const b=k.getBoundingClientRect(), x=b.left+b.width/2, y=b.top+b.height/2;
+            if(x>r.left&&x<r.right&&y>r.top&&y<r.bottom){ under++; if(!pop.contains(document.elementFromPoint(x,y))) over++; } }); return [under, over]; })()""")
+        check(cover[0] > 0 and cover[1] == 0, f'the ADD PEDAL menu covers the open pedal\'s knobs ({cover[0]} under it, {cover[1]} showing through)')
+        await pg.screenshot(path=str(OUT / 'pedal-menu.png'))
+        await pg.keyboard.press('Escape'); await pg.mouse.click(5, 5); await pg.wait_for_timeout(150)
         # a pedal that arrives while another tab is showing (a preset loaded from the AMP page) is full size too
         w_vis = await face.evaluate("b=>b.querySelector('.obs-pface').offsetWidth")
         await pg.evaluate("setTab('AMP')"); await pg.wait_for_timeout(100)

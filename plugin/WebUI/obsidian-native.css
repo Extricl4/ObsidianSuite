@@ -270,3 +270,6 @@ button.obs-locked { opacity: .32; cursor: not-allowed; }
 .obs-fslots .sl.on i { color: #6ecdff; }
 .obs-fslots .sl u { text-decoration: none; margin-left: 2px; opacity: .5; padding: 0 2px; }
 .obs-fslots .sl u:hover { opacity: 1; color: #ff8a80; }
+/* the pages' pop-up menus (ADD PEDAL / EFFECT / SPECIAL FX, CHOOSE AMP / CAB) sit above everything on the page,
+   so the pedal editor's knobs can't show through */
+.page .pop { z-index: 60 !important; }
