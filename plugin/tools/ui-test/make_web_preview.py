@@ -51,7 +51,12 @@ def main():
     WEB.mkdir(exist_ok=True)
     html = (run.UI / 'obsidian-demo.html').read_text(encoding='utf-8')
     mock = (HERE / 'mock-native.js').read_text(encoding='utf-8')
-    head = '<script>\n' + mock + '\nwindow.__mock.load(' + json.dumps(state) + ');\n</script>\n'
+    # the small face sprites (knob pointers, LEDs) go inline: the artifact may hold at most 512 files
+    import base64, re
+    sprites = {f.name: 'data:image/png;base64,' + base64.b64encode(f.read_bytes()).decode()
+               for f in sorted((run.CONTENT / 'Faces' / 'img').glob('*.png')) if not re.search(r'_k\d+o\.png$', f.name)}
+    head = ('<script>\n' + mock + '\nwindow.__mock.load(' + json.dumps(state) + ');\nwindow.__obsFaceImg = '
+            + json.dumps(sprites, separators=(',', ':')) + ';\n</script>\n')
     i = html.lower().find('<head>') + len('<head>')
     html = html[:i] + '\n' + head + html[i:]
     css = (run.PLUGIN / 'WebUI' / 'obsidian-native.css').read_text(encoding='utf-8')
@@ -64,7 +69,8 @@ def main():
     for f in (run.PLUGIN / 'WebUI' / 'pedals').glob('*.webp'): shutil.copy(f, WEB / f.name)
     shutil.copytree(run.UI / 'fonts', WEB / 'fonts', dirs_exist_ok=True)
     if (WEB / 'faces').is_symlink(): (WEB / 'faces').unlink()
-    shutil.copytree(run.CONTENT / 'Faces' / 'img', WEB / 'faces' / 'img', dirs_exist_ok=True, ignore=shutil.ignore_patterns('*_k[0-9]o.png'))
+    if (WEB / 'faces').exists(): shutil.rmtree(WEB / 'faces')
+    shutil.copytree(run.CONTENT / 'Faces' / 'img', WEB / 'faces' / 'img', ignore=shutil.ignore_patterns('*.png'))   # sprites are inline
     print('wrote', WEB / 'index.html', round(len(html) / 1024), 'KB')
 
 

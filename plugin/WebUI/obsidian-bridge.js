@@ -1388,7 +1388,7 @@ function renderLib(p) {
     const pic = (a, snd) => {
       if (!a.face || !a.face.skins) return '';
       const d0 = a.face.dims && a.face.dims[0], pos = snd && snd[1] && snd[1][0] != null ? snd[1][0] : d0 && d0.start || 0;
-      return '<span class="obs-tilepic" style="background-image:url(\'faces/img/' + esc(a.face.skins[d0 && d0.skin ? Math.min(a.face.skins.length - 1, pos) : 0].id) + '_on.webp\')"></span>'; };
+      return '<span class="obs-tilepic" style="background-image:url(\'' + esc(faceImg(a.face.skins[d0 && d0.skin ? Math.min(a.face.skins.length - 1, pos) : 0].id + '_on.webp')) + '\')"></span>'; };
     p._tiles = tiles;
     p._grid.innerHTML = head + tiles.map(([a, snd], i) => {
       const lbl = snd ? soundLabel(a, snd) : '';
@@ -1560,17 +1560,20 @@ function faceTip(j) {
   tip.style.left = (k.c[0] / F.W * 100) + '%'; tip.style.top = ((k.c[1] - k.r) / F.H * 100) + '%';
   tip.classList.add('on');
 }
+// a face image's address. The web preview hands over the small sprites inline (window.__obsFaceImg), so it stays
+// under the artifact's file limit; the plugin serves them from Documents\\Obsidian Amp Suite\\Faces.
+function faceImg(name) { return (window.__obsFaceImg && window.__obsFaceImg[name]) || 'faces/img/' + name; }
 function buildFace() {
   const I = faceUi.info, F = I.face, W = F.W, H = F.H, pc = (v, t) => (v / t * 100).toFixed(4) + '%';
   const st = faceUi.stage, nd = ' alt="" draggable="false"';
   let h = '';
-  F.skins.forEach((sk, i) => { h += '<img class="ff-base off" data-s="' + i + '" src="faces/img/' + sk.id + '_off.webp"' + nd + '><img class="ff-base on" data-s="' + i + '" src="faces/img/' + sk.id + '_on.webp"' + nd + '>'; });
+  F.skins.forEach((sk, i) => { h += '<img class="ff-base off" data-s="' + i + '" src="' + faceImg(sk.id + '_off.webp') + '"' + nd + '><img class="ff-base on" data-s="' + i + '" src="' + faceImg(sk.id + '_on.webp') + '"' + nd + '>'; });
   F.skins.forEach((sk, i) => F.knobs.forEach((k, j) => {
     const [x, y, w, hh] = k.b, pos = 'left:' + pc(x, W) + ';top:' + pc(y, H) + ';width:' + pc(w, W) + ';height:' + pc(hh, H) + ';transform-origin:' + k.o[0] + '% ' + k.o[1] + '%';
-    h += '<img class="ff-ptr" data-s="' + i + '" data-k="' + j + '" data-v="on" src="faces/img/' + sk.id + '_k' + j + '.png" style="' + pos + '"' + nd + '>';
-    if (sk.ptrOff) h += '<img class="ff-ptr" data-s="' + i + '" data-k="' + j + '" data-v="off" src="faces/img/' + sk.id + '_k' + j + 'o.png" style="' + pos + '"' + nd + '>';
+    h += '<img class="ff-ptr" data-s="' + i + '" data-k="' + j + '" data-v="on" src="' + faceImg(sk.id + '_k' + j + '.png') + '" style="' + pos + '"' + nd + '>';
+    if (sk.ptrOff) h += '<img class="ff-ptr" data-s="' + i + '" data-k="' + j + '" data-v="off" src="' + faceImg(sk.id + '_k' + j + 'o.png') + '" style="' + pos + '"' + nd + '>';
   }));
-  for (const id in F.leds) { const [x, y, w, hh] = F.leds[id]; h += '<img class="ff-led" data-l="' + esc(id) + '" src="faces/img/' + F.key + '_led_' + id + '.png" style="left:' + pc(x, W) + ';top:' + pc(y, H) + ';width:' + pc(w, W) + ';height:' + pc(hh, H) + '"' + nd + '>'; }
+  for (const id in F.leds) { const [x, y, w, hh] = F.leds[id]; h += '<img class="ff-led" data-l="' + esc(id) + '" src="' + faceImg(F.key + '_led_' + id + '.png') + '" style="left:' + pc(x, W) + ';top:' + pc(y, H) + ';width:' + pc(w, W) + ';height:' + pc(hh, H) + '"' + nd + '>'; }
   F.knobs.forEach((k, j) => { const r = k.r * 1.15; h += '<button class="ff-hot" data-k="' + j + '" aria-label="' + esc(k.label) + '" style="left:' + pc(k.c[0] - r, W) + ';top:' + pc(k.c[1] - r, H) + ';width:' + pc(2 * r, W) + ';height:' + pc(2 * r, H) + '"></button>'; });
   for (const id in F.buttons) { const [x, y, w, hh] = F.buttons[id]; h += '<button class="ff-hot ff-btn" data-b="' + esc(id) + '" title="' + esc(faceBtnLabel(id)) + '" style="left:' + pc(x - 6, W) + ';top:' + pc(y - 6, H) + ';width:' + pc(w + 12, W) + ';height:' + pc(hh + 12, H) + '"></button>'; }
   if (F.loader && F.screen) {               // Eidolon's screen: the slot and capture up top, each knob's value above its knob
