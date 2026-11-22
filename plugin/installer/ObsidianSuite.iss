@@ -40,6 +40,8 @@ ArchitecturesInstallIn64BitMode=x64compatible
 PrivilegesRequired=admin
 WizardStyle=modern
 UninstallDisplayName=Obsidian Amp Suite
+; a DAW that has the plugin open holds the .vst3: list it on "Preparing to install" and offer to close it
+CloseApplicationsFilter=*.exe,*.dll,*.chm,*.vst3
 
 [InstallDelete]
 ; the first test build was called "Obsidian Suite": remove it so the DAW doesn't list two plugins

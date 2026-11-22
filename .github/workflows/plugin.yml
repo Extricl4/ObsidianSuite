@@ -96,7 +96,7 @@ jobs:
           $v = $env:OBS_VERSION; $n = $env:GITHUB_RUN_NUMBER
           $setup = Get-ChildItem dist\*-Setup.exe -ErrorAction SilentlyContinue | Select-Object -First 1
           $upd = Get-ChildItem dist\*-Update.exe -ErrorAction SilentlyContinue | Select-Object -First 1
-          if (-not $setup) { Write-Host "No installer was built: nothing to publish"; exit 0 }
+          if (-not $setup) { Write-Host "::error::No installer was built (see the Installer step): nothing was published for UPDATE"; exit 1 }
           $pack = (Get-Content build\obsidian-pack.txt -Raw).Trim()
           $msg = (git log -1 --pretty=%B) | Where-Object { $_ -notmatch '^(Co-Authored-By|Claude-Session):' }
           $lines = @()

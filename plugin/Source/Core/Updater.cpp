@@ -230,9 +230,10 @@ bool Updater::install (bool standalone, juce::String& message)
         message = "Run the installer yourself (it's shown in its folder).";
         return false;
     }
-    // Standalone: a quiet install (just a progress bar), the app closes and the installer starts it again.
-    // In a DAW: the installer's own window; it offers to close the DAW, which holds the plugin file.
-    const juce::String args = standalone ? "/SP- /SILENT /NOCANCEL /NORESTART /CLOSEAPPLICATIONS" : "/SP- /NORESTART";
+    // Standalone: a quiet install (just a progress bar); the app closes itself and the installer starts it again.
+    // It never closes other programs: a DAW open in the background with the plugin gets a "file in use / Retry" box.
+    // In a DAW: the installer's own window; "Preparing to install" lists the DAW (it holds the .vst3) and offers to close it.
+    const juce::String args = standalone ? "/SP- /SILENT /NOCANCEL /NORESTART /NOCLOSEAPPLICATIONS" : "/SP- /NORESTART";
     if (! f.startAsProcess (args))
     {
         message = "The installer didn't start (did Windows ask, and was it allowed?).";

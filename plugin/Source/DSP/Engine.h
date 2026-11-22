@@ -34,7 +34,8 @@ public:
     void prepare (double sampleRate, int maxBlock);
     void release();
     /** buffer: in/out, numIn = how many channels hold input. Output is always stereo (ch 0/1). */
-    void process (juce::AudioBuffer<float>& buffer, int numIn, const HostInfo& host);
+    /** numOut: the output bus's channels (a stereo-in / mono-out layout still has a 2-channel buffer). */
+    void process (juce::AudioBuffer<float>& buffer, int numIn, const HostInfo& host, int numOut = 2);
 
     // ---- message-thread controls (non-automatable state) ---------------------------
     dsp::AmpSection& amp()                        { return ampSection; }

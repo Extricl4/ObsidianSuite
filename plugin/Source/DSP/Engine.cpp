@@ -108,7 +108,7 @@ void Engine::readHarmonyParams (dsp::hydra::Params& hp)
     hp.transpose = (float) std::lround (v (p.transpose));
 }
 
-void Engine::process (juce::AudioBuffer<float>& buffer, int numIn, const HostInfo& hostIn)
+void Engine::process (juce::AudioBuffer<float>& buffer, int numIn, const HostInfo& hostIn, int numOut)
 {
     const auto t0 = juce::Time::getHighResolutionTicks();
     const int total = buffer.getNumSamples();
@@ -120,7 +120,8 @@ void Engine::process (juce::AudioBuffer<float>& buffer, int numIn, const HostInf
     ctxProto.bpm = host.bpm; ctxProto.hostPlaying = host.playing; ctxProto.ppq = host.ppq;
 
     auto v = [] (std::atomic<float>* a) { return a->load (std::memory_order_relaxed); };
-    const bool stereoOut = buffer.getNumChannels() >= 2;
+    const bool stereoOut = buffer.getNumChannels() >= 2 && numOut >= 2;
+    const bool stereoIn = buffer.getNumChannels() >= 2 && numIn >= 2;
 
     // Notes from the UI (AUDITION / computer keys) play at the start of this block, before any MIDI.
     {
@@ -145,15 +146,16 @@ void Engine::process (juce::AudioBuffer<float>& buffer, int numIn, const HostInf
         const int n = juce::jmin (maxBlock, total - start);
         float* L = buffer.getWritePointer (0, start);
         float* R = stereoOut ? buffer.getWritePointer (1, start) : nullptr;
+        const float* inR = stereoIn ? buffer.getReadPointer (1, start) : nullptr;
         float* x = mono.data();
 
         // ---- input select ------------------------------------------------------------
         const int mode = inputMode.load();
         // sum of both inputs, unless they're the same signal (a mono track in a DAW arrives on both
         // channels: adding them would make it 6 dB hotter than the same guitar in the app)
-        if (numIn >= 2 && mode == 0 && std::equal (L, L + n, R)) std::copy (L, L + n, x);
-        else if (numIn >= 2 && mode == 0) for (int i = 0; i < n; ++i) x[i] = L[i] + R[i];
-        else if (numIn >= 2 && mode == 2) std::copy (R, R + n, x);
+        if (inR != nullptr && mode == 0 && std::equal (L, L + n, inR)) std::copy (L, L + n, x);
+        else if (inR != nullptr && mode == 0) for (int i = 0; i < n; ++i) x[i] = L[i] + inR[i];
+        else if (inR != nullptr && mode == 2) std::copy (inR, inR + n, x);
         else if (numIn >= 1)              std::copy (L, L + n, x);
         else                              std::fill (x, x + n, 0.f);
 
@@ -287,8 +289,8 @@ void Engine::process (juce::AudioBuffer<float>& buffer, int numIn, const HostInf
         if (R == nullptr) for (int i = 0; i < n; ++i) L[i] = 0.5f * (L[i] + outR[i]);
         outMeterL.process (L, n); outMeterR.process (outR, n);
     }
-    // Any extra output channels: silence.
-    for (int c = 2; c < buffer.getNumChannels(); ++c) buffer.clear (c, 0, total);
+    // Any extra output channels: silence (with a mono output, channel 1 only held the right input).
+    for (int c = stereoOut ? 2 : 1; c < buffer.getNumChannels(); ++c) buffer.clear (c, 0, total);
     numSynthNotes = 0;          // this block's synth notes are used up
 
     // CPU meter: share of the real-time budget this block used.

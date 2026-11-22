@@ -375,8 +375,49 @@ int runSelfTest (const juce::StringArray& args)
         }
         const float rms = (float) std::sqrt (acc / idx);
         r.check (finite && rms > 0.001f && peak <= 2.0f, juce::String::formatted ("a different block size every call (1..512, like FL Studio): rms %.3f, peak %.2f", rms, peak));
+
+        // channel layouts the plugin accepts: mono track (mono / mono) and stereo in / mono out (folded, not just left)
+        auto layoutRun = [&] (const juce::AudioChannelSet& in, const juce::AudioChannelSet& out)
+        {
+            juce::AudioProcessor::BusesLayout l; l.inputBuses.add (in); l.outputBuses.add (out);
+            const bool ok = p.setBusesLayout (l);
+            p.prepareToPlay (SR, BLOCK);
+            Guitar gg (SR); auto f = pluckAt (gg, SR);
+            const int ch = juce::jmax (in.size(), out.size());
+            juce::MidiBuffer m; double acc = 0; bool fin = true; int at = 0;
+            for (int b = 0; b < (int) (SR * 0.6) / BLOCK; ++b)
+            {
+                juce::AudioBuffer<float> buf (ch, BLOCK);
+                for (int i = 0; i < BLOCK; ++i) { const float v = f (at + i); for (int c = 0; c < ch; ++c) buf.setSample (c, i, c == 0 ? v : 0.f); }
+                p.processBlock (buf, m);
+                for (int i = 0; i < BLOCK; ++i)
+                {
+                    const float y = out.size() >= 2 ? 0.5f * (buf.getSample (0, i) + buf.getSample (1, i)) : buf.getSample (0, i);   // what a mono speaker gets
+                    fin = fin && std::isfinite (y); acc += (double) y * y;
+                }
+                at += BLOCK;
+            }
+            return std::make_pair (ok && fin, (float) std::sqrt (acc / at));
+        };
+        const auto stSt = layoutRun (juce::AudioChannelSet::stereo(), juce::AudioChannelSet::stereo());
+        const auto moMo = layoutRun (juce::AudioChannelSet::mono(), juce::AudioChannelSet::mono());
+        const auto stMo = layoutRun (juce::AudioChannelSet::stereo(), juce::AudioChannelSet::mono());
+        layoutRun (juce::AudioChannelSet::stereo(), juce::AudioChannelSet::stereo());
+        const float dbMo = juce::Decibels::gainToDecibels (moMo.second / stSt.second), dbSm = juce::Decibels::gainToDecibels (stMo.second / stSt.second);
+        r.check (stSt.first && moMo.first && stMo.first && std::abs (dbMo) < 1.f && std::abs (dbSm) < 1.f,
+                 juce::String::formatted ("mono track (mono in/out) and stereo in / mono out play like the stereo mix folded to mono (%+.1f / %+.1f dB)", dbMo, dbSm));
     }
     p.prepareToPlay (SR, BLOCK);
+    {
+        // the DAW learns the latency as soon as it prepares the plugin (HQ transpose adds some)
+        setNorm (p, "transpose.hq", 1.f); setReal (p, "transpose", -2.f);
+        p.prepareToPlay (SR, BLOCK);
+        const int hq = p.getLatencySamples(), eng = p.engine().latencySamples();
+        setNorm (p, "transpose.hq", 0.f); setReal (p, "transpose", 0.f);
+        p.prepareToPlay (SR, BLOCK);
+        r.check (hq > 0 && hq == eng && p.getLatencySamples() < hq,
+                 juce::String::formatted ("the DAW is told the latency when it prepares the plugin (HQ transpose %d samples, Live %d)", hq, p.getLatencySamples()));
+    }
 
     // ---------------------------------------------------------------- 5. transpose accuracy
     r.head ("Transpose accuracy (110 Hz harmonic tone in, like an A string)");

@@ -100,8 +100,9 @@ void ObsidianProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     dsp.oversampling.store (wantedOversampling());        // a bounce may want more (Render quality)
     dsp.prepare (sampleRate, juce::jmax (16, samplesPerBlock));
     doubleScratch.setSize (2, juce::jmax (16, samplesPerBlock));
-    reportedLatency = -1;
-    timerCallback();
+    // tell the DAW the latency now (the timer only runs on the message thread; hosts may prepare on another one)
+    reportedLatency = (bool) appSettings->get ("latencyCompensation") ? dsp.latencySamples() : 0;
+    setLatencySamples (reportedLatency);
 }
 
 void ObsidianProcessor::releaseResources()
@@ -147,7 +148,7 @@ void ObsidianProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
         }
 
     const int numIn = getTotalNumInputChannels();
-    dsp.process (buffer, numIn, host);
+    dsp.process (buffer, numIn, host, getTotalNumOutputChannels());
 
     // Test tone (Settings > Device > TEST).
     if (int left = testTone.load(); left > 0)
