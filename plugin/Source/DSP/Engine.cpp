@@ -259,6 +259,7 @@ void Engine::process (juce::AudioBuffer<float>& buffer, int numIn, const HostInf
             if (! full) eqFade.mix (dryL.data(), dryR.data(), L, outR, n);
         }
         eqWasActive = eqFade.active();
+        spectrum.push (L, outR, n);              // EQ page analyzer (does nothing unless the page is open)
 
         // ---- FX, special FX ------------------------------------------------------------------
         racks[1].process (st, 2, n, ctxProto, v (p.postOn) > 0.5f);

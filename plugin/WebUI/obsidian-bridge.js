@@ -320,6 +320,23 @@ function setupBindings() {
       const draw = eqRedraw;
       window.eqRedraw = function () { const lc = LCF, hc = HCF; if (cutOff.LC) LCF = 20; if (cutOff.HC) HCF = 20000; try { draw(); } finally { LCF = lc; HCF = hc; } };
     }
+    // analyzer: the shape behind the curve is what comes out of the EQ, and it only shows while there's sound
+    const specSvg = typeof eqSvg === 'function' && eqSvg();
+    const specPath = specSvg && specSvg.querySelector('path[fill="rgba(255,255,255,.035)"]');
+    if (specPath) { specPath.classList.add('obs-eqspec'); specPath.setAttribute('d', 'M0 220 L1000 220 Z'); }
+    let specOn = false;
+    window.obsEqSpectrum = m => {
+      const vis = EP.offsetParent !== null && !document.hidden;
+      if (vis !== specOn) { specOn = vis; call('eqSpectrum', vis); }
+      if (!specPath) return;
+      const s = vis && m && Array.isArray(m.spec) ? m.spec : null;
+      specPath.classList.toggle('obs-live', !!s && s.some(db => db > -78));
+      if (!s || s.length < 2) return;
+      const n = s.length - 1;   // points sit on the graph's axis: 31.25 Hz * 2^(10 k / n)
+      let d = 'M0 220';
+      s.forEach((db, k) => { d += ' L' + (k / n * 1000).toFixed(1) + ' ' + Math.max(30, Math.min(220, 220 - (db + 90) / 80 * 170)).toFixed(1); });
+      specPath.setAttribute('d', d + ' L1000 220 Z');
+    };
     // RESET: every band flat, both cuts off and their switches back on
     const rs = $('.eqreset', EP);
     if (rs) rs.addEventListener('click', () => setTimeout(() => { cutTogs.forEach(([t, show]) => { if (t.dataset.on !== '1') { setTog(t, true); show(); } }); queueScan(); }, 0));
@@ -505,6 +522,7 @@ function showMeters(m) {
   if (cpuSpan) cpuSpan.textContent = 'CPU ' + Math.round(clamp(m.cpu * 100, 0, 999)) + '%';
   showTuner(m.tuner || {});
   safe('face meters', () => faceMeters(m));
+  safe('eq spectrum', () => window.obsEqSpectrum && window.obsEqSpectrum(m));
   if (m.beat !== undefined && m.beat >= 0) flashBeat(m.beat);
   const busy = $('.obs-busy-global'); if (busy) busy.style.display = m.busy ? '' : 'none';
 }

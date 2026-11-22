@@ -29,6 +29,18 @@ const MODES = [
   ['World', [['Hirajoshi', [0, 2, 3, 7, 8]], ['In Sen', [0, 1, 5, 7, 10]], ['Iwato', [0, 1, 5, 6, 10]], ['Kumoi', [0, 2, 3, 7, 9]], ['Persian', [0, 1, 4, 5, 6, 8, 11]], ['Egyptian', [0, 2, 5, 7, 10]], ['Gypsy', [0, 2, 3, 6, 7, 8, 10]], ['Prometheus', [0, 2, 4, 6, 9, 10]]]],
   ['Jazz', [['Bebop dominant', [0, 2, 4, 5, 7, 9, 10, 11]], ['Bebop major', [0, 2, 4, 5, 7, 8, 9, 11]]]],
 ];
+// each category's colour and one-line description in the MODE menu
+const MODE_CATS = {
+  'Common': ['#e9e6df', 'The everyday scales'],
+  'Church modes': ['#ffd36e', 'Modes of the major scale'],
+  'Pentatonic and blues': ['#9cf07a', 'Five notes, plus the blue note'],
+  'Metal and dark': ['#ff6b6b', 'Exotic and menacing'],
+  'Symmetric': ['#b48cff', 'Patterns that repeat across the octave'],
+  'Melodic minor family': ['#ff9f5a', 'Modes of the melodic minor'],
+  'Harmonic minor family': ['#ff7fc8', 'Modes of the harmonic minor'],
+  'World': ['#5ee0c2', 'Japanese, Persian, Egyptian, Gypsy and more'],
+  'Jazz': ['#6fd3ff', 'Bebop scales with a passing note'],
+};
 const MODE_LIST = MODES.flatMap(([g, l]) => l.map(([n, s]) => ({ group: g, name: n, steps: s })));
 const DEG = ['1', '♭2', '2', '♭3', '3', '4', '♭5', '5', '♭6', '6', '♭7', '7'];
 
@@ -205,13 +217,18 @@ css.textContent = `
   background: linear-gradient(#1e1e22, #141416); box-shadow: inset 0 1px 0 rgba(255,255,255,.08), inset 0 0 0 1px rgba(255,255,255,.07), 0 24px 50px rgba(0,0,0,.8); }
 .hm-menu.show { display: block; }
 .hm-menu input { width: 100%; box-sizing: border-box; height: 30px; border: none; border-radius: 8px; padding: 0 10px; background: #0a0a0b; color: #e9e6df; font: inherit; font-size: 12px; outline: none; box-shadow: inset 0 2px 6px rgba(0,0,0,.9); margin-bottom: 8px; }
-.hm-modes { max-height: 330px; overflow-y: auto; padding-right: 4px; columns: 3; column-gap: 12px; }
+.hm-modes { position: relative; max-height: 340px; overflow-y: auto; overflow-x: hidden; padding-right: 6px; display: flex; flex-direction: column; gap: 10px; }
+.hm-mcat { --c: #e9e6df; flex: none; border-radius: 10px; padding: 9px 10px 10px 13px; background: linear-gradient(rgba(255,255,255,.04), rgba(255,255,255,.015));
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.07), inset 3px 0 0 var(--c); }
+.hm-mcat h5 { display: flex; align-items: baseline; gap: 10px; margin: 0 0 6px 8px; font-size: 9.5px; font-weight: 700; letter-spacing: .2em; color: var(--c); }
+.hm-mcat h5 span { font-size: 10.5px; font-weight: 400; letter-spacing: .02em; color: #8d8d93; }
+.hm-mcat h5 em { margin-left: auto; font-style: normal; font-size: 9px; font-weight: 500; letter-spacing: .08em; color: #5f5f66; }
+.hm-mgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .hm-modes::-webkit-scrollbar { width: 6px; } .hm-modes::-webkit-scrollbar-thumb { background: #2a2a2f; border-radius: 3px; }
-.hm-modes h5 { margin: 6px 0 4px; font-size: 8.5px; font-weight: 600; letter-spacing: .2em; color: var(--accent); break-after: avoid; }
-.hm-modes button { display: flex; flex-direction: column; gap: 2px; width: 100%; border: none; border-radius: 7px; background: none; color: #d6d3cc; font: inherit; font-size: 11.5px; text-align: left; padding: 5px 8px; cursor: pointer; break-inside: avoid; }
+.hm-modes button { display: flex; flex-direction: column; gap: 2px; width: 100%; border: none; border-radius: 8px; background: rgba(255,255,255,.03); box-shadow: inset 0 0 0 1px rgba(255,255,255,.07); color: #d6d3cc; font: inherit; font-size: 11.5px; text-align: left; padding: 6px 10px; cursor: pointer; }
 .hm-modes button small { font-size: 8.5px; color: #6f6f76; letter-spacing: .06em; }
-.hm-modes button:hover { background: rgba(255,255,255,.05); }
-.hm-modes button.on { background: rgba(255,255,255,.08); box-shadow: inset 2px 0 0 var(--accent); color: #fff; }
+.hm-modes button:hover { background: rgba(255,255,255,.06); box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); }
+.hm-modes button.on { background: color-mix(in srgb, var(--c) 12%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 55%, transparent), inset 3px 0 0 var(--c); color: #fff; }
 .hm-keys { display: grid; grid-template-columns: repeat(4, 74px); gap: 5px; }
 .hm-keys button { height: 34px; border: none; border-radius: 8px; background: #0e0e10; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); color: #d6d3cc; font: inherit; font-size: 12px; cursor: pointer; }
 .hm-keys button:hover { box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
@@ -386,11 +403,17 @@ const keyMenu = menu(keyBtn, m => {
 const modeMenu = menu(modeBtn, m => {
   const q = el('input'); q.placeholder = 'Search ' + MODE_LIST.length + ' modes'; const list = el('div', 'hm-modes');
   const draw = () => { const f = q.value.trim().toLowerCase(); list.innerHTML = '';
+    // one box per category, scrolling up and down
     MODES.forEach(([g, l]) => { const items = l.filter(([n]) => !f || n.toLowerCase().includes(f) || g.toLowerCase().includes(f)); if (!items.length) return;
-      list.appendChild(el('h5', null, g.toUpperCase()));
+      const [col, about] = MODE_CATS[g] || ['#e9e6df', ''];
+      const box = el('div', 'hm-mcat'); box.style.setProperty('--c', col);
+      box.appendChild(el('h5', null, g.toUpperCase() + (about ? '<span>' + about + '</span>' : '') + '<em>' + items.length + (items.length === 1 ? ' MODE' : ' MODES') + '</em>'));
+      const grid = el('div', 'hm-mgrid');
       items.forEach(([n, st]) => { const i = MODE_LIST.findIndex(x => x.name === n), b = el('button', i === S.mode ? 'on' : '', n + '<small>' + st.map(s => DEG[s]).join('  ') + '</small>');
-        b.onclick = () => { S.mode = i; m.classList.remove('show'); changed(); }; list.appendChild(b); }); }); };
-  q.addEventListener('input', draw); m._open = () => { q.value = ''; draw(); setTimeout(() => q.focus(), 0); };
+        b.onclick = () => { S.mode = i; m.classList.remove('show'); changed(); }; grid.appendChild(b); });
+      box.appendChild(grid); list.appendChild(box); }); };
+  q.addEventListener('input', draw);
+  m._open = () => { q.value = ''; draw(); setTimeout(() => { q.focus(); const on = list.querySelector('button.on'); if (on) list.scrollTop = on.offsetTop - list.clientHeight / 2 + on.offsetHeight / 2; }, 0); };
   m.append(q, list);
 }, 290, 84, 720);
 /* HYDRA presets, in four groups. A voice: [on, smart, step (smart), semitones (fixed), level, pan, detune]. */

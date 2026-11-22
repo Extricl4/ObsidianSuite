@@ -264,6 +264,23 @@ int runSelfTest (const juce::StringArray& args)
         r.check (ampJ < 1.6 && cabJ < 1.6 && eqJ < 1.6, juce::String::formatted ("switching AMP / CAB / EQ off mid-note doesn't click (largest jump %.2f / %.2f / %.2f x the steady signal's)", ampJ, cabJ, eqJ));
         p.presetManager().loadInit();
 
+        // EQ page analyzer: a 1 kHz tone peaks at 1 kHz; after silence it falls back to the floor
+        {
+            auto& sp = p.engine().eqSpectrum();
+            p.presetManager().loadInit(); setNorm (p, "amp.on", 0.f); setNorm (p, "cab.on", 0.f);
+            sp.setWanted (true);
+            render (p, SR, BLOCK, 0.3, [] (int i) { return 0.25f * (float) std::sin (2.0 * juce::MathConstants<double>::pi * 1000.0 * i / 48000.0); });
+            const auto a = sp.analyse (SR, 1.0 / 30.0);
+            const int peak = (int) (std::max_element (a.begin(), a.end()) - a.begin());   // 1 kHz is point 60 (31.25 Hz * 2^5)
+            const float at1k = a[(size_t) peak], at100 = a[17];
+            render (p, SR, BLOCK, 0.3, [] (int) { return 0.f; });
+            float after = -200.f; for (int i = 0; i < 90; ++i) { const auto& b = sp.analyse (SR, 1.0 / 30.0); after = *std::max_element (b.begin(), b.end()); }
+            sp.setWanted (false);
+            r.check (std::abs (peak - 60) <= 1 && at1k > -40.f && at1k - at100 > 30.f && after < -78.f,
+                     juce::String::formatted ("EQ analyzer: a 1 kHz tone peaks at 1 kHz (%.0f dB, 100 Hz %.0f dB); silent afterwards (%.0f dB)", at1k, at100, after));
+            p.presetManager().loadInit();
+        }
+
         // Settings > Audio > Render quality: a bounce (offline render) uses more oversampling
         const auto oldQ = p.settings().get ("renderQuality"), oldOs = p.settings().get ("oversampling");
         p.settings().set ("renderQuality", "Highest"); p.settings().set ("oversampling", 2); p.applySettings();

@@ -128,6 +128,7 @@
     setSetting: (k, v) => { S.settings[k] = v; return true; },
     midiMappings: () => S.midi, midiRemove: i => { S.midi.splice(i, 1); return S.midi; },
     audioSetup: () => S.audio,
+    eqSpectrum: on => { S.eqSpectrum = !!on; return true; },
   };
   let meterTimer = null;
   function startMeters() {

@@ -4,7 +4,7 @@
 const BEATS=4, BARS=32, TOTAL=BARS*BEATS, LANE=74;
 const TCOL=['var(--accent)','#5fd4c4','#a891ff','#ffb547','#ff7a9a','#6fb7ff','#9be36b','#ff8f5a'];
 const css=document.createElement('style'); css.textContent=`
-#studio{width:1200px;height:660px;border-radius:24px;overflow:hidden;display:flex;flex-direction:column;position:relative;background:radial-gradient(120% 60% at 50% -10%, #222226 0%, #141416 45%, #0d0d0f 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.09),inset 0 0 0 1px rgba(255,255,255,.06),0 40px 90px rgba(0,0,0,.85);user-select:none;-webkit-user-select:none}
+#studio{width:100%;height:100%;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;position:relative;background:radial-gradient(120% 60% at 50% -10%, #222226 0%, #141416 45%, #0d0d0f 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.09),inset 0 0 0 1px rgba(255,255,255,.06),0 40px 90px rgba(0,0,0,.85);user-select:none;-webkit-user-select:none}
 #studio button{font-family:inherit;cursor:pointer;line-height:1}
 #studio button:focus{outline:none}#studio button:focus-visible{outline:1.5px solid var(--accent);outline-offset:2px}
 /* ---- top ---- */
@@ -473,7 +473,7 @@ ov.firstElementChild.addEventListener('click',e=>{ if(e.target===ov.firstElement
 const menu=document.createElement('div'); menu.className='st-menu'; S.appendChild(menu);
 const pop=document.createElement('div'); pop.className='st-pop'; S.appendChild(pop);
 function place(el,x,y){ const r=S.getBoundingClientRect(), k=sc(); el.style.display=el===menu?'flex':'block';
-  let L=(x-r.left)/k, T=(y-r.top)/k; const w=el.offsetWidth, h=el.offsetHeight; L=Math.min(L,1200-w-8); T=Math.min(T,660-h-8); el.style.left=L+'px'; el.style.top=T+'px'; }
+  let L=(x-r.left)/k, T=(y-r.top)/k; const w=el.offsetWidth, h=el.offsetHeight; L=Math.min(L,S.offsetWidth-w-8); T=Math.min(T,S.offsetHeight-h-8); el.style.left=L+'px'; el.style.top=T+'px'; }
 function hideMenus(){ menu.style.display='none'; pop.style.display='none'; }
 lanes.addEventListener('contextmenu',e=>{ const cl=e.target.closest('.st-clip'); if(!cl||recording) return; e.preventDefault(); selClip=clips.find(x=>x.id===+cl.dataset.id); selTrack=selClip.track; render();
   const canSplit=pos>selClip.start+.05&&pos<selClip.start+selClip.len-.05;

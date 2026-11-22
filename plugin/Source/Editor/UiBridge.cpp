@@ -315,6 +315,8 @@ void UiBridge::buildCommands()
     c["setBeats"]  = [this] (const juce::Array<juce::var>& a, Completion d) { const int b = juce::jlimit (1, 16, argInt (a, 0, 4)); proc.engine().beatsPerBar.store (b); proc.rig().setMisc ("beats", b); d (true); };
     c["setAccent"] = [this] (const juce::Array<juce::var>& a, Completion d) { proc.engine().accentFirst.store (a.size() > 0 && (bool) a[0]); proc.rig().setMisc ("accent", a.size() > 0 && (bool) a[0]); d (true); };
     c["metronome"] = [this] (const juce::Array<juce::var>& a, Completion d) { proc.engine().setMetronomeRunning (a.size() > 0 && (bool) a[0]); d (true); };
+    // the EQ page is open (its analyzer runs only then)
+    c["eqSpectrum"] = [this] (const juce::Array<juce::var>& a, Completion d) { proc.engine().eqSpectrum().setWanted (a.size() > 0 && (bool) a[0]); d (true); };
     c["tunerOpen"] = [this] (const juce::Array<juce::var>& a, Completion d) { proc.engine().tunerOpen.store (a.size() > 0 && (bool) a[0]); d (true); };
 
     // ---- MIDI -------------------------------------------------------------------------------
@@ -453,14 +455,21 @@ void UiBridge::timerCallback()
     const float midi = dsp::PitchTracker::toMidi (hz, ref);
     const float cents = hz > 0 ? (midi - std::round (midi)) * 100.f : 0.f;
     auto tuner = obj ({ { "hz", hz }, { "conf", conf }, { "note", hz > 0 && conf > 0.5f ? noteName (midi) : juce::String() }, { "cents", cents }, { "level", t.inputLevel() } });
-    emit ("obs:meters", obj ({
+    auto meters = obj ({
         { "in", e.inputPeak() }, { "outL", e.outputPeakL() }, { "outR", e.outputPeakR() }, { "gate", e.gateGain() },
         { "cpu", e.cpuLoad() }, { "clip", e.takeClip() }, { "tuner", tuner }, { "beat", e.metronomeBeat() },
         { "synth", e.synthActivity() }, { "bpm", e.effectiveBpm() }, { "busy", proc.rig().isBusy() },
         { "synNote", e.synthNote() }, { "synStep", e.synthStep() }, { "synSrc", e.synthSource() },
         { "hmNote", e.harmonyNote() }, { "hmChord", juce::var (e.harmonyChord()) },
         { "ampA", e.amp().playingA() }, { "ampB", e.amp().playingB() }, { "ampF", e.amp().playingBlend() }, { "cabIn", e.amp().cabInside() },
-        { "latencyMs", proc.getSampleRate() > 0 ? proc.getLatencySamples() * 1000.0 / proc.getSampleRate() : 0.0 } }));
+        { "latencyMs", proc.getSampleRate() > 0 ? proc.getLatencySamples() * 1000.0 / proc.getSampleRate() : 0.0 } });
+    if (auto& sp = e.eqSpectrum(); sp.isWanted())
+    {
+        juce::Array<juce::var> spec;
+        for (float db : sp.analyse (proc.getSampleRate(), 1.0 / 30.0)) spec.add (juce::roundToInt (db));
+        meters.getDynamicObject()->setProperty ("spec", spec);
+    }
+    emit ("obs:meters", meters);
 
     // Device info changes slowly; refresh it now and then for the settings page.
     if (++meterTick % 60 == 0 && proc.isStandalone()) emit ("obs:audioStats", audioSetup());

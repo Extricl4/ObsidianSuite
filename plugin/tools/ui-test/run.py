@@ -164,7 +164,18 @@ async def run(standalone):
         await pg.locator('.eqreset').click(); await pg.wait_for_timeout(250)
         check(await pg.evaluate("window.__mock.sent('eq.b6')") == 0.5 and await pg.evaluate("window.__mock.sent('eq.lc.on')") == 1
               and await pg.evaluate("document.querySelector('.obs-cutsw .tog').dataset.on") == '1', 'EQ RESET: every band flat and both cut switches back on')
+        # analyzer: asked for only while EQ is open, hidden while silent, shown while playing, gone when you stop
+        quiet = await pg.evaluate("[document.querySelector('.obs-eqspec') && getComputedStyle(document.querySelector('.obs-eqspec')).opacity, window.__mock.state.eqSpectrum === true]")
+        await pg.evaluate("window.__mock.meterExtra = { spec: Array.from({length:121}, (_, k) => -60 + 25*Math.exp(-(((k-45)/18)**2))) }"); await pg.wait_for_timeout(500)
+        playing = await pg.evaluate("[getComputedStyle(document.querySelector('.obs-eqspec')).opacity, document.querySelector('.obs-eqspec').getAttribute('d').split(' L').length]")
         await pg.screenshot(path=str(OUT / 'eq.png'))
+        await pg.evaluate("window.__mock.meterExtra = { spec: Array(121).fill(-120) }"); await pg.wait_for_timeout(600)
+        stopped = await pg.evaluate("getComputedStyle(document.querySelector('.obs-eqspec')).opacity")
+        await pg.evaluate("window.__mock.meterExtra = null; window.__mock.log.length=0; setTab('AMP')"); await pg.wait_for_timeout(200)
+        closed = await pg.evaluate("window.__mock.log.some(x=>x[0]==='eqSpectrum'&&x[1]===false)")
+        check(quiet == ['0', True] and playing[0] == '1' and playing[1] >= 121 and stopped == '0' and closed,
+              f'EQ analyzer: hidden when silent, follows the sound while playing, fades when you stop, off when you leave EQ ({quiet}, {playing}, {stopped}, {closed})')
+        await pg.evaluate("setTab('EQ')"); await pg.wait_for_timeout(100)
 
         # ---- synth page
         await pg.evaluate("setTab('SYNTH')")
@@ -778,6 +789,10 @@ async def run(standalone):
         if standalone:
             # ---- STUDIO: each track shows its pan; a double-click on the pan slider centres it
             await pg.locator('#f0 button', has_text='STUDIO').click(); await pg.wait_for_timeout(300)
+            fit = await pg.evaluate("""(() => { const a = document.getElementById('app').getBoundingClientRect(), s = document.getElementById('studio').getBoundingClientRect(), t = document.querySelector('.st-top');
+              const inside = ['.st-master', '.st-close'].every(q => { const r = document.querySelector(q).getBoundingClientRect(); return r.left >= s.left && r.right <= s.right; });
+              return Math.abs(a.width - s.width) < 1 && Math.abs(a.height - s.height) < 1 && t.scrollWidth <= t.clientWidth && inside; })()""")
+            check(fit, 'STUDIO fills the suite window, MASTER and the close button fit inside')
             pan = pg.locator('#studio .st-head').first.locator('.st-pan'); box = await pan.bounding_box()
             await pg.mouse.click(box['x'] + box['width'] * .9, box['y'] + box['height'] / 2); await pg.wait_for_timeout(500)
             v1 = await pg.locator('#studio .st-head').first.locator('.st-panv').text_content()

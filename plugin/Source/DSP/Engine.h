@@ -16,6 +16,7 @@
 #include "AmpSection.h"
 #include "CabSection.h"
 #include "Modules/ModuleRegistry.h"
+#include "Spectrum.h"
 
 namespace obs
 {
@@ -66,6 +67,8 @@ public:
     // Meters / analysis for the UI.
     float inputPeak() const                       { return inMeter.read(); }
     float outputPeakL() const                     { return outMeterL.read(); }
+    /** The EQ page's analyzer (what comes out of the EQ). */
+    dsp::SpectrumTap& eqSpectrum()                { return spectrum; }
     float outputPeakR() const                     { return outMeterR.read(); }
     float gateGain() const                        { return gate.currentGain(); }
     float synthActivity() const                   { return synth.currentActivity(); }
@@ -117,6 +120,7 @@ private:
     dsp::Metronome metronome;
     std::atomic<Studio*> studio { nullptr };
     dsp::PeakMeter inMeter, outMeterL, outMeterR;
+    dsp::SpectrumTap spectrum;
     dsp::Smoother inGainSm, outGainSm, tunerMute;
     dsp::SectionFade cabFade, eqFade, synthFade;       // click-free on / off of those sections
     bool cabWasActive = true, eqWasActive = true;
