@@ -1,4 +1,5 @@
 #include "Engine.h"
+#include "../Core/Studio.h"
 
 namespace obs
 {
@@ -248,6 +249,9 @@ void Engine::process (juce::AudioBuffer<float>& buffer, int numIn, const HostInf
             // Last line of defence for your ears and speakers: soft ceiling just above 0 dBFS.
             L[i] = juce::jlimit (-2.f, 2.f, a); outR[i] = juce::jlimit (-2.f, 2.f, b);
         }
+
+        // ---- STUDIO: records what you hear, then its takes and its click go in ------------------
+        if (auto* st = studio.load (std::memory_order_acquire)) st->process (L, outR, n);
 
         // ---- metronome ------------------------------------------------------------------------
         metronome.setRunning (metroRunning.load());

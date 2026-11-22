@@ -281,6 +281,35 @@ void UiBridge::buildCommands()
         d (true);
     };
 
+    // ---- STUDIO (standalone): the page owns the arrangement, the engine records and plays ---
+    c["studioSync"]   = [this] (const juce::Array<juce::var>& a, Completion d) { proc.studio().setArrangement (a.size() > 0 ? a[0] : juce::var()); d (true); };
+    c["studioPlay"]   = [this] (const juce::Array<juce::var>& a, Completion d) { proc.studio().play (a.size() > 0 ? (double) a[0] : 0.0); d (true); };
+    c["studioRecord"] = [this] (const juce::Array<juce::var>& a, Completion d)
+    {
+        // round trip: the interface's input + output latency and the plugin's own (when compensation is on)
+        int rt = 0;
+        if (auto* h = juce::StandalonePluginHolder::getInstance())
+            if (auto* dev = h->deviceManager.getCurrentAudioDevice())
+                rt = dev->getInputLatencyInSamples() + dev->getOutputLatencyInSamples();
+        if ((bool) proc.settings().get ("latencyCompensation")) rt += proc.getLatencySamples();
+        proc.studio().setRoundTrip (rt);
+        proc.studio().record (argInt (a, 0), a.size() > 1 ? (double) a[1] : 0.0, a.size() > 2 ? (double) a[2] : 0.0);
+        d (true);
+    };
+    c["studioStop"]   = [this] (const juce::Array<juce::var>&, Completion d) { proc.studio().stop(); d (true); };
+    c["studioExport"] = [this] (const juce::Array<juce::var>&, Completion d)
+    {
+        chooseFile ("Export the STUDIO mix", "*.wav", true, [this] (juce::File f)
+        {
+            if (! f.hasFileExtension ("wav")) f = f.withFileExtension ("wav");
+            juce::String err;
+            if (proc.studio().exportMix (f, err)) toast ("Exported " + f.getFileName());
+            else toast (err, true);
+        }, "Obsidian Studio mix.wav");
+        d (true);
+    };
+    c["studioReveal"] = [] (const juce::Array<juce::var>&, Completion d) { auto f = Studio::recordingsFolder(); f.createDirectory(); f.revealToUser(); d (true); };
+
     // ---- tempo / metronome / tuner -------------------------------------------------------
     c["setBpm"]    = [this] (const juce::Array<juce::var>& a, Completion d) { const double b = juce::jlimit (20.0, 400.0, (double) argF (a, 0, 120.f)); proc.engine().internalBpm.store (b); proc.rig().setMisc ("bpm", b); d (true); };
     c["setBeats"]  = [this] (const juce::Array<juce::var>& a, Completion d) { const int b = juce::jlimit (1, 16, argInt (a, 0, 4)); proc.engine().beatsPerBar.store (b); proc.rig().setMisc ("beats", b); d (true); };
@@ -395,6 +424,13 @@ void UiBridge::changeListenerCallback (juce::ChangeBroadcaster*) { emit ("obs:au
 void UiBridge::timerCallback()
 {
     if (! ready) return;
+    if (proc.isStandalone())
+    {
+        const auto st = proc.studio().status();
+        const bool act = (bool) st["active"];
+        if (act || studioWasActive) emit ("obs:studio", st);
+        studioWasActive = act;
+    }
     if (updater->changes() != updaterSeen) { updaterSeen = updater->changes(); emit ("obs:update", updater->toJson()); }
     if (anyDirty.exchange (false))
     {

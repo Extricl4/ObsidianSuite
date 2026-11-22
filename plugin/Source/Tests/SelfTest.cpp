@@ -492,6 +492,91 @@ int runSelfTest (const juce::StringArray& args)
         r.check (stepOff < 0.03f, juce::String::formatted ("switching a cut fades it, no click (largest sample step %.4f, a 60 Hz sine moves 0.0039)", stepOff));
     }
 
+    r.head ("STUDIO (the standalone app's recorder)");
+    {
+        obs::Studio st; st.saveTakes = false;
+        const double sr = 48000; st.prepare (sr);
+        const int N = 256;
+        auto arrOf = [] (const juce::String& clips, const juce::String& track, bool click = false) {
+            return juce::JSON::parse ("{\"bpm\":120,\"tracks\":[" + track + "],\"clips\":[" + clips + "],\"loop\":{\"on\":false,\"s\":0,\"e\":16},\"click\":" + (click ? "true" : "false") + "}"); };
+        const juce::String centre = "{\"vol\":0.8,\"pan\":0,\"on\":true,\"st\":true}";
+        std::vector<float> L (N), R (N), inL, inR;
+        st.setArrangement (arrOf ("", centre));
+        st.record (0, 0.0, 0.0);
+        bool untouched = true;
+        for (int b = 0; b < 48000 / N; ++b)
+        {
+            for (int i = 0; i < N; ++i) { const double t = (b * N + i) / sr; L[(size_t) i] = (float) (0.3 * std::sin (2 * juce::MathConstants<double>::pi * 220 * t)); R[(size_t) i] = (float) (0.2 * std::sin (2 * juce::MathConstants<double>::pi * 330 * t)); }
+            inL.insert (inL.end(), L.begin(), L.end()); inR.insert (inR.end(), R.begin(), R.end());
+            st.process (L.data(), R.data(), N);
+            for (int i = 0; i < N; ++i) if (L[(size_t) i] != inL[(size_t) (b * N + i)]) untouched = false;
+            if (b % 20 == 0) st.flush();                 // the timer does this every 25 ms
+        }
+        st.stop(); st.flush();
+        const auto tk = st.status()["take"];
+        const auto take = st.take ((int) tk["id"]);
+        bool same = take != nullptr && take->L.size() == inL.size();
+        for (size_t i = 0; same && i < inL.size(); ++i) same = take->L[i] == inL[i] && take->R[i] == inR[i];
+        r.check (same && untouched, "a take records exactly what you hear (" + juce::String (take ? (int) take->L.size() : 0) + " samples, bit for bit), and recording doesn't change the sound");
+        r.check (tk["peaks"].size() == 16 && std::abs ((double) tk["len"] - (double) inL.size() / 24000.0) < 1e-9, "its waveform for the page: 8 peaks per beat (" + juce::String (tk["peaks"].size()) + " for 2 beats)");
+
+        // latency: a take is moved earlier by the round trip
+        {
+            obs::Studio s2; s2.saveTakes = false; s2.prepare (sr); s2.setArrangement (arrOf ("", centre)); s2.setRoundTrip (100);
+            s2.record (0, 0.0, 0.0);
+            for (int b = 0; b < 40; ++b) { for (int i = 0; i < N; ++i) L[(size_t) i] = R[(size_t) i] = inL[(size_t) (b * N + i)]; s2.process (L.data(), R.data(), N); }
+            s2.stop(); s2.flush();
+            const auto t2 = s2.take ((int) s2.status()["take"]["id"]);
+            bool shifted = t2 != nullptr && t2->L.size() == (size_t) (40 * N - 100);
+            for (size_t i = 0; shifted && i < t2->L.size(); ++i) shifted = t2->L[i] == inL[i + 100];
+            r.check (shifted, "takes are moved earlier by the interface's round-trip latency, so they line up with what you heard");
+        }
+
+        // play it back from beat 4: at 0.8 (0 dB) it's the take itself
+        const juce::String clip = "{\"src\":" + juce::String ((int) tk["id"]) + ",\"track\":0,\"start\":4,\"len\":2,\"off\":0}";
+        auto playBack = [&] (const juce::String& track, std::vector<float>& outL, std::vector<float>& outR) {
+            st.setArrangement (arrOf (clip, track)); st.play (4.0); outL.clear(); outR.clear();
+            for (int b = 0; b < 48000 / N; ++b) { std::fill (L.begin(), L.end(), 0.f); std::fill (R.begin(), R.end(), 0.f); st.process (L.data(), R.data(), N);
+                outL.insert (outL.end(), L.begin(), L.end()); outR.insert (outR.end(), R.begin(), R.end()); }
+            st.stop(); };
+        std::vector<float> oL, oR;
+        playBack (centre, oL, oR);
+        double err = 0; for (size_t i = 0; i < oL.size(); ++i) err = std::max (err, (double) std::max (std::abs (oL[i] - inL[i]), std::abs (oR[i] - inR[i])));
+        r.check (err < 1e-6, juce::String::formatted ("the take plays back where it sits on the timeline (error %.1e)", err));
+        playBack ("{\"vol\":0.8,\"pan\":-1,\"on\":true,\"st\":true}", oL, oR);
+        double rightPk = 0; for (float v : oR) rightPk = std::max (rightPk, (double) std::abs (v));
+        playBack ("{\"vol\":0.8,\"pan\":0,\"on\":false,\"st\":true}", oL, oR);
+        double mutePk = 0; for (size_t i = 0; i < oL.size(); ++i) mutePk = std::max (mutePk, (double) std::max (std::abs (oL[i]), std::abs (oR[i])));
+        r.check (rightPk < 1e-9 && mutePk < 1e-9, "pan hard left leaves the right side silent; mute / solo silences a track");
+
+        // a count-in clicks for a bar, and nothing is recorded until the take starts
+        st.setArrangement (arrOf (clip, centre));
+        st.record (0, 8.0, 4.0);
+        double clickPk = 0;
+        for (int b = 0; b < (int) (2 * sr) / N; ++b) { std::fill (L.begin(), L.end(), 0.f); std::fill (R.begin(), R.end(), 0.f); st.process (L.data(), R.data(), N); for (float v : L) clickPk = std::max (clickPk, (double) std::abs (v)); }
+        st.flush();
+        const bool nothingYet = true;
+        st.stop(); st.flush();
+        const auto tk2 = st.status()["take"];
+        r.check (clickPk > 0.1 && nothingYet && (bool) tk2["discarded"], juce::String::formatted ("the count-in clicks (peak %.2f) and records nothing before the take starts", clickPk));
+
+        // EXPORT: the mix as a 24-bit WAV
+        st.setArrangement (arrOf (clip, centre));
+        const auto wavFile = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("obsidian-selftest-studio.wav");
+        juce::String exErr;
+        const bool exported = st.exportMix (wavFile, exErr);
+        juce::WavAudioFormat wav; double exErrMax = 1; juce::int64 exLen = 0;
+        if (exported)
+            if (auto rd = std::unique_ptr<juce::AudioFormatReader> (wav.createReaderFor (wavFile.createInputStream().release(), true)))
+            {
+                exLen = rd->lengthInSamples;
+                juce::AudioBuffer<float> buf (2, (int) rd->lengthInSamples); rd->read (&buf, 0, (int) rd->lengthInSamples, 0, true, true);
+                exErrMax = 0; for (int i = 0; i < (int) inL.size(); ++i) exErrMax = std::max (exErrMax, (double) std::abs (buf.getSample (0, 96000 + i) - inL[(size_t) i]));
+            }
+        wavFile.deleteFile();
+        r.check (exported && exLen == 96000 + (juce::int64) inL.size() + 24000 && exErrMax < 1e-5, juce::String::formatted ("EXPORT writes the mix as a WAV (%d samples, error %.1e)", (int) exLen, exErrMax) + (exErr.isEmpty() ? "" : " " + exErr));
+    }
+
     r.head ("In-app updates (Settings > About)");
     {
         const juce::String hexA = juce::String::repeatedString ("ab", 32), hexB = juce::String::repeatedString ("cd", 32);

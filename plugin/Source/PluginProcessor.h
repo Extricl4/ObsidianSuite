@@ -1,5 +1,6 @@
 #pragma once
 #include <juce_audio_processors/juce_audio_processors.h>
+#include "Core/Studio.h"
 #include "Core/Params.h"
 #include "Core/AppSettings.h"
 #include "Core/Rig.h"
@@ -45,6 +46,7 @@ public:
     juce::AudioProcessorValueTreeState& state()     { return apvts; }
     Engine& engine()                                { return dsp; }
     Rig& rig()                                      { return *rigPtr; }
+    Studio& studio()                                { return *studioPtr; }
     PresetManager& presetManager()                  { return *presets; }
     MidiMapper& midi()                              { return midiMapper; }
     AppSettings& settings()                         { return *appSettings; }
@@ -64,6 +66,7 @@ private:
     Engine dsp;
     juce::AudioProcessorValueTreeState apvts;
     std::unique_ptr<Rig> rigPtr;
+    std::unique_ptr<Studio> studioPtr;
     std::unique_ptr<PresetManager> presets;
     MidiMapper midiMapper;
     std::atomic<int> testTone { 0 };

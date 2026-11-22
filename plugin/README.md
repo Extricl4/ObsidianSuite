@@ -268,10 +268,25 @@ version.
 * `"Obsidian Amp Suite.exe" --render-synth <folder>` renders synth patches to WAV; `python plugin/tools/amp-lab/synthcheck.py <folder>`
   measures their level, DC and aliasing. `plugin/tools/amp-lab` also has the amp measurement tools (`amplab.cpp`, `level.cpp`).
 
+## STUDIO (standalone app)
+
+The footer's STUDIO is a small recorder (`Source/Core/Studio.h`):
+
+* **REC** records what you hear onto the armed track: the finished sound at the end of the chain,
+  before the click and before the studio's own playback. **COUNT-IN** gives one bar of clicks first.
+* Takes are moved earlier by the interface's round-trip latency (and the plugin's own, when latency
+  compensation is on), so what you played lines up with what you heard.
+* Every take is also saved as a 24-bit WAV in `Documents\Obsidian Amp Suite\Recordings`.
+* Takes play back with each track's volume, pan, mute and solo; loop and click work while playing.
+  Move, trim, split, duplicate and delete takes on the timeline; the engine follows.
+* **EXPORT** mixes every track down to a 24-bit WAV.
+* The page owns the arrangement and sends it on every change (`studioSync`). The engine records
+  through a lock-free FIFO and never allocates or waits on the audio thread.
+
 ## Not done yet
 
-* **STUDIO** (the mini recorder) is shown only in the standalone app, and recording there is still the
-  demo. The engine side (recording the DI and re-amping takes) is the next step.
+* **STUDIO** records what you hear, not the dry guitar, so takes can't be re-amped yet. The arrangement
+  (which takes sit where) lasts while the app is open. The takes themselves are kept as WAV files.
 * Overdrive, Clean Boost, Compressor, Glue, Limiter, Sweep Filter, Looper and NAM Pedal have no design yet,
   so they show as plain cards.
 * The in-house amps show a plain panel (with each amp's own slight tint); only the capture amps have faces.

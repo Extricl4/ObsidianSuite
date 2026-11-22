@@ -56,6 +56,7 @@ private:
     ObsidianProcessor& proc;
     juce::SharedResourcePointer<Updater> updater;   // one per process, shared by every window
     int updaterSeen = 0;
+    bool studioWasActive = false;
     Emit emit;
     std::function<void (float)> applyScale;
     std::unordered_map<juce::String, Cmd> commands;

@@ -24,6 +24,8 @@ struct HostInfo
     double bpm = 120; bool playing = false; double ppq = 0; bool hasHostTempo = false;
 };
 
+class Studio;          // Core/Studio.h: the standalone app's recorder, fed from the end of the chain
+
 class Engine
 {
 public:
@@ -54,6 +56,8 @@ public:
     std::atomic<bool>  accentFirst { true };
     std::atomic<float> metronomeVolume { 0.7f };
     void setMetronomeRunning (bool r)             { metroRunning.store (r); }
+    /** STUDIO (standalone only): records the finished sound and plays its takes back in. */
+    void setStudio (Studio* s)                    { studio.store (s); }
     bool metronomeRunning() const                 { return metroRunning.load(); }
     int  metronomeBeat() const                    { return metronome.currentBeat(); }
     double effectiveBpm() const                   { return lastBpm.load(); }
@@ -110,6 +114,7 @@ private:
     dsp::Doubler doubler;
     dsp::StereoWidth width;
     dsp::Metronome metronome;
+    std::atomic<Studio*> studio { nullptr };
     dsp::PeakMeter inMeter, outMeterL, outMeterR;
     dsp::Smoother inGainSm, outGainSm, tunerMute;
     dsp::ModuleContext ctxProto;

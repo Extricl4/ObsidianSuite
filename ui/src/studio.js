@@ -199,6 +199,7 @@ ov.innerHTML=`<div style="position: absolute; inset: 0; background: rgba(6,6,7,.
    <div><small>TEMPO</small><b class="bpm" id="st-bpm">120</b></div>
   </div>
   <button class="st-pill" data-a="count" title="One bar of clicks before recording starts">COUNT-IN</button>
+  <button class="st-pill" data-a="export" title="Mix every track down to a WAV file">EXPORT</button>
   <button class="st-pill snap on" data-a="snap" title="Snap takes to the beat grid when you move or trim them. Ctrl+scroll zooms.">SNAP ON</button>
   <span class="st-rec-badge">REC</span>
   <div class="st-master"><span>MASTER</span><div class="st-mm"><div><i id="st-ml"></i></div><div><i id="st-mr"></i></div></div></div>
@@ -219,13 +220,31 @@ try{ TTIP.STUDIO='Tiny recorder: record takes, move them around, loop and play b
 /* ---------- state ---------- */
 let ppb=16, snap=1;
 const SNAPS=[[0,'OFF'],[1,'ON']];   /* ON snaps takes to the beat grid */
-const mkT=(name,ico,ci)=>({name,ico,c:TCOL[ci%TCOL.length],vol:.8,pan:0,m:false,s:false,arm:false,mon:false,r:false,w:false,st:false});
+const mkT=(name,ico,ci)=>({name,ico,c:TCOL[ci%TCOL.length],vol:.8,pan:0,m:false,s:false,arm:false,mon:false,r:false,w:false,st:true});
 let tracks=[mkT('Track 1','guitar',0)]; tracks[0].arm=true;   /* starts empty: one armed track */
 let clips=[], selClip=null, selTrack=0, nid=1;
 let pos=0, playing=false, recording=false, loopOn=false, clickOn=false, countIn=false, loopS=0, loopE=16;
 let liveClip=null, t0=0, p0=0, raf=0, lastBeat=-1, counting=false;
 const mkPeaks=(n,seed)=>{ let s=seed*9301+49297, v=.5; const out=[]; for(let i=0;i<n;i++){ s=(s*9301+49297)%233280; const r=s/233280; v=Math.max(.08,Math.min(1,v*.82+r*.36)); out.push(Math.min(1,v+((i%8===0)?.35:0))); } return out; };
 function addClip(track,start,len,name,peaks){ const c={id:nid++,track,start,len,off:0,name,peaks:peaks||mkPeaks(Math.ceil(len*8)+8,nid*7)}; clips.push(c); return c; }
+
+/* ---------- the plugin's recorder ----------
+   In the app, window.obsStudioEngine (set by obsidian-bridge.js) records what you hear and plays the takes;
+   this page owns the arrangement and sends it on every change. Without it (a browser) the page plays pretend. */
+const E=()=>window.obsStudioEngine||null;
+let engPos=null, pendingClip=null, syncT=0;
+function sync(){ const e=E(); if(!e) return; clearTimeout(syncT); syncT=setTimeout(()=>e.sync({ bpm,
+  tracks:tracks.map((t,i)=>({vol:t.vol,pan:t.pan,on:audible(i),st:!!t.st})),
+  clips:clips.filter(c=>c.src).map(c=>({src:c.src,track:c.track,start:c.start,len:c.len,off:c.off})),
+  loop:{on:loopOn,s:loopS,e:loopE}, click:clickOn }),25); }
+window.obsStudio={ event(st){
+  engPos=st.playing?st.pos:null;
+  if(st.peaks&&liveClip) liveClip.peaks.push(...st.peaks);
+  if(st.take){ const c=pendingClip;
+    if(c){ if(st.take.discarded){ clips=clips.filter(x=>x!==c); if(selClip===c) selClip=null; }
+      else { c.src=st.take.id; c.peaks=st.take.peaks.slice(); c.len=st.take.len; c.off=0; c.pending=false; toast(c.name+' recorded'+(st.take.file?' · saved in Recordings':'')); } }
+    pendingClip=null; render(); }
+}, sync };
 
 /* ---------- helpers ---------- */
 const audible=t=>{ const anyS=tracks.some(x=>x.s); return !tracks[t].m && (!anyS||tracks[t].s); };
@@ -283,7 +302,7 @@ function render(){
     d.style.left=(c.start*ppb)+'px'; d.style.width=Math.max(2,c.len*ppb)+'px';
     d.innerHTML='<span>'+c.name+'</span>'+waveSVG(c)+'<div class="tl"></div><div class="tr"></div>'; lane.appendChild(d); });
   hlist.scrollTop=scroller.scrollTop;
-  drawOvw(); drawPH(); tools(); }
+  drawOvw(); drawPH(); tools(); sync(); }
 function drawOvw(){ if(!ovw) return; const W=ovw.clientWidth||900, H=50, n=tracks.length, rowH=Math.min(10,(H-12)/n);
   let h='<small>OVERVIEW</small>'; clips.forEach(c=>{ h+='<b style="left:'+(c.start/TOTAL*W).toFixed(1)+'px;width:'+Math.max(2,c.len/TOTAL*W).toFixed(1)+'px;top:'+(6+c.track*rowH).toFixed(1)+'px;height:'+(rowH-2).toFixed(1)+'px;background:'+(c===liveClip?'#ff4d4d':tracks[c.track].c)+(audible(c.track)?'':';opacity:.2')+'"></b>'; });
   const vw=scroller.clientWidth/(TOTAL*ppb)*W, vx=scroller.scrollLeft/(TOTAL*ppb)*W;
@@ -296,19 +315,20 @@ function drawPH(){ ph.style.left=(pos*ppb)+'px'; const beat=Math.floor(pos), bar
 function tools(){ const sn=$s('[data-a="snap"]'); sn.textContent='SNAP '+SNAPS.find(x=>x[0]===snap)[1]; sn.classList.toggle('on',snap>0);
   const pb=$s('[data-a="play"]'); pb.innerHTML=playing&&!recording&&!counting?I.pause:I.play; pb.classList.toggle('on',playing&&!recording&&!counting);
   $s('[data-a="rec"]').classList.toggle('on',recording||counting); $s('[data-a="loop"]').classList.toggle('on',loopOn); $s('[data-a="click"]').classList.toggle('on',clickOn); $s('[data-a="count"]').classList.toggle('on',countIn);
-  S.classList.toggle('recording',recording||counting); }
+  S.classList.toggle('recording',recording||counting); sync(); }
 const vms=()=>[...hlist.querySelectorAll('.st-vm')];
 function clearMeters(){ vms().forEach(m=>m.querySelectorAll('i').forEach(i=>i.style.height=0)); $s('#st-ml').style.width=$s('#st-mr').style.width=0; lanes.querySelectorAll('.st-clip.play').forEach(c=>c.classList.remove('play')); }
 
 /* ---------- transport ---------- */
 let AC=null; function blip(acc){ try{ if(!AC) AC=new (window.AudioContext||window.webkitAudioContext)(); const o=AC.createOscillator(), g=AC.createGain(); o.frequency.value=acc?1600:1100; g.gain.setValueAtTime(.18,AC.currentTime); g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+.05); o.connect(g).connect(AC.destination); o.start(); o.stop(AC.currentTime+.06); }catch(_){} }
 function tick(now){ const b=p0+(now-t0)/1000*bpm/60;
-  if(counting){ const cb=Math.floor(b-p0); if(cb!==lastBeat){ lastBeat=cb; blip(cb%BEATS===0); } if(b-p0>=BEATS){ counting=false; beginRec(); return; } raf=requestAnimationFrame(tick); return; }
-  pos=b;
-  if(loopOn&&!recording&&pos>=loopE){ p0=loopS; t0=now; pos=loopS; lastBeat=-1; }
+  if(counting){ const cb=Math.floor(b-p0); if(cb!==lastBeat){ lastBeat=cb; if(!E()) blip(cb%BEATS===0); } if(b-p0>=BEATS){ counting=false; beginRec(); return; } raf=requestAnimationFrame(tick); return; }
+  const follow=!!E()&&engPos!=null;            /* the app: the engine's playhead (it loops and clicks itself) */
+  pos=follow?engPos:b;
+  if(!follow&&loopOn&&!recording&&pos>=loopE){ p0=loopS; t0=now; pos=loopS; lastBeat=-1; }
   if(pos>=TOTAL){ stop(false); return; }
-  const fb=Math.floor(pos); if(fb!==lastBeat){ lastBeat=fb; if(clickOn) blip(fb%BEATS===0); }
-  if(recording&&liveClip){ liveClip.len=Math.max(.01,pos-liveClip.start); const need=Math.ceil(liveClip.len*8); while(liveClip.peaks.length<need){ const prev=liveClip.peaks[liveClip.peaks.length-1]||.4; liveClip.peaks.push(Math.max(.06,Math.min(1,prev*.8+Math.random()*.4+(liveClip.peaks.length%8===0?.3:0)))); }
+  const fb=Math.floor(pos); if(fb!==lastBeat){ lastBeat=fb; if(clickOn&&!E()) blip(fb%BEATS===0); }
+  if(recording&&liveClip){ liveClip.len=Math.max(.01,pos-liveClip.start); const need=Math.ceil(liveClip.len*8); while(!E()&&liveClip.peaks.length<need){ const prev=liveClip.peaks[liveClip.peaks.length-1]||.4; liveClip.peaks.push(Math.max(.06,Math.min(1,prev*.8+Math.random()*.4+(liveClip.peaks.length%8===0?.3:0)))); }
     const el=lanes.querySelector('.st-clip[data-id="'+liveClip.id+'"]'); if(el){ el.style.width=Math.max(2,liveClip.len*ppb)+'px'; el.querySelector('svg').outerHTML=waveSVG(liveClip); } }
   /* meters + clip highlight */
   const ms=vms(); let L=0,R=0;
@@ -321,16 +341,21 @@ function tick(now){ const b=p0+(now-t0)/1000*bpm/60;
   lanes.querySelectorAll('.st-clip').forEach(el=>{ const c=clips.find(x=>x.id===+el.dataset.id); el.classList.toggle('play',!!c&&pos>=c.start&&pos<c.start+c.len); });
   const sx=pos*ppb; if(sx>scroller.scrollLeft+scroller.clientWidth-60){ scroller.scrollLeft=sx-120; drawOvw(); }
   drawPH(); raf=requestAnimationFrame(tick); }
-function play(){ if(playing) return; playing=true; t0=performance.now(); p0=pos; lastBeat=-1; raf=requestAnimationFrame(tick); tools(); }
-function pause(){ if(recording) return stop(false); playing=false; cancelAnimationFrame(raf); clearMeters(); tools(); }
-function stop(rewind=true){ if(recording) endRec(); playing=false; counting=false; cancelAnimationFrame(raf); clearMeters(); if(rewind) pos=loopOn?loopS:0; render(); }
+function play(){ if(playing) return; playing=true; t0=performance.now(); p0=pos; lastBeat=-1; engPos=null; if(E()){ sync(); E().play(pos); } raf=requestAnimationFrame(tick); tools(); }
+function pause(){ if(recording) return stop(false); playing=false; if(E()) E().stop(); engPos=null; cancelAnimationFrame(raf); clearMeters(); tools(); }
+function stop(rewind=true){ if(E()&&(playing||counting||recording)) E().stop(); engPos=null; if(recording) endRec(); playing=false; counting=false; cancelAnimationFrame(raf); clearMeters(); if(rewind) pos=loopOn?loopS:0; render(); }
+/* a jump while playing: the engine plays on from there */
+function rejump(){ if(playing&&!recording&&!counting){ t0=performance.now(); p0=pos; engPos=null; if(E()) E().play(pos); } }
 function record(){ if(recording||counting) return stop(false); const t=tracks.findIndex(x=>x.arm); if(t<0){ toast('Arm a track first (the round button)'); return; }
-  if(playing){ cancelAnimationFrame(raf); playing=false; }
+  if(playing){ cancelAnimationFrame(raf); playing=false; if(E()) E().stop(); }
+  if(E()){ sync(); E().record(t,pos,countIn?BEATS:0); engPos=null; }
   if(countIn){ counting=true; playing=true; t0=performance.now(); p0=pos; lastBeat=-1; raf=requestAnimationFrame(tick); tools(); return; }
   beginRec(); }
 function beginRec(){ const t=tracks.findIndex(x=>x.arm); const n=clips.filter(c=>/^TAKE/.test(c.name)).length+1;
   liveClip=addClip(t,pos,.01,'TAKE '+n,[]); selClip=liveClip; selTrack=t; recording=true; playing=true; t0=performance.now(); p0=pos; lastBeat=-1; render(); raf=requestAnimationFrame(tick); }
-function endRec(){ recording=false; if(liveClip){ if(liveClip.len<.25){ clips=clips.filter(c=>c!==liveClip); selClip=null; } else { liveClip.peaks.push(...mkPeaks(8,3).map(x=>x*.3)); toast(liveClip.name+' recorded'); } } liveClip=null; }
+function endRec(){ recording=false;
+  if(E()){ if(liveClip){ liveClip.pending=true; pendingClip=liveClip; } liveClip=null; return; }     /* the engine sends the finished take */
+  if(liveClip){ if(liveClip.len<.25){ clips=clips.filter(c=>c!==liveClip); selClip=null; } else { liveClip.peaks.push(...mkPeaks(8,3).map(x=>x*.3)); toast(liveClip.name+' recorded'); } } liveClip=null; }
 
 /* ---------- editing ---------- */
 const snapTo=b=>snap?Math.round(b/snap)*snap:b;
@@ -343,7 +368,8 @@ S.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) retur
   if(b.classList.contains('st-close')) return closeStudio();
   if(a==='play') return playing&&!recording&&!counting?pause():play();
   if(a==='stop') return stop(true);
-  if(a==='start'){ pos=loopOn?loopS:0; if(playing){ t0=performance.now(); p0=pos; } scroller.scrollLeft=0; drawOvw(); return drawPH(); }
+  if(a==='start'){ pos=loopOn?loopS:0; rejump(); scroller.scrollLeft=0; drawOvw(); return drawPH(); }
+  if(a==='export'){ if(E()){ stop(false); E().export(); } else toast('EXPORT writes a WAV of the mix in the app'); return; }
   if(a==='rec') return record();
   if(a==='loop'){ loopOn=!loopOn; return render(); }
   if(a==='click'){ clickOn=!clickOn; return tools(); }
@@ -391,14 +417,14 @@ S.addEventListener('pointerdown',e=>{ if(e.button!==0) return;
     drag={k:mode,c,x:e.clientX,y:e.clientY,s:c.start,l:c.len,o:c.off}; render(); e.preventDefault(); return; }
   if(e.target.closest('.st-lane')&&!recording){ selClip=null; selTrack=+e.target.closest('.st-lane').dataset.t; seek(e); render(); }
 });
-function seek(e){ const r=canvas.getBoundingClientRect(); pos=Math.max(0,Math.min(TOTAL,(e.clientX-r.left)/sc()/ppb)); if(playing){ t0=performance.now(); p0=pos; } drawPH(); tools(); }
+function seek(e){ const r=canvas.getBoundingClientRect(); pos=Math.max(0,Math.min(TOTAL,(e.clientX-r.left)/sc()/ppb)); rejump(); drawPH(); tools(); }
 function ovwMove(e){ const r=ovw.getBoundingClientRect(); const f=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)); scroller.scrollLeft=f*TOTAL*ppb-scroller.clientWidth/2; drawOvw(); }
 function volMove(e){ const tr=drag.el.querySelector('.trk').getBoundingClientRect(); const t=tracks[drag.t]; t.vol=Math.max(0,Math.min(1,(e.clientX-tr.left)/tr.width));
   drag.el.querySelector('.f').style.width=(t.vol*100)+'%'; drag.el.querySelector('.k').style.left=(t.vol*100)+'%'; drag.el.title='Volume '+fmtVol(t.vol);
-  const n=drag.el.closest('.st-head').querySelector('.st-name'); n.textContent=fmtVol(t.vol); n.classList.add('val'); }
+  const n=drag.el.closest('.st-head').querySelector('.st-name'); n.textContent=fmtVol(t.vol); n.classList.add('val'); sync(); }
 function panMove(e){ const tr=drag.el.querySelector('.trk').getBoundingClientRect(); const t=tracks[drag.t]; let p=((e.clientX-tr.left)/tr.width)*2-1; p=Math.max(-1,Math.min(1,p)); if(Math.abs(p)<.05) p=0; t.pan=p;
   drag.el.querySelector('.f').setAttribute('style',panFill(p)); drag.el.querySelector('.k').style.left=((p+1)*50)+'%'; drag.el.title='Pan '+fmtPan(p);
-  const v=drag.el.closest('.st-head').querySelector('.st-panv'); if(v){ v.textContent=fmtPan(p); v.classList.toggle('c',Math.abs(p)<.02); } }
+  const v=drag.el.closest('.st-head').querySelector('.st-panv'); if(v){ v.textContent=fmtPan(p); v.classList.toggle('c',Math.abs(p)<.02); } sync(); }
 function knobSet(){ const t=tracks[drag.t], k=drag.el, h=k.closest('.st-head');
   const v=drag.which==='vol'?t.vol:(t.pan+1)/2; k.querySelector('.ring').style.background=ring(v,t.c,drag.which==='pan'); k.querySelector('.cap').style.transform='rotate('+(-135+270*v)+'deg)';
   if(drag.which==='vol') h.querySelector('.st-db').textContent=fmtVol(t.vol); else k.nextElementSibling.textContent=fmtPan(t.pan); }
@@ -439,7 +465,7 @@ document.addEventListener('keydown',e=>{ if(!open()){ if(e.key==='Escape'&&$$('.
   else if(k==='s'&&!e.ctrlKey&&!e.metaKey){ split(); }
   else if(k==='d'&&(e.ctrlKey||e.metaKey)){ e.preventDefault(); dup(); }
   else if(k==='delete'||k==='backspace'){ e.preventDefault(); del(); }
-  else if(k==='home'||k==='enter'){ pos=loopOn?loopS:0; if(playing){ t0=performance.now(); p0=pos; } drawPH(); }
+  else if(k==='home'||k==='enter'){ pos=loopOn?loopS:0; rejump(); drawPH(); }
   else if(k==='escape'){ if(menu.style.display!=='none'&&menu.style.display||pop.style.display==='block') hideMenus(); else closeStudio(); }
 });
 ov.firstElementChild.addEventListener('click',e=>{ if(e.target===ov.firstElementChild) stop(false); });
@@ -465,7 +491,7 @@ function openChan(ti,btn){ if(pop.style.display==='block'&&pop.dataset.t==ti){ h
   const r=btn.getBoundingClientRect(); place(pop,r.right+6,r.top-20); }
 pop.addEventListener('input',e=>{ const t=tracks[+pop.dataset.t]; const p=e.target.dataset.p; if(!p) return; t[p]=+e.target.value; if(p==='pan'&&Math.abs(t.pan)<.04) t.pan=0;
   e.target.nextElementSibling.textContent=p==='vol'?fmtVol(t.vol).replace(' dB',''):fmtPan(t.pan);
-  const h=hlist.children[+pop.dataset.t]; if(h&&p==='vol'){ h.querySelector('.f').style.width=(t.vol*100)+'%'; h.querySelector('.k').style.left=(t.vol*100)+'%'; } });
+  sync(); const h=hlist.children[+pop.dataset.t]; if(h&&p==='vol'){ h.querySelector('.f').style.width=(t.vol*100)+'%'; h.querySelector('.k').style.left=(t.vol*100)+'%'; } });
 pop.addEventListener('click',e=>{ const c=e.target.closest('[data-c]'); if(!c) return; const ti=+pop.dataset.t; tracks[ti].c=c.dataset.c; pop.style.setProperty('--tc',c.dataset.c); pop.querySelectorAll('[data-c]').forEach(x=>x.classList.toggle('on',x===c)); render(); hlist.children[ti].querySelector('.st-b.e').classList.add('on'); });
 window.studioRender=render;
 })();

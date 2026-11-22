@@ -23,6 +23,14 @@
     if (st.rig) { S.rig = JSON.parse(JSON.stringify(st.rig)); later('obs:rig', S.rig, 10); }
   }
   let updTimer = null;
+  const ST = { on: false, rec: false, ids: 0, arr: null, timer: 0 };
+  const stNow = () => ({ pos: ST.from + (performance.now() - ST.t0) / 1000 * ((ST.arr && ST.arr.bpm) || 120) / 60 });
+  function stStart(from, rec, track, recFrom) {
+    clearInterval(ST.timer); Object.assign(ST, { on: true, rec, track, recFrom, from, t0: performance.now(), sent: 0 });
+    ST.timer = setInterval(() => { const st = stNow(), m = { playing: true, recording: ST.rec, pos: st.pos, active: true };
+      if (ST.rec && st.pos > ST.recFrom) { const need = Math.floor((st.pos - ST.recFrom) * 8); if (need > ST.sent) { m.peaks = Array.from({ length: need - ST.sent }, () => .3 + Math.random() * .6); ST.sent = need; } }
+      emit('obs:studio', m); }, 33);
+  }
   const setUpd = o => { Object.assign(S.update, o); later('obs:update', Object.assign({}, S.update), 0); };
   const listChanged = () => { S.presetFolders.sort((a, b) => a.localeCompare(b)); later('obs:presets', { list: S.presets, folders: S.presetFolders.slice() }, 5); };
 
@@ -106,6 +114,16 @@
       const n = ch + 1; S.rig.amp.channels[ch] = { file: 'C:/Captures/Example ' + n + '.nam', name: 'Example ' + n, title: ['5150 Red Lead', 'Plexi Crunch', 'Twin Clean', 'Uberschall Rhythm'][ch], gear: ['Peavey 5150', 'Marshall 1959', 'Fender Twin Reverb', 'Bogner Uberschall'][ch], kind: ch % 2 ? 'Full rig' : 'Amp only', by: 'Example', loaded: true };
       later('obs:rig', S.rig, 30); return true; },
     clearCapture: ch => { if (S.rig.amp.channels && S.rig.amp.channels[ch]) S.rig.amp.channels[ch] = { file: '', name: '', loaded: false }; later('obs:rig', S.rig, 10); return true; },
+    // STUDIO: a pretend recorder (no audio here): the playhead runs, a take gets made-up peaks
+    studioSync: a => { ST.arr = a; return true; },
+    studioPlay: b => { stStart(b, false, 0, 0); return true; },
+    studioRecord: (t, b, ci) => { stStart(b - ci, true, t, b); return true; },
+    studioStop: () => { if (!ST.on) return true; const st = stNow(); clearInterval(ST.timer); ST.on = false;
+      const msg = { playing: false, recording: false, pos: st.pos, active: false };
+      if (ST.rec) { const len = Math.max(0, st.pos - ST.recFrom);
+        msg.take = len < .2 ? { discarded: true, track: ST.track, start: ST.recFrom } : { id: ++ST.ids, track: ST.track, start: ST.recFrom, len, name: 'TAKE ' + ST.ids, peaks: Array.from({ length: Math.ceil(len * 8) }, () => .3 + Math.random() * .6), file: '' }; }
+      ST.rec = false; later('obs:studio', msg, 30); return true; },
+    studioExport: () => true, studioReveal: () => true,
     getSettings: () => S.settings,
     setSetting: (k, v) => { S.settings[k] = v; return true; },
     midiMappings: () => S.midi, midiRemove: i => { S.midi.splice(i, 1); return S.midi; },

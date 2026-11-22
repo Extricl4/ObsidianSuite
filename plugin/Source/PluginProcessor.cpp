@@ -11,6 +11,8 @@ ObsidianProcessor::ObsidianProcessor()
 {
     dsp.attach (apvts);
     rigPtr = std::make_unique<Rig> (dsp, apvts);
+    studioPtr = std::make_unique<Studio>();
+    if (isStandalone()) dsp.setStudio (studioPtr.get());      // a DAW already records: STUDIO is the app's
     presets = std::make_unique<PresetManager> (apvts, *rigPtr, *appSettings);
     appSettings->addListener (this);
     applySettings();
@@ -26,6 +28,7 @@ ObsidianProcessor::ObsidianProcessor()
 
 ObsidianProcessor::~ObsidianProcessor()
 {
+    dsp.setStudio (nullptr);
     stopTimer();
     appSettings->removeListener (this);
     appSettings->flush();
@@ -74,6 +77,7 @@ void ObsidianProcessor::settingChanged (const juce::String& key, const juce::var
 
 void ObsidianProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
+    studioPtr->prepare (sampleRate);
     dsp.prepare (sampleRate, juce::jmax (16, samplesPerBlock));
     doubleScratch.setSize (2, juce::jmax (16, samplesPerBlock));
     reportedLatency = -1;

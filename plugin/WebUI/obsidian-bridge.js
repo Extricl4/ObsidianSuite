@@ -391,6 +391,13 @@ function setupChrome(st) {
   if (!st.standalone) {
     const sb = byText('button', 'STUDIO', $('#f0'));
     if (sb) { const prev = sb.previousElementSibling; sb.classList.add('obs-hidden'); if (prev && !prev.children.length && !txt(prev)) prev.classList.add('obs-hidden'); }
+  } else {
+    // the real recorder (Core/Studio.h): the page sends its arrangement, the engine records and plays
+    window.obsStudioEngine = {
+      sync: a => call('studioSync', a), play: b => call('studioPlay', b), record: (t, b, ci) => call('studioRecord', t, b, ci),
+      stop: () => call('studioStop'), export: () => call('studioExport'), reveal: () => call('studioReveal') };
+    on('obs:studio', x => { if (window.obsStudio) safe('studio', () => window.obsStudio.event(x)); });
+    if (window.obsStudio) window.obsStudio.sync();
   }
   // About links
   const URLS = { 'CHECK FOR UPDATES': 'https://github.com/Extricl4/ObsidianSuite/releases', 'MANUAL': 'https://github.com/Extricl4/ObsidianSuite/blob/main/plugin/README.md', 'LICENCES': 'https://github.com/Extricl4/ObsidianSuite/blob/main/plugin/LICENSES.md' };
