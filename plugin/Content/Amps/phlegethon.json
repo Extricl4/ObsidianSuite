@@ -1,0 +1,41 @@
+{
+ "key": "phlegethon",
+ "name": "PHLEGETHON",
+ "type": "nam",
+ "role": "high gain",
+ "folder": "CAPTURE AMPS",
+ "basedOn": "Neural DSP Archetype: Gojira X",
+ "description": "Phlegethon is new, named for the river of fire: a slab of cooling magma, black crust plates split by molten cracks that run white-hot towards the bottom, the name standing in the lava with a moat of fire round every letter. It plays the \"Black Go\" capture of the Gojira X plugin.",
+ "pack": "Black And Blue NAM Profiles (Black Go)",
+ "madeBy": "cyclone",
+ "files": 1,
+ "kind": "Full rig (cab in the capture)",
+ "captures": [
+  "Amps/Phlegethon/Black Go Guitar - cyclone.nam"
+ ],
+ "channelNames": [
+  "Black Go"
+ ],
+ "map": {
+  "knobs": [
+   "Gain",
+   "Bass",
+   "Middle",
+   "Treble",
+   "Presence",
+   "Depth",
+   "Master"
+  ],
+  "gainKnob": 0,
+  "buttons": [],
+  "settings": {
+   "": {
+    "by": "one",
+    "rig": true,
+    "files": [
+     "Amps/Phlegethon/Black Go Guitar - cyclone.nam"
+    ]
+   }
+  }
+ }
+}

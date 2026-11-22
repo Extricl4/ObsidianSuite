@@ -52,7 +52,7 @@ def make(m):
       cab('1x12', mic='Dynamic 57'), post=[fx('lethe', Time=420, Feedback=25, Mix=14, Mode='Tape'), fx('crypt', Decay=1.8, Mix=14)])
     P('BE Crunch', F, 'Crunch', 'Friedman BE: thick, aggressive classic-rock crunch', A('lamia', channel='BE', mic='Mic blend', Gain=6, Bass=5, Middle=6, Treble=6, Presence=5.5, Resonance=5, Master=5),
       gate=-60, doubler=7)
-    P('EL34 Grind', F, 'Crunch', 'Friedman EL34 channel with a Duke of Tone push', A('lamia', channel='EL34', mic='SM57', Gain=6.5, Bass=5, Middle=6.5, Treble=6, Presence=5.5, Resonance=5, Master=5),
+    P('EL34 Grind', F, 'Crunch', 'Friedman EL34 channel with a Duke of Tone push', A('lamia', channel='EL34', mic='SM57', Gain=6.5, Bass=5, Middle=6.5, Treble=7.5, Presence=7, Resonance=5, Master=5),
       pre=[fx('emperor', Mode='OD', Drive=0, Volume=3, Mix=100)], gate=-60)
 
     # ------------------------------------------------------------------ RHYTHM (high gain)

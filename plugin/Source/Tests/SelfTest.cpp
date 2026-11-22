@@ -114,7 +114,8 @@ private:
 
 struct RunStats { float peak = 0, rms = 0; bool finite = true; double maxBlockLoad = 0, avgLoad = 0; };
 
-RunStats render (ObsidianProcessor& p, double sr, int block, double seconds, std::function<float (int)> input, int numInCh = 2)
+RunStats render (ObsidianProcessor& p, double sr, int block, double seconds, std::function<float (int)> input, int numInCh = 2,
+                 std::vector<float>* capture = nullptr)
 {
     RunStats st;
     juce::AudioBuffer<float> buf (2, block);
@@ -136,6 +137,8 @@ RunStats render (ObsidianProcessor& p, double sr, int block, double seconds, std
         const double secs = juce::Time::highResolutionTicksToSeconds (juce::Time::getHighResolutionTicks() - t0);
         const double load = secs / (n / sr);
         st.maxBlockLoad = juce::jmax (st.maxBlockLoad, load); loadSum += load; ++blocks;
+        if (capture != nullptr)
+            for (int i = 0; i < n; ++i) capture->push_back (0.5f * (buf.getSample (0, i) + buf.getSample (1, i)));
         for (int c = 0; c < 2; ++c)
             for (int i = 0; i < n; ++i)
             {
@@ -285,6 +288,47 @@ int runSelfTest (const juce::StringArray& args)
         r.check (st.rms > 0.003f, "sound passes through (rms " + juce::String (juce::Decibels::gainToDecibels (st.rms), 1) + " dB)");
         r.check (st.peak <= 2.0f, "peak stays under the safety ceiling (" + juce::String (st.peak, 2) + ")");
         r.info ("CPU: avg " + juce::String (st.avgLoad * 100, 2) + "% of real time, worst block " + juce::String (st.maxBlockLoad * 100, 1) + "%");
+    }
+
+    r.head ("Cab mics (the sound doesn't depend on what was loaded before)");
+    {
+        // A condenser has no proximity bass; going back to a dynamic at the same distance used to keep the condenser's
+        // flat low end, so a preset sounded thinner after one that used a 414. Compare with a cab that never saw it.
+        auto run = [&] (bool via414) {
+            dsp::CabSection cab; cab.prepare (SR, BLOCK);
+            juce::Random rng (7);
+            std::vector<float> in ((size_t) BLOCK), l ((size_t) BLOCK), rr ((size_t) BLOCK);
+            dsp::CabSection::MicParams a, b; b.mute = true;
+            double sum = 0;
+            for (int blk = 0; blk < 400; ++blk)
+            {
+                a.model = (via414 && blk < 100) ? 2 : 0;
+                for (auto& v : in) v = rng.nextFloat() * 0.4f - 0.2f;
+                cab.process (in.data(), l.data(), rr.data(), BLOCK, a, b, 20.f, 20000.f, true);
+                if (blk >= 300) for (auto v : l) sum += (double) v * v;
+            }
+            return juce::Decibels::gainToDecibels ((float) std::sqrt (sum / (100.0 * BLOCK)));
+        };
+        const float fresh = run (false), after = run (true);
+        r.check (std::abs (fresh - after) < 0.1f, "a dynamic mic sounds the same after a condenser was on it (" + juce::String (fresh, 2) + " / "
+                 + juce::String (after, 2) + " dB)");
+    }
+    r.head ("Full-rig capture amps bypass the plugin's cab");
+    {
+        // every amp whose captures have the cab in them plays all its settings as rigs, so there's never a second cab
+        juce::StringArray bad; int n = 0;
+        for (auto& f : Rig::contentFolder().getChildFile ("Amps").findChildFiles (juce::File::findFiles, false, "*.json"))
+        {
+            const auto key = f.getFileNameWithoutExtension();
+            const auto v = Rig::readAmpFile (key);
+            if (! v["kind"].toString().startsWithIgnoreCase ("Full rig")) continue;
+            ++n;
+            if (auto* st = v["map"]["settings"].getDynamicObject())
+                for (auto& kv : st->getProperties())
+                    if (! (bool) kv.value["rig"]) bad.add (key + " " + kv.name.toString());
+        }
+        r.check (bad.isEmpty(), juce::String (n) + " full-rig amps play every setting without the plugin's cab"
+                 + (bad.isEmpty() ? juce::String() : " (not: " + bad.joinIntoString (", ") + ")"));
     }
 
     // ---------------------------------------------------------------- 1a0. noise gate
@@ -1336,9 +1380,33 @@ int writeFactoryPresets (const juce::File& dir, const juce::File& specFile, floa
     int written = 0, failed = 0;
     juce::StringArray report;
 
+    // Tone check (tools/presets/tonecheck.py): with OBS_DI set to a 48 kHz guitar DI recording, every preset also
+    // plays it and the result goes to OBS_RENDER_DIR as a mono WAV. OBS_ONLY="a|b" limits the run to names (or folders) containing a or b.
+    std::vector<float> di;
+    const auto renderDir = juce::File (juce::SystemStats::getEnvironmentVariable ("OBS_RENDER_DIR", "/tmp/obs-renders"));
+    const auto only = juce::StringArray::fromTokens (juce::SystemStats::getEnvironmentVariable ("OBS_ONLY", {}), "|", {});
+    if (const auto diPath = juce::SystemStats::getEnvironmentVariable ("OBS_DI", {}); diPath.isNotEmpty())
+    {
+        juce::AudioFormatManager fm; fm.registerBasicFormats();
+        if (auto r = std::unique_ptr<juce::AudioFormatReader> (fm.createReaderFor (juce::File (diPath))))
+        {
+            juce::AudioBuffer<float> b (1, (int) r->lengthInSamples);
+            r->read (&b, 0, b.getNumSamples(), 0, true, false);
+            di.assign (b.getReadPointer (0), b.getReadPointer (0) + b.getNumSamples());
+            renderDir.createDirectory();
+        }
+        else std::cout << "Can't read the DI file " << diPath << std::endl;
+    }
+
     for (auto& e : *list)
     {
         const auto name = e["name"].toString();
+        if (! only.isEmpty())
+        {
+            bool hit = false;
+            for (auto& o : only) hit = hit || name.containsIgnoreCase (o.trim()) || e["category"].toString().containsIgnoreCase (o.trim());
+            if (! hit) continue;
+        }
         juce::StringArray problems;
         p.presetManager().loadInit();
 
@@ -1416,6 +1484,21 @@ int writeFactoryPresets (const juce::File& dir, const juce::File& specFile, floa
             outGain = juce::jlimit (-12.f, 12.f, targetDb + (float) (double) e.getProperty ("levelOffset", 0.0) - level);
             outGain = juce::jmin (outGain, -2.f - peak);                       // and keep the peaks under -2 dBFS
             setReal (p, "out.gain", outGain);
+        }
+
+        if (! di.empty())
+        {
+            for (int i = 0; i < 4; ++i) render (p, SR, BLOCK, 0.25, [] (int) { return 0.f; });
+            std::vector<float> out; out.reserve (di.size());
+            render (p, SR, BLOCK, (double) di.size() / SR, [&] (int i) { return di[(size_t) i]; }, 2, &out);
+            juce::AudioBuffer<float> ob (1, (int) out.size()); ob.copyFrom (0, 0, out.data(), (int) out.size());
+            auto f = renderDir.getChildFile (juce::File::createLegalFileName (e["file"].toString().fromLastOccurrenceOf ("/", false, false)
+                                                                                 .upToLastOccurrenceOf (".", false, false)) + ".wav");
+            f.deleteFile();
+            juce::WavAudioFormat wav;
+            if (auto os = std::unique_ptr<juce::OutputStream> (f.createOutputStream()))
+                if (auto w = std::unique_ptr<juce::AudioFormatWriter> (wav.createWriterFor (os.get(), SR, 1, 24, {}, 0)))
+                { os.release(); w->writeFromAudioSampleBuffer (ob, 0, ob.getNumSamples()); }
         }
 
         auto v = p.presetManager().captureCurrent (name, e["category"].toString());

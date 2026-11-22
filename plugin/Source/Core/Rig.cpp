@@ -304,7 +304,16 @@ juce::var Rig::namInfo (const juce::String& path)
 juce::var Rig::readAmpFile (const juce::String& key)
 {
     if (key.isEmpty() || key.containsAnyOf ("/\\:.")) return {};
-    return readJsonFile (contentFolder().getChildFile ("Amps").getChildFile (key + ".json"));
+    auto v = readJsonFile (contentFolder().getChildFile ("Amps").getChildFile (key + ".json"));
+    // An amp whose captures all have the cab in them ("kind": "Full rig ...") plays them as full rigs even where a
+    // setting doesn't say "rig": true itself (Belial, Ares, Lyssa, Melinoe and Nihil didn't), so the plugin's own cab
+    // stays out of the way. Without this they went through two cabs and sounded muffled.
+    if (v["kind"].toString().startsWithIgnoreCase ("Full rig"))
+        if (auto* st = v["map"]["settings"].getDynamicObject())
+            for (auto& kv : st->getProperties())
+                if (auto* o = kv.value.getDynamicObject(); o != nullptr && ! o->hasProperty ("rig"))
+                    o->setProperty ("rig", true);
+    return v;
 }
 juce::var Rig::readFaceFile (const juce::String& key)
 {

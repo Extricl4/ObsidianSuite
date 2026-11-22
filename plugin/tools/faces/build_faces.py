@@ -22,6 +22,7 @@ from pathlib import Path
 from PIL import Image
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from trim import trim, move
+from build_own_amps import own_keys, own_images    # the plugin's own amps (Nemean...): their faces come from build_own_amps.py
 
 ROOT = Path(__file__).resolve().parents[3]
 SITE = ROOT / 'visuals' / 'finished' / 'site'
@@ -37,11 +38,11 @@ def page_data():
 def main():
     amps = page_data()
     (OUT / 'img').mkdir(parents=True, exist_ok=True)
-    have = {p.stem for p in AMPS.glob('*.json')}
-    used, n = set(), 0
+    have = {p.stem for p in AMPS.glob('*.json')} - own_keys()
+    used, n = own_images(), 0
     for a in amps:
         loader = bool(a.get('loader'))      # Eidolon: the NAM loader's face (it has no captures of its own)
-        if a['key'] not in have and not loader:
+        if (a['key'] not in have and not loader) or a['key'] in own_keys():
             continue
         knobs = []
         for k in a['knobs']:

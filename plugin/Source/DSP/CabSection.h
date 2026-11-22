@@ -138,6 +138,7 @@ private:
         if (m.cache[0] != (float) p.model)
         {
             m.cache[0] = (float) p.model;
+            m.cache[2] = -999.f;   // the proximity bass below depends on the mic type too: redo it (it used to keep the last mic's)
             switch (p.model)
             {
                 case 0: // Dynamic 57: presence bump, low-end roll-off

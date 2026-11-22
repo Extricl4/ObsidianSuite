@@ -99,9 +99,27 @@ def slant_mask(a, x0, x1):
     return out
 
 
-def trim(key, bases):
-    """bases: {name: PIL image}. Returns ({name: RGBA image}, (dx, dy), (W, H))."""
+def trim(key, bases, mask_from=None):
+    """bases: {name: PIL image}. Returns ({name: RGBA image}, (dx, dy), (W, H)).
+    mask_from: another render of a head with the same size and camera whose outline is used instead (for a head whose
+    backdrop is too close to its own colour to find its edges, Phlegethon's dark brown on brown)."""
     arrs = {n: np.asarray(im.convert('RGB')).astype(np.float32) for n, im in bases.items()}
+    if mask_from is not None:
+        ref = np.asarray(mask_from.convert('RGB')).astype(np.float32)
+        top = max(0, body_top(ref) - CAP)
+        al_ref, _ = box_mask(ref[top:])
+        zone = ndimage.binary_dilation(al_ref > .5, iterations=CAP)
+        xs = np.arange(al_ref.shape[1])[None, :]
+        x0 = np.where((al_ref > .5).any(0))[0][0]; x1 = np.where((al_ref > .5).any(0))[0][-1] + 1
+        zone &= (xs < x0 + 4 * CAP) | (xs >= x1 - 4 * CAP)
+        al_ref = np.maximum(al_ref, alpha(ref[top:]) * zone)
+        ys, xs_ = np.where(al_ref > 0.02)
+        y0, y1, bx0, bx1 = ys.min(), ys.max() + 1, xs_.min(), xs_.max() + 1
+        res = {}
+        for n, a in arrs.items():
+            rgba = np.dstack([a[top:], al_ref[..., None] * 255])[y0:y1, bx0:bx1]
+            res[n] = Image.fromarray(np.clip(rgba + .5, 0, 255).astype(np.uint8), 'RGBA')
+        return res, (int(bx0), int(top + y0)), (int(bx1 - bx0), int(y1 - y0))
     H0 = next(iter(arrs.values())).shape[0]
     # keep a few rows above the body: corner caps that stand out of the box (Lamia, Erebus...) stay whole
     top = 0 if key in KEEP_TOP else max(0, min(body_top(a) for a in arrs.values()) - CAP)

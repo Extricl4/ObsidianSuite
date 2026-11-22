@@ -1,0 +1,108 @@
+{
+ "key": "nemean",
+ "name": "NEMEAN",
+ "type": "nam",
+ "role": "high gain",
+ "folder": "CAPTURE AMPS",
+ "basedOn": "Dimebag's Randall rigs, one capture per Pantera album",
+ "description": "Nemean is new, in the spirit of Pantera: black diamond tread plate with four claw slashes torn right through it and lit from behind, a polished chrome name over the top. COWBOYS, VULGAR, DRIVEN and TRENDKILL pick the album, and the light behind the slashes, the strip and the power lamp change to that album's colour.",
+ "pack": "Pantera Full Tone",
+ "madeBy": "hellyeahdime",
+ "files": 4,
+ "kind": "Full rig (cab in the capture)",
+ "captures": [
+  "Amps/Nemean/Cowboys From Hell - hellyeahdime.nam",
+  "Amps/Nemean/Vulgar Display of Power (Walk) - hellyeahdime.nam",
+  "Amps/Nemean/Far Beyond Driven (Im Broken) - hellyeahdime.nam",
+  "Amps/Nemean/The Great Southern Trendkill - hellyeahdime.nam"
+ ],
+ "channelNames": [
+  "Cowboys From Hell",
+  "Vulgar Display of Power",
+  "Far Beyond Driven",
+  "The Great Southern Trendkill"
+ ],
+ "map": {
+  "knobs": [
+   "Gain",
+   "Bass",
+   "Middle",
+   "Treble",
+   "Presence",
+   "Tight",
+   "Master"
+  ],
+  "gainKnob": 0,
+  "buttons": [
+   {
+    "id": "album",
+    "names": [
+     "Cowboys From Hell",
+     "Vulgar Display of Power",
+     "Far Beyond Driven",
+     "The Great Southern Trendkill"
+    ],
+    "buttons": [
+     "al1",
+     "al2",
+     "al3",
+     "al4"
+    ],
+    "leds": [
+     [
+      "al1_led"
+     ],
+     [
+      "al2_led"
+     ],
+     [
+      "al3_led"
+     ],
+     [
+      "al4_led"
+     ]
+    ],
+    "skin": true,
+    "perknobs": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "start": 1
+   }
+  ],
+  "settings": {
+   "0": {
+    "by": "one",
+    "rig": true,
+    "files": [
+     "Amps/Nemean/Cowboys From Hell - hellyeahdime.nam"
+    ]
+   },
+   "1": {
+    "by": "one",
+    "rig": true,
+    "files": [
+     "Amps/Nemean/Vulgar Display of Power (Walk) - hellyeahdime.nam"
+    ]
+   },
+   "2": {
+    "by": "one",
+    "rig": true,
+    "files": [
+     "Amps/Nemean/Far Beyond Driven (Im Broken) - hellyeahdime.nam"
+    ]
+   },
+   "3": {
+    "by": "one",
+    "rig": true,
+    "files": [
+     "Amps/Nemean/The Great Southern Trendkill - hellyeahdime.nam"
+    ]
+   }
+  }
+ }
+}

@@ -65,7 +65,7 @@ The amp chooser keeps them in the **OBSIDIAN AMPS** folder.
 
 ## The capture amps (the amp pack)
 
-The 30 finished amps from the visuals chat (`visuals/finished/`) are in the plugin, in the **CAPTURE AMPS** folder
+The 30 finished amps from the visuals chat (`visuals/finished/`) and the plugin's own Nemean and Phlegethon are in the plugin, in the **CAPTURE AMPS** folder
 of the amp chooser, each with its real face: the layer renders (face on / off, a pointer per knob, a sprite per lit
 LED), so knobs turn, buttons and LEDs work, the lamp is the power switch, and Moirai / Typhon change colour with the
 channel.
@@ -83,6 +83,15 @@ channel.
   (CHORUS button + Speed / Depth), Kratos's CRUNCH (more drive) and BRIGHT. Amps whose channels keep their own
   knobs (Moirai, Typhon, Umbra, Lamia...) swap them with the channel, also when a DAW automates the channel.
 * **Cab in the capture.** Captures that already contain a cab (marked "rig") bypass the CAB section while they play.
+  An amp whose `kind` starts with "Full rig" counts every setting as a rig (Belial, Ares, Lyssa, Melinoe and Nihil
+  weren't marked and went through two cabs, which is why their presets sounded muffled; fixed 2026-11-22).
+* **The plugin's own amps.** Two amps aren't from the visuals chat: **Nemean** (Pantera, the "Pantera Full Tone"
+  captures by hellyeahdime: COWBOYS / VULGAR / DRIVEN / TRENDKILL pick the album, and the glow behind the claw
+  slashes, the light strip, the power lamp and the LED take that album's colour) and **Phlegethon** (Gojira, the
+  "Black Go" capture of the Archetype: Gojira X plugin by cyclone: a slab of cooling magma). Their wiring is
+  `Content/Amps/nemean.json` / `phlegethon.json` (written by hand). Their looks are Blender renders made here:
+  `tools/faces/amps/make_amps.py` (art + specs), `tools/faces/amps/render.sh` (a copy of the visuals renderer,
+  so nothing is written into `visuals/`), then `tools/faces/build_own_amps.py` makes their faces.
 * **Level.** When an amp loads, its default capture plays a fixed test riff and the amp is trimmed so every amp
   plays about as loud as the in-house amps (the self-test measures them: −32.7 to −25.5 dB, in-house −29.5).
 * **Files.** `Content/Amps/*.json` (the wiring, from `visuals/finished/export_amps.py`), `Content/Captures/Amps/`
@@ -244,6 +253,13 @@ built-in copies (copy `WebUI/obsidian-bridge.js` in too if you're editing the br
 plugin, plays a test riff through it and sets the output so they all play about equally loud (needs the amp
 and pedal packs). Or save a preset in the plugin and copy the file into `Presets\Factory\` (rename
 `.obsidian` to `.json`). File names must be unique across all folders.
+
+**Tone check**: `tools/presets/tonecheck.py` measures every preset on a real guitar DI (the plugin renders it with
+`OBS_DI=<48 kHz wav> OBS_RENDER_DIR=<folder>` set while writing presets; `OBS_ONLY="a|b"` limits the run). It
+reports lows, low-mid mud, mids, bite (2-5 kHz) and fizz against full-rig captures made by tone creators, flags
+dull / muddy / fizzy / boomy / thin presets, and with `--fix` writes per-preset EQ corrections to `tonefix.json`,
+which `make_presets.py` lays on top of each preset's own EQ. Run it again on fresh renders to refine them. The
+Pantera presets are tuned by hand (listed in `KEEP`).
 
 **Version**: change `VERSION`.
 

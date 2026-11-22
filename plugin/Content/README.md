@@ -47,6 +47,10 @@ Each `Amps\<key>.json` has:
   `axes` naming the knobs and `w` their weights) and the closest one plays). `selector` is Eos's SOLO switch.
   `rig: true` means the cab is inside that capture, so the cab section should be bypassed.
 - Regenerate with `python3 visuals/finished/export_amps.py`. It also checks every file is here.
+- Nemean and Phlegethon are the plugin's own amps (not on the finished-amps page): their `Amps\<key>.json` is written
+  by hand and their faces come from `plugin/tools/faces/build_own_amps.py` (art and Blender specs in `plugin/tools/faces/amps/`).
+- An amp whose `kind` starts with "Full rig" plays every setting as a full rig (the plugin's cab bypassed) unless the
+  setting says `"rig": false`.
 
 The installer's pack option installs `Captures\Amps`, `Amps\*.json` and `Faces\` (the amp faces the plugin draws,
 made by `plugin/tools/faces/build_faces.py` from `visuals/finished/site`), and the release zip carries them under
@@ -80,6 +84,8 @@ These files were made by other people and downloaded by Emil for his own rig. Al
 | Hyperion | 17 captures | Dumble ODS 102 Ford Hyper Accuracy | slamminmofo |
 | Hecate | 1 captures | EVH 5150 | rusen |
 | Typhon | 3 captures | 5150 Stealth 100w Mesa OS Full Rig - Blue, Red and Green | jpisoutoftune |
+| Nemean | 4 captures | Pantera Full Tone (one per album: Cowboys From Hell, Walk, I'm Broken, The Great Southern Trendkill) | hellyeahdime |
+| Phlegethon | 1 capture | Black And Blue NAM Profiles: Black Go (Archetype Gojira) | cyclone |
 | Tyche | 1 captures | Marshall JMP-50 Lead 1969 Plexi A2 | amalgamaudio |
 | Thanatos | 1 captures | Soldano SLO-100 - Drive | amalgamaudio |
 | Orpheus | 2 captures | Acoustic Sim | gloo |

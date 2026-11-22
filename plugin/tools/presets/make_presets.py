@@ -110,7 +110,8 @@ FALLBACK = {'achlys': 'recto', 'ares': 'vh4', 'astraea': 'top30', 'belial': 'sty
             'dionysus': 'slo100', 'eos': 'glass65', 'erebus': 'vh4', 'eris': 'slo100', 'hecate': 'styx51', 'hyperion': 'slo100',
             'kratos': 'styx51', 'lamia': 'brit800', 'lyssa': 'styx51', 'melinoe': 'glass65', 'moirai': 'styx51', 'moros': 'core',
             'niflheim': 'core', 'nihil': 'core', 'nyx': 'vh4', 'orpheus': 'glass65', 'persephone': 'glass65', 'strix': 'recto',
-            'talos': 'recto', 'thanatos': 'slo100', 'tyche': 'plexi68', 'typhon': 'styx51', 'umbra': 'recto', 'vulcan': 'vh4'}
+            'talos': 'recto', 'thanatos': 'slo100', 'tyche': 'plexi68', 'typhon': 'styx51', 'umbra': 'recto', 'vulcan': 'vh4',
+            'nemean': 'styx51', 'phlegethon': 'vh4'}
 
 # ------------------------------------------------------------------ pedals and effects
 class Fx:
@@ -216,6 +217,8 @@ EQ = {
 }
 
 PRESETS = []
+# per-preset EQ corrections from the tone check (tonecheck.py --fix), keyed by preset name
+TONEFIX = json.loads((HERE / 'tonefix.json').read_text()) if (HERE / 'tonefix.json').exists() else {}
 def P(name, folder, type, note, amp, cab_=None, pre=(), post=(), sfx=(), eq='flat', gate=None, doubler=None, width=None,
       synth=None, params=None, level=0.0, transpose=0, in_gain=None, measure=True):
     PRESETS.append(dict(name=name, folder=folder, type=type, note=note, amp=amp, cab=cab_, pre=list(pre), post=list(post), sfx=list(sfx),
@@ -245,6 +248,8 @@ def build_spec():
         if p['in_gain'] is not None: params['in.gain'] = p['in_gain']
         if p['transpose']: params['transpose'] = p['transpose']; params['transpose.hq'] = 1
         eq = EQ[p['eq']] if isinstance(p['eq'], str) else p['eq']
+        fix = TONEFIX.get(name)                      # tonecheck.py --fix: measured on a real DI, laid on top
+        if fix: eq = [max(-12.0, min(12.0, round(a + b, 1))) for a, b in zip(eq, fix)]
         for i, g in enumerate(eq): params[f'eq.b{i + 1}'] = g
         steps = None
         if p['synth']:
@@ -261,7 +266,7 @@ def build_spec():
         e = {'name': name, 'category': cat, 'type': p['type'], 'note': p['note'], 'file': file,
              'amp': amp, 'cab': cabkey, 'racks': racks, 'params': params, 'levelOffset': p['level']}
         if not p['measure']: e['level'] = False
-        if isinstance(p['eq'], str) and p['eq'] != 'flat': e['eqName'] = p['eq'].capitalize()
+        if isinstance(p['eq'], str) and p['eq'] != 'flat' and not TONEFIX.get(name): e['eqName'] = p['eq'].capitalize()
         if steps: e['synSteps'] = steps
         if p['amp'].key in G.capture:
             fb = p['amp'].fallback

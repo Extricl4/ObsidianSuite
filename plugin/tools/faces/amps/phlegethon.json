@@ -1,0 +1,282 @@
+{
+ "size": [
+  24,
+  10,
+  10.5
+ ],
+ "border": 0.7,
+ "recess": 1.0,
+ "bevel": 0.2,
+ "rimcolor": [
+  1.0,
+  0.55,
+  0.3
+ ],
+ "body": {
+  "color": [
+   0.02,
+   0.018,
+   0.017
+  ],
+  "rough": 0.95,
+  "bump": [
+   "noise",
+   14,
+   0.8
+  ]
+ },
+ "handle": {
+  "w": 8.5,
+  "h": 1.2,
+  "color": [
+   0.014,
+   0.013,
+   0.012
+  ]
+ },
+ "world": [
+  0.012,
+  0.008,
+  0.006
+ ],
+ "glow_strips": [
+  {
+   "z": 4.25,
+   "color": [
+    1.0,
+    0.3,
+    0.03
+   ],
+   "strength": 4.5,
+   "w": 22.54
+  }
+ ],
+ "zones": [
+  {
+   "type": "relief",
+   "z": [
+    4.25,
+    9.8
+   ],
+   "height": "art/phlegethon_h.png",
+   "holes": "art/phlegethon_holes.png",
+   "depth": 0.42,
+   "res": 84,
+   "color": [
+    0.085,
+    0.076,
+    0.07
+   ],
+   "low": [
+    0.014,
+    0.01,
+    0.009
+   ],
+   "lo_at": 0.05,
+   "hi_at": 0.7,
+   "metal": 0.0,
+   "rough": 0.9,
+   "grain": [
+    90,
+    0.04
+   ],
+   "emit": [
+    [
+     1.0,
+     0.14,
+     0.005
+    ],
+    3.2,
+    0.28
+   ],
+   "emit_pow": 2.2,
+   "gloss": [
+    0.86,
+    [
+     0.006,
+     0.006,
+     0.008
+    ],
+    0.08,
+    0.0
+   ],
+   "glass": "art/phlegethon_glow.png",
+   "glass_strength": 2.4,
+   "glass_y": 0.3,
+   "glass_lights": [
+    {
+     "x": -7,
+     "color": [
+      1.0,
+      0.3,
+      0.03
+     ],
+     "energy": 12,
+     "size": 7
+    },
+    {
+     "x": 0,
+     "color": [
+      1.0,
+      0.3,
+      0.03
+     ],
+     "energy": 12,
+     "size": 7
+    },
+    {
+     "x": 7,
+     "color": [
+      1.0,
+      0.3,
+      0.03
+     ],
+     "energy": 12,
+     "size": 7
+    }
+   ]
+  },
+  {
+   "type": "panel",
+   "z": [
+    0.7,
+    4.25
+   ],
+   "art": "art/phlegethon_panel.png",
+   "artemis": 0.25,
+   "color": [
+    0.03,
+    0.027,
+    0.025
+   ],
+   "metal": 0,
+   "rough": 0.95,
+   "bump": [
+    "noise",
+    30,
+    0.5
+   ],
+   "knobs": [
+    {
+     "x": -8.25,
+     "z": 2.2975,
+     "r": 0.44,
+     "v": 0.7,
+     "shape": "skirt2",
+     "mat": "obsidian",
+     "mat2": "blackchrome",
+     "ptr": [
+      1.0,
+      0.36,
+      0.05
+     ]
+    },
+    {
+     "x": -5.75,
+     "z": 2.2975,
+     "r": 0.44,
+     "v": 0.55,
+     "shape": "skirt2",
+     "mat": "obsidian",
+     "mat2": "blackchrome",
+     "ptr": [
+      1.0,
+      0.36,
+      0.05
+     ]
+    },
+    {
+     "x": -3.25,
+     "z": 2.2975,
+     "r": 0.44,
+     "v": 0.45,
+     "shape": "skirt2",
+     "mat": "obsidian",
+     "mat2": "blackchrome",
+     "ptr": [
+      1.0,
+      0.36,
+      0.05
+     ]
+    },
+    {
+     "x": -0.75,
+     "z": 2.2975,
+     "r": 0.44,
+     "v": 0.55,
+     "shape": "skirt2",
+     "mat": "obsidian",
+     "mat2": "blackchrome",
+     "ptr": [
+      1.0,
+      0.36,
+      0.05
+     ]
+    },
+    {
+     "x": 1.75,
+     "z": 2.2975,
+     "r": 0.44,
+     "v": 0.5,
+     "shape": "skirt2",
+     "mat": "obsidian",
+     "mat2": "blackchrome",
+     "ptr": [
+      1.0,
+      0.36,
+      0.05
+     ]
+    },
+    {
+     "x": 4.25,
+     "z": 2.2975,
+     "r": 0.44,
+     "v": 0.5,
+     "shape": "skirt2",
+     "mat": "obsidian",
+     "mat2": "blackchrome",
+     "ptr": [
+      1.0,
+      0.36,
+      0.05
+     ]
+    },
+    {
+     "x": 6.75,
+     "z": 2.2975,
+     "r": 0.44,
+     "v": 0.5,
+     "shape": "skirt2",
+     "mat": "obsidian",
+     "mat2": "blackchrome",
+     "ptr": [
+      1.0,
+      0.36,
+      0.05
+     ]
+    }
+   ],
+   "jacks": [
+    [
+     -10.3,
+     2.2975,
+     "jack"
+    ]
+   ],
+   "jewels": [
+    {
+     "x": 9.75,
+     "z": 2.2975,
+     "color": [
+      1.0,
+      0.3,
+      0.03
+     ],
+     "r": 0.3,
+     "strength": 4,
+     "id": "power"
+    }
+   ]
+  }
+ ]
+}

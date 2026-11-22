@@ -266,8 +266,8 @@ def make(m):
       ONEx12, post=[room(12)])
     a("Who Did You Think I Was", 'Crunch', "Try! (2005) · trio blues-rock crunch", A('tyche', Gain=5, Treble=6, Middle=6.5, Bass=5, Presence=5.5, Volume=6, Master=6),
       cab('2x12'), pre=[klon(2, 60, 4, 'HIGH')], post=[room(12)])
-    a("Bold as Love", 'Crunch', "Continuum (2006) · a Hendrix cover: vibe and crunch", A('melinoe', mic='SM57', Volume=6.5, Treble=6, Bass=5, Middle=6, Reverb=2),
-      pre=[fx('overdrive', Drive=4, Tone=6, Level=4, Mix=100), vibe(2.8, 55)], post=[spring(14)])
+    a("Bold as Love", 'Crunch', "Continuum (2006) · a Hendrix cover: vibe and crunch", A('melinoe', mic='SM57', Volume=6, Treble=7.5, Bass=5, Middle=6, Reverb=2),
+      pre=[fx('overdrive', Drive=4, Tone=6, Level=0.5, Mix=100), vibe(2.8, 55)], post=[spring(14)])
     a("New Light", 'Clean', "Sob Rock era (2018) · glossy 80s clean with chorus", A('persephone', channel='Ch I', voice='Bright', Volume=4.5, Treble=6.5, Middle=5, Bass=5, switches=['chorus'], Speed=3, Depth=5),
       pre=[comp(-26, 4, 7)], post=[dly(360, 20, 12), hall(2.4, 16)])
     a("Stop This Train", 'Acoustic', "Continuum (2006) · fingerpicked acoustic", A('orpheus', take='Take 2', Gain=3.5, Bass=5, Middle=5, Treble=5.5, Body=7, Reverb=2, Volume=5),
@@ -294,18 +294,42 @@ def make(m):
 
     # =====================================================================================
     a = artist('Pantera')
-    a("Cowboys from Hell", 'Rhythm', "Cowboys from Hell (1990) · scooped, cutting, fast", A('belial', mic='Mic centre', Gain=6.5, Bass=6, Middle=3.5, Treble=6.5, Presence=6.5, Depth=6, Master=5),
-      pre=[boost(6, 150, 0, 2)], eq='scoop', gate=-48, doubler=6)
-    a("Walk", 'Rhythm', "Vulgar Display of Power (1992) · the swaggering, scooped groove", A('belial', mic='Mic centre', Gain=6.5, Bass=6.5, Middle=3, Treble=6.5, Presence=6.5, Depth=6.5, Master=5),
-      eq=[1, 2, 0, -5, -3, 0, 2.5, 1, -1], gate=-46, doubler=6)
-    a("Domination", 'Rhythm', "Cowboys from Hell (1990) · thrash breakdown tone", A('belial', mic='Mic off centre', Gain=6.5, Bass=6, Middle=4, Treble=6.5, Presence=6, Depth=6, Master=5),
-      eq='scoop', gate=-48, doubler=6)
+    # Nemean plays the "Pantera Full Tone" captures (hellyeahdime), one per album. They come out very bright and deeply
+    # scooped (Cowboys most of all), so every preset puts mids back, cuts the fizz above 6 kHz hard and keeps the bite.
+    # Hand-tuned against the tone check (tonecheck.py): mids about -6 dB, bite +2, fizz about -16 like a bright real rig.
+    CFH, VDOP, FBD, TGST = 'Cowboys From Hell', 'Vulgar Display of Power', 'Far Beyond Driven', 'The Great Southern Trendkill'
+    a("Cowboys from Hell", 'Rhythm', "Cowboys from Hell (1990) · the rawest album: biting, fast, a touch of mids left in",
+      A('nemean', album=CFH, Gain=6, Bass=5.5, Middle=8, Treble=4, Presence=2.5, Tight=4, Master=5),
+      eq=[0, 1, 0, 1, 2, 0, -1, -8, -8], gate=-50, doubler=6, params={'eq.hc': 7500})
+    a("Domination", 'Rhythm', "Cowboys from Hell (1990) · the thrash riffing and the breakdown",
+      A('nemean', album=CFH, Gain=6.5, Bass=6, Middle=8, Treble=4, Presence=2.5, Tight=4.5, Master=5),
+      eq=[0, 1.5, 0, 0.5, 2, 0, -1, -8, -8], gate=-50, doubler=6, params={'eq.hc': 7500})
     a("Cemetery Gates (Clean)", 'Clean', "Cowboys from Hell (1990) · the clean intro with chorus and echo", A('persephone', channel='Ch I', voice='Bright', Volume=4.5, Treble=6.5, Middle=5, Bass=5, switches=['chorus'], Speed=3, Depth=6),
       post=[dly(460, 30, 18), hall(3, 22)])
-    a("Cemetery Gates (Solo)", 'Lead', "Cowboys from Hell (1990) · the screaming solo", A('belial', mic='Mic centre', Gain=6.5, Bass=5, Middle=5.5, Treble=6.5, Presence=6.5, Depth=5.5, Master=5),
-      gate=-56, pre=[wah('Envelope', 6, 7, 7)], post=[dly(420, 28, 18), plate(2.4, 16)])
-    a("Floods (Solo)", 'Lead', "The Great Southern Trendkill (1996) · the long, wide outro solo", A('belial', mic='Mic centre', Gain=6, Bass=5, Middle=6, Treble=6, Presence=6, Depth=5, Master=5),
-      gate=-58, post=[dly(500, 35, 22, 'Ping-Pong'), hall(3.2, 20)])
+    a("Cemetery Gates (Solo)", 'Lead', "Cowboys from Hell (1990) · the screaming solo, more mids so it sings",
+      A('nemean', album=CFH, Gain=6.5, Bass=4.5, Middle=8.5, Treble=4, Presence=2.5, Tight=5, Master=5),
+      eq=[-1, 0, 0, 2, 2.5, 0, -1, -8, -8], gate=-58, params={'eq.hc': 7000}, post=[dly(420, 28, 18), plate(2.4, 16)])
+    a("Walk", 'Rhythm', "Vulgar Display of Power (1992) · the swaggering, scooped groove",
+      A('nemean', album=VDOP, Gain=6, Bass=6.5, Middle=8.5, Treble=4, Presence=3.5, Tight=3.5, Master=5),
+      eq=[1, 2, 1, 2, 2, 0, 0, -6, -6], gate=-48, doubler=6, params={'eq.hc': 9000})
+    a("Mouth for War", 'Rhythm', "Vulgar Display of Power (1992) · tight, punchy and mean",
+      A('nemean', album=VDOP, Gain=6.5, Bass=6, Middle=8.5, Treble=4, Presence=3.5, Tight=4.5, Master=5),
+      eq=[0, 1.5, 0.5, 2, 2, 0, 0, -6, -6], gate=-48, doubler=6, params={'eq.hc': 9000})
+    a("I'm Broken", 'Rhythm', "Far Beyond Driven (1994) · heavier and thicker, the low end chugs",
+      A('nemean', album=FBD, Gain=6.5, Bass=6, Middle=7.5, Treble=4, Presence=3.5, Tight=4, Master=5),
+      eq=[1, 1.5, 0, 1, 1.5, 0, 0, -6.5, -6], gate=-48, doubler=6, params={'eq.hc': 9000})
+    a("5 Minutes Alone", 'Rhythm', "Far Beyond Driven (1994) · the slow, crushing groove",
+      A('nemean', album=FBD, Gain=7, Bass=6.5, Middle=7.5, Treble=4, Presence=3.5, Tight=3.5, Master=5),
+      eq=[1.5, 1.5, 0, 1, 1.5, 0, 0, -6.5, -6], gate=-46, doubler=7, params={'eq.hc': 9000})
+    a("Drag the Waters", 'Rhythm', "The Great Southern Trendkill (1996) · dark, saturated, swampy",
+      A('nemean', album=TGST, Gain=6.5, Bass=5.5, Middle=6.5, Treble=5, Presence=4.5, Tight=4, Master=5),
+      eq=[0.5, 1, 0, 0.5, 0.5, 0, 0, -3.5, -5], gate=-48, doubler=6, params={'eq.hc': 10000})
+    a("The Great Southern Trendkill", 'Rhythm', "The Great Southern Trendkill (1996) · the title track's fast, angry riffing",
+      A('nemean', album=TGST, Gain=7, Bass=5.5, Middle=6.5, Treble=5, Presence=4.5, Tight=4.5, Master=5),
+      eq=[0, 1, 0, 0.5, 0.5, 0, 0, -3.5, -5], gate=-48, doubler=6, params={'eq.hc': 10000})
+    a("Floods (Solo)", 'Lead', "The Great Southern Trendkill (1996) · the long, wide outro solo",
+      A('nemean', album=TGST, Gain=6.5, Bass=4.5, Middle=7, Treble=5, Presence=4.5, Tight=5, Master=5),
+      eq=[-1, 0, 1, 1.5, 1.5, 0.5, 0, -3, -5], gate=-58, params={'eq.hc': 9500}, post=[dly(500, 35, 22, 'Ping-Pong'), hall(3.2, 20)])
 
     # =====================================================================================
     a = artist('Dream Theater')
@@ -335,14 +359,21 @@ def make(m):
 
     # =====================================================================================
     a = artist('Gojira')
-    a("Flying Whales", 'Rhythm', "From Mars to Sirius (2005) · massive, organic heavy tone", A('moirai', channel='Red · lead', Gain=5.5, Volume=5, Low=6, Mid=5.5, High=6, Presence=5.5, Resonance=6),
-      eq='modern', gate=-48, doubler=7)
-    a("Stranded", 'Rhythm', "Magma (2016) · the whammy squeals: octave-up whammy blended in", A('moirai', channel='Red · lead', Gain=5.5, Volume=5, Low=5.5, Mid=5.5, High=6, Presence=6, Resonance=5.5),
-      pre=[whammy(12, 55)], eq='tight', gate=-46, doubler=6)
-    a("L'Enfant Sauvage", 'Rhythm', "L'Enfant Sauvage (2012) · tight, choppy, pick-scrape heavy", A('typhon', channel='Red', Gain=6, Volume=5, Low=6, Mid=5, High=6, Presence=6, Resonance=6),
-      pre=[ts('II', -3, 3)], eq='tight', gate=-46, doubler=6)
-    a("Silvera", 'Rhythm', "Magma (2016) · modern, punchy, groovy", A('typhon', channel='Red', Gain=5.5, Volume=5, Low=5.5, Mid=5.5, High=6, Presence=6, Resonance=5.5),
-      eq='tight', gate=-46, doubler=6)
+    # Phlegethon plays the "Black Go" capture of the Gojira X plugin: already tight and mid-forward, so the EQ stays light.
+    a("Flying Whales", 'Rhythm', "From Mars to Sirius (2005) · massive, organic heavy tone",
+      A('phlegethon', Gain=6, Bass=6, Middle=5.5, Treble=5.5, Presence=5.5, Depth=6, Master=5), eq=[0.5, 1, 0, -0.5, 0, 0.5, 1, 0, -1], gate=-50, doubler=7)
+    a("Backbone", 'Rhythm', "From Mars to Sirius (2005) · fast, galloping and dry",
+      A('phlegethon', Gain=6.5, Bass=5.5, Middle=5.5, Treble=6, Presence=6, Depth=5.5, Master=5), eq=[0, 0.5, -0.5, -0.5, 0, 1, 1, 0, -1], gate=-48, doubler=6)
+    a("Stranded", 'Rhythm', "Magma (2016) · the whammy squeals: octave-up whammy blended in",
+      A('phlegethon', Gain=6, Bass=5.5, Middle=5.5, Treble=6, Presence=6, Depth=5.5, Master=5),
+      pre=[whammy(12, 55)], eq=[0, 0.5, 0, -0.5, 0, 1, 1, 0, -1], gate=-48, doubler=6)
+    a("L'Enfant Sauvage", 'Rhythm', "L'Enfant Sauvage (2012) · tight, choppy, pick-scrape heavy",
+      A('phlegethon', Gain=6, Bass=5.5, Middle=6, Treble=6, Presence=6, Depth=5, Master=5),
+      pre=[ts('II', -3, 3)], eq=[-0.5, 0.5, 0, 0, 0.5, 1, 1, 0, -1], gate=-48, doubler=6)
+    a("Silvera", 'Rhythm', "Magma (2016) · modern, punchy, groovy",
+      A('phlegethon', Gain=5.5, Bass=5.5, Middle=5.5, Treble=6, Presence=6, Depth=5.5, Master=5), eq=[0, 0.5, 0, -0.5, 0, 1, 1, 0, -1], gate=-48, doubler=6)
+    a("Born for One Thing", 'Rhythm', "Fortitude (2021) · thick, bouncy, the strings slapping",
+      A('phlegethon', Gain=6, Bass=6, Middle=5, Treble=5.5, Presence=5.5, Depth=6, Master=5), eq=[0.5, 1, -0.5, -1, 0, 0.5, 1, 0, -1], gate=-48, doubler=7)
     a("Amazonia (Clean)", 'Clean', "Fortitude (2021) · earthy clean with a twang", A('melinoe', mic='SM57 + 414', Volume=4.5, Treble=6, Bass=5, Middle=5.5, Reverb=2),
       post=[dly(380, 20, 12, 'Tape'), room(12)])
 
@@ -437,12 +468,12 @@ def make(m):
     a = artist('Stevie Ray Vaughan')
     a("Pride and Joy", 'Crunch', "Texas Flood (1983) · a Tube Screamer into a loud Fender. E flat tuning", A('melinoe', mic='SM57', Volume=6, Treble=6.5, Bass=5, Middle=6, Reverb=2.5),
       pre=[fx('overdrive', Drive=2.5, Tone=6, Level=0, Mix=100)], post=[spring(14)])
-    a("Texas Flood", 'Lead', "Texas Flood (1983) · slow blues, fat and stinging", A('melinoe', mic='SM57 + 414', Volume=6, Treble=6, Bass=5.5, Middle=6.5, Reverb=3),
-      pre=[fx('overdrive', Drive=3.5, Tone=5.5, Level=0, Mix=100)], post=[spring(16)])
+    a("Texas Flood", 'Lead', "Texas Flood (1983) · slow blues, fat and stinging", A('melinoe', mic='SM57 + 414', Volume=5.5, Treble=7.5, Bass=5.5, Middle=6.5, Reverb=3),
+      pre=[fx('overdrive', Drive=3.5, Tone=5.5, Level=-1.5, Mix=100)], post=[spring(16)])
     a("Lenny", 'Clean', "Texas Flood (1983) · soft, swirling clean through a rotary speaker", A('melinoe', mic='SM57 + 414', Volume=4.5, Treble=6, Bass=5, Middle=5, Reverb=2.5),
       pre=[vibe(1.4, 55, 'Rotary')], post=[spring(18)])
-    a("Scuttle Buttin'", 'Crunch', "Couldn't Stand the Weather (1984) · fast, bright, a bit more drive", A('melinoe', mic='SM57', Volume=6, Treble=7, Bass=5, Middle=6, Reverb=2),
-      pre=[fx('overdrive', Drive=4, Tone=6.5, Level=-2, Mix=100)], post=[spring(12)])
+    a("Scuttle Buttin'", 'Crunch', "Couldn't Stand the Weather (1984) · fast, bright, a bit more drive", A('melinoe', mic='SM57', Volume=5.5, Treble=7, Bass=5, Middle=6, Reverb=2),
+      pre=[fx('overdrive', Drive=4, Tone=6.5, Level=-3.5, Mix=100)], post=[spring(12)])
 
     # =====================================================================================
     a = artist('Queen')
@@ -731,7 +762,7 @@ def make(m):
       gate=-56, doubler=8, width=125)
     a("Best of You", 'Rhythm', "In Your Honor (2005) · raw, wide chorus wall", A('lamia', channel='BE', mic='Mic blend', Gain=6.5, Bass=5.5, Middle=6, Treble=6, Presence=5.5, Resonance=5, Master=5),
       gate=-56, doubler=8, width=125)
-    a("Learn to Fly", 'Crunch', "There Is Nothing Left to Lose (1999) · bright pop-rock crunch", A('lamia', channel='EL34', mic='SM57', Gain=5.5, Bass=5, Middle=6, Treble=6.5, Presence=6, Resonance=5, Master=5),
+    a("Learn to Fly", 'Crunch', "There Is Nothing Left to Lose (1999) · bright pop-rock crunch", A('lamia', channel='EL34', mic='SM57', Gain=5.5, Bass=5, Middle=6, Treble=8.5, Presence=8, Resonance=5, Master=5),
       gate=-60, doubler=7)
 
     # =====================================================================================
