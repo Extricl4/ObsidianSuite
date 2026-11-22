@@ -107,6 +107,52 @@ public:
             quit();
             return;
         }
+        if (const int i = args.indexOf ("--dump-presets"); i >= 0)
+        {
+            // for the web preview: what every built-in preset does to the knobs (normalised, only
+            // those that differ from Default) and the rig, exactly as the page would receive them
+            ObsidianProcessor p;
+            p.setPlayConfigDetails (2, 2, 48000, 256);
+            p.prepareToPlay (48000, 256);
+            const auto oldLast = p.settings().get ("lastPreset");
+            obs::Rig::asyncFileLoads = false;
+            auto& pm = p.presetManager();
+            auto norms = [&p]
+            {
+                juce::NamedValueSet v;
+                for (auto* prm : p.getParameters())
+                    if (auto* r = dynamic_cast<juce::RangedAudioParameter*> (prm)) v.set (r->getParameterID(), std::round (r->getValue() * 1.0e6) / 1.0e6);
+                return v;
+            };
+            pm.loadInit();
+            const auto def = norms();
+            auto out = new juce::DynamicObject(), all = new juce::DynamicObject();
+            out->setProperty ("defaultRig", p.rig().toJson());
+            auto dv = new juce::DynamicObject();
+            for (auto& nv : def) dv->setProperty (nv.name, nv.value);
+            out->setProperty ("defaults", juce::var (dv));
+            int n = 0;
+            for (auto& pr : pm.list())
+            {
+                if (! pr.factory || ! pm.load (pr.id)) continue;
+                auto e = new juce::DynamicObject(), pv = new juce::DynamicObject();
+                const auto now = norms();
+                for (auto& nv : now) if (std::abs ((double) nv.value - (double) def[nv.name]) > 1.0e-6) pv->setProperty (nv.name, nv.value);
+                e->setProperty ("p", juce::var (pv));
+                e->setProperty ("rig", p.rig().toJson());
+                all->setProperty (pr.id, juce::var (e));
+                if (++n % 40 == 0) p.engine().collectGarbage (true);
+            }
+            out->setProperty ("presets", juce::var (all));
+            obs::Rig::asyncFileLoads = true;
+            pm.loadInit();
+            p.settings().set ("lastPreset", oldLast);
+            juce::File::getCurrentWorkingDirectory().getChildFile (args[i + 1].unquoted()).replaceWithText (juce::JSON::toString (juce::var (out), true));
+            std::printf ("%d presets\n", n);
+            p.releaseResources();
+            quit();
+            return;
+        }
         if (args.contains ("--selftest"))
         {
             setApplicationReturnValue (runSelfTest (args));

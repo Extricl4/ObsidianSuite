@@ -17,9 +17,32 @@ import run  # noqa: E402  (reuses its page + standalone state builder)
 WEB = HERE / 'web'
 
 
+def preset_states():
+    """Runs the standalone with --dump-presets (OBS_BIN, or the Linux dev build)."""
+    import os, subprocess, tempfile
+    exe = Path(os.environ.get('OBS_BIN', '/home/claude/build/ObsidianSuite_artefacts/Release/Standalone/Obsidian Amp Suite'))
+    if not exe.exists(): return None
+    with tempfile.TemporaryDirectory() as tmp:
+        out = Path(tmp) / 'presets.json'
+        subprocess.run([str(exe), '--dump-presets', str(out)], cwd=tmp, check=True, timeout=600, capture_output=True)
+        d = json.loads(out.read_text(encoding='utf-8'))
+    for r in [d['defaultRig']] + [e['rig'] for e in d['presets'].values()]:
+        r['busy'] = False                                   # the preview has no loading to wait for
+        a = r.get('amp') or {}
+        if a.get('face'): a['face']['loaded'] = True
+    return d
+
+
 def main():
     state = run.build_page(standalone=True)
     state['presets'] = run.factory_presets()    # the 390 built-in presets (Factory + Artists), as the app lists them
+    # what each one does to the knobs and the rig, from the real plugin, so LOAD changes the amp, pedals, synth...
+    states = preset_states()
+    if states:
+        state['presetDefaults'], state['presetDefaultRig'] = states['defaults'], states['defaultRig']
+        state['presetStates'] = states['presets']
+    else:
+        print('  (no plugin build found: presets will only change their name; set OBS_BIN to the standalone)')
     # every amp of the amp pack, with its face
     state['amps'] = [a for a in state['amps'] if a.get('type') != 'capture']
     state['amps'] += [run.capture_entry(f.stem) for f in sorted((run.CONTENT / 'Amps').glob('*.json'))]

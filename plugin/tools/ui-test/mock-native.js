@@ -14,6 +14,14 @@
   const params = {};             // id -> norm
   const emit = (ev, payload) => (listeners[ev] || []).forEach(fn => { try { fn(payload); } catch (e) { console.error(e); } });
   const later = (ev, payload, ms = 0) => setTimeout(() => emit(ev, payload), ms);
+  /* What a preset does (dumped from the real plugin by "--dump-presets", see make_web_preview.py):
+     every knob back to Default except the ones the preset sets, and its rig (amp, cab, pedals, synth...). */
+  function applyPreset(st) {
+    if (!st || !S.presetDefaults) return;
+    const vals = Object.assign({}, S.presetDefaults, st.p);
+    Object.assign(params, vals); later('obs:params', vals, 15);
+    if (st.rig) { S.rig = JSON.parse(JSON.stringify(st.rig)); later('obs:rig', S.rig, 10); }
+  }
   const listChanged = () => { S.presetFolders.sort((a, b) => a.localeCompare(b)); later('obs:presets', { list: S.presets, folders: S.presetFolders.slice() }, 5); };
 
   function moduleType(key) { return (S.modules || []).find(m => m.key === key); }
@@ -62,14 +70,15 @@
     ampSwitch: (i, on) => { if (S.rig.amp.face) S.rig.amp.face.switches[i] = !!on; return S.rig; },
     setCab: key => { const c = (S.cabs || []).find(x => x.key === key) || {}; S.rig.cab = { key, name: c.name || key, irA: '', irB: '', irAName: '', irBName: '' }; later('obs:rig', S.rig, 10); return S.rig; },
     presetList: () => S.presets,
-    presetLoad: id => { const p = S.presets.find(x => x.id === id); if (!p) return false; S.preset = Object.assign({}, S.preset, { id: p.id, name: p.name, category: p.category, factory: p.factory, dirty: false }); later('obs:preset', S.preset, 10); return true; },
+    presetLoad: id => { const p = S.presets.find(x => x.id === id); if (!p) return false; S.preset = Object.assign({}, S.preset, { id: p.id, name: p.name, category: p.category, factory: p.factory, dirty: false }); applyPreset(S.presetStates && S.presetStates[id]); later('obs:preset', S.preset, 10); return true; },
     presetNext: d => { const i = S.presets.findIndex(x => x.id === S.preset.id); const p = S.presets[(i + d + S.presets.length) % S.presets.length]; return commands.presetLoad(p.id); },
-    presetInit: () => { S.preset = Object.assign({}, S.preset, { id: 'factory:Default', name: 'Default', factory: true, dirty: false }); later('obs:preset', S.preset, 10); return true; },
+    presetInit: () => { S.preset = Object.assign({}, S.preset, { id: 'factory:Default', name: 'Default', factory: true, dirty: false }); if (S.presetDefaults) applyPreset({ p: {}, rig: S.presetDefaultRig }); later('obs:preset', S.preset, 10); return true; },
     presetSave: () => true,
     presetSaveAs: (name, cat, dir) => {
       const id = 'user:' + (dir ? dir + '/' : '') + name; S.presets = S.presets.filter(x => x.id !== id);
       const p = { id, name, category: cat, factory: false }; if (dir) { p.dir = dir; if (!S.presetFolders.includes(dir)) S.presetFolders.push(dir); }
-      S.presets.push(p); listChanged(); return commands.presetLoad(p.id); },
+      S.presets.push(p); if (S.presetStates) S.presetStates[id] = { p: Object.assign({}, params), rig: JSON.parse(JSON.stringify(S.rig)) };
+      listChanged(); return commands.presetLoad(p.id); },
     presetDelete: id => { const p = S.presets.find(x => x.id === (id || S.preset.id)); if (!p || p.factory) return false; S.presets = S.presets.filter(x => x !== p); listChanged(); return true; },
     presetRename: () => true, presetRescan: () => S.presets,
     // your own folders, like PresetManager does on disk
