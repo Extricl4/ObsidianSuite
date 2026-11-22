@@ -31,7 +31,11 @@ def build_page(standalone):
     state['standalone'] = standalone
     # three amps from the amp pack, with their faces (images served from Content/Faces like the plugin does)
     state['amps'] += [capture_entry(k) for k in ('umbra', 'moirai', 'kratos')]
-    state['presets'] = factory_presets() + state['presets']
+    # your presets: the dump's own ones, two of them in a folder of yours
+    mine = [dict(e, id='user:' + e['name']) for e in state['presets'] if not e['factory']]
+    for e in mine[:2]: e['dir'] = 'Drop D'; e['id'] = 'user:Drop D/' + e['name']
+    state['presets'] = factory_presets() + mine
+    state['presetFolders'] = ['Drop D', 'Live set']
     faces = OUT / 'faces'
     if faces.is_symlink() or faces.exists():
         faces.unlink() if faces.is_symlink() else shutil.rmtree(faces)
@@ -512,6 +516,11 @@ async def run(standalone):
         await pg.locator('.obs-prow').nth(2).dblclick(); await pg.wait_for_timeout(200)
         name = await pg.evaluate("document.querySelector('[aria-label=\"Previous preset\"]').nextElementSibling.textContent.trim()")
         check(name == want, f'double-click loads a preset ({name})')
+        locked = await pg.evaluate("[...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='DELETE'&&!b.closest('.ov')).classList.contains('obs-locked')")
+        await pg.evaluate("window.__mock.log.length=0")
+        await pg.evaluate("[...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='DELETE'&&!b.closest('.ov')).click()"); await pg.wait_for_timeout(120)
+        check(locked and await pg.locator('.obs-dialog').count() == 0 and not await pg.evaluate("window.__mock.log.some(x=>x[0]==='presetDelete')"),
+              'artist and factory presets are locked: DELETE is greyed out and does nothing')
         await pg.evaluate("window.__mock.log.length=0")
         await pg.locator('[aria-label="Next preset"]').click(); await pg.wait_for_timeout(150)
         check(await pg.evaluate("window.__mock.log.some(x=>x[0]==='presetNext'&&x[1]===1)"), 'next-preset arrow')
@@ -519,6 +528,56 @@ async def run(standalone):
         check(await pg.locator('.obs-dialog input').count() == 1, 'SAVE AS asks for a name')
         await pg.locator('.obs-dialog input').fill('My Wall'); await pg.locator('.obs-dialog [data-ok]').click(); await pg.wait_for_timeout(150)
         check(await pg.evaluate("window.__mock.log.some(x=>x[0]==='presetSaveAs'&&x[1]==='My Wall')"), 'SAVE AS saves under the new name')
+        # ---- your own folders
+        await pg.wait_for_timeout(150)
+        unlocked = not await pg.evaluate("[...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='DELETE'&&!b.closest('.ov')).classList.contains('obs-locked')")
+        await pg.evaluate("openOv('presets')"); await pg.wait_for_timeout(200)
+        names = lambda: pg.evaluate("[...document.querySelectorAll('.obs-prow')].map(r=>r.children[1].textContent)")
+        dirs = await pg.evaluate("[...document.querySelectorAll('.obs-pdir')].map(d=>d.dataset.folder)")
+        rows = await names()
+        check(unlocked and dirs == ['MY/Drop D', 'MY/Live set'] and 'My Wall' in rows and len(rows) == 11,
+              f'My presets shows your folders ({dirs}), then your loose presets ({len(rows)})')
+        await pg.locator('.obs-prow', has_text='My Wall').click(); await pg.wait_for_timeout(80)
+        mine_btns = await pg.evaluate("['.obs-pdel','.obs-pmove'].every(c=>document.querySelector(c).offsetParent!==null)")
+        await pg.locator('button.obs-newfolder').click(); await pg.wait_for_timeout(100)
+        await pg.locator('.obs-dialog input').fill('Solos'); await pg.locator('.obs-dialog [data-ok]').click(); await pg.wait_for_timeout(250)
+        here = await pg.evaluate("(document.querySelector('.obs-pup b')||{}).textContent")
+        side = await pg.evaluate("[...document.querySelectorAll('.obs-folder')].map(f=>f.dataset.folder)")
+        check(mine_btns and here == 'Solos' and 'MY/Solos' in side and await pg.locator('.obs-pfren').count() == 1 and await pg.locator('.obs-empty').count() == 1,
+              'NEW FOLDER makes a folder and opens it (empty, with RENAME / DELETE for it)')
+        await pg.locator('.obs-pup').click(); await pg.wait_for_timeout(150)
+        await pg.evaluate("window.__mock.log.length=0")
+        await pg.locator('.obs-prow', has_text='My Wall').drag_to(pg.locator('.obs-pdir[data-folder="MY/Solos"]')); await pg.wait_for_timeout(200)
+        moved = await pg.evaluate("window.__mock.log.some(x=>x[0]==='presetMove'&&x[1]==='user:My Wall'&&x[2]==='Solos')")
+        await pg.locator('.obs-pdir[data-folder="MY/Solos"]').click(); await pg.wait_for_timeout(150)
+        check(moved and await names() == ['My Wall'], 'drag a preset onto a folder to move it there')
+        await pg.screenshot(path=str(OUT / 'presets-mine.png'))
+        await pg.locator('.obs-prow', has_text='My Wall').click(); await pg.wait_for_timeout(60)
+        await pg.locator('.obs-pmove').click(); await pg.wait_for_timeout(100)
+        await pg.locator('.obs-dialog select').select_option('Drop D'); await pg.locator('.obs-dialog [data-ok]').click(); await pg.wait_for_timeout(200)
+        await pg.locator('.obs-pup').click(); await pg.wait_for_timeout(120)
+        await pg.locator('.obs-pdir[data-folder="MY/Drop D"]').click(); await pg.wait_for_timeout(150)
+        dd = await names()
+        check('My Wall' in dd and len(dd) == 3, f'MOVE TO FOLDER moves the selected preset ({dd})')
+        await pg.locator('.obs-pfren').click(); await pg.wait_for_timeout(100)
+        await pg.locator('.obs-dialog input').fill('Drop C'); await pg.locator('.obs-dialog [data-ok]').click(); await pg.wait_for_timeout(250)
+        here = await pg.evaluate("(document.querySelector('.obs-pup b')||{}).textContent")
+        check(here == 'Drop C' and len(await names()) == 3, 'rename a folder (it stays open, presets and all)')
+        await pg.locator('.obs-pfdel').click(); await pg.wait_for_timeout(100)
+        warn = await pg.locator('.obs-dialog p').text_content()
+        await pg.locator('.obs-dialog [data-ok]').click(); await pg.wait_for_timeout(250)
+        dirs = await pg.evaluate("[...document.querySelectorAll('.obs-pdir')].map(d=>d.dataset.folder)")
+        check('3 presets' in warn and dirs == ['MY/Live set', 'MY/Solos'] and await pg.locator('.obs-pup').count() == 0,
+              'deleting a folder warns how many presets go with it, then goes back to My presets')
+        await pg.locator('#preset-search').fill('sandman'); await pg.wait_for_timeout(120)
+        await pg.locator('.obs-prow').first.click(); await pg.wait_for_timeout(80)
+        hidden = await pg.evaluate("['.obs-pdel','.obs-pmove'].every(c=>document.querySelector(c).offsetParent===null)")
+        lockln = await pg.evaluate("[...document.querySelectorAll('.obs-lockline')].map(e=>e.offsetParent?e.textContent:'').join('')")
+        await pg.evaluate("window.__mock.log.length=0")
+        check(hidden and lockln == 'Built in · locked' and not await pg.evaluate("document.querySelector('.obs-prow').classList.contains('obs-pmine')"),
+              'a factory/artist preset has no DELETE / MOVE, says it is locked, and can\'t be dragged')
+        await pg.locator('#preset-search').fill(''); await pg.wait_for_timeout(60)
+        await pg.evaluate("closeOv && closeOv()"); await pg.wait_for_timeout(100)
 
         # ---- settings
         await pg.evaluate("openOv('settings')")

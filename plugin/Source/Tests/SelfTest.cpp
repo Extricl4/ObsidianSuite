@@ -820,6 +820,28 @@ int runSelfTest (const juce::StringArray& args)
         r.check (found && std::abs (gain->convertFrom0to1 (gain->getValue()) - 7.3f) < 0.01f, "load restores knob values");
         r.check (p.rig().toJson()["racks"][1][2]["key"].toString() == "tide", "load restores the pedal/effect slots");
 
+        // built-in presets are locked; your own folders are real sub-folders
+        {
+            auto& pm = p.presetManager();
+            auto entry = [&pm] (const juce::String& name) { for (auto& e : pm.list()) if (e.name == name) return e; return obs::PresetManager::Info(); };
+            const auto fac = entry ("Enter Sandman"), mine = entry ("Selftest Sound");
+            r.check (fac.factory && ! pm.remove (fac.id) && ! pm.rename (fac.id, "x") && ! pm.move (fac.id, ""), "factory and artist presets can't be deleted, renamed or moved");
+            r.check (pm.createFolder ("Drop D") && pm.userFolders().contains ("Drop D") && tmp.getChildFile ("Drop D").isDirectory()
+                     && ! pm.createFolder ("Drop D") && ! pm.createFolder ("..") && ! pm.createFolder ("  "), "make a folder (no duplicates, no path tricks)");
+            r.check (pm.saveAs ("Folder Sound", "Lead", "Drop D") && tmp.getChildFile ("Drop D/Folder Sound.obsidian").existsAsFile()
+                     && entry ("Folder Sound").dir == "Drop D", "SAVE AS into a folder");
+            pm.load (mine.id);
+            r.check (pm.move (mine.id, "Drop D") && entry ("Selftest Sound").dir == "Drop D" && pm.currentId().contains ("Drop D")
+                     && ! tmp.getChildFile ("Selftest Sound.obsidian").exists(), "move a preset into a folder (the loaded one follows)");
+            r.check (pm.renameFolder ("Drop D", "Half Step") && entry ("Folder Sound").dir == "Half Step" && pm.currentId().contains ("Half Step")
+                     && ! pm.userFolders().contains ("Drop D"), "rename a folder");
+            r.check (pm.rename (entry ("Folder Sound").id, "Folder Sound 2") && tmp.getChildFile ("Half Step/Folder Sound 2.obsidian").existsAsFile(),
+                     "renaming a preset keeps it in its folder");
+            const bool out = pm.move (entry ("Selftest Sound").id, "") && pm.move (entry ("Folder Sound 2").id, "") && entry ("Selftest Sound").dir.isEmpty();
+            r.check (out && pm.removeFolder ("Half Step") && pm.userFolders().isEmpty() && ! tmp.getChildFile ("Half Step").exists()
+                     && ! pm.removeFolder ("Nope"), "move presets back out, delete the folder");
+        }
+
         juce::MemoryBlock mb; p.getStateInformation (mb);
         auto other = std::make_unique<ObsidianProcessor>();
         other->setStateInformation (mb.getData(), (int) mb.getSize());

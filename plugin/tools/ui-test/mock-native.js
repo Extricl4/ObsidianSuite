@@ -14,6 +14,7 @@
   const params = {};             // id -> norm
   const emit = (ev, payload) => (listeners[ev] || []).forEach(fn => { try { fn(payload); } catch (e) { console.error(e); } });
   const later = (ev, payload, ms = 0) => setTimeout(() => emit(ev, payload), ms);
+  const listChanged = () => { S.presetFolders.sort((a, b) => a.localeCompare(b)); later('obs:presets', { list: S.presets, folders: S.presetFolders.slice() }, 5); };
 
   function moduleType(key) { return (S.modules || []).find(m => m.key === key); }
   const RK = ['pre', 'post', 'sfx'];
@@ -65,8 +66,18 @@
     presetNext: d => { const i = S.presets.findIndex(x => x.id === S.preset.id); const p = S.presets[(i + d + S.presets.length) % S.presets.length]; return commands.presetLoad(p.id); },
     presetInit: () => { S.preset = Object.assign({}, S.preset, { id: 'factory:Default', name: 'Default', factory: true, dirty: false }); later('obs:preset', S.preset, 10); return true; },
     presetSave: () => true,
-    presetSaveAs: (name, cat) => { const p = { id: 'user:' + name, name, category: cat, factory: false }; S.presets.push(p); later('obs:presets', S.presets, 5); return commands.presetLoad(p.id); },
-    presetDelete: () => true, presetRename: () => true, presetRescan: () => S.presets,
+    presetSaveAs: (name, cat, dir) => {
+      const id = 'user:' + (dir ? dir + '/' : '') + name; S.presets = S.presets.filter(x => x.id !== id);
+      const p = { id, name, category: cat, factory: false }; if (dir) { p.dir = dir; if (!S.presetFolders.includes(dir)) S.presetFolders.push(dir); }
+      S.presets.push(p); listChanged(); return commands.presetLoad(p.id); },
+    presetDelete: id => { const p = S.presets.find(x => x.id === (id || S.preset.id)); if (!p || p.factory) return false; S.presets = S.presets.filter(x => x !== p); listChanged(); return true; },
+    presetRename: () => true, presetRescan: () => S.presets,
+    // your own folders, like PresetManager does on disk
+    presetFolders: () => S.presetFolders.slice(),
+    presetNewFolder: name => { name = String(name || '').replace(/[\\/:*?"<>|]/g, '').trim(); if (!name || S.presetFolders.includes(name)) return false; S.presetFolders.push(name); listChanged(); return true; },
+    presetRenameFolder: (a, b) => { const i = S.presetFolders.indexOf(a); if (i < 0 || !b || S.presetFolders.includes(b)) return false; S.presetFolders[i] = b; S.presets.forEach(p => { if (!p.factory && p.dir === a) p.dir = b; }); listChanged(); return true; },
+    presetDeleteFolder: a => { if (!S.presetFolders.includes(a)) return false; S.presetFolders = S.presetFolders.filter(x => x !== a); S.presets = S.presets.filter(p => p.factory || p.dir !== a); listChanged(); return true; },
+    presetMove: (id, dir) => { const p = S.presets.find(x => x.id === id); if (!p || p.factory || (dir && !S.presetFolders.includes(dir))) return false; if (dir) p.dir = dir; else delete p.dir; listChanged(); return true; },
     getSettings: () => S.settings,
     setSetting: (k, v) => { S.settings[k] = v; return true; },
     midiMappings: () => S.midi, midiRemove: i => { S.midi.splice(i, 1); return S.midi; },
@@ -100,7 +111,7 @@
   };
   window.__mock = {
     log, params, emit, get state() { return S; },
-    load(state) { S = state; (S.params || []).forEach(p => params[p.id] = p.norm); },
+    load(state) { S = state; S.presetFolders = S.presetFolders || []; (S.params || []).forEach(p => params[p.id] = p.norm); },
     sent(id) { const l = log.filter(x => x[0] === 'setParam' && x[1] === id); return l.length ? l[l.length - 1][2] : undefined; },
   };
 })();

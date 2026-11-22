@@ -327,7 +327,7 @@ async function start() {
   on('obs:params', applyParams);
   on('obs:rig', applyRig);
   on('obs:preset', showPreset);
-  on('obs:presets', list => { presetList = list || []; renderPresetList(); });
+  on('obs:presets', x => { if (Array.isArray(x)) presetList = x; else if (x) { presetList = x.list || []; presetUserFolders = x.folders || []; } renderPresetList(); });
   on('obs:meters', showMeters);
   on('obs:toast', t => say(t.text));
   on('obs:audio', renderAudio);
@@ -473,18 +473,30 @@ function showTuner(t) {
 }
 
 /* ================================================================= presets */
-let presetList = [], presetCur = {}, presetSel = null, presetFolder = 'FACTORY', presetQuery = '';
-/* Preset folders: FACTORY (by type), ARTISTS (one folder per artist), MY PRESETS (your saves, by type).
-   A factory preset whose category is "Artists/<name>" lives in that artist's folder. */
+let presetList = [], presetCur = {}, presetSel = null, presetFolder = 'FACTORY', presetQuery = '', presetUserFolders = [];
+/* Preset folders: FACTORY (by type), ARTISTS (one folder per artist), MY PRESETS (your saves, in folders you make).
+   A factory preset whose category is "Artists/<name>" lives in that artist's folder.
+   Factory and artist presets are built in and locked: they can't be deleted, renamed or moved. */
 const presetOpen = new Set(['FACTORY']);
 const presetGroup = p => !p.factory ? 'MY' : /^Artists\//.test(p.category || '') ? 'ARTISTS' : 'FACTORY';
-const presetSub = p => presetGroup(p) === 'ARTISTS' ? p.category.slice(8) : (p.type || p.category || '');
+const presetSub = p => { const g = presetGroup(p); return g === 'ARTISTS' ? p.category.slice(8) : g === 'MY' ? (p.dir || '') : (p.type || p.category || ''); };
+const presetEntry = id => presetList.find(x => x.id === id);
+const presetLocked = p => !p || p.factory !== false;               // built in (factory + artists)
+const NO_FOLDER = '— No folder —';
 const presetType = p => p.type || (/^Artists\//.test(p.category || '') ? '' : p.category) || '—';
 const presetIn = (p, f) => { const [g, sub] = f.split('/'); return presetGroup(p) === g && (sub === undefined || presetSub(p) === f.slice(g.length + 1)); };
 const GROUP_NAME = { FACTORY: 'Factory', ARTISTS: 'Artists', MY: 'My presets' };
+/** The sub-folders of a top folder, in display order (Factory: by type; Artists: A-Z). */
+function presetSubs(g) {
+  if (g === 'MY') return presetUserFolders.slice();
+  const subs = [...new Set(presetList.filter(p => presetGroup(p) === g).map(presetSub).filter(Boolean))];
+  return subs.sort(g === 'ARTISTS' ? (a, b) => a.localeCompare(b) : (a, b) => ((TYPE_ORDER.indexOf(a) + 99) % 99) - ((TYPE_ORDER.indexOf(b) + 99) % 99) || a.localeCompare(b));
+}
+const FOLDER_IC = '<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M3 6.5a1.5 1.5 0 0 1 1.5-1.5h4.6l2 2.2h8.4A1.5 1.5 0 0 1 21 8.7v9.8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5z"/></svg>';
 const TYPE_ORDER = ['Clean', 'Crunch', 'Rhythm', 'Lead', 'Ambient', 'Synth', 'FX', 'Acoustic'];
 function setupPresets(st) {
   presetList = st.presets || [];
+  presetUserFolders = st.presetFolders || [];
   presetCur = st.preset || {};
   const prev = $('[aria-label="Previous preset"]'), next = $('[aria-label="Next preset"]');
   intercept(b => b === prev, () => guardSwitch(() => call('presetNext', -1)));
@@ -493,7 +505,7 @@ function setupPresets(st) {
   intercept(b => top.contains(b) && txt(b) === 'SAVE', () => call('presetSave'));
   intercept(b => top.contains(b) && txt(b) === 'SAVE AS', () => saveAsDialog());
   intercept(b => top.contains(b) && txt(b) === 'DELETE', async () => {
-    if (presetCur.factory) { say('Factory presets can\'t be deleted'); return; }
+    if (presetLocked(presetEntry(presetCur.id) || presetCur)) { say('Factory and artist presets are locked: they can\'t be deleted'); return; }
     if (await confirmDialog('DELETE PRESET', 'Delete "' + presetCur.name + '"? It goes to the recycle bin, so you can get it back.', 'DELETE')) call('presetDelete', presetCur.id);
   });
   const ov = $('.ov[data-ov="presets"]'); if (!ov) return;
@@ -509,7 +521,75 @@ function setupPresets(st) {
   folders.forEach(f => f.remove());
   if (rowBox) { rowBox.style.overflowY = 'auto'; rowBox.style.minHeight = '0'; }
   const hdr = $$('span', ov).find(s => txt(s) === 'AMP'); if (hdr) { hdr.textContent = 'TYPE'; const t = hdr.nextElementSibling; if (t && txt(t) === 'TAGS') t.textContent = 'SOURCE'; }
-  const nf = byText('button', 'NEW FOLDER', ov); if (nf) nf.classList.add('obs-hidden');
+  const nf = byText('button', 'NEW FOLDER', ov);
+  if (nf) { nf.classList.add('obs-newfolder'); nf.title = 'Make a folder in My presets'; }
+  intercept(b => b.classList.contains('obs-newfolder'), () => newPresetFolder());
+  // the details column: RENAME + DELETE side by side, MOVE TO FOLDER under them (your presets only)
+  const ren = byText('button', 'RENAME', ov), dup = byText('button', 'DUPLICATE', ov);
+  if (ren && dup) {
+    const pair = document.createElement('div'); pair.className = 'obs-ppair'; ren.parentElement.insertBefore(pair, ren);
+    const del = ren.cloneNode(true); del.textContent = 'DELETE'; del.classList.add('obs-pdel');
+    pair.append(ren, del);
+    const mv = dup.cloneNode(true); mv.textContent = 'MOVE TO FOLDER'; mv.classList.add('obs-pmove');
+    pair.after(mv);
+    ov._mine = [pair, mv];
+  }
+  intercept(b => b.classList.contains('obs-pdel'), async () => {
+    const p = sel(); if (!p || presetLocked(p)) return;
+    if (await confirmDialog('DELETE PRESET', 'Delete "' + p.name + '"? It goes to the recycle bin, so you can get it back.', 'DELETE')) call('presetDelete', p.id);
+  });
+  intercept(b => b.classList.contains('obs-pmove'), async () => {
+    const p = sel(); if (!p || presetLocked(p)) return;
+    if (!presetUserFolders.length) { say('Make a folder first: NEW FOLDER, under the folder list'); return; }
+    const r = await formDialog('MOVE "' + p.name + '"', [{ key: 'dir', label: 'To folder', value: p.dir || NO_FOLDER, options: [NO_FOLDER].concat(presetUserFolders) }], 'MOVE');
+    if (r) call('presetMove', p.id, r.dir === NO_FOLDER ? '' : r.dir);
+  });
+  // inside one of your folders: rename or delete it
+  intercept(b => b.classList.contains('obs-pfren'), async () => {
+    const old = presetFolder.slice(3), name = await textDialog('RENAME FOLDER', old, 'RENAME');
+    if (!name || name === old) return;
+    const before = presetUserFolders.slice();
+    if (await call('presetRenameFolder', old, name)) goToNewFolder(before, name);
+  });
+  intercept(b => b.classList.contains('obs-pfdel'), async () => {
+    const name = presetFolder.slice(3), n = presetList.filter(p => presetGroup(p) === 'MY' && p.dir === name).length;
+    const what = n ? ' and the ' + (n === 1 ? 'preset' : n + ' presets') + ' in it' : '';
+    if (!await confirmDialog('DELETE FOLDER', 'Delete the folder "' + name + '"' + what + '? It goes to the recycle bin, so you can get it back.', 'DELETE')) return;
+    if (await call('presetDeleteFolder', name)) { presetFolder = 'MY'; renderPresetList(); }
+  });
+  // drag one of your presets onto a folder (or back onto My presets) to move it
+  let pd = null;
+  const dropAt = (x, y) => { const el = document.elementFromPoint(x, y), t = el && el.closest('[data-folder]'); return t && ov.contains(t) && /^MY(\/|$)/.test(t.dataset.folder) ? t : null; };
+  ov.addEventListener('pointerdown', e => {
+    const r = e.target.closest('.obs-prow.obs-pmine'); if (!r || e.button !== 0) return;
+    pd = { r, id: r.dataset.id, x: e.clientX, y: e.clientY, moved: false };
+  });
+  addEventListener('pointermove', e => {
+    if (!pd) return;
+    if (!pd.moved && Math.hypot(e.clientX - pd.x, e.clientY - pd.y) < 6) return;
+    const app = $('#app') || document.body, ar = app.getBoundingClientRect(), sc = ar.width / (app.offsetWidth || ar.width);
+    if (!pd.moved) {
+      pd.moved = true; ov.classList.add('obs-dragging'); pd.r.classList.add('obs-pdragged');
+      pd.ghost = document.createElement('div'); pd.ghost.className = 'obs-pghost';
+      pd.ghost.innerHTML = '<span></span>'; pd.ghost.firstChild.textContent = (presetEntry(pd.id) || {}).name || '';
+      app.appendChild(pd.ghost);
+    }
+    pd.ghost.style.left = ((e.clientX - ar.left) / sc + 12) + 'px'; pd.ghost.style.top = ((e.clientY - ar.top) / sc + 10) + 'px';
+    const t = dropAt(e.clientX, e.clientY);
+    $$('.obs-drop', ov).forEach(x => x !== t && x.classList.remove('obs-drop'));
+    if (t && t.dataset.folder.slice(3) !== ((presetEntry(pd.id) || {}).dir || '')) t.classList.add('obs-drop');
+    pd.to = t && t.classList.contains('obs-drop') ? t.dataset.folder.slice(3) : null;
+  });
+  addEventListener('pointerup', () => {
+    if (!pd) return;
+    const x = pd; pd = null;
+    if (!x.moved) return;
+    ov.classList.remove('obs-dragging'); x.r.classList.remove('obs-pdragged'); if (x.ghost) x.ghost.remove();
+    $$('.obs-drop', ov).forEach(el => el.classList.remove('obs-drop'));
+    const swallow = ev => { ev.stopImmediatePropagation(); ev.preventDefault(); document.removeEventListener('click', swallow, true); };
+    document.addEventListener('click', swallow, true); setTimeout(() => document.removeEventListener('click', swallow, true), 50);
+    if (x.to != null) call('presetMove', x.id, x.to);
+  });
   const search = $('#preset-search', ov);
   if (search) search.addEventListener('input', () => { presetQuery = search.value.trim().toLowerCase(); renderPresetList(); });
   intercept(b => b.classList.contains('obs-folder'), b => {
@@ -518,6 +598,10 @@ function setupPresets(st) {
     presetFolder = f; presetQuery = ''; const se = $('#preset-search'); if (se) se.value = '';
     renderPresetList(); if (ov._rowBox) ov._rowBox.scrollTop = 0; });
   intercept(b => b.classList.contains('obs-prow'), b => { presetSel = b.dataset.id; markPresetSel(); });
+  // a top folder lists its sub-folders: click one to go in, the back row goes up again
+  intercept(b => b.classList.contains('obs-pdir') || b.classList.contains('obs-pup'), b => {
+    const f = b.dataset.folder; presetFolder = f; presetOpen.add(f.split('/')[0]);
+    renderPresetList(); if (ov._rowBox) ov._rowBox.scrollTop = 0; });
   ov.addEventListener('dblclick', e => { const r = e.target.closest('.obs-prow'); if (r) guardSwitch(() => { call('presetLoad', r.dataset.id); closeOv(); }); });
   const sel = () => presetList.find(p => p.id === presetSel);
   intercept(b => ov.contains(b) && txt(b) === 'LOAD', () => { const p = sel(); if (p) guardSwitch(() => { call('presetLoad', p.id); closeOv(); }); });
@@ -525,16 +609,33 @@ function setupPresets(st) {
   intercept(b => ov.contains(b) && txt(b) === 'SHOW IN EXPLORER', () => call('presetReveal'));
   intercept(b => ov.contains(b) && txt(b) === 'RENAME', async () => {
     const p = sel(); if (!p) return;
-    if (p.factory) { say('Factory presets can\'t be renamed. DUPLICATE it first.'); return; }
+    if (presetLocked(p)) { say('Factory and artist presets are locked. DUPLICATE one to make your own.'); return; }
     const name = await textDialog('RENAME PRESET', p.name, 'RENAME'); if (name) call('presetRename', p.id, name);
   });
   intercept(b => ov.contains(b) && txt(b) === 'DUPLICATE', async () => {
     const p = sel(); if (!p) return;
+    // the copy goes in the folder of yours that's open, else next to the original (your presets) or loose in My presets
+    const dir = presetFolder.startsWith('MY/') ? presetFolder.slice(3) : !presetLocked(p) ? (p.dir || '') : '';
+    const type = presetType(p) === '—' ? '' : presetType(p);
     await call('presetLoad', p.id);
-    const ok = await call('presetSaveAs', p.name + ' copy', p.category || '');
-    if (ok) say('Duplicated as "' + p.name + ' copy"');
+    const ok = await call('presetSaveAs', p.name + ' copy', type, dir);
+    if (ok) say('Duplicated as "' + p.name + ' copy" in ' + (dir || 'My presets'));
   });
   renderPresetList();
+}
+/** After making or renaming a folder: open it (the name may have been tidied up). */
+async function goToNewFolder(before, typed) {
+  const now = (await call('presetFolders')) || presetUserFolders;
+  presetUserFolders = now;
+  const made = now.find(x => !before.includes(x)) || now.find(x => x.toLowerCase() === String(typed).trim().toLowerCase());
+  if (made) { presetFolder = 'MY/' + made; presetOpen.add('MY'); presetQuery = ''; const se = $('#preset-search'); if (se) se.value = ''; }
+  renderPresetList();
+}
+async function newPresetFolder() {
+  const name = await textDialog('NEW FOLDER', 'New Folder', 'MAKE');
+  if (!name) return;
+  const before = presetUserFolders.slice();
+  if (await call('presetNewFolder', name)) goToNewFolder(before, name);
 }
 function guardSwitch(go) {
   if (presetCur.dirty && INIT && INIT.settings && INIT.settings.askBeforeSwitching)
@@ -549,14 +650,10 @@ function showPreset(p) {
     const e = presetList.find(x => x.id === p.id);
     if (e) { const g = presetGroup(e), sb = presetSub(e); presetFolder = sb ? g + '/' + sb : g; presetOpen.add(g); }
   }
+  const topDel = $$('button').find(b => txt(b) === 'DELETE' && !b.closest('.ov'));
+  if (topDel) { const lk = presetLocked(presetEntry(p.id) || p); topDel.classList.toggle('obs-locked', lk); topDel.title = lk ? 'Factory and artist presets are locked' : 'Delete this preset (to the recycle bin)'; }
   const mark = !INIT || !INIT.settings || INIT.settings.markUnsaved !== false;
   if (typeof setPreset === 'function') setPreset(esc(p.name), p.dirty && mark);
-/** The sub-folders of a top folder, in display order (Factory: by type; Artists: A-Z). */
-function presetSubs(g) {
-  const subs = [...new Set(presetList.filter(p => presetGroup(p) === g).map(presetSub).filter(Boolean))];
-  return subs.sort(g === 'ARTISTS' ? (a, b) => a.localeCompare(b) : (a, b) => ((TYPE_ORDER.indexOf(a) + 99) % 99) - ((TYPE_ORDER.indexOf(b) + 99) % 99) || a.localeCompare(b));
-}
-const FOLDER_IC = '<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M3 6.5a1.5 1.5 0 0 1 1.5-1.5h4.6l2 2.2h8.4A1.5 1.5 0 0 1 21 8.7v9.8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5z"/></svg>';
   if (!presetSel) presetSel = p.id;
   renderPresetList();
 }
@@ -584,23 +681,57 @@ function renderPresetList() {
       presetSubs(g).forEach(sb => row(g + '/' + sb, sb, inG.filter(p => presetSub(p) === sb).length, true));
     }
   }
+  $$('.obs-prow, .obs-pdir, .obs-pbar', ov._rowBox).forEach(x => x.remove());
+  $$('.obs-empty', ov._rowBox).forEach(x => x.remove());
+  let [grp, sub] = presetFolder.split('/');
+  if (presetFolder.includes('/')) sub = presetFolder.slice(grp.length + 1);
+  if (sub !== undefined && !presetSubs(grp).includes(sub)) { presetFolder = grp; sub = undefined; }   // that folder is gone
+  const loose = [];
+  // a top folder shows its folders, not every preset at once (My presets: your folders, then the loose ones)
+  if (!presetQuery && sub === undefined)
+  {
+    const subs = presetSubs(grp);
+    subs.forEach(sb => {
+      const n = presetList.filter(p => presetGroup(p) === grp && presetSub(p) === sb).length;
+      const d = document.createElement('button'); d.className = 'obs-pdir'; d.dataset.folder = grp + '/' + sb;
+      d.innerHTML = '<span class="ic">' + FOLDER_IC + '</span><b></b><small></small><span class="go">›</span>';
+      d.querySelector('b').textContent = sb; d.querySelector('small').textContent = n ? n + (n === 1 ? ' preset' : ' presets') : 'empty';
+      if (presetList.some(p => p.id === presetCur.id && presetGroup(p) === grp && presetSub(p) === sb)) d.classList.add('cur');
+      ov._rowBox.appendChild(d);
+    });
+    if (grp !== 'MY' || !subs.length && !presetList.some(p => presetGroup(p) === 'MY')) {
+      if (!subs.length) { const e = document.createElement('div'); e.className = 'obs-empty'; e.textContent = grp === 'MY' ? 'No presets of yours yet. SAVE AS saves one; NEW FOLDER makes a folder for them.' : 'No presets here yet.'; ov._rowBox.appendChild(e); }
+      markPresetSel();
+      return;
+    }
+    presetList.forEach(p => { if (presetGroup(p) === 'MY' && !presetSub(p)) loose.push(p); });
+    if (!loose.length) { markPresetSel(); return; }
+  }
+  // inside a folder: a way back up (and, in one of yours, rename / delete it)
+  if (!presetQuery && sub !== undefined)
+  {
+    const bar = document.createElement('div'); bar.className = 'obs-pbar';
+    const up = document.createElement('button'); up.className = 'obs-pup'; up.dataset.folder = grp;
+    up.innerHTML = '<span class="go">‹</span><span>' + esc(GROUP_NAME[grp]) + '</span><span class="sep">/</span><b></b>';
+    up.querySelector('b').textContent = sub; up.title = 'Back to ' + GROUP_NAME[grp] + (grp === 'MY' ? ' (drop a preset here to take it out of the folder)' : '');
+    bar.appendChild(up);
+    if (grp === 'MY') bar.insertAdjacentHTML('beforeend', '<button class="obs-pfact obs-pfren" title="Rename this folder">RENAME</button><button class="obs-pfact obs-pfdel" title="Delete this folder">DELETE</button>');
+    ov._rowBox.appendChild(bar);
+  }
   // searching looks everywhere; otherwise the open folder
-  const show = presetList.filter(p => presetQuery ? (p.name + ' ' + p.category + ' ' + (p.type || '') + ' ' + (p.note || '')).toLowerCase().includes(presetQuery) : presetIn(p, presetFolder));
+  const show = loose.length ? loose : presetList.filter(p => presetQuery ? (p.name + ' ' + p.category + ' ' + (p.type || '') + ' ' + (p.dir || '') + ' ' + (p.note || '')).toLowerCase().includes(presetQuery) : presetIn(p, presetFolder));
   show.forEach(p => {
     const r = ov._rowTpl.cloneNode(true); r.classList.add('obs-prow'); r.dataset.id = p.id;
     const sp = r.querySelectorAll(':scope > span');
-  // a top folder lists its sub-folders: click one to go in, the back row goes up again
-  intercept(b => b.classList.contains('obs-pdir') || b.classList.contains('obs-pup'), b => {
-    const f = b.dataset.folder; presetFolder = f; presetOpen.add(f.split('/')[0]);
-    renderPresetList(); if (ov._rowBox) ov._rowBox.scrollTop = 0; });
     if (sp[1]) sp[1].textContent = p.name;
     if (sp[2]) sp[2].textContent = presetType(p);
-    if (sp[3]) sp[3].textContent = presetGroup(p) === 'ARTISTS' ? presetSub(p) : p.factory ? 'Factory' : 'My preset';
+    if (sp[3]) sp[3].textContent = presetGroup(p) === 'ARTISTS' ? presetSub(p) : p.factory ? 'Factory' : p.dir || 'My preset';
     if (p.note) r.title = p.note;
+    if (!presetLocked(p)) { r.classList.add('obs-pmine'); if (!p.note) r.title = 'Drag onto a folder to move it'; }
     if (sp[0]) sp[0].style.visibility = p.id === presetCur.id ? 'visible' : 'hidden';
     ov._rowBox.appendChild(r);
   });
-  if (!show.length) { const e = document.createElement('div'); e.className = 'obs-empty'; e.textContent = presetQuery ? 'No presets match "' + presetQuery + '".' : 'No presets here yet. Use SAVE AS to make one.'; ov._rowBox.appendChild(e); }
+  if (!show.length) { const e = document.createElement('div'); e.className = 'obs-empty'; e.textContent = presetQuery ? 'No presets match "' + presetQuery + '".' : grp === 'MY' ? 'This folder is empty. Drag presets onto it, or pick it in SAVE AS.' : 'No presets here yet. Use SAVE AS to make one.'; ov._rowBox.appendChild(e); }
   markPresetSel();
 }
 function markPresetSel() {
@@ -617,20 +748,27 @@ function markPresetSel() {
     const nameEl = selLbl.nextElementSibling; if (nameEl) nameEl.textContent = p.name || '';
     const info = nameEl && nameEl.nextElementSibling;
     if (info) {
-      const g = presetGroup(p), folder = g === 'ARTISTS' ? 'Artists · ' + presetSub(p) : GROUP_NAME[g];
-      const lines = ['Folder · ' + folder, 'Type · ' + presetType(p), p.note || '',
-                     p.id === presetCur.id ? 'Loaded now' + (presetCur.dirty ? ' · edited' : '') : 'Double-click to load'];
-      [...info.children].forEach((c, i) => { c.textContent = lines[i] || ''; c.style.display = lines[i] ? '' : 'none'; });
+      const e = presetEntry(p.id) || p, g = presetGroup(e), sb = presetSub(e), locked = presetLocked(e);
+      const folder = GROUP_NAME[g] + (sb && g !== 'FACTORY' ? ' / ' + sb : '');
+      const lines = ['Folder · ' + folder, 'Type · ' + presetType(e), e.note || '',
+                     p.id === presetCur.id ? 'Loaded now' + (presetCur.dirty ? ' · edited' : '') : 'Double-click to load',
+                     locked && e.id !== 'factory:Default' ? 'Built in · locked' : ''];
+      while (info.children.length < lines.length) info.appendChild(document.createElement('span'));
+      [...info.children].forEach((c, i) => { c.textContent = lines[i] || ''; c.style.display = lines[i] ? '' : 'none'; c.classList.toggle('obs-lockline', i === 4); });
+      (ov._mine || []).forEach(x => x.classList.toggle('obs-hidden', locked));
     }
   }
 }
 async function saveAsDialog() {
   const cats = [...new Set(TYPE_ORDER.concat(presetList.filter(p => !p.factory).map(p => p.category).filter(c => c && !/^Artists\//.test(c))))];
   const cur = presetList.find(p => p.id === presetCur.id) || presetCur, curType = cur.type || (/^Artists\//.test(cur.category || '') ? '' : cur.category);
-  const r = await formDialog('SAVE AS', [
+  const dir = presetFolder.startsWith('MY/') ? presetFolder.slice(3) : !presetLocked(cur) ? (cur.dir || '') : '';
+  const fields = [
     { key: 'name', label: 'Name', value: presetCur.factory || !presetCur.name ? (presetCur.name ? presetCur.name + ' (mine)' : 'My Preset') : presetCur.name },
-    { key: 'category', label: 'Type', value: curType || 'Rhythm', options: cats }], 'SAVE');
-  if (r && r.name) call('presetSaveAs', r.name, r.category);
+    { key: 'category', label: 'Type', value: curType || 'Rhythm', options: cats }];
+  if (presetUserFolders.length) fields.push({ key: 'dir', label: 'Folder', value: presetUserFolders.includes(dir) ? dir : NO_FOLDER, options: [NO_FOLDER].concat(presetUserFolders) });
+  const r = await formDialog('SAVE AS', fields, 'SAVE');
+  if (r && r.name) call('presetSaveAs', r.name, r.category, !r.dir || r.dir === NO_FOLDER ? '' : r.dir);
 }
 
 /* ------------------------------------------------------------------ dialogs */
@@ -649,39 +787,13 @@ function modal(build) {
 }
 function formDialog(title, fields, okText) {
   return modal((d, close) => {
-    d.innerHTML = '<h3>' + esc(title) + '</h3>' + fields.map(f => f.options
+    const many = fields.length > 1;
+    d.innerHTML = '<h3>' + esc(title) + '</h3>' + fields.map(f => (many && f.label ? '<label class="obs-flabel">' + esc(f.label) + '</label>' : '') + (f.options
       ? '<select data-k="' + f.key + '">' + f.options.map(o => '<option' + (o === f.value ? ' selected' : '') + '>' + esc(o) + '</option>').join('') + '</select>'
-      : '<input data-k="' + f.key + '" value="' + esc(f.value) + '" maxlength="60" spellcheck="false">').join('')
+      : '<input data-k="' + f.key + '" value="' + esc(f.value) + '" maxlength="60" spellcheck="false">')).join('')
       + '<div class="obs-row"><button class="obs-btn" data-x>CANCEL</button><button class="obs-btn primary" data-ok>' + esc(okText) + '</button></div>';
     const ok = () => { const r = {}; d.querySelectorAll('[data-k]').forEach(e => r[e.dataset.k] = e.value.trim()); close(r); };
     d.querySelector('[data-ok]').onclick = ok; d.querySelector('[data-x]').onclick = () => close(null);
-  $$('.obs-prow, .obs-pdir, .obs-pup', ov._rowBox).forEach(x => x.remove());
-  $$('.obs-empty', ov._rowBox).forEach(x => x.remove());
-  const [grp, sub] = presetFolder.split('/');
-  // a top folder (Factory, Artists) shows its folders, not every preset at once
-  if (!presetQuery && sub === undefined && grp !== 'MY')
-  {
-    const subs = presetSubs(grp);
-    subs.forEach(sb => {
-      const n = presetList.filter(p => presetGroup(p) === grp && presetSub(p) === sb).length;
-      const d = document.createElement('button'); d.className = 'obs-pdir'; d.dataset.folder = grp + '/' + sb;
-      d.innerHTML = '<span class="ic">' + FOLDER_IC + '</span><b></b><small></small><span class="go">›</span>';
-      d.querySelector('b').textContent = sb; d.querySelector('small').textContent = n + (n === 1 ? ' preset' : ' presets');
-      if (presetIn(presetCur, grp + '/' + sb) || presetList.some(p => p.id === presetCur.id && presetGroup(p) === grp && presetSub(p) === sb)) d.classList.add('cur');
-      ov._rowBox.appendChild(d);
-    });
-    if (!subs.length) { const e = document.createElement('div'); e.className = 'obs-empty'; e.textContent = 'No presets here yet.'; ov._rowBox.appendChild(e); }
-    markPresetSel();
-    return;
-  }
-  // inside a folder: a way back up
-  if (!presetQuery && sub !== undefined)
-  {
-    const up = document.createElement('button'); up.className = 'obs-pup'; up.dataset.folder = grp;
-    up.innerHTML = '<span class="go">‹</span><span>' + esc(GROUP_NAME[grp]) + '</span><span class="sep">/</span><b></b>';
-    up.querySelector('b').textContent = sub; up.title = 'Back to ' + GROUP_NAME[grp];
-    ov._rowBox.appendChild(up);
-  }
     d.addEventListener('keydown', e => { if (e.key === 'Enter') ok(); });
   });
 }

@@ -121,6 +121,7 @@ juce::var UiBridge::initialState()
     o->setProperty ("rig", proc.rig().toJson());
     o->setProperty ("preset", proc.presetManager().toJson());
     o->setProperty ("presets", proc.presetManager().listJson());
+    o->setProperty ("presetFolders", proc.presetManager().foldersJson());
     o->setProperty ("settings", juce::var (proc.settings().toObject().get()));
     o->setProperty ("midi", proc.midi().toJson());
     o->setProperty ("audio", audioSetup());
@@ -212,9 +213,21 @@ void UiBridge::buildCommands()
     c["presetNext"]   = [&pm, result] (const juce::Array<juce::var>& a, Completion d) { d (result (pm.loadNext (argInt (a, 0, 1)))); };
     c["presetInit"]   = [&pm] (const juce::Array<juce::var>&, Completion d) { d (pm.loadInit()); };
     c["presetSave"]   = [this, &pm, result] (const juce::Array<juce::var>&, Completion d) { const bool ok = result (pm.save()); if (ok) toast ("Saved " + pm.currentName()); d (ok); };
-    c["presetSaveAs"] = [this, &pm, result] (const juce::Array<juce::var>& a, Completion d) { const bool ok = result (pm.saveAs (argStr (a, 0), argStr (a, 1))); if (ok) toast ("Saved " + pm.currentName()); d (ok); };
+    c["presetSaveAs"] = [this, &pm, result] (const juce::Array<juce::var>& a, Completion d) { const bool ok = result (pm.saveAs (argStr (a, 0), argStr (a, 1), argStr (a, 2))); if (ok) toast ("Saved " + pm.currentName()); d (ok); };
     c["presetDelete"] = [this, &pm, result] (const juce::Array<juce::var>& a, Completion d) { const bool ok = result (pm.remove (argStr (a, 0).isEmpty() ? pm.currentId() : argStr (a, 0))); if (ok) toast ("Preset moved to the recycle bin"); d (ok); };
     c["presetRename"] = [&pm, result] (const juce::Array<juce::var>& a, Completion d) { d (result (pm.rename (argStr (a, 0), argStr (a, 1)))); };
+    // your own folders in My presets
+    c["presetFolders"]      = [&pm] (const juce::Array<juce::var>&, Completion d) { d (pm.foldersJson()); };
+    c["presetNewFolder"]    = [this, &pm, result] (const juce::Array<juce::var>& a, Completion d) { const bool ok = result (pm.createFolder (argStr (a, 0))); if (ok) toast ("Made the folder"); d (ok); };
+    c["presetRenameFolder"] = [&pm, result] (const juce::Array<juce::var>& a, Completion d) { d (result (pm.renameFolder (argStr (a, 0), argStr (a, 1)))); };
+    c["presetDeleteFolder"] = [this, &pm, result] (const juce::Array<juce::var>& a, Completion d) { const bool ok = result (pm.removeFolder (argStr (a, 0))); if (ok) toast ("Folder moved to the recycle bin"); d (ok); };
+    c["presetMove"]         = [this, &pm, result] (const juce::Array<juce::var>& a, Completion d)
+    {
+        const auto dir = argStr (a, 1);
+        const bool ok = result (pm.move (argStr (a, 0), dir));
+        if (ok) toast ("Moved to " + (dir.isEmpty() ? juce::String ("My presets") : dir));
+        d (ok);
+    };
     c["presetRescan"] = [&pm] (const juce::Array<juce::var>&, Completion d) { pm.rescan(); d (pm.listJson()); };
     c["presetImport"] = [this, &pm, result] (const juce::Array<juce::var>&, Completion d)
     {
@@ -338,7 +351,13 @@ void UiBridge::parameterChanged (const juce::String& id, float)
 void UiBridge::rigChanged()                         { rigDirty = true; }
 void UiBridge::rigMessage (const juce::String& t, bool err) { toast (t, err); }
 void UiBridge::presetStateChanged()                 { emit ("obs:preset", proc.presetManager().toJson()); }
-void UiBridge::presetListChanged()                  { emit ("obs:presets", proc.presetManager().listJson()); }
+void UiBridge::presetListChanged()
+{
+    auto o = new juce::DynamicObject();
+    o->setProperty ("list", proc.presetManager().listJson());
+    o->setProperty ("folders", proc.presetManager().foldersJson());
+    emit ("obs:presets", juce::var (o));
+}
 void UiBridge::changeListenerCallback (juce::ChangeBroadcaster*) { emit ("obs:audio", audioSetup()); }
 
 void UiBridge::timerCallback()
