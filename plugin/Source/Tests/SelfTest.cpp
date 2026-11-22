@@ -10,6 +10,7 @@
 //  every file of the installed Obsidian pedal pack), and a CPU budget for a full rig.
 // =============================================================================
 #include "../DSP/HarmonyDefs.h"
+#include "../Core/Updater.h"
 #include "../PluginProcessor.h"
 #include <set>
 #include "../DSP/Modules/ModuleRegistry.h"
@@ -463,6 +464,29 @@ int runSelfTest (const juce::StringArray& args)
             r.check (finite && jump < 0.5f, "moving it before / after the amp while playing: no jumps (biggest step " + juce::String (jump, 3) + ")");
         }
         p.presetManager().loadInit();
+    }
+
+    // ---------------------------------------------------------------- 5c. updates
+    r.head ("In-app updates (Settings > About)");
+    {
+        const juce::String hexA = juce::String::repeatedString ("ab", 32), hexB = juce::String::repeatedString ("cd", 32);
+        const auto json = juce::JSON::parse (juce::String (R"J({
+          "tag_name": "build-145", "name": "Build 145 (0.2.0)", "published_at": "2026-11-22T00:00:00Z",
+          "body": "HYDRA: six voices\n\n<!-- obsidian\nbuild: 145\nversion: 0.2.0\npack: 298d0ab9f6c0c908\nsha256: ObsidianAmpSuite-0.2.0-Setup.exe )J") + hexA
+          + "\nsha256: ObsidianAmpSuite-0.2.0-Update.exe " + hexB + R"J(\n-->",
+          "assets": [
+            { "name": "ObsidianAmpSuite-0.2.0-Setup.exe", "size": 90000000, "browser_download_url": "https://github.com/Extricl4/ObsidianSuite/releases/download/build-145/ObsidianAmpSuite-0.2.0-Setup.exe" },
+            { "name": "ObsidianAmpSuite-0.2.0-Update.exe", "size": 25000000, "browser_download_url": "https://github.com/Extricl4/ObsidianSuite/releases/download/build-145/ObsidianAmpSuite-0.2.0-Update.exe" },
+            { "name": "Evil-Update.exe", "size": 1000, "browser_download_url": "https://example.com/Evil-Update.exe" } ] })J");
+        const auto rel = Updater::parseRelease (json);
+        r.check (rel.ok && rel.build == 145 && rel.version == "0.2.0" && rel.pack == "298d0ab9f6c0c908" && rel.notes == "HYDRA: six voices",
+                 "reads a GitHub release: build " + juce::String (rel.build) + ", pack, notes without the hidden block");
+        r.check (rel.full.sha == hexA && rel.update.sha == hexB && rel.full.size == 90000000 && rel.update.url.endsWith ("-Update.exe"),
+                 "finds both installers with their sizes and checksums");
+        r.check (! Updater::trustedUrl ("https://example.com/x.exe") && ! Updater::trustedUrl ("https://github.com/someone/else/releases/download/a/x.exe")
+                 && Updater::trustedUrl (rel.full.url), "downloads only from this project's own GitHub releases");
+        r.info ("this build: " + juce::String (Updater::ownBuild() > 0 ? "build " + juce::String (Updater::ownBuild()) : juce::String ("made by hand"))
+                + ", pack " + Updater::ownPack());
     }
 
     // ---------------------------------------------------------------- 6. synth

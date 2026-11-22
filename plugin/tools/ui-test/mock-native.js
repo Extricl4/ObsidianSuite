@@ -22,6 +22,8 @@
     Object.assign(params, vals); later('obs:params', vals, 15);
     if (st.rig) { S.rig = JSON.parse(JSON.stringify(st.rig)); later('obs:rig', S.rig, 10); }
   }
+  let updTimer = null;
+  const setUpd = o => { Object.assign(S.update, o); later('obs:update', Object.assign({}, S.update), 0); };
   const listChanged = () => { S.presetFolders.sort((a, b) => a.localeCompare(b)); later('obs:presets', { list: S.presets, folders: S.presetFolders.slice() }, 5); };
 
   function moduleType(key) { return (S.modules || []).find(m => m.key === key); }
@@ -87,6 +89,18 @@
     presetRenameFolder: (a, b) => { const i = S.presetFolders.indexOf(a); if (i < 0 || !b || S.presetFolders.includes(b)) return false; S.presetFolders[i] = b; S.presets.forEach(p => { if (!p.factory && p.dir === a) p.dir = b; }); listChanged(); return true; },
     presetDeleteFolder: a => { if (!S.presetFolders.includes(a)) return false; S.presetFolders = S.presetFolders.filter(x => x !== a); S.presets = S.presets.filter(p => p.factory || p.dir !== a); listChanged(); return true; },
     presetMove: (id, dir) => { const p = S.presets.find(x => x.id === id); if (!p || p.factory || (dir && !S.presetFolders.includes(dir))) return false; if (dir) p.dir = dir; else delete p.dir; listChanged(); return true; },
+    // in-app updates (Settings > About), like obs::Updater: check -> available -> download -> ready -> install
+    getUpdate: () => Object.assign({}, S.update),
+    updateCheck: () => { setUpd({ state: 'checking', error: '' });
+      setTimeout(() => setUpd({ state: 'available', latest: (S.build || 0) + 1, version: '0.2.0', title: 'Build ' + ((S.build || 0) + 1) + ' (0.2.0)',
+        notes: 'Example notes: in the app this is what changed in the newest build.', size: 48 * 1048576, full: false }), 250);
+      return Object.assign({}, S.update); },
+    updateDownload: () => { if (!S.update.latest) return Object.assign({}, S.update); clearInterval(updTimer); setUpd({ state: 'downloading', progress: 0 });
+      updTimer = setInterval(() => { const p = Math.min(1, (S.update.progress || 0) + 0.25); if (p < 1) setUpd({ progress: p }); else { clearInterval(updTimer); setUpd({ state: 'ready', progress: 1 }); } }, 120);
+      return Object.assign({}, S.update); },
+    updateCancel: () => { clearInterval(updTimer); setUpd({ state: 'available', progress: 0 }); return true; },
+    updateInstall: () => { if (S.update.state !== 'ready') return { ok: false, message: 'Nothing downloaded yet' };
+      setUpd({ state: 'installing' }); return { ok: true, message: 'This is the web preview: in the app the installer runs now and the app opens again on the new build.' }; },
     getSettings: () => S.settings,
     setSetting: (k, v) => { S.settings[k] = v; return true; },
     midiMappings: () => S.midi, midiRemove: i => { S.midi.splice(i, 1); return S.midi; },
@@ -120,7 +134,7 @@
   };
   window.__mock = {
     log, params, emit, get state() { return S; },
-    load(state) { S = state; S.presetFolders = S.presetFolders || []; (S.params || []).forEach(p => params[p.id] = p.norm); },
+    load(state) { S = state; S.presetFolders = S.presetFolders || []; S.update = S.update || { state: 'idle', own: S.build || 0, canInstall: true }; (S.params || []).forEach(p => params[p.id] = p.norm); },
     sent(id) { const l = log.filter(x => x[0] === 'setParam' && x[1] === id); return l.length ? l[l.length - 1][2] : undefined; },
   };
 })();

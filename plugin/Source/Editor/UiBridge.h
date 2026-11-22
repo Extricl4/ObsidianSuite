@@ -1,4 +1,5 @@
 #pragma once
+#include "../Core/Updater.h"
 // =============================================================================
 //  UiBridge: the ONE door between the web UI and the plugin.
 //
@@ -53,6 +54,8 @@ private:
     juce::var modulesJson();
 
     ObsidianProcessor& proc;
+    juce::SharedResourcePointer<Updater> updater;   // one per process, shared by every window
+    int updaterSeen = 0;
     Emit emit;
     std::function<void (float)> applyScale;
     std::unordered_map<juce::String, Cmd> commands;

@@ -1,6 +1,7 @@
 # Builds the Obsidian Amp Suite plugin for Windows on every change to plugin/ or ui/,
 # runs its self-test, and uploads the VST3, the standalone app and an installer.
-# Download them from the run's "Artifacts" box (Actions tab).
+# Download them from the run's "Artifacts" box (Actions tab), or let the app update itself:
+# every build on main is also published as a release "build-<n>" (Settings > About > UPDATE).
 # Push a tag like v0.2.0 to publish them as a GitHub release.
 name: Plugin (Windows)
 
@@ -73,7 +74,9 @@ jobs:
         shell: pwsh
         run: |
           if (-not (Get-Command iscc -ErrorAction SilentlyContinue)) { choco install innosetup -y --no-progress | Out-Null; $env:Path += ";C:\Program Files (x86)\Inno Setup 6" }
-          iscc /DAppVersion=$env:OBS_VERSION /DSourceDir="$pwd\dist\ObsidianAmpSuite" /O"$pwd\dist" plugin\installer\ObsidianSuite.iss
+          iscc /DAppVersion=$env:OBS_VERSION /DBuild=$env:GITHUB_RUN_NUMBER /DSourceDir="$pwd\dist\ObsidianAmpSuite" /O"$pwd\dist" plugin\installer\ObsidianSuite.iss
+          # the small one for the app's UPDATE button (no capture / IR pack)
+          iscc /DAppVersion=$env:OBS_VERSION /DBuild=$env:GITHUB_RUN_NUMBER /DUpdateOnly=1 /DSourceDir="$pwd\dist\ObsidianAmpSuite" /O"$pwd\dist" plugin\installer\ObsidianSuite.iss
 
       - uses: actions/upload-artifact@v4
         with:
@@ -81,6 +84,38 @@ jobs:
           path: |
             dist/*.zip
             dist/*.exe
+
+      # Every build on main becomes a release "build-<n>": the app's Settings > About > UPDATE finds it there.
+      # The notes end with a hidden block the app reads (build, pack, SHA-256 of each installer).
+      - name: Publish build (in-app updates)
+        if: github.ref == 'refs/heads/main'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $v = $env:OBS_VERSION; $n = $env:GITHUB_RUN_NUMBER
+          $setup = Get-ChildItem dist\*-Setup.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+          $upd = Get-ChildItem dist\*-Update.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $setup) { Write-Host "No installer was built: nothing to publish"; exit 0 }
+          $pack = (Get-Content build\obsidian-pack.txt -Raw).Trim()
+          $msg = (git log -1 --pretty=%B) | Where-Object { $_ -notmatch '^(Co-Authored-By|Claude-Session):' }
+          $lines = @()
+          $lines += $msg
+          $lines += ''
+          $lines += '<!-- obsidian'
+          $lines += "build: $n"
+          $lines += "version: $v"
+          $lines += "pack: $pack"
+          $lines += "sha256: $($setup.Name) $((Get-FileHash $setup.FullName -Algorithm SHA256).Hash.ToLower())"
+          if ($upd) { $lines += "sha256: $($upd.Name) $((Get-FileHash $upd.FullName -Algorithm SHA256).Hash.ToLower())" }
+          $lines += '-->'
+          ($lines -join "`n") | Set-Content -Encoding utf8 notes.md
+          $files = @($setup.FullName); if ($upd) { $files += $upd.FullName }
+          gh release create "build-$n" @files --title "Build $n ($v)" --notes-file notes.md --target $env:GITHUB_SHA --latest
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          # keep the newest 8 builds
+          $old = gh release list --limit 100 --json tagName,createdAt | ConvertFrom-Json | Where-Object { $_.tagName -like 'build-*' } | Sort-Object createdAt -Descending | Select-Object -Skip 8
+          foreach ($r in $old) { gh release delete $r.tagName --cleanup-tag --yes }
 
       - name: Release (tags only)
         if: startsWith(github.ref, 'refs/tags/v')

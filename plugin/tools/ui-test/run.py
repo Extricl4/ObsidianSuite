@@ -622,6 +622,28 @@ async def run(standalone):
         check(await pg.evaluate("window.__mock.sent('transpose.hq')") == 1, 'Settings > Audio: transpose HQ switch')
         await pg.locator('.spanel[data-panel="Audio"] .seg button', has_text='4×').click(); await pg.wait_for_timeout(120)
         check(await pg.evaluate("window.__mock.log.some(x=>x[0]==='setSetting'&&x[1]==='oversampling'&&x[2]===4)"), 'Settings > Audio: oversampling 4×')
+        # ---- Settings > About: the update button
+        await pg.locator('.setnav button', has_text='About').click(); await pg.wait_for_timeout(120)
+        about = await pg.evaluate("[...document.querySelectorAll('.spanel[data-panel=About] span')].map(s=>s.textContent.trim())")
+        msg = lambda: pg.evaluate("document.querySelector('.obs-upd-msg').textContent")
+        go = lambda: pg.evaluate("document.querySelector('.obs-upd-go').textContent")
+        check('Build' in about and 'made by hand' in about and await pg.locator('.obs-upd').is_visible() and 'made by hand' in await msg(),
+              f'Settings > About shows the build and an UPDATES box ({await msg()})')
+        await pg.evaluate("window.__mock.log.length=0")
+        await pg.locator('.obs-upd-check').click(); await pg.wait_for_timeout(450)
+        m1, g1 = await msg(), await go()
+        check(await pg.evaluate("window.__mock.log.some(x=>x[0]==='updateCheck')") and 'Build 1 is ready' in m1 and g1 == 'UPDATE'
+              and await pg.locator('.obs-upd-notes').is_visible(), f'CHECK NOW finds a newer build and shows what changed ({m1})')
+        await pg.screenshot(path=str(OUT / 'settings-about.png'))
+        await pg.locator('.obs-upd-go').click(); await pg.wait_for_timeout(200)
+        m2, bar = await msg(), await pg.locator('.obs-upd-bar').is_visible()
+        await pg.wait_for_timeout(700)
+        check('Downloading' in m2 and bar and await pg.evaluate("window.__mock.log.some(x=>x[0]==='updateInstall')"),
+              f'UPDATE downloads it with a progress bar, then installs ({m2})')
+        await pg.evaluate("window.__mock.log.length=0")
+        await pg.locator('.obs-upd-tog').click(); await pg.wait_for_timeout(100)
+        check(await pg.evaluate("window.__mock.log.some(x=>x[0]==='setSetting'&&x[1]==='checkUpdates'&&x[2]===false)"), '"Check when it opens" can be switched off')
+        await pg.locator('.obs-upd-tog').click(); await pg.wait_for_timeout(60)
         if standalone:
             await pg.locator('.setnav button', has_text='Device').click(); await pg.wait_for_timeout(100)
             dd = await pg.evaluate("[...document.querySelectorAll('.spanel[data-panel=Device] button')].map(b=>b.textContent.trim()).filter(Boolean)")

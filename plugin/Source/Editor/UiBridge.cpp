@@ -111,6 +111,8 @@ juce::var UiBridge::initialState()
 {
     auto o = new juce::DynamicObject();
     o->setProperty ("version", OBSIDIAN_VERSION_STRING);
+    o->setProperty ("build", Updater::ownBuild());
+    o->setProperty ("update", updater->toJson());
     o->setProperty ("standalone", proc.isStandalone());
     o->setProperty ("platform", juce::SystemStats::getOperatingSystemName());
     o->setProperty ("cpu", juce::SystemStats::getCpuModel());
@@ -129,7 +131,19 @@ juce::var UiBridge::initialState()
     return juce::var (o);
 }
 
-void UiBridge::uiReady()  { ready = true; }
+void UiBridge::uiReady()
+{
+    ready = true;
+    updaterSeen = updater->changes();
+    // look for a newer build when the window opens (at most every 6 hours; Settings > About can turn it off)
+    auto& st = proc.settings();
+    const double now = juce::Time::currentTimeMillis() / 1000.0;
+    if ((bool) st.get ("checkUpdates") && now - (double) st.get ("lastUpdateCheck") > 6 * 3600.0 && updater->state() != Updater::State::downloading)
+    {
+        st.set ("lastUpdateCheck", now);
+        updater->check();
+    }
+}
 
 // ---------------------------------------------------------------------------- commands
 void UiBridge::handle (const juce::String& command, const juce::Array<juce::var>& args, Completion done)
@@ -311,6 +325,24 @@ void UiBridge::buildCommands()
 
     // ---- misc -------------------------------------------------------------------------------
     c["openUrl"]      = [] (const juce::Array<juce::var>& a, Completion d) { juce::URL (argStr (a, 0)).launchInDefaultBrowser(); d (true); };
+
+    // ---- in-app updates (Settings > About > UPDATES) --------------------------------------
+    c["updateCheck"]    = [this] (const juce::Array<juce::var>&, Completion d)
+    {
+        updater->check();
+        proc.settings().set ("lastUpdateCheck", juce::Time::currentTimeMillis() / 1000.0);
+        d (updater->toJson());
+    };
+    c["updateDownload"] = [this] (const juce::Array<juce::var>&, Completion d) { updater->download(); d (updater->toJson()); };
+    c["updateCancel"]   = [this] (const juce::Array<juce::var>&, Completion d) { updater->cancel(); d (true); };
+    c["updateInstall"]  = [this] (const juce::Array<juce::var>&, Completion d)
+    {
+        juce::String msg;
+        const bool ok = updater->install (proc.isStandalone(), msg);
+        auto o = new juce::DynamicObject(); o->setProperty ("ok", ok); o->setProperty ("message", msg);
+        d (juce::var (o));
+    };
+    c["getUpdate"]      = [this] (const juce::Array<juce::var>&, Completion d) { d (updater->toJson()); };
     c["revealContent"] = [] (const juce::Array<juce::var>& a, Completion d)
     {
         auto f = Rig::contentFolder(); const auto sub = argStr (a, 0);
@@ -363,6 +395,7 @@ void UiBridge::changeListenerCallback (juce::ChangeBroadcaster*) { emit ("obs:au
 void UiBridge::timerCallback()
 {
     if (! ready) return;
+    if (updater->changes() != updaterSeen) { updaterSeen = updater->changes(); emit ("obs:update", updater->toJson()); }
     if (anyDirty.exchange (false))
     {
         auto o = new juce::DynamicObject();

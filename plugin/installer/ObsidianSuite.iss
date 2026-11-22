@@ -10,11 +10,17 @@
 #ifndef SourceDir
   #define SourceDir "..\..\dist\ObsidianSuite"
 #endif
+; /DBuild=145: the GitHub build number. /DUpdateOnly=1: the small installer the app's UPDATE button
+; downloads: everything except the big capture / IR pack (it leaves yours as it is).
+#ifndef Build
+  #define Build "0"
+#endif
 
 [Setup]
 AppId={{6A3F1C2E-5B7D-4E8A-9C1F-0B5D0B5D0B5D}
 AppName=Obsidian Amp Suite
 AppVersion={#AppVersion}
+AppVerName=Obsidian Amp Suite {#AppVersion} (build {#Build})
 AppPublisher=Emil
 AppPublisherURL=https://github.com/Extricl4/ObsidianSuite
 DefaultDirName={autopf}\Obsidian Amp Suite
@@ -22,7 +28,11 @@ DefaultGroupName=Obsidian Amp Suite
 DisableProgramGroupPage=yes
 UsePreviousAppDir=no
 UsePreviousGroup=no
+#ifdef UpdateOnly
+OutputBaseFilename=ObsidianAmpSuite-{#AppVersion}-Update
+#else
 OutputBaseFilename=ObsidianAmpSuite-{#AppVersion}-Setup
+#endif
 Compression=lzma2/max
 SolidCompression=yes
 ArchitecturesAllowed=x64compatible
@@ -51,8 +61,10 @@ Source: "{#SourceDir}\LICENSES.md"; DestDir: "{app}"; Flags: ignoreversion
 ; the amp pack's amp files and faces are ours: always updated
 Source: "{#SourceDir}\Content\Amps\*"; DestDir: "{userdocs}\Obsidian Amp Suite\Amps"; Components: pack; Flags: ignoreversion uninsneveruninstall
 Source: "{#SourceDir}\Content\Faces\*"; DestDir: "{userdocs}\Obsidian Amp Suite\Faces"; Components: pack; Flags: recursesubdirs createallsubdirs ignoreversion uninsneveruninstall
+#ifndef UpdateOnly
 ; pedal + amp pack -> Documents\Obsidian Amp Suite (Captures\..., IRs\...); never overwrites your files
 Source: "{#SourceDir}\Content\*"; DestDir: "{userdocs}\Obsidian Amp Suite"; Components: pack; Flags: recursesubdirs createallsubdirs onlyifdoesntexist uninsneveruninstall
+#endif
 
 [Dirs]
 Name: "{userdocs}\Obsidian Amp Suite\Presets"
@@ -70,3 +82,5 @@ Name: "desktopicon"; Description: "Desktop shortcut for the standalone app"; Com
 
 [Run]
 Filename: "{app}\Obsidian Amp Suite.exe"; Description: "Start Obsidian Amp Suite"; Components: app; Flags: nowait postinstall skipifsilent
+; the app's UPDATE button installs quietly and the app closes: open it again when done (not as admin)
+Filename: "{app}\Obsidian Amp Suite.exe"; Components: app; Flags: nowait runasoriginaluser; Check: WizardSilent

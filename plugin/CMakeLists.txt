@@ -81,6 +81,26 @@ juce_add_plugin(ObsidianSuite
     NEEDS_WEB_BROWSER           TRUE
     ICON_BIG                    "${CMAKE_CURRENT_SOURCE_DIR}/Resources/icon.png")
 
+# In-app updates (Source/Core/Updater.*): the GitHub build number (0 = built by hand) and which
+# capture / IR pack this build carries (the small update installer leaves the pack alone).
+if(DEFINED ENV{GITHUB_RUN_NUMBER})
+    set(OBSIDIAN_BUILD $ENV{GITHUB_RUN_NUMBER})
+else()
+    set(OBSIDIAN_BUILD 0)
+endif()
+file(GLOB_RECURSE OBSIDIAN_PACK_FILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/Content"
+     "${CMAKE_CURRENT_SOURCE_DIR}/Content/Captures/*" "${CMAKE_CURRENT_SOURCE_DIR}/Content/IRs/*")
+list(SORT OBSIDIAN_PACK_FILES)
+set(OBSIDIAN_PACK_LIST "")
+foreach(f IN LISTS OBSIDIAN_PACK_FILES)
+    file(SIZE "${CMAKE_CURRENT_SOURCE_DIR}/Content/${f}" sz)
+    string(APPEND OBSIDIAN_PACK_LIST "${f}:${sz}\n")
+endforeach()
+string(SHA256 OBSIDIAN_PACK_HASH "${OBSIDIAN_PACK_LIST}")
+string(SUBSTRING "${OBSIDIAN_PACK_HASH}" 0 16 OBSIDIAN_PACK_HASH)
+file(WRITE "${CMAKE_BINARY_DIR}/obsidian-pack.txt" "${OBSIDIAN_PACK_HASH}")
+message(STATUS "Obsidian: build ${OBSIDIAN_BUILD}, pack ${OBSIDIAN_PACK_HASH}")
+
 file(GLOB_RECURSE OBSIDIAN_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.h")
@@ -119,7 +139,9 @@ target_compile_definitions(ObsidianSuite
         JUCE_MODAL_LOOPS_PERMITTED=0
         JUCE_STRICT_REFCOUNTEDPOINTER=1
         OBSIDIAN_PRODUCT_NAME="Obsidian Amp Suite"
-        OBSIDIAN_VERSION_STRING="${OBSIDIAN_VERSION}")
+        OBSIDIAN_VERSION_STRING="${OBSIDIAN_VERSION}"
+        OBSIDIAN_BUILD_NUMBER=${OBSIDIAN_BUILD}
+        OBSIDIAN_PACK_HASH="${OBSIDIAN_PACK_HASH}")
 
 if(WIN32)
     target_compile_definitions(ObsidianSuite PUBLIC
@@ -147,6 +169,7 @@ target_link_libraries(ObsidianSuite
         juce::juce_audio_formats
         juce::juce_dsp
         juce::juce_gui_extra
+        juce::juce_cryptography
     PUBLIC
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags

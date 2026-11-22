@@ -319,6 +319,7 @@ async function start() {
   safe('racks', () => setupRacks(st));
   safe('amp', () => setupAmpCab(st));
   safe('settings', () => setupSettings(st));
+  safe('updates', () => setupUpdates(st));
   safe('tempo', () => setupTempo(st));
   safe('tuner', setupTuner);
   safe('midi', () => setupMidi(st));
@@ -334,6 +335,7 @@ async function start() {
   on('obs:audioStats', renderAudio);
   on('obs:midi', renderMappings);
   on('obs:settings', s => { INIT.settings = s; safe('settings', () => renderSettings(s)); });
+  on('obs:update', u => safe('update', () => renderUpdate(u)));
   showPreset(st.preset);
 }
 
@@ -356,6 +358,73 @@ function setupChrome(st) {
   const URLS = { 'CHECK FOR UPDATES': 'https://github.com/Extricl4/ObsidianSuite/releases', 'MANUAL': 'https://github.com/Extricl4/ObsidianSuite/blob/main/plugin/README.md', 'LICENCES': 'https://github.com/Extricl4/ObsidianSuite/blob/main/plugin/LICENSES.md' };
   intercept(b => URLS[txt(b)] && b.closest('.spanel'), b => call('openUrl', URLS[txt(b)]));
   const cu = byText('button', 'CHECK FOR UPDATES'); if (cu) cu.textContent = 'RELEASES';
+}
+
+/* ===================================================== updates (Settings > About) */
+let updEl = null, updToasted = 0, updAutoInstall = false;
+const mb = b => (b / 1048576).toFixed(b >= 10485760 ? 0 : 1) + ' MB';
+function setupUpdates(st) {
+  const A = $('.spanel[data-panel="About"]'); if (!A || $('.obs-upd', A)) return;
+  // the build number in the About table
+  const grid = $$('div', A).find(d => d.children.length >= 8 && $$('span', d).some(s => txt(s) === 'Version'));
+  if (grid) { const l = document.createElement('span'), v = document.createElement('span'); l.textContent = 'Build';
+    l.setAttribute('style', grid.children[0].getAttribute('style') || ''); v.setAttribute('style', grid.children[1].getAttribute('style') || '');
+    v.textContent = st.build ? String(st.build) : 'made by hand'; grid.appendChild(l); grid.appendChild(v); }
+  const box = document.createElement('div'); box.className = 'obs-upd';
+  box.innerHTML = '<div class="obs-upd-h"><b>UPDATES</b><span class="obs-upd-msg"></span></div>'
+    + '<div class="obs-upd-bar"><i></i></div>'
+    + '<div class="obs-upd-notes"></div>'
+    + '<div class="obs-upd-row"><button class="obs-btn obs-upd-go">UPDATE</button><button class="obs-btn obs-upd-check">CHECK NOW</button>'
+    + '<label class="obs-upd-auto"><span>Check when it opens</span></label></div>';
+  const col = A.firstElementChild || A; col.appendChild(box);
+  const tg = $('.tog') ? $('.tog').cloneNode(true) : document.createElement('button');
+  tg.setAttribute('aria-label', 'Check for updates when it opens'); tg.classList.add('obs-upd-tog'); $('.obs-upd-auto', box).appendChild(tg);
+  const drawTog = () => { if (typeof setTog === 'function') setTog(tg, INIT.settings.checkUpdates !== false); };
+  drawTog();
+  tg.addEventListener('click', e => { e.stopPropagation(); e.preventDefault(); const v = INIT.settings.checkUpdates === false; INIT.settings.checkUpdates = v; call('setSetting', 'checkUpdates', v); drawTog(); }, true);
+  $('.obs-upd-check', box).addEventListener('click', e => { e.stopPropagation(); call('updateCheck').then(renderUpdate); });
+  $('.obs-upd-go', box).addEventListener('click', e => {
+    e.stopPropagation();
+    const s = (updEl && updEl._u) || {};
+    if (s.state === 'downloading') { updAutoInstall = false; call('updateCancel'); return; }
+    if (s.state === 'ready') { installUpdate(); return; }
+    if (s.state === 'available' || (s.state === 'failed' && s.latest)) { updAutoInstall = true; call('updateDownload').then(renderUpdate); return; }
+    call('updateCheck').then(renderUpdate);
+  });
+  updEl = box;
+  renderUpdate(st.update || {});
+}
+function installUpdate() {
+  updAutoInstall = false;
+  call('updateInstall').then(r => { if (r && r.message) say(r.message); if (updEl) $('.obs-upd-msg', updEl).textContent = r && r.message ? r.message : ''; });
+}
+function renderUpdate(u) {
+  if (!u || !updEl) return;
+  updEl._u = u;
+  const msg = $('.obs-upd-msg', updEl), go = $('.obs-upd-go', updEl), bar = $('.obs-upd-bar', updEl), notes = $('.obs-upd-notes', updEl);
+  const own = u.own ? 'build ' + u.own : 'a build made by hand';
+  const size = u.size ? ' · ' + mb(u.size) + (u.full ? ' (with the pedal and amp pack)' : '') : '';
+  const T = {
+    idle: ['You have ' + own + '.', 'CHECK'],
+    checking: ['Looking for a newer build…', 'CHECK'],
+    uptodate: ['You have the newest build (' + (u.own || u.latest) + ').', 'CHECK'],
+    available: ['Build ' + u.latest + ' is ready' + size + '. You have ' + own + '.', 'UPDATE'],
+    downloading: ['Downloading build ' + u.latest + '… ' + Math.round((u.progress || 0) * 100) + '%', 'CANCEL'],
+    ready: ['Build ' + u.latest + ' is downloaded and checked.', u.canInstall ? 'INSTALL' : 'SHOW FILE'],
+    installing: ['Installing build ' + u.latest + '…', 'UPDATE'],
+    failed: [(u.error || 'Something went wrong.'), u.latest ? 'TRY AGAIN' : 'CHECK'],
+  }[u.state] || ['', 'CHECK'];
+  if (u.state !== 'installing' || !msg.textContent) msg.textContent = T[0];     // installing keeps the installer's own message
+  go.textContent = T[1];
+  go.classList.toggle('hot', u.state === 'available' || u.state === 'ready');
+  go.disabled = u.state === 'checking' || u.state === 'installing';
+  bar.style.display = u.state === 'downloading' ? '' : 'none';
+  bar.firstElementChild.style.width = Math.round((u.progress || 0) * 100) + '%';
+  const showNotes = u.latest && (u.state === 'available' || u.state === 'downloading' || u.state === 'ready');
+  notes.style.display = showNotes ? '' : 'none';
+  if (showNotes) notes.textContent = (u.title ? u.title + '\n' : '') + (u.notes || '');
+  if (u.state === 'available' && u.latest && u.latest !== updToasted && (!u.own || u.latest > u.own)) { updToasted = u.latest; say('Build ' + u.latest + ' is ready: Settings > About > UPDATE'); }
+  if (u.state === 'ready' && updAutoInstall) installUpdate();
 }
 
 /** Run fn instead of the demo's own click handling for buttons matching test(). */
