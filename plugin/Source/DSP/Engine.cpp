@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "Engine.h"
 #include "../Core/Studio.h"
 
@@ -48,6 +49,10 @@ void Engine::prepare (double sampleRate, int block)
     if (auto* ca = ampSection.captureSlot().get()) for (auto& e : ca->engines) if (e) e->prepare (sr, maxBlock);
     inGainSm.reset (sr, 30.f, 1.f); outGainSm.reset (sr, 30.f, 1.f); tunerMute.reset (sr, 40.f, 1.f);
     mono.assign ((size_t) maxBlock, 0.f); scratchR.assign ((size_t) maxBlock, 0.f); synthL.assign ((size_t) maxBlock, 0.f); synthR.assign ((size_t) maxBlock, 0.f);
+    dryL.assign ((size_t) maxBlock, 0.f); dryR.assign ((size_t) maxBlock, 0.f); synthG.assign ((size_t) maxBlock, 0.f);
+    cabFade.reset (sr, p.cabOn == nullptr || p.cabOn->load() > 0.5f); eqFade.reset (sr, p.eqOn == nullptr || p.eqOn->load() > 0.5f);
+    synthFade.reset (sr, p.synthOn != nullptr && p.synthOn->load() > 0.5f);
+    cabWasActive = cabFade.active(); eqWasActive = eqFade.active();
     prepared = true;
 }
 
@@ -144,7 +149,10 @@ void Engine::process (juce::AudioBuffer<float>& buffer, int numIn, const HostInf
 
         // ---- input select ------------------------------------------------------------
         const int mode = inputMode.load();
-        if (numIn >= 2 && mode == 0)      for (int i = 0; i < n; ++i) x[i] = L[i] + R[i];
+        // sum of both inputs, unless they're the same signal (a mono track in a DAW arrives on both
+        // channels: adding them would make it 6 dB hotter than the same guitar in the app)
+        if (numIn >= 2 && mode == 0 && std::equal (L, L + n, R)) std::copy (L, L + n, x);
+        else if (numIn >= 2 && mode == 0) for (int i = 0; i < n; ++i) x[i] = L[i] + R[i];
         else if (numIn >= 2 && mode == 2) std::copy (R, R + n, x);
         else if (numIn >= 1)              std::copy (L, L + n, x);
         else                              std::fill (x, x + n, 0.f);
@@ -169,21 +177,25 @@ void Engine::process (juce::AudioBuffer<float>& buffer, int numIn, const HostInf
         transposer.process (x, n, (int) std::round (v (p.transpose)), v (p.transposeHq) > 0.5f);
 
         // ---- synth ------------------------------------------------------------------------
-        const bool synthOn = v (p.synthOn) > 0.5f;
+        synthFade.set (v (p.synthOn) > 0.5f);
+        const bool synthOn = synthFade.active();             // on, or fading in / out (no click)
         const bool synthPost = v (p.syn[obs::synthdefs::post]) > 0.5f;
         float synthMix = 0.f;
+        // this chunk's notes, with offsets relative to the chunk
+        SynthNote chunkNotes[kMaxSynthNotes]; int numChunk = 0;
+        for (int e = 0; e < numSynthNotes; ++e)
+            if (synthNotes[e].offset >= start && synthNotes[e].offset < start + n)
+                chunkNotes[numChunk++] = { synthNotes[e].offset - start, synthNotes[e].note, synthNotes[e].vel };
+        if (! synthOn) synth.keysWhileOff (chunkNotes, numChunk);
         if (synthOn)
         {
             SynthParams sp; readSynthParams (sp, host);
-            // this chunk's notes, with offsets relative to the chunk
-            SynthNote chunkNotes[64]; int numChunk = 0;
-            for (int e = 0; e < numSynthNotes && numChunk < 64; ++e)
-                if (synthNotes[e].offset >= start && synthNotes[e].offset < start + n)
-                    chunkNotes[numChunk++] = { synthNotes[e].offset - start, synthNotes[e].note, synthNotes[e].vel };
             synth.process (x, synthL.data(), synthR.data(), n, sp, pitch, chunkNotes, numChunk);
             synthMix = sp.v[obs::synthdefs::mix] * 0.01f;
+            synthFade.gains (synthG.data(), n);
+            for (int i = 0; i < n; ++i) synthG[(size_t) i] *= synthMix;
             if (! synthPost)
-                for (int i = 0; i < n; ++i) x[i] = x[i] * (1.f - synthMix) + 0.5f * (synthL[(size_t) i] + synthR[(size_t) i]) * synthMix;
+                for (int i = 0; i < n; ++i) { const float m = synthG[(size_t) i]; x[i] = x[i] * (1.f - m) + 0.5f * (synthL[(size_t) i] + synthR[(size_t) i]) * m; }
         }
 
         // ---- pedals (mono) ----------------------------------------------------------------
@@ -207,15 +219,24 @@ void Engine::process (juce::AudioBuffer<float>& buffer, int numIn, const HostInf
             mp[m] = { (int) v (s.model), v (s.pos), v (s.dist), v (s.level), v (s.pan), v (s.solo) > 0.5f, v (s.mute) > 0.5f, v (s.phase) > 0.5f };
         }
         float* outR = R != nullptr ? R : scratchR.data();   // mono output: render R into scratch and fold at the end
-        // capture amps whose captures already contain a cab bypass the cab section
-        cabSection.process (x, L, outR, n, mp[0], mp[1], v (p.cabLc), v (p.cabHc), v (p.cabOn) > 0.5f && ! ampSection.cabInside());
+        // capture amps whose captures already contain a cab bypass the cab section (crossfaded, no click)
+        cabFade.set (v (p.cabOn) > 0.5f && ! ampSection.cabInside());
+        if (cabFade.active())
+        {
+            if (! cabWasActive) cabSection.reset();           // coming back on: no old tail from before
+            cabSection.process (x, L, outR, n, mp[0], mp[1], v (p.cabLc), v (p.cabHc), true);
+            if (! cabFade.full()) cabFade.mix (x, x, L, outR, n);
+        }
+        else { std::copy (x, x + n, L); std::copy (x, x + n, outR); }
+        cabWasActive = cabFade.active();
 
         // ---- synth post-amp ----------------------------------------------------------------
         if (synthOn && synthPost)
             for (int i = 0; i < n; ++i)
             {
-                L[i] = L[i] * (1.f - synthMix) + synthL[(size_t) i] * synthMix;
-                outR[i] = outR[i] * (1.f - synthMix) + synthR[(size_t) i] * synthMix;
+                const float m = synthG[(size_t) i];
+                L[i] = L[i] * (1.f - m) + synthL[(size_t) i] * m;
+                outR[i] = outR[i] * (1.f - m) + synthR[(size_t) i] * m;
             }
 
         // ---- HYDRA after the amp: harmonies of the amp's sound, like a second guitarist -------
@@ -224,12 +245,18 @@ void Engine::process (juce::AudioBuffer<float>& buffer, int numIn, const HostInf
         float* st[2] = { L, outR };
 
         // ---- EQ ---------------------------------------------------------------------------
-        if (v (p.eqOn) > 0.5f)
+        eqFade.set (v (p.eqOn) > 0.5f);
+        if (eqFade.active())
         {
+            const bool full = eqFade.full();
+            if (! eqWasActive) eq.reset();
+            if (! full) { std::copy (L, L + n, dryL.data()); std::copy (outR, outR + n, dryR.data()); }
             for (int b = 0; b < kEqBands; ++b) eq.setBand (b, kEqFreqs[b], v (p.eqBand[b]));
             eq.setCuts (v (p.eqLc), v (p.eqHc), v (p.eqLcOn) > 0.5f, v (p.eqHcOn) > 0.5f);
             eq.process (st, 2, n);
+            if (! full) eqFade.mix (dryL.data(), dryR.data(), L, outR, n);
         }
+        eqWasActive = eqFade.active();
 
         // ---- FX, special FX ------------------------------------------------------------------
         racks[1].process (st, 2, n, ctxProto, v (p.postOn) > 0.5f);
@@ -251,7 +278,7 @@ void Engine::process (juce::AudioBuffer<float>& buffer, int numIn, const HostInf
         }
 
         // ---- STUDIO: records what you hear, then its takes and its click go in ------------------
-        if (auto* st = studio.load (std::memory_order_acquire)) st->process (L, outR, n);
+        if (auto* rec = studio.load (std::memory_order_acquire)) rec->process (L, outR, n);
 
         // ---- metronome ------------------------------------------------------------------------
         metronome.setRunning (metroRunning.load());

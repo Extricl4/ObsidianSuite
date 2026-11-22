@@ -36,7 +36,11 @@ public:
 
     juce::ValueTree& tree()                         { return rig; }
     void restore (const juce::ValueTree& saved);    // from DAW state / preset
-    juce::ValueTree snapshot() const                { return rig.createCopy(); }
+    /** The rig as a copy (presets, DAW state). Safe from any thread: off the message thread (some hosts save
+        projects from a background thread) it's the copy the message thread keeps up to date. */
+    juce::ValueTree snapshot() const;
+    /** Message thread: refresh the copy other threads get (on every change, and from a timer). */
+    void refreshSnapshot();
     void resetToDefault();
     void applyAll();                                // push the whole rig into the engine (after prepare / restore)
 
@@ -126,5 +130,8 @@ private:
     int lastAmpChannel = -1;
     juce::String shownFile[kNumRacks][kSlotsPerRack];   // what each pack pedal showed last (UI refresh when it changes)
     juce::ListenerList<Listener> listeners;
+    mutable juce::CriticalSection snapLock;
+    juce::ValueTree snapCache;
+    int snapTicks = 0;
 };
 } // namespace obs

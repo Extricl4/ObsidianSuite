@@ -1838,7 +1838,11 @@ function renderAudio(a) {
     const names = ['All devices', ...(a.midiInputs || []).map(m => m.name)];
     DD[7].splice(0, DD[7].length, ...names);
     const b = $$('button', M).find(x => x.querySelector('path[d="M6 9l6 6 6-6"]') && (names.includes(ddText(x)) || x._midiIn));
-    if (b) { b._midiIn = true; const cur = (INIT.settings || {}).midiInput || 'All devices'; setDDText(b, names.includes(cur) ? cur : 'All devices'); if (!b._watched) { b._watched = true; watchDD(b, t => call('setSetting', 'midiInput', t)); } }
+    // picking one device listens to that one only; "All devices" turns them all on
+    if (b) { b._midiIn = true; b._devs = a.midiInputs || []; const cur = (INIT.settings || {}).midiInput || 'All devices'; setDDText(b, names.includes(cur) ? cur : 'All devices');
+      if (!b._watched) { b._watched = true; watchDD(b, async t => { INIT.settings.midiInput = t; call('setSetting', 'midiInput', t);
+        for (const m of b._devs) await call('midiInputEnable', m.id, t === 'All devices' || m.name === t);
+        const st = await call('audioSetup'); if (st) renderAudio(st); }); } }
   }
 }
 /* "Transpose quality" row in Settings > Audio (Live = instant, HQ = studio quality, adds latency) */
@@ -1868,6 +1872,18 @@ function setupTempo(st) {
   if (sig) sig.addEventListener('click', e => { const b = e.target.closest('button'); if (b) call('setBeats', parseInt(txt(b))); });
   const acc = $('.tog[aria-label="Accent first beat"]');
   if (acc) acc.addEventListener('click', () => setTimeout(() => call('setAccent', acc.dataset.on === '1'), 0));
+  // click volume (the metronome had no volume control)
+  const accRow = acc && acc.parentElement;
+  if (accRow && !$('.obs-clickvol')) {
+    const row = document.createElement('div'); row.className = 'obs-clickvol';
+    row.innerHTML = '<span>Click volume</span><input type="range" min="0" max="100" step="1" aria-label="Click volume"><b></b>';
+    accRow.after(row);
+    const r = $('input', row), v = $('b', row), cur = Math.round(100 * (+((st.settings || {}).metronomeVolume ?? .7)));
+    r.value = cur; v.textContent = cur + '%';
+    r.addEventListener('input', () => { v.textContent = r.value + '%'; });
+    r.addEventListener('change', () => { if (window.obsSetSetting) window.obsSetSetting('metronomeVolume', +r.value / 100); else call('setSetting', 'metronomeVolume', +r.value / 100); });
+    r.addEventListener('click', e => e.stopPropagation());
+  }
   document.addEventListener('click', e => {
     const b = e.target.closest('[aria-label="Start metronome"],[aria-label="Stop metronome"]'); if (!b) return;
     setTimeout(() => call('metronome', typeof metro !== 'undefined' ? !!metro : false), 0);

@@ -55,7 +55,7 @@ void ObsidianProcessor::applySettings()
     juce::var maps;
     if (juce::JSON::parse (appSettings->get ("midiMappings").toString(), maps).wasOk() && maps.isArray() && maps.size() > 0)
         midiMapper.fromJson (maps);
-    const int os = juce::jlimit (1, 4, (int) appSettings->get ("oversampling"));
+    const int os = wantedOversampling();
     if (os != dsp.oversampling.load())
     {
         dsp.oversampling.store (os);
@@ -69,6 +69,25 @@ void ObsidianProcessor::applySettings()
     }
 }
 
+int ObsidianProcessor::wantedOversampling() const
+{
+    int os = juce::jlimit (1, 4, (int) appSettings->get ("oversampling"));
+    if (isNonRealtime())                   // a bounce: Settings > Audio > Render quality
+    {
+        const auto q = appSettings->get ("renderQuality").toString();
+        if (q == "Highest") os = 4;
+        else if (q == "High") os = juce::jmax (os, 2);
+    }
+    return os;
+}
+
+void ObsidianProcessor::setNonRealtime (bool offline) noexcept
+{
+    const bool was = isNonRealtime();
+    juce::AudioProcessor::setNonRealtime (offline);
+    if (was != offline && juce::MessageManager::existsAndIsCurrentThread()) applySettings();
+}
+
 void ObsidianProcessor::settingChanged (const juce::String& key, const juce::var&)
 {
     if (key == "midiMappings") return;   // set by the mapper itself
@@ -78,6 +97,7 @@ void ObsidianProcessor::settingChanged (const juce::String& key, const juce::var
 void ObsidianProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     studioPtr->prepare (sampleRate);
+    dsp.oversampling.store (wantedOversampling());        // a bounce may want more (Render quality)
     dsp.prepare (sampleRate, juce::jmax (16, samplesPerBlock));
     doubleScratch.setSize (2, juce::jmax (16, samplesPerBlock));
     reportedLatency = -1;
@@ -113,7 +133,7 @@ void ObsidianProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
             if (msg.isNoteOn())                              dsp.addSynthNote (meta.samplePosition, msg.getNoteNumber(), msg.getFloatVelocity());
             else if (msg.isNoteOff())                        dsp.addSynthNote (meta.samplePosition, msg.getNoteNumber(), 0.f);
             else if (msg.isAllNotesOff() || msg.isAllSoundOff())
-                for (int nn = 0; nn < 128; ++nn) dsp.addSynthNote (meta.samplePosition, nn, 0.f);
+                dsp.addSynthNote (meta.samplePosition, -1, 0.f);     // one "all notes off" (DAWs send it on all 16 channels)
         }
     }
 
@@ -157,8 +177,17 @@ void ObsidianProcessor::processBlock (juce::AudioBuffer<double>& buffer, juce::M
     for (int c = 0; c < ch; ++c) for (int i = 0; i < n; ++i) buffer.setSample (c, i, (double) view.getSample (c, i));
 }
 
+void ObsidianProcessor::keepPresetForSave()
+{
+    const auto id = presets->currentId(), name = presets->currentName();
+    const bool dirty = presets->isDirty();
+    const juce::ScopedLock sl (presetLock);
+    savedPresetId = id; savedPresetName = name; savedPresetDirty = dirty;
+}
+
 void ObsidianProcessor::timerCallback()
 {
+    keepPresetForSave();
     // MIDI events (CC -> params, program change -> preset, learn).
     const auto learned = midiMapper.dispatch (apvts, [this] (int pc)
     {
@@ -186,7 +215,11 @@ void ObsidianProcessor::getStateInformation (juce::MemoryBlock& dest)
     root.appendChild (apvts.copyState(), nullptr);
     root.appendChild (rigPtr->snapshot(), nullptr);
     juce::ValueTree pre ("PRESET");
-    pre.setProperty ("id", presets->currentId(), nullptr).setProperty ("name", presets->currentName(), nullptr).setProperty ("dirty", presets->isDirty(), nullptr);
+    if (auto* mm = juce::MessageManager::getInstanceWithoutCreating(); mm != nullptr && mm->isThisTheMessageThread()) keepPresetForSave();
+    {
+        const juce::ScopedLock sl (presetLock);
+        pre.setProperty ("id", savedPresetId, nullptr).setProperty ("name", savedPresetName, nullptr).setProperty ("dirty", savedPresetDirty, nullptr);
+    }
     root.appendChild (pre, nullptr);
     if (auto xml = root.createXml()) copyXmlToBinary (*xml, dest);
 }

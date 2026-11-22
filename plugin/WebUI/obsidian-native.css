@@ -273,3 +273,8 @@ button.obs-locked { opacity: .32; cursor: not-allowed; }
 /* the pages' pop-up menus (ADD PEDAL / EFFECT / SPECIAL FX, CHOOSE AMP / CAB) sit above everything on the page,
    so the pedal editor's knobs can't show through */
 .page .pop { z-index: 60 !important; }
+/* the tempo pop-up: click volume */
+.obs-clickvol { display: flex; align-items: center; gap: 10px; font-size: 12px; color: rgb(var(--cf_a3a3a8)); }
+.obs-clickvol span { flex: none; }
+.obs-clickvol input { flex: 1; min-width: 0; accent-color: var(--accent); }
+.obs-clickvol b { flex: none; width: 36px; text-align: right; font-weight: 500; font-variant-numeric: tabular-nums; color: rgb(var(--cf_e9e6df)); }

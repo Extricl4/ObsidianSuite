@@ -46,6 +46,31 @@ private:
     float cur = 0, target = 0, inc = 0; int steps = 1, left = 0;
 };
 
+/** Click-free on / off for a whole section: while it switches, the processed signal is crossfaded
+    with the dry one (15 ms). Fully off = the section isn't processed at all. */
+class SectionFade
+{
+public:
+    void reset (double sr, bool on)      { sm.reset (sr, 15.f, on ? 1.f : 0.f); }
+    void set (bool on)                    { sm.set (on ? 1.f : 0.f); }
+    bool active() const                   { return sm.isSmoothing() || sm.current() > 0.f; }   // process the section
+    bool full() const                     { return ! sm.isSmoothing() && sm.current() >= 1.f; } // no dry needed
+    /** wet = dry + g (wet - dry), sample by sample (call only when active and not full). */
+    void mix (const float* dryL, const float* dryR, float* L, float* R, int n)
+    {
+        for (int i = 0; i < n; ++i)
+        {
+            const float g = sm.next();
+            L[i] = dryL[i] + g * (L[i] - dryL[i]);
+            if (R != nullptr) R[i] = dryR[i] + g * (R[i] - dryR[i]);
+        }
+    }
+    /** Advance without mixing (fills gains: for sections that mix themselves). */
+    void gains (float* g, int n)          { for (int i = 0; i < n; ++i) g[i] = sm.next(); }
+private:
+    Smoother sm;
+};
+
 /** One-pole lowpass / highpass (6 dB/oct). */
 class OnePole
 {

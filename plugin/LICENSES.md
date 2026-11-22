@@ -8,6 +8,7 @@ Downloaded at build time (see `cmake/Dependencies.cmake`), not stored in this re
 | [NeuralAmpModelerCore](https://github.com/sdatkinson/NeuralAmpModelerCore) | playing `.nam` captures | MIT |
 | [AudioDSPTools](https://github.com/sdatkinson/AudioDSPTools) | resampling captures to your sample rate | MIT |
 | [Eigen](https://eigen.tuxfamily.org) | maths for NAM | MPL 2.0 |
+| [nlohmann/json](https://github.com/nlohmann/json) | reading `.nam` files (comes with NAM) | MIT |
 | [Signalsmith Stretch](https://github.com/Signalsmith-Audio/signalsmith-stretch) | HQ transpose | MIT |
 | [Signalsmith Linear](https://github.com/Signalsmith-Audio/linear) | FFT for Signalsmith Stretch | MIT |
 | [Steinberg ASIO SDK](https://www.steinberg.net/developers/) | ASIO in the standalone app | GPLv3 or Steinberg licence |

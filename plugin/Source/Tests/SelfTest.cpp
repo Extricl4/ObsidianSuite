@@ -229,6 +229,50 @@ int runSelfTest (const juce::StringArray& args)
         r.info ("CPU: avg " + juce::String (st.avgLoad * 100, 2) + "% of real time, worst block " + juce::String (st.maxBlockLoad * 100, 1) + "%");
     }
 
+    // ---------------------------------------------------------------- 1a. levels and switching
+    r.head ("Levels and switching (mono tracks in a DAW, sections on / off, bounces)");
+    {
+        const auto sine = [SR] (int i) { return 0.2f * (float) std::sin (2.0 * juce::MathConstants<double>::pi * 110.0 * i / SR); };
+        p.presetManager().loadInit();
+        const auto one = render (p, SR, BLOCK, 1.0, sine);          // guitar on input 1 only
+        p.presetManager().loadInit();
+        const auto dup = render (p, SR, BLOCK, 1.0, sine, 1);       // the same guitar on both channels (a mono track in a DAW)
+        const float diffDb = juce::Decibels::gainToDecibels (dup.rms) - juce::Decibels::gainToDecibels (one.rms);
+        r.check (std::abs (diffDb) < 0.5f, juce::String::formatted ("a mono track in a DAW (both channels the same) plays at the same level as one input (%+.1f dB)", diffDb));
+
+        // switching a section on / off mid-note: no step in the output (largest jump vs the steady signal)
+        auto jump = [&] (const juce::String& id, float from, float to, std::function<void()> setup) {
+            p.presetManager().loadInit(); if (setup) setup(); setNorm (p, id, from);
+            juce::AudioBuffer<float> buf (2, BLOCK); juce::MidiBuffer midi; std::vector<float> out;
+            const int blocks = (int) (1.2 * SR) / BLOCK, swBlock = (int) (0.6 * SR) / BLOCK;
+            int idx = 0;
+            for (int b = 0; b < blocks; ++b)
+            {
+                if (b == swBlock) setNorm (p, id, to);
+                for (int i = 0; i < BLOCK; ++i) { buf.setSample (0, i, 1.25f * sine (idx++)); buf.setSample (1, i, 0.f); }
+                p.processBlock (buf, midi);
+                for (int i = 0; i < BLOCK; ++i) out.push_back (buf.getSample (0, i));
+            }
+            const int sw = swBlock * BLOCK, win = (int) (0.2 * SR);
+            double before = 1e-9, after = 1e-9, at = 0;
+            for (int i = sw - win; i < sw; ++i) before = std::max (before, (double) std::abs (out[(size_t) i] - out[(size_t) i - 1]));
+            for (int i = sw + win; i < sw + 2 * win; ++i) after = std::max (after, (double) std::abs (out[(size_t) i] - out[(size_t) i - 1]));
+            for (int i = sw; i < sw + (int) (0.05 * SR); ++i) at = std::max (at, (double) std::abs (out[(size_t) i] - out[(size_t) i - 1]));
+            return at / std::max (before, after); };
+        const double ampJ = jump ("amp.on", 1.f, 0.f, {}), cabJ = jump ("cab.on", 1.f, 0.f, {});
+        const double eqJ = jump ("eq.on", 1.f, 0.f, [&] { setReal (p, "eq.b2", 12.f); setReal (p, "eq.b7", -12.f); setReal (p, "eq.lc", 400.f); });
+        r.check (ampJ < 1.6 && cabJ < 1.6 && eqJ < 1.6, juce::String::formatted ("switching AMP / CAB / EQ off mid-note doesn't click (largest jump %.2f / %.2f / %.2f x the steady signal's)", ampJ, cabJ, eqJ));
+        p.presetManager().loadInit();
+
+        // Settings > Audio > Render quality: a bounce (offline render) uses more oversampling
+        const auto oldQ = p.settings().get ("renderQuality"), oldOs = p.settings().get ("oversampling");
+        p.settings().set ("renderQuality", "Highest"); p.settings().set ("oversampling", 2); p.applySettings();
+        p.setNonRealtime (true);  const int offline = p.engine().oversampling.load();
+        p.setNonRealtime (false); const int live = p.engine().oversampling.load();
+        p.settings().set ("renderQuality", oldQ); p.settings().set ("oversampling", oldOs); p.applySettings();
+        r.check (offline == 4 && live == 2, juce::String::formatted ("Render quality: a bounce renders at %dx oversampling, playing at %dx", offline, live));
+    }
+
     // ---------------------------------------------------------------- 1b. every in-house amp
     r.head ("Every in-house amp (gain 0 / 5 / 10, extreme tone settings)");
     for (const auto& m : obs::amp::models())
@@ -624,6 +668,21 @@ int runSelfTest (const juce::StringArray& args)
         e.uiSynthNote (64, false);
         render (p, SR, BLOCK, 1.0, [&] (int) { return 0.f; });
         r.check (e.synthActivity() < 0.01f, "the UI's AUDITION note off releases it");
+        // stuck notes: MIDI from the DAW, through processBlock like a host sends it
+        auto midiBlock = [&] (std::function<void (juce::MidiBuffer&)> fill) { juce::AudioBuffer<float> b (2, BLOCK); b.clear(); juce::MidiBuffer m; fill (m); p.processBlock (b, m); };
+        midiBlock ([] (juce::MidiBuffer& m) { m.addEvent (juce::MidiMessage::noteOn (1, 76, 0.9f), 0); });
+        render (p, SR, BLOCK, 0.3, [&] (int) { return 0.f; });
+        const float playing = e.synthActivity();
+        midiBlock ([] (juce::MidiBuffer& m) { for (int c = 1; c <= 16; ++c) m.addEvent (juce::MidiMessage::allNotesOff (c), 10); });
+        render (p, SR, BLOCK, 1.0, [&] (int) { return 0.f; });
+        r.check (playing > 0.05f && e.synthActivity() < 0.01f, juce::String::formatted ("the DAW stopping (All Notes Off on all 16 channels) releases a high note (E5: %.3f -> %.3f)", playing, e.synthActivity()));
+        midiBlock ([] (juce::MidiBuffer& m) { m.addEvent (juce::MidiMessage::noteOn (1, 76, 0.9f), 0); });
+        render (p, SR, BLOCK, 0.2, [&] (int) { return 0.f; });
+        setNorm (p, "synth.on", 0); render (p, SR, BLOCK, 0.1, [&] (int) { return 0.f; });
+        midiBlock ([] (juce::MidiBuffer& m) { m.addEvent (juce::MidiMessage::noteOff (1, 76), 0); });
+        render (p, SR, BLOCK, 0.1, [&] (int) { return 0.f; });
+        setNorm (p, "synth.on", 1); render (p, SR, BLOCK, 1.0, [&] (int) { return 0.f; });
+        r.check (e.synthActivity() < 0.01f, "a key let go while the synth was off doesn't hang when it's switched back on (" + juce::String (e.synthActivity(), 3) + ")");
 
         // chords follow the key: E minor, A played -> A C E (minor), G played -> G B D (major)
         float ch[4];

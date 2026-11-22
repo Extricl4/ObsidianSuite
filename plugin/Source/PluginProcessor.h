@@ -59,7 +59,13 @@ public:
 private:
     void timerCallback() override;
     void settingChanged (const juce::String& key, const juce::var& value) override;
+    /** Oversampling now: the Audio setting, raised by "Render quality" while the DAW renders offline. */
+    int wantedOversampling() const;
+public:
+    /** Applies the app settings to the engine (also called by the self-test). */
     void applySettings();
+    void setNonRealtime (bool offline) noexcept override;
+private:
     void loadStartupSound();
 
     juce::SharedResourcePointer<AppSettings> appSettings;
@@ -76,6 +82,10 @@ private:
     bool stateWasRestored = false;
     int reportedLatency = -1;
     juce::CriticalSection msgLock;
+    // the loaded preset as a DAW save stores it (kept by the timer: hosts may save from another thread)
+    juce::CriticalSection presetLock;
+    juce::String savedPresetId, savedPresetName; bool savedPresetDirty = false;
+    void keepPresetForSave();
     juce::String learnMessage;
     juce::AudioBuffer<float> doubleScratch;
     std::shared_ptr<bool> aliveToken = std::make_shared<bool> (true);   // expires with the processor

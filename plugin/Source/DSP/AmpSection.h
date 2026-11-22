@@ -60,6 +60,7 @@ public:
         tone.prepare (s); tone.initSmoother (s);
         inGain.reset (s, 30.f, 1.f);
         fade.reset (s, 12.f, 1.f);
+        tailK = std::exp (-1.f / (float) (0.0025 * s)); tail = 0.f; lastOut = 0.f;
         scratch.assign ((size_t) maxBlock, 0.f);
         for (auto& v : vbuf) v.assign ((size_t) maxBlock, 0.f);
         driveSm.reset (s, 30.f, 1.f); levelSm.reset (s, 30.f, 1.f);
@@ -102,11 +103,13 @@ public:
         // Crossfade (dip) whenever the processing path changes: type, model, channel or capture.
         CaptureAmp* cap = t == Capture ? capture.get() : nullptr;
         const void* path = t == Nam ? (const void*) eng : t == Model ? (const void*) wanted : t == Capture ? (const void*) cap : (const void*) (intptr_t) (t + 1);
-        if (path != lastPath) { lastPath = path; fade.snap (0.f); fade.set (1.f); }
+        // (the new path fades in from silence; the old one glides out from its last sample: no step, no click)
+        if (path != lastPath) { lastPath = path; fade.snap (0.f); fade.set (1.f); tail = lastOut; }
 
         if (t == None)
         {
             if (fade.isSmoothing()) for (int i = 0; i < n; ++i) x[i] *= fade.next();
+            glide (x, n);
             for (auto& c : captures) c.blockDone();
             capture.blockDone();
             return;
@@ -141,6 +144,7 @@ public:
         else model.process (x, n, gain, bass, mid, treble, presence, depth, master);
 
         if (fade.isSmoothing()) for (int i = 0; i < n; ++i) x[i] *= fade.next();
+        glide (x, n);
         for (auto& c : captures) c.blockDone();
         capture.blockDone();
     }
@@ -331,6 +335,14 @@ private:
     amp::AmpModel model;
     ToneStack tone;
     Smoother inGain, fade;
+    float tail = 0.f, tailK = 0.99f, lastOut = 0.f;
+    /** The old path's last value, decaying (2.5 ms), added while the new one fades in. */
+    void glide (float* x, int n)
+    {
+        if (std::abs (tail) > 1.0e-6f) for (int i = 0; i < n; ++i) { x[i] += tail; tail *= tailK; }
+        else tail = 0.f;
+        if (n > 0) lastOut = x[n - 1];
+    }
     const void* lastPath = nullptr;
     std::vector<float> scratch;
 };

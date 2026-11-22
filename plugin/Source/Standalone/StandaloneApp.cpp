@@ -20,6 +20,34 @@ int runSelfTest (const juce::StringArray& args);
 int writeFactoryPresets (const juce::File& dir, const juce::File& spec, float targetDb);
 int renderSynthDemos (const juce::File& dir);
 
+/** Opens MIDI inputs as they appear, like JUCE's own auto-open, but following Settings > MIDI > "MIDI input".
+    (JUCE's turns every device on half a second after launch, which undid picking one device.)
+    A device that shows up is turned on when the setting is "All devices", when it is the chosen one,
+    or when the chosen one isn't connected (the menu then shows "All devices" too). */
+class MidiWatch : private juce::Timer
+{
+public:
+    explicit MidiWatch (juce::AudioDeviceManager& d) : dm (d) { timerCallback(); startTimer (700); }
+private:
+    void timerCallback() override
+    {
+        const auto now = juce::MidiInput::getAvailableDevices();
+        if (now == last) return;
+        const auto want = settings->get ("midiInput").toString();
+        bool present = false;
+        for (auto& d : now) present = present || d.name == want;
+        for (auto& d : last)
+            if (! now.contains (d)) dm.setMidiInputDeviceEnabled (d.identifier, false);
+        for (auto& d : now)
+            if (! last.contains (d))
+                dm.setMidiInputDeviceEnabled (d.identifier, want.isEmpty() || want == "All devices" || ! present || d.name == want);
+        last = now;
+    }
+    juce::AudioDeviceManager& dm;
+    juce::Array<juce::MidiDeviceInfo> last;
+    juce::SharedResourcePointer<AppSettings> settings;
+};
+
 class MainWindow : public juce::DocumentWindow
 {
 public:
@@ -163,9 +191,10 @@ public:
         auto* settings = props.getUserSettings();
         const bool firstRun = ! settings->containsKey ("audioSetup");
         holder = std::make_unique<juce::StandalonePluginHolder> (settings, false, juce::String(), nullptr,
-                                                                 juce::Array<juce::StandalonePluginHolder::PluginInOuts>(), true);
+                                                                 juce::Array<juce::StandalonePluginHolder::PluginInOuts>(), false);
         holder->getMuteInputValue().setValue (false);
         if (firstRun) preferAsio();
+        midiWatch = std::make_unique<MidiWatch> (holder->deviceManager);
 
         if (juce::Desktop::getInstance().getDisplays().displays.isEmpty()) return;   // headless: audio only
         window = std::make_unique<MainWindow> (*holder, settings);
@@ -173,6 +202,7 @@ public:
 
     void shutdown() override
     {
+        midiWatch = nullptr;
         if (holder != nullptr) { holder->savePluginState(); holder->saveAudioDeviceState(); }
         window = nullptr;
         holder = nullptr;
@@ -214,6 +244,7 @@ private:
 
     juce::ApplicationProperties props;
     std::unique_ptr<juce::StandalonePluginHolder> holder;
+    std::unique_ptr<MidiWatch> midiWatch;
     std::unique_ptr<MainWindow> window;
 };
 } // namespace obs

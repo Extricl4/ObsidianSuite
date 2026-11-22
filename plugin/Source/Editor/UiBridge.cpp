@@ -377,7 +377,7 @@ void UiBridge::buildCommands()
         auto f = Rig::contentFolder(); const auto sub = argStr (a, 0);
         (sub.isNotEmpty() ? f.getChildFile (sub) : f).revealToUser(); d (true);
     };
-    c["log"]   = [] (const juce::Array<juce::var>& a, Completion d) { DBG ("UI: " << argStr (a, 0)); d (true); };
+    c["log"]   = [] (const juce::Array<juce::var>& a, Completion d) { juce::ignoreUnused (a); DBG ("UI: " << argStr (a, 0)); d (true); };
     c["ready"] = [this] (const juce::Array<juce::var>&, Completion d) { uiReady(); d (initialState()); };
     c["init"]  = [this] (const juce::Array<juce::var>&, Completion d) { d (initialState()); };
 }

@@ -117,12 +117,14 @@ private:
     std::atomic<Studio*> studio { nullptr };
     dsp::PeakMeter inMeter, outMeterL, outMeterR;
     dsp::Smoother inGainSm, outGainSm, tunerMute;
+    dsp::SectionFade cabFade, eqFade, synthFade;       // click-free on / off of those sections
+    bool cabWasActive = true, eqWasActive = true;
     dsp::ModuleContext ctxProto;
     std::atomic<bool> metroRunning { false };
     std::atomic<double> lastBpm { 120.0 };
     std::atomic<float> cpu { 0.f };
 
-    std::vector<float> mono, synthL, synthR, scratchR;
+    std::vector<float> mono, synthL, synthR, scratchR, dryL, dryR, synthG;
     std::atomic<unsigned> synthSteps[16];
     static constexpr int kMaxSynthNotes = 256;
     dsp::SynthNote synthNotes[kMaxSynthNotes]; int numSynthNotes = 0;

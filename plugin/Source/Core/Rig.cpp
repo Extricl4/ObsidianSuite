@@ -141,7 +141,7 @@ void Rig::applyAmp()
             juce::String err;
             ampMap = CaptureAmpMap::compile (readAmpFile (key)["map"], readFaceFile (key), err);
             ampMapKey = ampMap != nullptr ? key : juce::String();
-            if (ampMap == nullptr) message (amp["name"].toString() + ": " + (err.isEmpty() ? "its amp file isn't installed (Documents\Obsidian Amp Suite\Amps)" : err), true);
+            if (ampMap == nullptr) message (amp["name"].toString() + ": " + (err.isEmpty() ? "its amp file isn't installed (" + contentFolder().getChildFile ("Amps").getFullPathName() + ")" : err), true);
         }
         lastAmpChannel = -1;
         pushFaceState();
@@ -987,6 +987,7 @@ juce::var Rig::toJson() const
 void Rig::timerCallback()
 {
     engine.collectGarbage (false);
+    if (++snapTicks % 3 == 0) refreshSnapshot();               // knob turns on the amp face don't all notify
     captureAmpChannelTick();
     bool changed = false;
     for (int r = 0; r < kNumRacks; ++r)                         // IR pedals rebuild their IR here (never on the audio thread)
@@ -998,7 +999,22 @@ void Rig::timerCallback()
             }
     if (changed) notifyChanged();                               // e.g. a pack pedal's switch picked another capture
 }
-void Rig::notifyChanged()                     { listeners.call ([] (Listener& l) { l.rigChanged(); }); }
+void Rig::notifyChanged()                     { refreshSnapshot(); listeners.call ([] (Listener& l) { l.rigChanged(); }); }
+
+juce::ValueTree Rig::snapshot() const
+{
+    if (auto* mm = juce::MessageManager::getInstanceWithoutCreating(); mm == nullptr || mm->isThisTheMessageThread())
+        return rig.createCopy();
+    const juce::ScopedLock sl (snapLock);
+    return snapCache.isValid() ? snapCache.createCopy() : juce::ValueTree ("RIG");
+}
+
+void Rig::refreshSnapshot()
+{
+    auto copy = rig.createCopy();
+    const juce::ScopedLock sl (snapLock);
+    snapCache = copy;
+}
 void Rig::message (const juce::String& t, bool err)
 {
     if (err) DBG ("Obsidian: " << t);

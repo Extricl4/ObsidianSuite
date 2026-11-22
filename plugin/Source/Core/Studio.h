@@ -4,8 +4,8 @@
 //
 //  It records what you hear: the finished sound at the end of the chain, before
 //  the click and before the studio's own playback. Takes live in memory for
-//  playback and are also saved as WAV files in Documents\Obsidian Amp Suite\
-//  Recordings. The page owns the arrangement (tracks, takes on the timeline, loop,
+//  playback and are also saved as WAV files (Documents / Obsidian Amp Suite /
+//  Recordings). The page owns the arrangement (tracks, takes on the timeline, loop,
 //  click) and sends it whenever it changes; this class plays it back with each
 //  track's volume / pan / mute / solo, clicks on the beat, and mixes it down to a
 //  WAV (EXPORT).

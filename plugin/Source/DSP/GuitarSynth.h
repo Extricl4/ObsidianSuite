@@ -371,6 +371,7 @@ private:
     // ------------------------------------------------------------------ notes
     void handleNote (const SynthNote& e)
     {
+        if (e.note < 0) { kbCount = 0; if (src == Src::Midi) stopNote(); return; }   // all notes off (the DAW stopped)
         if (e.vel > 0)
         {
             for (int i = 0; i < kbCount; ++i) if (kb[i].note == e.note) { removeKb (i); break; }
@@ -384,6 +385,24 @@ private:
             else if (src == Src::Midi) stopNote();
         }
     }
+public:
+    /** While the synth is switched off: keys let go meanwhile are let go here too
+        (else they'd hang when it's switched back on). Note-ons are ignored. */
+    void keysWhileOff (const SynthNote* events, int numEvents)
+    {
+        for (int k = 0; k < numEvents; ++k)
+        {
+            const auto& e = events[k];
+            if (e.note < 0) kbCount = 0;
+            else if (e.vel <= 0) { for (int i = 0; i < kbCount; ++i) if (kb[i].note == e.note) { removeKb (i); break; } }
+        }
+        if (kbCount == 0 && src == Src::Midi && sounding)
+        {
+            sounding = held = arpActive = arpGate = false;
+            ampEnv.gate (false); fltEnv.gate (false);
+        }
+    }
+private:
     void removeKb (int i) { for (int k = i; k < kbCount - 1; ++k) kb[k] = kb[k + 1]; --kbCount; }
 
     void startNote (float note, float velocity, Src s, bool legatoMove)
