@@ -234,6 +234,15 @@
   ok   Paradise City                       -18.4 dB  peak  -9.2  out  -7.6
   ok   November Rain (Solo)                -27.7 dB  peak -18.5  out   1.7
   ok   Knockin' on Heaven's Door (Solo)    -19.3 dB  peak  -9.6  out  -6.7
+  ok   Fool for Your Loving                -19.1 dB  peak  -9.7  out  -6.9
+  ok   Ain't No Love in the Heart of the City  -20.8 dB  peak -11.5  out  -5.2
+  ok   Slide It In                         -28.2 dB  peak -19.4  out   2.2
+  ok   Still of the Night                  -26.7 dB  peak -17.8  out   0.7
+  ok   Here I Go Again '87                 -28.4 dB  peak -19.7  out   2.4
+  ok   Is This Love                        -30.5 dB  peak -16.0  out   4.5
+  ok   Is This Love (Solo)                 -29.7 dB  peak -19.9  out   3.7
+  ok   Crying in the Rain '87              -28.7 dB  peak -19.4  out   2.7
+  ok   Slip of the Tongue                  -23.8 dB  peak -14.6  out  -2.2
   ok   Back in Black                       -17.8 dB  peak  -8.0  out  -8.2
   ok   Highway to Hell                     -17.8 dB  peak  -8.5  out  -8.2
   ok   Thunderstruck                       -18.7 dB  peak  -9.3  out  -7.3
@@ -266,6 +275,16 @@
   ok   Come as You Are                     -30.5 dB  peak -15.0  out   4.5
   ok   Heart-Shaped Box                    -18.5 dB  peak  -9.9  out  -7.5
   ok   Lithium                             -19.0 dB  peak -10.1  out  -7.0
+  ok   Man in the Box                      -26.3 dB  peak -16.1  out   0.3
+  ok   Man in the Box (Solo)               -28.4 dB  peak -20.6  out   2.4
+  ok   Them Bones                          -27.3 dB  peak -18.9  out   1.3
+  ok   Would?                              -24.9 dB  peak -15.7  out  -1.1
+  ok   Rooster                             -24.9 dB  peak -15.5  out  -1.1
+  ok   Down in a Hole                      -29.6 dB  peak -13.4  out   3.6
+  ok   No Excuses                          -30.7 dB  peak -16.3  out   4.7
+  ok   Nutshell                            -29.5 dB  peak -16.8  out   3.5
+  ok   Grind                               -26.4 dB  peak -16.6  out   0.4
+  ok   Check My Brain                      -19.8 dB  peak  -8.9  out  -6.2
   ok   Creep                               -18.3 dB  peak  -9.1  out  -7.7
   ok   Paranoid Android                    -27.4 dB  peak -16.6  out   1.4
   ok   Weird Fishes                        -27.2 dB  peak -16.4  out   1.2
@@ -395,4 +414,4 @@
   ok   Smooth                              -26.6 dB  peak -17.5  out   0.6
   ok   Still Got the Blues                 -27.6 dB  peak -18.7  out   1.6
   ok   Parisienne Walkways                 -25.5 dB  peak -15.9  out  -0.5
-Wrote 397 presets to /home/claude/obsidiansuite/plugin/Presets
+Wrote 416 presets to /home/claude/obsidiansuite/plugin/Presets

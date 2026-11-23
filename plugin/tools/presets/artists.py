@@ -426,6 +426,36 @@ def make(m):
       FOURx12, eq='lead', gate=-62, post=[dly(520, 30, 20, 'Tape'), hall(3, 20)])
 
     # =====================================================================================
+    a = artist('Whitesnake')
+    a("Fool for Your Loving", 'Crunch', "Ready an' Willing (1980) · bluesy British crunch with a bit of room",
+      A('tyche', Gain=5.5, Treble=6, Middle=7, Bass=5, Presence=5.5, Volume=7, Master=6), FOURx12,
+      gate=-64, doubler=6, post=[room(12)])
+    a("Ain't No Love in the Heart of the City", 'Crunch', "Snakebite (1978) · slow blues, warm and just breaking up",
+      A('tyche', Gain=4.5, Treble=5.5, Middle=7, Bass=5, Presence=5, Volume=6.5, Master=6), FOURx12,
+      gate=-66, post=[spring(14)])
+    a("Slide It In", 'Crunch', "Slide It In (1984) · swaggering mid-80s hard rock",
+      A('chrysaor', Gain=6.5, Bass=5, Middle=6.5, Treble=6.5, Presence=6.5, Master=5), FOURx12,
+      gate=-60, doubler=6, post=[room(10)])
+    a("Still of the Night", 'Rhythm', "Whitesnake (1987) · the huge, saturated riff: a boosted Marshall, thick and tight",
+      A('chrysaor', Gain=8, Bass=5.5, Middle=6.5, Treble=6.5, Presence=6.5, Master=5), FOURx12,
+      pre=[ts('II', -2, 5)], gate=-56, doubler=8, width=135, post=[room(10)])
+    a("Here I Go Again '87", 'Crunch', "Whitesnake (1987) · the big, polished arena chords",
+      A('chrysaor', Gain=7, Bass=5, Middle=6.5, Treble=6.5, Presence=6.5, Master=5), FOURx12,
+      pre=[ts('II', -4, 4)], gate=-60, doubler=8, width=135, post=[dly(380, 18, 10), hall(2.4, 14)])
+    a("Is This Love", 'Clean', "Whitesnake (1987) · lush chorused clean with long echoes",
+      A('melinoe', mic='SM57 + 414', Volume=4, Treble=8, Bass=4.5, Middle=5.5, Reverb=1.5),
+      pre=[comp(-26, 3, 6, 70)], post=[chorus(0.7, 45, 40), dly(440, 30, 20), hall(3, 22)], width=130)
+    a("Is This Love (Solo)", 'Lead', "Whitesnake (1987) · the singing, chorused 80s lead",
+      A('chrysaor', Gain=7.5, Bass=5, Middle=7, Treble=6.5, Presence=6.5, Master=5), FOURx12,
+      pre=[ts('I', -4, 4)], gate=-62, post=[chorus(0.6, 30, 25), dly(460, 32, 22), hall(3.2, 22)])
+    a("Crying in the Rain '87", 'Lead', "Whitesnake (1987) · the fiery solo: lots of gain, wide echo",
+      A('chrysaor', Gain=8.5, Bass=5, Middle=7, Treble=6.5, Presence=6.5, Master=5), FOURx12,
+      pre=[ts('II', -2, 5)], gate=-60, post=[sdly('1/4', 30, 20, 'Ping-Pong'), hall(3, 20)])
+    a("Slip of the Tongue", 'Rhythm', "Slip of the Tongue (1989) · the title track: slick, high-gain late-80s shred rhythm",
+      A('thanatos', Preamp=7, Bass=5.5, Middle=6, Treble=6.5, Presence=6, Depth=5.5, Master=5), FOURx12,
+      gate=-56, doubler=8, width=130)
+
+    # =====================================================================================
     a = artist('AC/DC')
     a("Back in Black", 'Crunch', "Back in Black (1980) · less gain than you think: punchy, open, loud", A('tyche', Gain=5, Treble=6.5, Middle=7, Bass=5, Presence=6, Volume=7, Master=6),
       FOURx12, gate=-66, doubler=8, width=130, post=[room(10)])
@@ -509,6 +539,40 @@ def make(m):
       FOURx12, pre=[fuzz(7, 6, -3)], eq='fuzz', doubler=7)
     a("Lithium", 'Rhythm', "Nevermind (1991) · the loud chorus distortion", A('tyche', Gain=5.5, Treble=6, Middle=6, Bass=6, Presence=5.5, Volume=7, Master=6),
       FOURx12, pre=[fx('emperor', Mode='DIST', Drive=2, Volume=2, Mix=100)], gate=-60, doubler=8)
+
+    # =====================================================================================
+    a = artist('Alice in Chains')
+    # Jerry Cantrell: dark, thick, mid-heavy Marshall-type crunch, lots of wah. Most songs in E flat.
+    a("Man in the Box", 'Rhythm', "Facelift (1990) · the talk-box riff (an envelope wah stands in for the talk box). E flat tuning",
+      A('chrysaor', Gain=7, Bass=6, Middle=6.5, Treble=6.5, Presence=6.5, Master=5), FOURx12,
+      pre=[wah('Envelope', 5.5, 5, 5)], gate=-58, doubler=7, post=[room(10)])
+    a("Man in the Box (Solo)", 'Lead', "Facelift (1990) · the wah solo: vocal, nasty, mid-heavy. E flat tuning",
+      A('chrysaor', Gain=7.5, Bass=5, Middle=7.5, Treble=5.5, Presence=5, Master=5), FOURx12,
+      pre=[wah('Manual', pos=58, q=8), ts('I', -4, 4)], gate=-62, post=[dly(380, 22, 14), plate(2, 14)])
+    a("Them Bones", 'Rhythm', "Dirt (1992) · the lurching drop riff, thick and dark. Drop D flat tuning",
+      A('chrysaor', Gain=7.5, Bass=6, Middle=6.5, Treble=6.5, Presence=6.5, Master=5), FOURx12,
+      pre=[ts('II', -3, 4)], gate=-54, doubler=7)
+    a("Would?", 'Rhythm', "Dirt (1992) · heavy, brooding and wide. E flat tuning",
+      A('thanatos', Preamp=6.5, Bass=6, Middle=6.5, Treble=5.5, Presence=5, Depth=5.5, Master=5), FOURx12,
+      gate=-56, doubler=8, width=130, post=[room(10)])
+    a("Rooster", 'Rhythm', "Dirt (1992) · the crushing chorus riffs. E flat tuning",
+      A('thanatos', Preamp=7, Bass=6, Middle=6.5, Treble=5.5, Presence=5, Depth=6, Master=5), FOURx12,
+      gate=-54, doubler=8, width=130)
+    a("Down in a Hole", 'Clean', "Dirt (1992) · the haunted clean picking with a little chorus and echo. E flat tuning",
+      A('melinoe', mic='SM57 + 414', Volume=4, Treble=8, Bass=4.5, Middle=5.5, Reverb=1.5),
+      pre=[chorus(0.6, 35, 30)], post=[dly(430, 25, 16), hall(2.6, 18)])
+    a("No Excuses", 'Clean', "Jar of Flies (1994) · bright, chorused clean strumming. E flat tuning",
+      A('persephone', channel='Ch I', voice='Bright', Volume=4.5, Treble=7.5, Middle=5.5, Bass=4.5, switches=['chorus'], Speed=2.5, Depth=5),
+      post=[room(12)])
+    a("Nutshell", 'Acoustic', "Jar of Flies (1994) · the sad, open acoustic part. E flat tuning",
+      A('orpheus', take='Take 2', Gain=4, Bass=4.5, Middle=7, Treble=7.5, Body=5, Reverb=2.5, Volume=5),
+      post=[hall(2.8, 18)])
+    a("Grind", 'Rhythm', "Alice in Chains (1995) · slow, sludgy and grinding",
+      A('erebus', Gain=6, Bass=6, Middle=6, Treble=5.5, Presence=5, Depth=6, Master=5),
+      gate=-52, doubler=8, width=130)
+    a("Check My Brain", 'Rhythm', "Black Gives Way to Blue (2009) · the bending, seasick main riff. Drop D flat tuning",
+      A('lamia', channel='HBE', mic='SM57', Gain=6, Bass=5.5, Middle=6.5, Treble=7.5, Presence=7, Master=5),
+      gate=-54, doubler=7)
 
     # =====================================================================================
     a = artist('Radiohead')
