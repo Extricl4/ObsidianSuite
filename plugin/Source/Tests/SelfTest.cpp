@@ -299,6 +299,15 @@ int runSelfTest (const juce::StringArray& args)
             juce::Random rng (7);
             std::vector<float> in ((size_t) BLOCK), l ((size_t) BLOCK), rr ((size_t) BLOCK);
             dsp::CabSection::MicParams a, b; b.mute = true;
+            // the cab's impulse response is built on a background thread: let it arrive before comparing
+            // (a busy build machine took long enough that the two runs measured different responses)
+            for (int i = 0; i < 40; ++i)
+            {
+                std::fill (in.begin(), in.end(), 0.f);
+                cab.process (in.data(), l.data(), rr.data(), BLOCK, a, b, 20.f, 20000.f, true);
+                juce::Thread::sleep (25);
+            }
+            cab.reset();
             double sum = 0;
             for (int blk = 0; blk < 400; ++blk)
             {
