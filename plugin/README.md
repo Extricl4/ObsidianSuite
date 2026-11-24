@@ -30,6 +30,7 @@ If an ASIO driver is installed the app picks it by itself on the first start. In
 | 10 celestial pedals: lush reverbs (Elysium hall, Empyrean two-voice shimmer, Nimbus cloud, Vesper choir, Halo reverse/bloom), delays (Astral shimmer delay, Mnemosyne three-head tape echo + spring, Gemini dual/reverse), Lyra 12-string, Icarus octave fuzz | `Source/DSP/Modules/CelestialModules.cpp` |
 | Transpose: **Live** (instant) and **HQ** (studio quality, latency reported to the DAW) | `Source/DSP/Sections.h`, `PitchShifter.h` |
 | Synth, played by the guitar or MIDI (see below) | `Source/DSP/GuitarSynth.h`, parameters in `SynthDefs.h`, page in `ui/src/synth.js` |
+| GLITCH (the SFX tab's second page): KERAUNOS, an expression pedal with 16 effects, and KHAOS, a tempo-synced glitch engine (see below) | `Source/DSP/FxLab.h`, parameters in `FxLabDefs.h`, page in `ui/src/fxlab.js` |
 | HYDRA harmonizer, six voices (see below) | `Source/DSP/Harmonizer.h`, parameters and modes in `HarmonyDefs.h`, page in `ui/src/harmony.js` |
 | Themes: colours, fonts, bands and moving details | `ui/src/themes.js`, fonts in `ui/fonts` (OFL) |
 | Parameters (one list: DAW automation, presets and UI all use it) | `Source/Core/Params.cpp` |
@@ -157,6 +158,35 @@ atmospheres that play by themselves around your playing, no notes needed. It has
 * **SCENES**: 29 hand-made atmospheres (nature, dream, dark, horror), each led by one sound of its own and
   levelled to sit under the guitar. **SUMMON MOOD** (calm .. horror) decides what the random buttons make:
   the three dice, **MUTATE** (nudge everything) and **SUMMON** (a whole new world, with a name).
+
+## GLITCH (the SFX tab's second page)
+
+The switch on top of the SFX tab flips between **RACK** (your special effects pedals) and **GLITCH**: two units
+on one faceplate, styled like SIREN. They play only while the SFX tab is on (switching one on wakes the tab).
+
+**KERAUNOS** (the thunderbolt): one treadle, sixteen effects in four groups. **PITCH**: whammy up / down, dive
+bomb (two octaves), fifth up, octave + fifth, squeal, detune drop. **LASER**: laser (a resonant comb that zaps
+up), zap comb, frequency shift. **RING**: ring mod, ring tracking (follows the note you play). **FILTER**: wah,
+talk box (U-O-A-E-I), filter, bit crush.
+* **MODE**: PEDAL (drag the treadle, or move it with a MIDI expression pedal via MIDI learn), ENVELOPE (your
+  picking pushes it), AUTO (it rocks by itself), TRIGGER (each pick attack, or the TRIGGER button, fires a sweep).
+* SPEED and SENS mean what the mode needs (fall time, rate, sweep time; how far / how soft); SWEEP picks up,
+  down, up and down or random. COLOR is each effect's tone (resonance, sharpness, bits). BEFORE / AFTER AMP.
+* The screen draws what the pedal does from heel to toe, with the value where it is now (+7 st, 1.2 kHz, "A").
+
+**KHAOS** (the void): glitches made from the last bars you played, locked to the DAW's tempo (or the app's BPM).
+* 22 glitch types in five groups. **TIME**: stutter, roll, reverse, scatter, skip, freeze. **PITCH**: pitch,
+  tape stop, spin up, half speed, warble. **DIGITAL**: crush, chop, dropout, data. **INTERFERENCE**: GSM, radio,
+  hum, static. **TEXTURE**: grains, echo, vinyl.
+* **RANDOM**: on every step of the GRID there is a CHANCE of a glitch of LENGTH steps, picked from the lit types
+  (click a group's name for all of it). **SEQUENCE**: pick a type, click steps to draw it (right-click clears,
+  the wheel changes a step); runs of one type play as one longer glitch. The lane shows the playhead and what
+  fired. CHAOS makes them wilder, REACH is how far back they reach, PITCH / DIRECTION for pitch glitches,
+  FILTER is a DJ filter on the glitches.
+* **HOLD**: hold it down to freeze the moment you press it, or tap it to latch.
+
+29 presets (laser, pitch, robot, filter, glitch, broken, texture, combo), DICE (both units, or each unit's own
+dice), UNDO and RESET. In a browser the page animates by itself (no sound).
 
 ## HYDRA, the harmonizer (HARMONY page)
 
@@ -326,8 +356,9 @@ Pantera presets are tuned by hand (listed in `KEEP`).
 ## Tests
 
 * `"Obsidian Amp Suite.exe" --selftest report.txt` renders every pedal in every slot with random settings,
-  every sample rate and buffer size, checks transpose pitch accuracy, the synth, AETHER (every bed, voice and texture, random worlds, FREEZE, FOLLOW), HYDRA (pitch of every voice,
-  how fast it follows, bypass, moving it while playing), presets, DAW state and CPU. Add `--nam file.nam` to test a capture, and `--packs` to play every file of the installed pedal and amp
+  every sample rate and buffer size, checks transpose pitch accuracy, the synth (and its KEYS), AETHER (every bed, voice and texture, random worlds, FREEZE, FOLLOW), HYDRA (pitch of every voice,
+  how fast it follows, bypass, moving it while playing, SIREN through it, AETHER kept out), KERAUNOS and KHAOS (pitch at the toe, every effect and
+  mode, every glitch type, the sequence in time, HOLD, bypass, CPU), presets, DAW state and CPU. Add `--nam file.nam` to test a capture, and `--packs` to play every file of the installed pedal and amp
   pack (every capture amp: all its captures load, the gain is swept, every button is pressed, level and CPU).
   The GitHub build runs it on every push.
 * `python plugin/tools/ui-test/run.py` runs the real UI in headless Chrome against a fake engine and clicks

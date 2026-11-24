@@ -418,7 +418,7 @@ public:
     {
         for (auto& h : hist) std::fill (h.begin(), h.end(), 0.f);
         for (auto& h : echo) std::fill (h.begin(), h.end(), 0.f);
-        wc = 0; echoW = 0; beat = 0; lastStep = -1; ev[0].type = ev[1].type = -1; cur = 0;
+        wc = 0; echoW = 0; beat = 0; lastStep = -1; ev[0].type = ev[1].type = -1; cur = 0; holdWas = false;
         shiftL.reset(); shiftR.reset();
         for (auto* f : { &djL, &djR, &bpL, &bpR, &echoLp[0], &echoLp[1] }) f->reset();
         for (auto& g : grains) g.left = 0;
@@ -444,6 +444,9 @@ public:
         {
             const float dl = L[i], dr = R[i];
             hist[0][(size_t) (wc & mask)] = dl; hist[1][(size_t) (wc & mask)] = dr; ++wc;
+            // HOLD pressed: freeze this very moment (not at the next step, when the note may be gone)
+            if (hold && ! holdWas && ev[cur].type < 0) start (g::Freeze, 4.f * stepLen);
+            holdWas = hold;
             const long long step = (long long) std::floor (beat / stepBeats + 1.0e-9);
             if (step != lastStep) { lastStep = step; onStep (step, p, hold); }
             beat += inc;
@@ -752,6 +755,7 @@ private:
     fx::Rng rng; fx::PitchShift shiftL, shiftR;
     Svf djL, djR, bpL, bpR, echoLp[2]; bool filterOn = false, filterLow = true;
     float heldSample[2] {};
+    bool holdWas = false;
     std::atomic<int> shownStep { 0 }, shownType { -1 }, shownCount { 0 };
 };
 } // namespace obs::dsp

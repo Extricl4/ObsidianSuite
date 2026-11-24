@@ -1266,6 +1266,128 @@ int runSelfTest (const juce::StringArray& args)
         p.presetManager().loadInit();
     }
 
+    // ---------------------------------------------------------------- 6d. KERAUNOS and KHAOS (the SFX tab's GLITCH page)
+    r.head ("KERAUNOS and KHAOS (SFX > GLITCH)");
+    {
+        auto& e = p.engine();
+        int nFx = 0;
+        for (auto* prm : p.getParameters())
+            if (auto* rp = dynamic_cast<juce::RangedAudioParameter*> (prm)) if (rp->getParameterID().startsWith ("ker.") || rp->getParameterID().startsWith ("glt.")) ++nFx;
+        r.check (nFx == obs::fxdefs::ker::count + obs::fxdefs::glt::count, juce::String (nFx) + " KERAUNOS and KHAOS parameters");
+        auto clean = [&] {
+            p.presetManager().loadInit();
+            for (auto id : { "amp.on", "cab.on", "doubler.on", "gate.on", "eq.on", "synth.on", "harm.on" }) setNorm (p, id, 0);
+            setNorm (p, "sfx.on", 1);
+        };
+        auto tone = [&] (double hz) { const double sr = SR; return [hz, sr] (int i) { const double t = i / sr; double v = 0;
+            for (int h = 1; h <= 5; ++h) v += std::sin (juce::MathConstants<double>::twoPi * hz * h * t) / h; return (float) (0.2 * v); }; };
+        auto pitchOf = [&] (std::function<float (int)> in, double secs) {
+            std::vector<float> cap; render (p, SR, BLOCK, secs, in, 2, &cap);
+            return detectPitch (std::vector<float> (cap.begin() + (long) (0.4 * SR), cap.end()), SR); };
+        auto cents = [] (float got, float want) { return got > 0 ? std::abs (1200.f * std::log2 (got / want)) : 9999.f; };
+        // the treadle: whammy and friends land on their notes (A3 in)
+        {
+            struct C { const char* name; int algo; float want; };
+            juce::String res; int good = 0;
+            for (auto c : { C { "Whammy Up", 0, 440.f }, C { "Whammy Down", 1, 110.f }, C { "Dive Bomb (half way)", 2, 110.f }, C { "Fifth Up", 3, 329.63f }, C { "Squeal", 5, 880.f } })
+            {
+                clean(); setNorm (p, "ker.on", 1); setReal (p, "ker.algo", (float) c.algo); setReal (p, "ker.mode", 0); setReal (p, "ker.pos", c.algo == 2 ? 50.f : 100.f); setReal (p, "ker.mix", 100);
+                setReal (p, "ker.place", 1); setReal (p, "ker.color", 100);
+                const float f = pitchOf (tone (220.0), 1.0);
+                if (cents (f, c.want) < 30.f) ++good;
+                res << c.name << " " << juce::String (f, 1) << ", ";
+            }
+            r.check (good == 5, "the pedal at the toe (A3 in): " + res.dropLastCharacters (2) + " Hz");
+        }
+        // every effect in every mode, before and after the amp: clean
+        {
+            Guitar g (SR); bool ok = true; float worst = 0; juce::String bad;
+            for (int a = 0; a < obs::fxdefs::ker::kAlgos; ++a)
+            {
+                clean(); setNorm (p, "amp.on", 1); setNorm (p, "cab.on", 1); setNorm (p, "ker.on", 1); setReal (p, "ker.algo", (float) a);
+                setReal (p, "ker.mode", (float) (a % 4)); setReal (p, "ker.place", (float) (a % 2)); setReal (p, "ker.color", (float) ((a * 37) % 101)); setReal (p, "ker.speed", 80);
+                const auto st = render (p, SR, BLOCK, 0.6, [&] (int i) { if (i % (int) (SR * 0.15) == 0) g.pluck (110.f * (1 + i / (int) (SR * 0.15) % 3), 0.6f); return g.next(); });
+                worst = juce::jmax (worst, st.peak);
+                if (! st.finite || st.peak > 1.99f || st.rms < 1e-4f) { ok = false; bad << a << " "; }
+            }
+            r.check (ok, "all 16 effects, all four modes, before and after the amp: clean (loudest peak " + juce::String (worst, 2) + ")" + (bad.isEmpty() ? juce::String() : " (bad: " + bad + ")"));
+        }
+        // what moves it: AUTO rocks by itself, a pick attack fires a TRIGGER sweep, ENVELOPE follows the playing
+        {
+            clean(); setNorm (p, "ker.on", 1); setReal (p, "ker.algo", 12); setReal (p, "ker.mode", 2); setReal (p, "ker.speed", 70); setReal (p, "ker.shape", 2);
+            float lo = 1, hi = 0;
+            render (p, SR, BLOCK, 2.0, [&] (int i) { if (i % 256 == 0) { lo = juce::jmin (lo, e.keraunosPos()); hi = juce::jmax (hi, e.keraunosPos()); } return 0.f; });
+            Guitar g (SR);
+            setReal (p, "ker.mode", 3); setReal (p, "ker.shape", 0); setReal (p, "ker.speed", 40); setReal (p, "ker.sens", 60);
+            render (p, SR, BLOCK, 1.0, [] (int) { return 0.f; });
+            const float rest = e.keraunosPos(); float peak = 0;
+            render (p, SR, BLOCK, 0.4, [&] (int i) { if (i == 0) g.pluck (220.f, 0.6f); if (i % 256 == 0) peak = juce::jmax (peak, e.keraunosPos()); return g.next(); });
+            Guitar g2 (SR);
+            setReal (p, "ker.mode", 1); setReal (p, "ker.sens", 30); render (p, SR, BLOCK, 3.0, [] (int) { return 0.f; });
+            const float still = e.keraunosPos(); float pushed = 0;
+            render (p, SR, BLOCK, 0.3, [&] (int i) { if (i == 0) g2.pluck (220.f, 0.7f); if (i % 256 == 0) pushed = juce::jmax (pushed, e.keraunosPos()); return g2.next(); });
+            r.check (hi - lo > 0.8f && rest < 0.05f && peak > 0.9f && still < 0.05f && pushed > 0.3f,
+                     juce::String::formatted ("AUTO rocks it (%.2f..%.2f), a pick fires a TRIGGER sweep (%.2f -> %.2f), ENVELOPE follows the playing (%.2f -> %.2f)", lo, hi, rest, peak, still, pushed));
+        }
+        // KHAOS: every glitch type on its own, by chance at 100%: clean, and it really glitches
+        {
+            Guitar g (SR); bool ok = true; juce::String bad; float worst = 0;
+            for (int t = 0; t < obs::fxdefs::glt::kTypes; ++t)
+            {
+                clean(); setNorm (p, "glt.on", 1); setReal (p, "glt.mode", 0); setReal (p, "glt.chance", 100); setReal (p, "glt.grid", 3); setReal (p, "glt.chaos", 60);
+                for (int k = 0; k < obs::fxdefs::glt::kTypes; ++k) setNorm (p, obs::fxdefs::glt::table()[obs::fxdefs::glt::t0 + k].id, k == t ? 1.f : 0.f);
+                const int ev0 = e.khaosEvents();
+                const auto st = render (p, SR, BLOCK, 1.5, [&] (int i) { if (i % (int) (SR * 0.25) == 0) g.pluck (110.f * (1 + (i / (int) (SR * 0.25)) % 4), 0.5f); return g.next(); });
+                worst = juce::jmax (worst, st.peak);
+                if (! st.finite || st.peak > 1.99f || e.khaosEvents() - ev0 < 4) { ok = false; bad << obs::fxdefs::glt::typeNames() << ""; bad = bad.upToFirstOccurrenceOf ("|", false, false); bad << t << " "; }
+            }
+            r.check (ok, "all 22 glitch types fire and stay clean (loudest peak " + juce::String (worst, 2) + ")" + (bad.isEmpty() ? juce::String() : " (bad: " + bad + ")"));
+        }
+        // SEQUENCE: the steps play in time (120 BPM, 1/16: a step every 125 ms), the meter follows
+        {
+            clean(); setNorm (p, "glt.on", 1); setReal (p, "glt.mode", 1); setReal (p, "glt.grid", 3);
+            for (int i = 0; i < 16; ++i) setReal (p, obs::fxdefs::glt::table()[obs::fxdefs::glt::s0 + i].id, i % 4 == 0 ? 1.f : 0.f);
+            render (p, SR, BLOCK, 0.2, [] (int) { return 0.f; });
+            const int ev0 = e.khaosEvents(); std::set<int> stepsSeen;
+            render (p, SR, BLOCK, 2.0, [&] (int i) { if (i % 512 == 0) stepsSeen.insert (e.khaosStep()); return 0.f; });
+            const int n = e.khaosEvents() - ev0;
+            r.check (n == 4 && stepsSeen.size() >= 14, "SEQUENCE: a stutter on each beat of the 16 steps plays 4 times in a 2 s bar at 120 BPM (" + juce::String (n) + "), the step meter walks all 16 (" + juce::String ((int) stepsSeen.size()) + " seen)");
+        }
+        // HOLD keeps the sound frozen after you stop; MIX 0 is the dry sound
+        {
+            Guitar g (SR);
+            auto tail = [&] (bool hold) {
+                clean(); setNorm (p, "glt.on", 1); setReal (p, "glt.mode", 1);
+                for (int i = 0; i < 16; ++i) setReal (p, obs::fxdefs::glt::table()[obs::fxdefs::glt::s0 + i].id, 0);
+                render (p, SR, BLOCK, 0.6, [&] (int i) { if (i % (int) (SR * 0.1) == 0) g.pluck (220.f, 0.5f); return g.next(); });
+                setNorm (p, "glt.hold", hold ? 1.f : 0.f);                 // pressed while the note rings, then you stop
+                render (p, SR, BLOCK, 0.02, [&] (int) { return g.next(); });
+                const auto st = render (p, SR, BLOCK, 0.8, [] (int) { return 0.f; });
+                setNorm (p, "glt.hold", 0); return st.rms; };
+            const float held = tail (true), free = tail (false);
+            r.check (held > 0.005f && held > free * 4.f, juce::String::formatted ("HOLD freezes the last moment after you stop (%.4f vs %.4f without)", held, free));
+        }
+        // the SFX tab bypassed: both units are out of the way; CPU with everything at once
+        {
+            Guitar g (SR);
+            auto run = [&] (bool sfx) { clean(); setNorm (p, "ker.on", 1); setReal (p, "ker.algo", 10); setReal (p, "ker.mode", 2); setNorm (p, "glt.on", 1);
+                setReal (p, "glt.chance", 100); setNorm (p, "sfx.on", sfx ? 1.f : 0.f); render (p, SR, BLOCK, 0.3, [] (int) { return 0.f; });
+                std::vector<float> cap; render (p, SR, BLOCK, 0.8, [&] (int i) { if (i == 0) g.pluck (220.f, 0.5f); return g.next(); }, 2, &cap); return cap; };
+            clean(); render (p, SR, BLOCK, 0.3, [] (int) { return 0.f; });
+            std::vector<float> dry; Guitar g2 (SR); render (p, SR, BLOCK, 0.8, [&] (int i) { if (i == 0) g2.pluck (220.f, 0.5f); return g2.next(); }, 2, &dry);
+            const auto byp = run (false);
+            float diff = 0; for (size_t i = 0; i < juce::jmin (dry.size(), byp.size()); ++i) diff = juce::jmax (diff, std::abs (dry[i] - byp[i]));
+            r.check (diff < 1e-4f, "with the SFX tab bypassed KERAUNOS and KHAOS are out of the way (differs by " + juce::String (diff, 6) + ")");
+            clean(); setNorm (p, "amp.on", 1); setNorm (p, "cab.on", 1); setNorm (p, "ker.on", 1); setReal (p, "ker.algo", 11); setReal (p, "ker.mode", 2); setReal (p, "ker.place", 1);
+            setNorm (p, "glt.on", 1); setReal (p, "glt.grid", 5); setReal (p, "glt.chance", 100); setReal (p, "glt.chaos", 100);
+            for (int k = 0; k < obs::fxdefs::glt::kTypes; ++k) setNorm (p, obs::fxdefs::glt::table()[obs::fxdefs::glt::t0 + k].id, 1);
+            Guitar g3 (SR);
+            const auto st = render (p, SR, BLOCK, 3.0, [&] (int i) { if (i % (int) (SR * 0.2) == 0) g3.pluck (110.f * (1 + (i / (int) (SR * 0.2)) % 3), 0.5f); return g3.next(); });
+            r.check (st.finite && st.peak < 1.99f, "KERAUNOS + KHAOS (every type, 1/32, chaos 100) on the full rig: clean, " + juce::String (st.avgLoad * 100, 1) + "% of one core");
+        }
+        p.presetManager().loadInit();
+    }
+
     // ---------------------------------------------------------------- 7. NAM
     r.head ("NAM captures");
     {

@@ -6,6 +6,7 @@
   base.html  - the page (layout, knobs, pages, settings, base script)
   synth.js   - the SYNTH page (built in script) + plugin hooks (window.obsSynth)
   aether.js  - AETHER, the SYNTH page's second page (noise, ambience, atmospheres)
+  fxlab.js   - GLITCH, the SFX page's second page (KERAUNOS and KHAOS)
   synth_presets.js - the synth's factory presets (PRESETS button)
   header.js  - header knobs (TRANSPOSE, WIDTH) and knob wheel / double-click
   studio.js  - STUDIO recorder
@@ -63,7 +64,7 @@ while depth:
     if o!=-1 and o<c: depth+=1; i=o+4
     else: depth-=1; i=c+6
 h=h[:b]+h[i-6:]
-i=h.rfind('</body>'); h=h[:i]+open('synth_presets.js').read()+'\n'+open('synth.js').read()+'\n'+open('aether.js').read()+('\n'+open('harmony.js').read() if HARMONY else '')+'\n'+open('header.js').read()+'\n'+open('studio.js').read()+'\n'+h[i:]
+i=h.rfind('</body>'); h=h[:i]+open('synth_presets.js').read()+'\n'+open('synth.js').read()+'\n'+open('aether.js').read()+'\n'+open('fxlab.js').read()+('\n'+open('harmony.js').read() if HARMONY else '')+'\n'+open('header.js').read()+'\n'+open('studio.js').read()+'\n'+h[i:]
 
 # ---------- theme: greys -> CSS variables ----------
 DATA=[]; 

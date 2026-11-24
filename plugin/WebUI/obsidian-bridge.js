@@ -239,6 +239,19 @@ function setupBindings() {
     showPower(); setInterval(showPower, 300);
   });
 
+  /* ---- SFX GLITCH page (fxlab.js: KERAUNOS and KHAOS expose all of their state) ---- */
+  if (window.obsFxLab) safe('fxlab', () => {
+    const F = window.obsFxLab;
+    addBinding({ ids: F.ids, read: () => F.read(), write: v => F.write(v) });
+    // TRIGGER and HOLD are pressed and let go fast: they go to the engine at once
+    F.paramOut = (id, n) => { vals[id] = n; last[id] = n; call('setParam', id, n); };
+    // the units only play while the SFX tab is on: switching one on wakes the tab
+    F.sectionOut = on => { vals['sfx.on'] = on ? 1 : 0; last['sfx.on'] = vals['sfx.on']; call('setParam', 'sfx.on', on ? 1 : 0);
+      if (on) { if (bypassed.has('SFX')) say('SFX switched on'); bypassed.delete('SFX'); } else bypassed.add('SFX'); if (typeof styleTabs === 'function') styleTabs(); };
+    const showSection = () => { if (F.setSection) F.setSection((vals['sfx.on'] ?? 1) >= .5); };
+    showSection(); setInterval(showSection, 300);
+  });
+
   /* ---- HARMONY page (HYDRA: harmony.js exposes all of its state) ---- */
   if (window.obsHarmony) safe('harmony', () => {
     const H = window.obsHarmony;
@@ -505,6 +518,7 @@ let meterEls = null, cpuSpan = null;
 const dbPct = lin => { const db = 20 * Math.log10(Math.max(lin, 1e-6)); return clamp((db + 60) / 60 * 100, 2, 100); };
 function showMeters(m) {
   if (window.obsHarmony && window.obsHarmony.live) safe('harmony live', () => window.obsHarmony.live({ note: m.hmNote, chord: m.hmChord || [] }));
+  if (window.obsFxLab && window.obsFxLab.live) safe('fxlab live', () => window.obsFxLab.live({ pos: m.kerPos, step: m.gltStep, type: m.gltType, ev: m.gltEv, bpm: m.bpm }));
   if (window.obsSynth && window.obsSynth.live) safe('synth live', () => {
     window.obsSynth.live({ note: m.synNote, step: m.synStep, level: Math.min(1, (m.synth || 0) * 1.4), src: ['guitar', 'midi', 'hold'][m.synSrc] || 'guitar' });
     if (m.bpm) window.obsSynth.setBpm(m.bpm);

@@ -113,7 +113,7 @@ async def run(standalone):
         b = await p.chromium.launch(executable_path=exe, args=['--no-sandbox', '--allow-file-access-from-files'])
         pg = await b.new_page(viewport={'width': 1376, 'height': 836})
         errors = []
-        pg.on('pageerror', lambda e: errors.append(str(e)))
+        pg.on('pageerror', lambda e: errors.append(str(e) + ' @ ' + ' | '.join(l.strip() for l in (getattr(e, 'stack', '') or '').split('\n')[1:3])))
         pg.on('console', lambda m: errors.append(m.text) if m.type == 'error' else None)
         await pg.add_init_script(path=str(HERE / 'mock-native.js'))
         await pg.add_init_script(script='window.__mock.load(' + json.dumps(state) + ');')
@@ -182,7 +182,7 @@ async def run(standalone):
         # the loaded synth preset shows under the SIREN plate (name + category) and under PRESETS
         pi = await pg.evaluate("obsSynth.presets.findIndex(p => p.name === 'Coin Bling')")
         await pg.evaluate(f"obsSynth.loadPreset({pi})"); await pg.wait_for_timeout(150)
-        pn = await pg.evaluate("[document.querySelector('.sy-badge .pn u').textContent, document.querySelector('.sy-badge .pn em').textContent, document.querySelector('.sy-prname').textContent]")
+        pn = await pg.evaluate("[document.querySelector('.sy-dev .sy-badge .pn u').textContent, document.querySelector('.sy-dev .sy-badge .pn em').textContent, document.querySelector('.sy-prname').textContent]")
         check(pn == ['Coin Bling', 'ARCADE', 'Coin Bling'], f'SYNTH shows the loaded preset under SIREN and under PRESETS ({pn})')
         await pg.evaluate("obsSynth.reset && obsSynth.reset()"); await pg.wait_for_timeout(100)
         defs = await pg.evaluate("obsSynth.defs")
@@ -200,7 +200,7 @@ async def run(standalone):
         check(not bad and not extra, f'synth page and engine agree on all {len(defs)} SIREN and AETHER parameters' + (f' (mismatch: {bad[:6]} extra: {extra[:6]})' if bad or extra else ''))
         shown = await pg.evaluate("document.querySelector('.sy-dev').classList.contains('off')")
         await pg.evaluate("window.__mock.log.length=0")
-        await pg.locator('.sy-pb').first.click(); await pg.wait_for_timeout(400)
+        await pg.locator('.sy-dev .sy-pb').first.click(); await pg.wait_for_timeout(400)
         hidden = not await pg.evaluate("document.querySelector('.sy-dev').classList.contains('off')")
         check(shown and hidden and await pg.evaluate("window.__mock.sent('synth.on')") == 1, 'synth page shows when the synth is off, and the POWER button turns it on')
         await pg.evaluate("window.__mock.log.length=0")
@@ -433,7 +433,7 @@ async def run(standalone):
         hi = await pg.evaluate("obsSynth.presets.findIndex(p => p.name === 'Abattoir')")
         await pg.evaluate(f"obsSynth.loadPreset({hi})"); await pg.wait_for_timeout(900)      # not a click: the bridge's regular scan sends it
         sent = await pg.evaluate("Object.fromEntries(window.__mock.log.filter(x=>x[0]==='setParam').map(x=>[x[1],x[2]]))")
-        cls = await pg.evaluate("[document.querySelector('.sy-badge .pn').classList.contains('hor'), document.querySelector('.ae-badge .pn u').textContent]")
+        cls = await pg.evaluate("[document.querySelector('.sy-dev .sy-badge .pn').classList.contains('hor'), document.querySelector('.ae-badge .pn u').textContent]")
         check(sent.get('atm.on') == 1 and abs(sent.get('atm.tex.type', -1) - 1) < 1e-6 and any(k.startswith('syn.') for k in sent) and cls == [True, 'Abattoir'],
               f'the HORROR preset "Abattoir" sets SIREN and its atmosphere, AETHER turns on, the name shows in red ({cls}, on {sent.get("atm.on")}, texture {sent.get("atm.tex.type")})')
         await pg.locator('.sy-siren .sy-prbtn').click(); await pg.wait_for_timeout(150)
@@ -444,6 +444,98 @@ async def run(standalone):
         await pg.locator('.sy-prs.sy-siren .x').click(); await pg.wait_for_timeout(100)
         await pg.evaluate("window.__mock.emit('obs:params', {'atm.on': 0})"); await pg.wait_for_timeout(100)
 
+
+        # ---- SFX GLITCH page: KERAUNOS and KHAOS
+        await pg.evaluate("setTab('SFX')"); await pg.wait_for_timeout(150)
+        defs = await pg.evaluate("obsFxLab.defs")
+        meta = {q['id']: q for q in state['params'] if q['id'].startswith(('ker.', 'glt.'))}
+        bad = []
+        for d in defs:
+            q = meta.get(d[0])
+            if not q or abs(q['min'] - d[2]) > 1e-6 or abs(q['max'] - d[3]) > 1e-6 or abs(q['def'] - d[4]) > 1e-6 or (d[1] == 'choice' and q.get('choices') != d[5].split('|')): bad.append(d[0])
+        extra = sorted(set(meta) - {d[0] for d in defs})
+        check(len(defs) == 63 and not bad and not extra, f'GLITCH page and engine agree on all {len(defs)} KERAUNOS and KHAOS parameters' + (f' (mismatch: {bad[:6]} extra: {extra[:6]})' if bad or extra else ''))
+        await pg.locator('.fl-pagesw button[data-p="glitch"]').click(); await pg.wait_for_timeout(200)
+        shown = await pg.evaluate("[!!document.querySelector('.fl-dev').offsetParent, !document.querySelector('.fl-rack').offsetParent]")
+        check(shown == [True, True], f'the RACK | GLITCH switch shows the GLITCH page in place of the rack ({shown})')
+        await pg.evaluate("window.__mock.log.length=0")
+        await pg.locator('.fl-dev .sy-pb[data-param="ker.on"]').click(); await pg.wait_for_timeout(150)
+        await pg.locator('.fl-alg button[data-i="7"]').click(); await pg.wait_for_timeout(150)
+        check(await pg.evaluate("window.__mock.sent('ker.on')") == 1 and abs((await pg.evaluate("window.__mock.sent('ker.algo')") or 0) - 7 / 15) < 1e-6 and await pg.evaluate("document.querySelector('.fl-led .kn').textContent") == 'LASER',
+              'KERAUNOS: POWER and the LASER button reach the engine, the display says LASER')
+        # the treadle: grabbing it switches to PEDAL and moves the pedal
+        await pg.evaluate("window.__mock.emit('obs:params', {'ker.mode': 2/3})"); await pg.wait_for_timeout(900)
+        await pg.evaluate("window.__mock.log.length=0")
+        bx = await pg.locator('.fl-ped').bounding_box()
+        await pg.mouse.move(bx['x'] + bx['width'] / 2, bx['y'] + bx['height'] * .7); await pg.mouse.down()
+        await pg.mouse.move(bx['x'] + bx['width'] / 2, bx['y'] + bx['height'] * .7 - 90, steps=8); await pg.mouse.up(); await pg.wait_for_timeout(150)
+        pos = await pg.evaluate("window.__mock.sent('ker.pos')")
+        check(await pg.evaluate("window.__mock.sent('ker.mode')") == 0 and pos is not None and pos > .4, f'grabbing the treadle switches AUTO to PEDAL and moves it (pedal {pos})')
+        # TRIGGER: pressed and let go, both reach the engine at once
+        await pg.evaluate("window.__mock.log.length=0")
+        tb = await pg.locator('.fl-pb-mom .sy-pb').first.bounding_box()
+        await pg.mouse.move(tb['x'] + tb['width'] / 2, tb['y'] + tb['height'] / 2); await pg.mouse.down(); await pg.wait_for_timeout(60); await pg.mouse.up(); await pg.wait_for_timeout(200)
+        trig = await pg.evaluate("window.__mock.log.filter(x=>x[0]==='setParam'&&x[1]==='ker.trig').map(x=>x[2])")
+        check(trig[:2] == [1, 0] and await pg.evaluate("window.__mock.sent('ker.mode')") == 1, f'TRIGGER sends a press and a release (ker.trig {trig}) and switches to TRIGGER')
+        # KHAOS: RANDOM toggles types; clicking a step switches to SEQUENCE and draws the picked type
+        await pg.evaluate("window.__mock.emit('obs:params', {'glt.mode': 0, 'glt.on': 0})"); await pg.wait_for_timeout(900)
+        await pg.evaluate("window.__mock.log.length=0")
+        await pg.locator('.fl-type[data-t="15"]').click(); await pg.wait_for_timeout(150)
+        gsm = await pg.evaluate("window.__mock.sent('glt.t.gsm')")
+        await pg.locator('.fl-dev .sy-seg[data-param="glt.mode"] button[data-i="1"]').click(); await pg.wait_for_timeout(100)
+        await pg.locator('.fl-type[data-t="7"]').click(); await pg.wait_for_timeout(100)
+        lb = await pg.locator('.fl-lane').bounding_box()
+        await pg.mouse.click(lb['x'] + lb['width'] * (2.5 / 16), lb['y'] + lb['height'] * .6); await pg.wait_for_timeout(200)
+        st3 = await pg.evaluate("window.__mock.sent('glt.s3')")
+        check(gsm == 1 and await pg.evaluate("window.__mock.sent('glt.mode')") == 1 and st3 is not None and abs(st3 - 8 / 22) < 1e-6 and await pg.evaluate("window.__mock.sent('glt.on')") == 1,
+              f'KHAOS: GSM lights for RANDOM; in SEQUENCE a click draws TAPE STOP into step 3 and turns KHAOS on (step {st3})')
+        await pg.mouse.click(lb['x'] + lb['width'] * (2.5 / 16), lb['y'] + lb['height'] * .6, button='right'); await pg.wait_for_timeout(200)
+        check(await pg.evaluate("window.__mock.sent('glt.s3')") == 0, 'right-click clears a step')
+        # HOLD: a tap latches, the next tap lets go
+        await pg.evaluate("window.__mock.log.length=0")
+        hb = await pg.locator('.fl-pb-mom .sy-pb').nth(1).bounding_box()
+        for _ in range(2):
+            await pg.mouse.move(hb['x'] + hb['width'] / 2, hb['y'] + hb['height'] / 2); await pg.mouse.down(); await pg.wait_for_timeout(60); await pg.mouse.up(); await pg.wait_for_timeout(150)
+            if _ == 0: lat = await pg.evaluate("[window.__mock.sent('glt.hold'), document.querySelectorAll('.fl-pb-mom .sy-pbv')[1].textContent]")
+        check(lat == [1, 'LATCHED'] and await pg.evaluate("window.__mock.sent('glt.hold')") == 0, f'HOLD: a tap latches it ({lat}), the next tap lets go')
+        # the engine's meters move the treadle, the display and the type that plays
+        await pg.evaluate("window.__mock.emit('obs:params', {'glt.on': 1})"); await pg.wait_for_timeout(900)
+        await pg.evaluate("window.__mock.meterExtra = {kerPos: .8, gltStep: 5, gltType: 15, gltEv: 3}"); await pg.wait_for_timeout(400)
+        live = await pg.evaluate("[document.querySelector('.fl-tread .cap b').textContent, document.querySelector('.fl-led .gn').textContent, document.querySelector('.fl-type[data-t=\"15\"]').classList.contains('play'), document.querySelector('.fl-led .gv').textContent]")
+        check(live == ['80%', 'GSM', True, 'STEP 06'], f'meters from the engine move the treadle and light the playing glitch ({live})')
+        await pg.evaluate("window.__mock.meterExtra = null")
+        # SFX tab bypassed: the page says so; switching a unit on wakes the tab
+        await pg.evaluate("window.__mock.emit('obs:params', {'sfx.on': 0, 'ker.on': 0})"); await pg.wait_for_timeout(900)
+        off = await pg.evaluate("document.querySelector('.fl-dev').classList.contains('sfx-off')")
+        await pg.evaluate("window.__mock.log.length=0")
+        await pg.locator('.fl-dev .sy-pb[data-param="ker.on"]').click(); await pg.wait_for_timeout(200)
+        check(off and await pg.evaluate("window.__mock.sent('sfx.on')") == 1, f'with the SFX tab bypassed the page shows it, and KERAUNOS ON turns the tab back on ({off})')
+        # presets, dice and undo
+        await pg.locator('.fl-prbtn').click(); await pg.wait_for_timeout(150)
+        n_pr = await pg.locator('.fl-prs .sy-pr').count()
+        await pg.evaluate("window.__mock.log.length=0")
+        await pg.locator('.fl-prs .sy-pr', has_text='Breakbeat').click(); await pg.wait_for_timeout(250)
+        sent = await pg.evaluate("Object.assign(obsFxLab.read(), Object.fromEntries(window.__mock.log.filter(x=>x[0]==='setParam').map(x=>[x[1],x[2]])))")
+        check(n_pr >= 25 and sent.get('glt.on') == 1 and sent.get('ker.on') == 0 and sent.get('glt.mode') == 1 and abs(sent.get('glt.s5', 0) - 1 / 22) < 1e-6 and abs(sent.get('glt.s13', 0) - 2 / 22) < 1e-6 and await pg.evaluate("document.querySelector('.fl-prname').textContent") == 'Breakbeat',
+              f'GLITCH presets: {n_pr}; "Breakbeat" draws its steps, KHAOS on, KERAUNOS off')
+        await pg.locator('.fl-prs .x').click(); await pg.wait_for_timeout(100)
+        before = await pg.evaluate("JSON.stringify(obsFxLab.read())")
+        await pg.evaluate("window.__mock.log.length=0")
+        await pg.locator('.fl-dice').click(); await pg.wait_for_timeout(250)
+        n_d = await pg.evaluate("window.__mock.log.filter(x=>x[0]==='setParam'&&/^(ker|glt)\\./.test(x[1])).length")
+        await pg.locator('.fl-dev .sy-undo').click(); await pg.wait_for_timeout(250)
+        after = await pg.evaluate("JSON.stringify(obsFxLab.read())")
+        diff = [k for k, v in json.loads(before).items() if abs(v - json.loads(after)[k]) > 1e-6]
+        check(n_d > 8 and not diff, f'DICE rolls {n_d} settings, UNDO brings them back' + (f' (differ {diff[:5]})' if diff else ''))
+        fit = await pg.evaluate("""(() => { const out = [], dev = document.querySelector('.fl-dev');
+            dev.querySelectorAll('.sy-val, .sy-eng, .sy-kl, .sy-kv, .fl-lbl, .fl-type b, .fl-alg button, .sy-pill, .fl-led .nm, .fl-led .vv, .fl-led .u').forEach(e => {
+              if (!e.offsetParent) return; const box = (e.closest('.sy-sec') || dev).getBoundingClientRect(), r = e.getBoundingClientRect();
+              if (r.left < box.left - 1 || r.right > box.right + 1 || e.scrollWidth > e.clientWidth + 1 && getComputedStyle(e).overflow === 'hidden') out.push(e.textContent.trim().slice(0, 14)); });
+            return out; })()""")
+        check(not fit, 'every GLITCH number and label stays inside its box' + (f' ({fit[:5]})' if fit else ''))
+        await pg.screenshot(path=str(OUT / 'sfx-glitch.png'))
+        await pg.locator('.fl-pagesw button[data-p="rack"]').click(); await pg.wait_for_timeout(150)
+        check(await pg.evaluate("!!document.querySelector('.fl-rack').offsetParent && !document.querySelector('.fl-dev').offsetParent"), 'RACK brings the special effects rack back')
 
         # ---- HARMONY page (HYDRA)
         await pg.evaluate("setTab('HARMONY')"); await pg.wait_for_timeout(150)

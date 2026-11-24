@@ -1498,7 +1498,7 @@ window.obsSynth = {
 };
 
 /* ------------------------------------------------------------ AETHER: the second page (aether.js builds it on this device) */
-Object.assign(kit, { el, P, S, set, onChange, on, fmt, toN, toV, clamp, sg, knob, toggle, chip, seg, pill, mknob, sel, pushBtn, row, spacer, section, IC, hidpi, tc, accent, FONT, dev, SP, root,
+Object.assign(kit, { el, P, S, set, onChange, on, fmt, toN, toV, clamp, sg, knob, toggle, chip, seg, pill, mknob, sel, pushBtn, pairBtn, segBool, stepper, row, spacer, section, IC, hidpi, tc, accent, FONT, dev, SP, root,
   PWR_IC, stripGroups, presetValue, NOTE_NAMES, catCol, horCls, isPowered: () => powered, audio: () => audio(), ctx: () => ac, out: () => comp, inPlugin });
 const pageSw = el('div', 'sy-page', '<button data-p="siren" title="SIREN: the synth your guitar plays"><i></i>SIREN</button><button data-p="aether" title="AETHER: noise, ambience and atmospheres around your playing"><i></i>AETHER</button>');
 dev.appendChild(pageSw);
