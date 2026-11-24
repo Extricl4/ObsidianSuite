@@ -1,0 +1,110 @@
+{
+ "enclosure": {
+  "color": [
+   0.28,
+   0.035,
+   0.06
+  ],
+  "metal": 0.35,
+  "rough": 0.28,
+  "coat": 0.85,
+  "bump": [
+   "noise",
+   500,
+   0.03
+  ]
+ },
+ "engrave": {
+  "rough": 0.24,
+  "metal": 1.0,
+  "depth": 1.0,
+  "strength": 0.5,
+  "distance": 0.015
+ },
+ "glow_strength": 1.6,
+ "knobs": [
+  {
+   "at": [
+    260,
+    470
+   ],
+   "r": 0.6,
+   "style": "gold",
+   "v": 0.45
+  },
+  {
+   "at": [
+    660,
+    470
+   ],
+   "r": 0.6,
+   "style": "gold",
+   "v": 0.65
+  },
+  {
+   "at": [
+    1060,
+    470
+   ],
+   "r": 0.6,
+   "style": "gold",
+   "v": 0.35
+  },
+  {
+   "at": [
+    260,
+    860
+   ],
+   "r": 0.38,
+   "style": "gold",
+   "v": 0.4
+  },
+  {
+   "at": [
+    660,
+    860
+   ],
+   "r": 0.38,
+   "style": "gold",
+   "v": 0.5
+  },
+  {
+   "at": [
+    1060,
+    860
+   ],
+   "r": 0.38,
+   "style": "gold",
+   "v": 0.3
+  }
+ ],
+ "leds": [
+  {
+   "at": [
+    660,
+    1200
+   ],
+   "color": [
+    1.0,
+    0.9,
+    0.7
+   ],
+   "strength": 18
+  }
+ ],
+ "footswitches": [
+  [
+   660,
+   2190,
+   1.0
+  ]
+ ],
+ "screws": [],
+ "rimcolor": [
+  1.0,
+  0.85,
+  0.7
+ ],
+ "art": "art/lyra_art.png",
+ "glow": "art/lyra_glow.png"
+}

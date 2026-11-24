@@ -124,17 +124,20 @@ M_CREAM = mat('cream', (0.85,0.8,0.7,1), 0, .35, bump=('knurl', 24, .2))
 M_WHITE = mat('white', (0.95,0.95,0.95,1), 0, .4, emit=(1,1,1,1), estr=0.4)
 M_BLACKLINE = mat('bl', (0.01,0.01,0.01,1), 0, .5)
 M_COPPER = mat('copper', (0.95,0.55,0.35,1), 1, .25, bump=('knurl', 40, .3))
+M_GOLD = mat('gold', (1.0,0.77,0.40,1), 1, .24, bump=('knurl', 40, .3))
+M_GOLDTOP = mat('goldtop', (1.0,0.79,0.46,1), 1, .2, aniso=.5)
+M_PEARL = mat('pearl', (0.92,0.91,0.89,1), 0.15, .2, bump=('knurl', 24, .15))
 
 def knob(px, py, r, style='black', v=0.5, h=1.0):
     x, y = P(px, py)
-    sk = {'black':M_BLACKP,'alu':M_ALU,'cream':M_CREAM,'copper':M_COPPER}[style]
-    tp = {'black':M_BLACKTOP,'alu':M_ALUTOP,'cream':M_CREAM,'copper':M_ALUTOP}[style]
+    sk = {'black':M_BLACKP,'alu':M_ALU,'cream':M_CREAM,'copper':M_COPPER,'gold':M_GOLD,'pearl':M_PEARL}[style]
+    tp = {'black':M_BLACKTOP,'alu':M_ALUTOP,'cream':M_CREAM,'copper':M_ALUTOP,'gold':M_GOLDTOP,'pearl':M_PEARL}[style]
     c = add(bpy.ops.mesh.primitive_cylinder_add, vertices=96, radius=r, depth=h*0.75, location=(x,y,TOP+h*0.375)); bevel(c, 0.04, 3); setmat(c, sk)
     t = add(bpy.ops.mesh.primitive_cylinder_add, vertices=96, radius=r*0.82, depth=h*0.3, location=(x,y,TOP+h*0.75+h*0.15)); bevel(t, 0.06, 4); setmat(t, tp)
     ang = math.radians(135 - 270*v)
     pl = add(bpy.ops.mesh.primitive_cube_add, size=1, location=(x + math.cos(ang)*r*0.42, y + math.sin(ang)*r*0.42, TOP+h*1.05+0.012))
     pl.scale = (r*0.62, 0.05, 0.02); pl.rotation_euler = (0,0,ang)
-    setmat(pl, M_BLACKLINE if style=='cream' else M_WHITE)
+    setmat(pl, M_BLACKLINE if style in ('cream', 'pearl', 'gold') else M_WHITE)
 def footswitch(px, py, s=1.0):
     x, y = P(px, py)
     n = add(bpy.ops.mesh.primitive_cylinder_add, vertices=6, radius=0.62*s, depth=0.22, location=(x,y,TOP+0.11)); bevel(n,0.02,2); setmat(n, M_CHROME)

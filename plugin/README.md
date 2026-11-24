@@ -27,6 +27,7 @@ If an ASIO driver is installed the app picks it by itself on the first start. In
 | Cab: two mics (model, position, distance, level, pan, solo/mute/phase), IR loading, built-in cabs | `Source/DSP/CabSection.h` |
 | 29 pedals / effects (drive, fuzz, boost, comp, wah, whammy, octave, sub, delay, reverb, shimmer, swell, freeze, tape stop, looper, glitch, chorus, flanger, phaser, tremolo, vibrato/rotary, ring mod, bitcrusher, filters, limiter) | `Source/DSP/Modules/*.cpp` |
 | 9 pack pedals with their own captures / IRs (Chiron, Emperor, Graven, Maw, XXXIII, Helios, Aeon; Ossuary, Halcyon) plus Crypt's six RV-6 modes | `Source/DSP/Modules/PackModules.cpp`, `IrCore.h` |
+| 10 celestial pedals: lush reverbs (Elysium hall, Empyrean two-voice shimmer, Nimbus cloud, Vesper choir, Halo reverse/bloom), delays (Astral shimmer delay, Mnemosyne three-head tape echo + spring, Gemini dual/reverse), Lyra 12-string, Icarus octave fuzz | `Source/DSP/Modules/CelestialModules.cpp` |
 | Transpose: **Live** (instant) and **HQ** (studio quality, latency reported to the DAW) | `Source/DSP/Sections.h`, `PitchShifter.h` |
 | Synth, played by the guitar or MIDI (see below) | `Source/DSP/GuitarSynth.h`, parameters in `SynthDefs.h`, page in `ui/src/synth.js` |
 | HYDRA harmonizer, six voices (see below) | `Source/DSP/Harmonizer.h`, parameters and modes in `HarmonyDefs.h`, page in `ui/src/harmony.js` |
@@ -173,6 +174,30 @@ Cabs\       one .json per cab you want in the ADD CAB list
 Captures\Pedals\<Pedal>\   the pedal pack's captures (Chiron, Emperor, Graven, Maw, XXXIII, Helios, Aeon)
 IRs\Pedals\<Pedal>\        the pedal pack's reverb IRs (Crypt, Ossuary, Halcyon)
 ```
+
+### The celestial pedals
+
+Ten pedals in `CelestialModules.cpp`. The five reverbs share one engine, *LushTank*: a "figure-8" tank in the style of
+the classic studio plate algorithms (two cross-fed branches of modulated allpasses, delays and damping) that is
+smoother and denser than the FDN behind Crypt and Seraph. Faces: `visuals/pedals/<key>.json` (+ `visuals/tools/art_<key>.py`).
+
+| Pedal | What it does | Knobs |
+|---|---|---|
+| Elysium Hall | huge cathedral hall: dense early reflections, long moving tail; INFINITE holds the tail while you play over it | Decay, Size, Pre-delay, Tone, Low Cut, Mod, Mix, Infinite |
+| Empyrean Shimmer | two pitch voices (octave + 5th/4th/2 oct/sub/3rd) rising inside the tail | Decay, Size, Shimmer, Voice II, Interval, Tone, Mod, Mix |
+| Nimbus Cloud | notes dissolve into a drifting haze; Swell fades the reverb in under each note; FREEZE holds the cloud | Decay, Cloud, Drift, Swell, Tone, Low Cut, Mix, Freeze |
+| Vesper Choir | the tail sings through vowel formants (A E I O U), optional octave/fifth voices | Decay, Size, Vowel, Choir, Voices, Breath, Tone, Mix |
+| Halo Reverse | REVERSE: reverb played backwards, swelling into the next note; BLOOM: the tail re-enters and builds | Mode, Length, Decay, Tone, Mod, Low Cut, Mix |
+| Astral Shimmer Delay | repeats climb an octave/fifth and smear into a wash | Time, Feedback, Shimmer, Interval, Diffuse, Mod, Tone, Mix |
+| Mnemosyne Tape Echo | three tape heads (7 combinations), wow/flutter, tape age, spring reverb; runs away past 95 % | Time, Intensity, Heads, Wow, Age, Spring, Echo, Tone |
+| Gemini Dual Delay | two heads in a rhythm (dotted, half, triplet, third, 1.5x, golden), cross-fed; head B can play backwards | Time, Pattern, Feedback, Cross, Tone, Mod, Mix, Reverse |
+| Lyra 12-String | adds a chiming octave string and a detuned twin, strummed a hair apart | Octave, Detune, Spread, Chime, Width, Mix |
+| Icarus Octave Fuzz | rectifier octave-up fuzz, 4x oversampled | Fuzz, Octave, Tone, Level, Mix |
+
+`"Obsidian Amp Suite.exe" --render-pedal-demos <folder>` renders a short clean-guitar demo through each of them
+(plus wet-only impulse responses of the reverbs). The self-test checks stability with every knob at max, decaying
+and frozen tails, that the shimmers really rise an octave, the choir vowels, the reverse swell, echo timing,
+Icarus's octave, other sample rates and CPU.
 
 ### The pedal pack
 

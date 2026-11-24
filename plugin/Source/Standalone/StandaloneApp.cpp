@@ -19,6 +19,7 @@ namespace obs
 int runSelfTest (const juce::StringArray& args);
 int writeFactoryPresets (const juce::File& dir, const juce::File& spec, float targetDb);
 int renderSynthDemos (const juce::File& dir);
+int renderPedalDemos (const juce::File& dir);
 
 /** Opens MIDI inputs as they appear, like JUCE's own auto-open, but following Settings > MIDI > "MIDI input".
     (JUCE's turns every device on half a second after launch, which undid picking one device.)
@@ -118,6 +119,12 @@ public:
         if (const int i = args.indexOf ("--render-synth"); i >= 0)
         {
             setApplicationReturnValue (renderSynthDemos (juce::File::getCurrentWorkingDirectory().getChildFile (args[i + 1].unquoted())));
+            quit();
+            return;
+        }
+        if (const int i = args.indexOf ("--render-pedal-demos"); i >= 0)
+        {
+            setApplicationReturnValue (renderPedalDemos (juce::File::getCurrentWorkingDirectory().getChildFile (args[i + 1].unquoted())));
             quit();
             return;
         }

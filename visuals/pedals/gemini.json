@@ -1,0 +1,125 @@
+{
+ "enclosure": {
+  "color": [
+   0.74,
+   0.75,
+   0.77
+  ],
+  "metal": 1.0,
+  "rough": 0.32,
+  "bump": [
+   "noise",
+   700,
+   0.04
+  ]
+ },
+ "engrave": {
+  "rough": 0.35,
+  "metal": 0.0,
+  "depth": 1.0,
+  "strength": 0.5,
+  "distance": 0.015
+ },
+ "glow_strength": 1.4,
+ "knobs": [
+  {
+   "at": [
+    260,
+    470
+   ],
+   "r": 0.6,
+   "style": "black",
+   "v": 0.45
+  },
+  {
+   "at": [
+    660,
+    470
+   ],
+   "r": 0.6,
+   "style": "black",
+   "v": 0.65
+  },
+  {
+   "at": [
+    1060,
+    470
+   ],
+   "r": 0.6,
+   "style": "black",
+   "v": 0.35
+  },
+  {
+   "at": [
+    260,
+    860
+   ],
+   "r": 0.38,
+   "style": "black",
+   "v": 0.4
+  },
+  {
+   "at": [
+    660,
+    860
+   ],
+   "r": 0.38,
+   "style": "black",
+   "v": 0.5
+  },
+  {
+   "at": [
+    1060,
+    860
+   ],
+   "r": 0.38,
+   "style": "black",
+   "v": 0.3
+  },
+  {
+   "at": [
+    420,
+    1170
+   ],
+   "r": 0.3,
+   "style": "black",
+   "v": 0.0
+  }
+ ],
+ "toggles": [
+  [
+   900,
+   1170,
+   -18
+  ]
+ ],
+ "leds": [
+  {
+   "at": [
+    660,
+    1620
+   ],
+   "color": [
+    1.0,
+    0.25,
+    0.2
+   ],
+   "strength": 22
+  }
+ ],
+ "footswitches": [
+  [
+   660,
+   2190,
+   1.0
+  ]
+ ],
+ "screws": [],
+ "rimcolor": [
+  1.0,
+  1.0,
+  1.0
+ ],
+ "art": "art/gemini_art.png",
+ "glow": "art/gemini_glow.png"
+}

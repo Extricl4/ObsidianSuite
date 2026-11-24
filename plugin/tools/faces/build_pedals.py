@@ -75,9 +75,9 @@ def chrome(nx, ny, rr):
     return np.stack([v, v * .99, v * .97], -1)
 
 def knob_fn(style, part):
-    base = {'black': (.07, .07, .075), 'alu': (.72, .72, .74), 'copper': (.85, .48, .3), 'cream': (.9, .86, .74)}[style]
-    top = {'black': (.11, .11, .115), 'alu': (.78, .78, .8), 'copper': (.78, .78, .8), 'cream': (.92, .88, .77)}[style]
-    metal = style in ('alu', 'copper')
+    base = {'black': (.07, .07, .075), 'alu': (.72, .72, .74), 'copper': (.85, .48, .3), 'cream': (.9, .86, .74), 'gold': (.9, .68, .34), 'pearl': (.93, .92, .9)}[style]
+    top = {'black': (.11, .11, .115), 'alu': (.78, .78, .8), 'copper': (.78, .78, .8), 'cream': (.92, .88, .77), 'gold': (.95, .74, .4), 'pearl': (.95, .94, .92)}[style]
+    metal = style in ('alu', 'copper', 'gold')
     def skirt(nx, ny, rr):
         ang = np.arctan2(ny, nx)
         knurl = .5 + .5 * np.sign(np.sin(ang * 40))
@@ -141,7 +141,7 @@ def render(key, spec, lit):
         return Image.open(p).convert('RGBA').resize((w, h), Image.LANCZOS) if p.exists() else None
     a = art(spec['art'].replace('art/', 'art/')) if spec.get('art') else None
     if a is not None:
-        am = spec.get('artmat', {}).get('metal', 0)
+        am = spec.get('artmat', spec.get('engrave', {})).get('metal', 0)
         arr = np.asarray(a, float) / 255
         if am > 0:
             sh = (.85 + .35 * np.exp(-((u - .3) ** 2 / .08 + (v - .25) ** 2 / .08)))[..., None]

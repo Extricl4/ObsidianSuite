@@ -213,6 +213,21 @@ struct ModuleRig
         }
     }
     void set (const juce::String& name, float v) { for (size_t k = 0; k < type->params.size(); ++k) if (type->params[k].name == name) p[k] = v; }
+    void setAllToMax() { for (size_t k = 0; k < type->params.size(); ++k) if (! type->params[k].momentary) p[k] = type->params[k].max; }
+    /** Renders `seconds` of input and returns the output (mid of L/R). */
+    std::vector<float> render (double sr, int block, double seconds, std::function<float (int)> input)
+    {
+        std::vector<float> out; out.reserve ((size_t) (sr * seconds) + (size_t) block);
+        juce::AudioBuffer<float> b (2, block); const int total = (int) (sr * seconds);
+        for (int done = 0; done < total; done += block)
+        {
+            const int n = juce::jmin (block, total - done);
+            for (int i = 0; i < n; ++i) { const float x = input (done + i); b.setSample (0, i, x); b.setSample (1, i, x); }
+            m->process (b.getArrayOfWritePointers(), 2, n, p.data(), ctx);
+            for (int i = 0; i < n; ++i) out.push_back (0.5f * (b.getSample (0, i) + b.getSample (1, i)));
+        }
+        return out;
+    }
     RunStats run (double sr, int block, double seconds, std::function<float (int)> input, std::function<void (int)> everyBlock = {})
     {
         RunStats st; juce::AudioBuffer<float> b (2, block); double sum = 0; long cnt = 0; double load = 0; int blocks = 0;
@@ -237,6 +252,22 @@ struct ModuleRig
         return st;
     }
 };
+
+/** Energy of `f` Hz in out[from, to) (Goertzel). */
+double tonePower (const std::vector<float>& out, double sr, double f, size_t from, size_t to)
+{
+    to = juce::jmin (to, out.size()); if (from >= to) return 0;
+    const double w = 2.0 * juce::MathConstants<double>::pi * f / sr, c = 2.0 * std::cos (w);
+    double s1 = 0, s2 = 0;
+    for (size_t i = from; i < to; ++i) { const double s0 = out[i] + c * s1 - s2; s2 = s1; s1 = s0; }
+    return (s1 * s1 + s2 * s2 - c * s1 * s2) / (double) ((to - from) * (to - from));
+}
+double rmsOf (const std::vector<float>& out, size_t from, size_t to)
+{
+    to = juce::jmin (to, out.size()); if (from >= to) return 0;
+    double a = 0; for (size_t i = from; i < to; ++i) a += (double) out[i] * out[i];
+    return std::sqrt (a / (double) (to - from));
+}
 
 /** A made-up reverb IR: decaying stereo noise. */
 dsp::IrFile fakeIr (double sr, float seconds, float rt60, int channels, juce::Random& rng)
@@ -1257,6 +1288,118 @@ int runSelfTest (const juce::StringArray& args)
         p.presetManager().loadInit();
     }
 
+    // ---------------------------------------------------------------- 7c. celestial pedals
+    r.head ("Celestial pedals (lush reverbs, shimmers, delays, Lyra, Icarus)");
+    {
+        const char* keys[] = { "elysium", "empyrean", "nimbus", "vesper", "halo", "astral", "mnemosyne", "gemini", "lyra", "icarus" };
+        const auto S = (size_t) SR;
+        auto burst = [] (int i) { juce::Random z (i / 2400); return (i % 48000) < 2400 ? (z.nextFloat() * 2.f - 1.f) * 0.3f * (1.f - (float) (i % 48000) / 2400.f) : 0.f; };
+        juce::Random nz (11);
+        for (auto key : keys)
+        {
+            ModuleRig mr (key, SR, BLOCK);
+            if (mr.m == nullptr) { r.fail (juce::String (key) + " is registered"); continue; }
+            // 1) defaults: a pluck rings out cleanly
+            Guitar g (SR);
+            auto st = mr.run (SR, BLOCK, 3.0, [&g] (int i) { if (i % 24000 == 0) g.pluck (146.8f, 0.45f); return g.next(); });
+            // 2) everything at maximum (feedback, shimmer, intensity, decay...) for 8 s of bursts: must stay bounded
+            ModuleRig mx (key, SR, BLOCK); mx.setAllToMax();
+            auto sm = mx.run (SR, BLOCK, 8.0, [&nz] (int i) { return (i % 48000) < 9600 ? (nz.nextFloat() * 2.f - 1.f) * 0.5f : 0.f; });
+            r.check (st.finite && st.rms > 0.002f && st.peak < 4.f && sm.finite && sm.peak < 6.f,
+                     mr.type->name + ": plays cleanly, and stays bounded with every knob at max (peak " + juce::String (sm.peak, 2) + ", cpu "
+                     + juce::String (st.avgLoad * 100.0, 2) + "%)");
+            r.check (st.avgLoad < 0.12, mr.type->name + ": CPU at defaults " + juce::String (st.avgLoad * 100.0, 2) + "% of one core");
+        }
+
+        // reverb tails: decay when they should, hold when frozen
+        for (auto key : { "elysium", "nimbus", "vesper", "halo", "empyrean" })
+        {
+            ModuleRig mr (key, SR, BLOCK); mr.set ("Mix", 100.f); mr.set ("Decay", 3.f); mr.set ("Shimmer", 0.f); mr.set ("Voice II", 0.f); mr.set ("Swell", 0.f);
+            auto out = mr.render (SR, BLOCK, 6.0, [&burst] (int i) { return i < 2400 ? burst (i) : 0.f; });
+            const double early = rmsOf (out, S / 2, S), late = rmsOf (out, 5 * S, 6 * S);
+            r.check (early > 1.0e-4 && late < early * 0.15, juce::String (key) + ": a 3 s decay dies away (" + juce::String (juce::Decibels::gainToDecibels ((float) (late / juce::jmax (1.0e-9, early))), 1) + " dB after 5 s)");
+        }
+        for (auto [key, sw] : { std::pair { "elysium", "Infinite" }, std::pair { "nimbus", "Freeze" } })
+        {
+            ModuleRig mr (key, SR, BLOCK); mr.set ("Mix", 100.f); mr.set ("Swell", 0.f);
+            std::vector<float> out;
+            auto a = mr.render (SR, BLOCK, 1.5, [&burst] (int i) { return burst (i); });
+            mr.set (sw, 1.f);
+            auto b = mr.render (SR, BLOCK, 8.0, [] (int) { return 0.f; });
+            const double held = rmsOf (b, 7 * S, 8 * S), start = rmsOf (b, S / 2, S);
+            r.check (start > 1.0e-4 && held > start * 0.35 && held < start * 2.5, juce::String (key) + ": " + sw + " holds the tail (8 s later at "
+                     + juce::String (juce::Decibels::gainToDecibels ((float) (held / juce::jmax (1.0e-9, start))), 1) + " dB, no build-up)");
+        }
+
+        // shimmer: a 220 Hz note grows energy an octave up
+        const double sineRate = SR;
+        auto sine = [sineRate] (float f) { return std::function<float (int)> ([f, sineRate] (int i) { return 0.25f * std::sin (juce::MathConstants<float>::twoPi * f * (float) i / (float) sineRate); }); };
+        for (auto key : { "empyrean", "astral" })
+        {
+            ModuleRig on (key, SR, BLOCK), off (key, SR, BLOCK);
+            on.set ("Mix", 100.f); off.set ("Mix", 100.f); on.set ("Shimmer", 100.f); off.set ("Shimmer", 0.f); off.set ("Voice II", 0.f); on.set ("Voice II", 0.f);
+            on.set ("Feedback", 70.f); off.set ("Feedback", 70.f);
+            auto a = on.render (SR, BLOCK, 4.0, sine (220.f)), b = off.render (SR, BLOCK, 4.0, sine (220.f));
+            const double up = tonePower (a, SR, 440.0, 2 * S, 4 * S) / juce::jmax (1.0e-12, tonePower (a, SR, 220.0, 2 * S, 4 * S));
+            const double ref = tonePower (b, SR, 440.0, 2 * S, 4 * S) / juce::jmax (1.0e-12, tonePower (b, SR, 220.0, 2 * S, 4 * S));
+            r.check (up > ref * 4.0, juce::String (key) + ": shimmer rises an octave (440 Hz vs 220 Hz: " + juce::String (10.0 * std::log10 (juce::jmax (1.0e-12, up)), 1)
+                     + " dB, without shimmer " + juce::String (10.0 * std::log10 (juce::jmax (1.0e-12, ref)), 1) + " dB)");
+        }
+        {   // Vesper: the vowel changes the colour of the choir (A is brighter than U around 1.1 kHz)
+            ModuleRig a ("vesper", SR, BLOCK), u ("vesper", SR, BLOCK);
+            for (auto* m : { &a, &u }) { m->set ("Mix", 100.f); m->set ("Choir", 100.f); m->set ("Breath", 0.f); }
+            a.set ("Vowel", 0.f); u.set ("Vowel", 4.f);
+            juce::Random z1 (3), z2 (3);
+            auto oa = a.render (SR, BLOCK, 3.0, [&z1] (int) { return (z1.nextFloat() * 2.f - 1.f) * 0.1f; });
+            auto ou = u.render (SR, BLOCK, 3.0, [&z2] (int) { return (z2.nextFloat() * 2.f - 1.f) * 0.1f; });
+            const double ra = tonePower (oa, SR, 1150.0, S, 3 * S) / juce::jmax (1.0e-12, tonePower (oa, SR, 330.0, S, 3 * S));
+            const double ru = tonePower (ou, SR, 1150.0, S, 3 * S) / juce::jmax (1.0e-12, tonePower (ou, SR, 330.0, S, 3 * S));
+            r.check (ra > ru * 2.0, "vesper: vowels sing different formants (A vs U at 1.15 kHz: " + juce::String (10.0 * std::log10 (ra / juce::jmax (1.0e-12, ru)), 1) + " dB)");
+        }
+        {   // Halo reverse: the tail swells up after the note instead of starting loud
+            ModuleRig h ("halo", SR, BLOCK); h.set ("Mix", 100.f); h.set ("Length", 800.f); h.set ("Mode", 0.f);
+            auto out = h.render (SR, BLOCK, 2.0, [&burst] (int i) { return i < 2400 ? burst (i) : 0.f; });
+            size_t peakAt = 0; float pk = 0;
+            for (size_t i = S / 10; i < out.size(); i += 64) if (std::abs (out[i]) > pk) { pk = std::abs (out[i]); peakAt = i; }   // after the dry note
+            r.check (peakAt > S / 4, "halo: reverse tail swells (loudest " + juce::String ((int) (1000 * peakAt / S)) + " ms after the note)");
+        }
+        // echoes land where they should
+        auto echoPeaks = [&] (ModuleRig& mr, double seconds) { return mr.render (SR, BLOCK, seconds, [] (int i) { return i == 0 ? 1.f : 0.f; }); };
+        auto energyNear = [&] (const std::vector<float>& o, double ms) { const size_t c = (size_t) (ms * 0.001 * SR); return rmsOf (o, c > 240 ? c - 240 : 0, c + 240); };
+        {
+            ModuleRig g ("gemini", SR, BLOCK); g.set ("Mix", 100.f); g.set ("Time", 400.f); g.set ("Pattern", 0.f); g.set ("Feedback", 0.f); g.set ("Mod", 0.f);
+            auto o = echoPeaks (g, 1.0);
+            const double a = energyNear (o, 400.0), b = energyNear (o, 300.0), gap = energyNear (o, 150.0);
+            r.check (a > gap * 20 && b > gap * 20, "gemini: heads at 400 ms and 300 ms (dotted)");
+            ModuleRig m ("mnemosyne", SR, BLOCK); m.set ("Echo", 100.f); m.set ("Time", 200.f); m.set ("Heads", 6.f); m.set ("Intensity", 0.f); m.set ("Wow", 0.f); m.set ("Spring", 0.f); m.set ("Age", 0.f);
+            auto o2 = echoPeaks (m, 1.0);
+            const double h1 = energyNear (o2, 200.0), h2 = energyNear (o2, 400.0), h3 = energyNear (o2, 600.0), gp = energyNear (o2, 300.0);
+            r.check (h1 > gp * 10 && h2 > gp * 10 && h3 > gp * 10, "mnemosyne: three tape heads at 200 / 400 / 600 ms");
+        }
+        {   // Lyra adds the octave string; Icarus makes an octave out of a single note
+            ModuleRig l ("lyra", SR, BLOCK); l.set ("Octave", 100.f); l.set ("Detune", 0.f);
+            auto o = l.render (SR, BLOCK, 1.5, sine (220.f));
+            const double oct = tonePower (o, SR, 440.0, S / 2, (size_t) (1.5 * SR)) / juce::jmax (1.0e-12, tonePower (o, SR, 220.0, S / 2, (size_t) (1.5 * SR)));
+            r.check (oct > 0.05, "lyra: the octave string is there (440 Hz at " + juce::String (10.0 * std::log10 (juce::jmax (1.0e-12, oct)), 1) + " dB vs the note)");
+            ModuleRig i1 ("icarus", SR, BLOCK), i0 ("icarus", SR, BLOCK); i1.set ("Octave", 100.f); i0.set ("Octave", 0.f);
+            auto a = i1.render (SR, BLOCK, 1.0, sine (220.f)), b = i0.render (SR, BLOCK, 1.0, sine (220.f));
+            const double ra = tonePower (a, SR, 440.0, S / 4, S) / juce::jmax (1.0e-12, tonePower (a, SR, 220.0, S / 4, S));
+            const double rb = tonePower (b, SR, 440.0, S / 4, S) / juce::jmax (1.0e-12, tonePower (b, SR, 220.0, S / 4, S));
+            r.check (ra > rb * 10.0, "icarus: the octave knob brings the octave up (+" + juce::String (10.0 * std::log10 (ra / juce::jmax (1.0e-12, rb)), 1) + " dB at 440 Hz)");
+        }
+        {   // other sample rates
+            bool ok = true;
+            for (double rate : { 44100.0, 96000.0 })
+                for (auto key : keys)
+                {
+                    ModuleRig mr (key, rate, 256); Guitar g2 (rate);
+                    auto s2 = mr.run (rate, 256, 1.5, [&g2] (int i) { if (i == 0) g2.pluck (110.f, 0.4f); return g2.next(); });
+                    if (! (s2.finite && s2.peak < 4.f && s2.rms > 1.0e-4f)) { ok = false; r.fail (juce::String (key) + " at " + juce::String (rate) + " Hz"); }
+                }
+            r.check (ok, "all ten work at 44.1 kHz and 96 kHz");
+        }
+    }
+
     // ---------------------------------------------------------------- 8. presets
     r.head ("Presets and DAW state");
     {
@@ -1592,6 +1735,112 @@ int renderSynthDemos (const juce::File& dir)
     }
     p.releaseResources();
     std::cout << "Wrote " << written << " synth demos to " << dir.getFullPathName() << std::endl;
+    return written > 0 ? 0 : 1;
+}
+
+// -----------------------------------------------------------------------------
+//  --render-pedal-demos <folder>: a short clean-guitar part through each celestial pedal
+//  (plucked-string guitar, showcase settings), 48 kHz stereo WAV. For listening, not a test.
+// -----------------------------------------------------------------------------
+int renderPedalDemos (const juce::File& dir)
+{
+    dir.createDirectory();
+    const double sr = 48000; const int block = 256;
+    // a guitar with six strings: each pluck goes to the next free string, softened like a fingered note
+    struct Strings
+    {
+        explicit Strings (double r) { for (int i = 0; i < 6; ++i) s.emplace_back (r); lp.setLowpass (r, 4200.f); body.set (dsp::Biquad::Peak, r, 210.f, 1.2f, 4.f); }
+        void pluck (float hz, float amp) { s[(size_t) (k++ % 6)].pluck (hz, amp); }
+        float next() { float x = 0; for (auto& g : s) x += g.next(); return body.process (lp.lp (x)) * 0.8f; }
+        std::vector<Guitar> s; int k = 0; dsp::OnePole lp; dsp::Biquad body;
+    };
+
+    auto hz = [] (int midi) { return 440.f * std::pow (2.f, (float) (midi - 69) / 12.f); };
+    struct Ev { double t; int note; float amp; };
+    auto arps = [] { std::vector<Ev> e; const int ch[4][4] = { { 40, 47, 54, 59 }, { 36, 43, 52, 59 }, { 43, 50, 55, 62 }, { 38, 45, 54, 57 } };   // Em(add9)-ish, Cmaj7, G, D
+        for (int c = 0; c < 4; ++c) for (int i = 0; i < 4; ++i) e.push_back ({ c * 2.0 + i * 0.32, ch[c][i], 0.42f }); return e; };
+    auto sparse = [] { std::vector<Ev> e; const int n[] = { 64, 67, 71, 69, 66, 64 }; for (int i = 0; i < 6; ++i) e.push_back ({ i * 1.25, n[i], 0.5f }); return e; };
+    auto strum = [] { std::vector<Ev> e; const int ch[3][6] = { { 40, 47, 52, 55, 59, 64 }, { 45, 52, 57, 60, 64, 69 }, { 43, 47, 50, 55, 59, 67 } };
+        for (int c = 0; c < 3; ++c) for (int rep = 0; rep < 2; ++rep) for (int i = 0; i < 6; ++i) e.push_back ({ c * 2.4 + rep * 1.2 + i * 0.018, ch[c][i], 0.33f }); return e; };
+    auto lead = [] { std::vector<Ev> e; const int n[] = { 64, 67, 69, 71, 74, 71, 76 }; const double t[] = { 0, 0.5, 1.0, 1.5, 2.25, 3.0, 3.75 };
+        for (int i = 0; i < 7; ++i) e.push_back ({ t[i], n[i], 0.55f }); return e; };
+
+    struct Demo { const char* key; const char* file; std::vector<Ev> part; double seconds; std::vector<std::pair<const char*, float>> set; };
+    const std::vector<Demo> demos = {
+        { "elysium",   "01-elysium-cathedral",      arps(),   14, { { "Decay", 9.f }, { "Mix", 40.f } } },
+        { "empyrean",  "02-empyrean-shimmer",       arps(),   16, { { "Decay", 14.f }, { "Shimmer", 70.f }, { "Voice II", 35.f }, { "Mix", 45.f } } },
+        { "nimbus",    "03-nimbus-cloud",           arps(),   16, { { "Decay", 18.f }, { "Mix", 55.f } } },
+        { "vesper",    "04-vesper-choir",           arps(),   15, { { "Decay", 10.f }, { "Choir", 80.f }, { "Voices", 1.f }, { "Mix", 45.f } } },
+        { "halo",      "05-halo-reverse",           sparse(), 10, { { "Mix", 55.f } } },
+        { "halo",      "06-halo-bloom",             arps(),   13, { { "Mode", 1.f }, { "Decay", 7.f }, { "Mix", 45.f } } },
+        { "astral",    "07-astral-shimmer-delay",   sparse(), 12, { { "Time", 420.f }, { "Feedback", 60.f }, { "Shimmer", 55.f } } },
+        { "mnemosyne", "08-mnemosyne-tape-echo",    sparse(), 11, { { "Heads", 6.f }, { "Intensity", 50.f } } },
+        { "gemini",    "09-gemini-dotted",          sparse(), 11, { { "Time", 450.f }, { "Pattern", 0.f } } },
+        { "gemini",    "10-gemini-reverse",         sparse(), 11, { { "Time", 600.f }, { "Pattern", 1.f }, { "Reverse", 1.f }, { "Mix", 50.f } } },
+        { "lyra",      "11-lyra-12-string",         strum(),   9, {} },
+        { "icarus",    "12-icarus-octave-fuzz",     lead(),    6, {} },
+    };
+    juce::WavAudioFormat wav; int written = 0;
+    auto writeWav = [&] (const juce::File& f, const juce::AudioBuffer<float>& b)
+    {
+        f.deleteFile();
+        std::unique_ptr<juce::OutputStream> os (f.createOutputStream().release());
+        if (auto* w = wav.createWriterFor (os.get(), sr, 2, 24, {}, 0)) { os.release(); std::unique_ptr<juce::AudioFormatWriter> ww (w); ww->writeFromAudioSampleBuffer (b, 0, b.getNumSamples()); return true; }
+        return false;
+    };
+    for (auto& d : demos)
+    {
+        ModuleRig mr (d.key, sr, block);
+        if (mr.m == nullptr) continue;
+        for (auto& [name, v] : d.set) mr.set (name, v);
+        Strings g (sr); size_t next = 0;
+        const int total = (int) (sr * d.seconds);
+        juce::AudioBuffer<float> out (2, total), dry (2, total), b (2, block);
+        for (int done = 0; done < total; done += block)
+        {
+            const int n = juce::jmin (block, total - done);
+            for (int i = 0; i < n; ++i)
+            {
+                const double t = (done + i) / sr;
+                while (next < d.part.size() && d.part[next].t <= t) { g.pluck (hz (d.part[next].note), d.part[next].amp); ++next; }
+                const float x = g.next();
+                b.setSample (0, i, x); b.setSample (1, i, x); dry.setSample (0, done + i, x); dry.setSample (1, done + i, x);
+            }
+            mr.m->process (b.getArrayOfWritePointers(), 2, n, mr.p.data(), mr.ctx);
+            for (int c = 0; c < 2; ++c) out.copyFrom (c, done, b, c, 0, n);
+        }
+        // normalise to -1 dBFS peak so every demo plays at a similar level
+        const float pk = juce::jmax (out.getMagnitude (0, total), 1.0e-6f);
+        out.applyGain (0.89f / pk);
+        if (writeWav (dir.getChildFile (juce::String (d.file) + ".wav"), out)) ++written;
+        if (juce::String (d.file).startsWith ("01")) { dry.applyGain (0.89f / juce::jmax (dry.getMagnitude (0, total), 1.0e-6f)); writeWav (dir.getChildFile ("00-dry-guitar.wav"), dry); }
+    }
+    // impulse responses (wet only), new reverbs and the older ones for comparison
+    for (auto key : { "elysium", "empyrean", "nimbus", "vesper", "halo", "crypt", "seraph" })
+    {
+        ModuleRig mr (key, sr, block); if (mr.m == nullptr) continue;
+        mr.set ("Mix", 100.f); mr.set ("Decay", 4.f); mr.set ("Swell", 0.f);
+        const int total = (int) (sr * 6.0);
+        juce::AudioBuffer<float> out (2, total), b (2, block);
+        for (int done = 0; done < total; done += block)
+        {
+            const int n = juce::jmin (block, total - done);
+            b.clear(); if (done == 0) { b.setSample (0, 0, 0.5f); b.setSample (1, 0, 0.5f); }
+            mr.m->process (b.getArrayOfWritePointers(), 2, n, mr.p.data(), mr.ctx);
+            for (int c = 0; c < 2; ++c) out.copyFrom (c, done, b, c, 0, n);
+        }
+        writeWav (dir.getChildFile (juce::String ("ir-") + key + ".wav"), out);
+    }
+    // wet level vs dry with steady noise at 100 % mix (to balance the pedals against each other)
+    for (auto key : { "elysium", "empyrean", "nimbus", "vesper", "halo", "crypt", "seraph", "astral", "gemini", "mnemosyne" })
+    {
+        ModuleRig mr (key, sr, block); if (mr.m == nullptr) continue;
+        mr.set ("Mix", 100.f); mr.set ("Echo", 100.f); mr.set ("Swell", 0.f);
+        juce::Random z (9); dsp::OnePole pk; pk.setLowpass (sr, 2500.f);
+        auto st = mr.run (sr, block, 6.0, [&] (int) { return pk.lp ((z.nextFloat() * 2.f - 1.f) * 0.3f); });
+        std::cout << "level " << key << " " << juce::Decibels::gainToDecibels (st.rms / 0.0565f) << " dB vs dry" << std::endl;
+    }
+    std::cout << "Wrote " << written << " pedal demos to " << dir.getFullPathName() << std::endl;
     return written > 0 ? 0 : 1;
 }
 } // namespace obs

@@ -1,0 +1,100 @@
+{
+ "enclosure": {
+  "color": [
+   0.52,
+   0.22,
+   0.1
+  ],
+  "metal": 0.85,
+  "rough": 0.38,
+  "bump": [
+   "noise",
+   500,
+   0.06
+  ]
+ },
+ "engrave": {
+  "rough": 0.4,
+  "metal": 0.0,
+  "depth": 1.0,
+  "strength": 0.55,
+  "distance": 0.015
+ },
+ "glow_strength": 1.6,
+ "knobs": [
+  {
+   "at": [
+    380,
+    470
+   ],
+   "r": 0.64,
+   "style": "black",
+   "v": 0.65
+  },
+  {
+   "at": [
+    940,
+    470
+   ],
+   "r": 0.64,
+   "style": "black",
+   "v": 0.7
+  },
+  {
+   "at": [
+    260,
+    860
+   ],
+   "r": 0.38,
+   "style": "black",
+   "v": 0.45
+  },
+  {
+   "at": [
+    660,
+    860
+   ],
+   "r": 0.38,
+   "style": "black",
+   "v": 0.5
+  },
+  {
+   "at": [
+    1060,
+    860
+   ],
+   "r": 0.38,
+   "style": "black",
+   "v": 1.0
+  }
+ ],
+ "leds": [
+  {
+   "at": [
+    660,
+    1290
+   ],
+   "color": [
+    1.0,
+    0.55,
+    0.15
+   ],
+   "strength": 26
+  }
+ ],
+ "footswitches": [
+  [
+   660,
+   2190,
+   1.0
+  ]
+ ],
+ "screws": [],
+ "rimcolor": [
+  1.0,
+  0.7,
+  0.45
+ ],
+ "art": "art/icarus_art.png",
+ "glow": "art/icarus_glow.png"
+}

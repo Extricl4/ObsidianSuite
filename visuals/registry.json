@@ -413,6 +413,23 @@
    "spec": "pedals/ascend.json",
    "type": "pitch / whammy"
   },
+  "astral": {
+   "name": "Astral",
+   "spec": "pedals/astral.json",
+   "type": "shimmer delay",
+   "engine": "built-in (plugin/Source/DSP/Modules/CelestialModules.cpp)",
+   "art": "tools/art_astral.py",
+   "face_knobs_in_order": [
+    "Time",
+    "Feedback",
+    "Mix",
+    "Shimmer",
+    "Diffuse",
+    "Mod",
+    "Tone",
+    "Interval"
+   ]
+  },
   "aurora": {
    "name": "Aurora",
    "spec": "pedals/aurora.json",
@@ -459,6 +476,23 @@
     ]
    }
   },
+  "elysium": {
+   "name": "Elysium",
+   "spec": "pedals/elysium.json",
+   "type": "cathedral hall reverb",
+   "engine": "built-in (plugin/Source/DSP/Modules/CelestialModules.cpp)",
+   "art": "tools/art_elysium.py",
+   "face_knobs_in_order": [
+    "Decay",
+    "Size",
+    "Mix",
+    "Pre-delay",
+    "Tone",
+    "Low Cut",
+    "Mod"
+   ],
+   "switch": "Infinite"
+  },
   "ember": {
    "name": "Ember",
    "spec": "pedals/ember.json",
@@ -482,6 +516,40 @@
      "DIST": "KOT DIST Gain=5.nam"
     }
    }
+  },
+  "empyrean": {
+   "name": "Empyrean",
+   "spec": "pedals/empyrean.json",
+   "type": "two-voice shimmer reverb",
+   "engine": "built-in (plugin/Source/DSP/Modules/CelestialModules.cpp)",
+   "art": "tools/art_empyrean.py",
+   "face_knobs_in_order": [
+    "Decay",
+    "Size",
+    "Mix",
+    "Shimmer",
+    "Voice II",
+    "Tone",
+    "Mod",
+    "Interval"
+   ]
+  },
+  "gemini": {
+   "name": "Gemini",
+   "spec": "pedals/gemini.json",
+   "type": "dual delay (rhythmic, reverse)",
+   "engine": "built-in (plugin/Source/DSP/Modules/CelestialModules.cpp)",
+   "art": "tools/art_gemini.py",
+   "face_knobs_in_order": [
+    "Time",
+    "Feedback",
+    "Mix",
+    "Cross",
+    "Tone",
+    "Mod",
+    "Pattern"
+   ],
+   "switch": "Reverse"
   },
   "graven": {
    "name": "Graven",
@@ -526,6 +594,22 @@
     }
    }
   },
+  "halo": {
+   "name": "Halo",
+   "spec": "pedals/halo.json",
+   "type": "reverse / bloom reverb",
+   "engine": "built-in (plugin/Source/DSP/Modules/CelestialModules.cpp)",
+   "art": "tools/art_halo.py",
+   "face_knobs_in_order": [
+    "Length",
+    "Decay",
+    "Mix",
+    "Tone",
+    "Mod",
+    "Low Cut"
+   ],
+   "switch": "Mode"
+  },
   "helios": {
    "name": "Helios",
    "spec": "pedals/helios.json",
@@ -557,6 +641,20 @@
    "spec": "pedals/hex.json",
    "type": "bitcrusher"
   },
+  "icarus": {
+   "name": "Icarus",
+   "spec": "pedals/icarus.json",
+   "type": "octave-up fuzz",
+   "engine": "built-in (plugin/Source/DSP/Modules/CelestialModules.cpp)",
+   "art": "tools/art_icarus.py",
+   "face_knobs_in_order": [
+    "Fuzz",
+    "Octave",
+    "Tone",
+    "Level",
+    "Mix"
+   ]
+  },
   "lament": {
    "name": "Lament",
    "spec": "pedals/lament.json",
@@ -571,6 +669,21 @@
    "name": "Lethe",
    "spec": "pedals/lethe.json",
    "type": "delay"
+  },
+  "lyra": {
+   "name": "Lyra",
+   "spec": "pedals/lyra.json",
+   "type": "12-string shimmer",
+   "engine": "built-in (plugin/Source/DSP/Modules/CelestialModules.cpp)",
+   "art": "tools/art_lyra.py",
+   "face_knobs_in_order": [
+    "Octave",
+    "Detune",
+    "Mix",
+    "Spread",
+    "Chime",
+    "Width"
+   ]
   },
   "maw": {
    "name": "Maw",
@@ -588,6 +701,40 @@
      "KODY": "SLAMMIN_FORTIN_GRIND_KODY.nam"
     }
    }
+  },
+  "mnemosyne": {
+   "name": "Mnemosyne",
+   "spec": "pedals/mnemosyne.json",
+   "type": "three-head tape echo + spring (wide enclosure)",
+   "engine": "built-in (plugin/Source/DSP/Modules/CelestialModules.cpp)",
+   "art": "tools/art_mnemosyne.py",
+   "face_knobs_in_order": [
+    "Time",
+    "Intensity",
+    "Echo",
+    "Tone",
+    "Heads",
+    "Wow",
+    "Age",
+    "Spring"
+   ]
+  },
+  "nimbus": {
+   "name": "Nimbus",
+   "spec": "pedals/nimbus.json",
+   "type": "cloud reverb",
+   "engine": "built-in (plugin/Source/DSP/Modules/CelestialModules.cpp)",
+   "art": "tools/art_nimbus.py",
+   "face_knobs_in_order": [
+    "Decay",
+    "Cloud",
+    "Mix",
+    "Drift",
+    "Swell",
+    "Tone",
+    "Low Cut"
+   ],
+   "switch": "Freeze"
   },
   "ossuary": {
    "name": "Ossuary",
@@ -663,6 +810,23 @@
    "name": "Tide",
    "spec": "pedals/tide.json",
    "type": "chorus"
+  },
+  "vesper": {
+   "name": "Vesper",
+   "spec": "pedals/vesper.json",
+   "type": "choir reverb",
+   "engine": "built-in (plugin/Source/DSP/Modules/CelestialModules.cpp)",
+   "art": "tools/art_vesper.py",
+   "face_knobs_in_order": [
+    "Decay",
+    "Size",
+    "Mix",
+    "Vowel",
+    "Choir",
+    "Breath",
+    "Tone"
+   ],
+   "switch": "Voices"
   },
   "vortex": {
    "name": "Vortex",

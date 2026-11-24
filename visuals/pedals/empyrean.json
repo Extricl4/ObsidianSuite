@@ -1,0 +1,128 @@
+{
+ "enclosure": {
+  "color": [
+   0.8,
+   0.63,
+   0.35
+  ],
+  "metal": 0.85,
+  "rough": 0.3,
+  "coat": 0.4,
+  "bump": [
+   "noise",
+   500,
+   0.04
+  ]
+ },
+ "engrave": {
+  "rough": 0.45,
+  "metal": 0.0,
+  "depth": 1.0,
+  "strength": 0.5,
+  "distance": 0.015
+ },
+ "glow_strength": 1.5,
+ "knobs": [
+  {
+   "at": [
+    260,
+    470
+   ],
+   "r": 0.6,
+   "style": "pearl",
+   "v": 0.45
+  },
+  {
+   "at": [
+    660,
+    470
+   ],
+   "r": 0.6,
+   "style": "pearl",
+   "v": 0.65
+  },
+  {
+   "at": [
+    1060,
+    470
+   ],
+   "r": 0.6,
+   "style": "pearl",
+   "v": 0.35
+  },
+  {
+   "at": [
+    200,
+    860
+   ],
+   "r": 0.38,
+   "style": "pearl",
+   "v": 0.4
+  },
+  {
+   "at": [
+    507,
+    860
+   ],
+   "r": 0.38,
+   "style": "pearl",
+   "v": 0.5
+  },
+  {
+   "at": [
+    813,
+    860
+   ],
+   "r": 0.38,
+   "style": "pearl",
+   "v": 0.3
+  },
+  {
+   "at": [
+    1120,
+    860
+   ],
+   "r": 0.38,
+   "style": "pearl",
+   "v": 0.55
+  },
+  {
+   "at": [
+    660,
+    1170
+   ],
+   "r": 0.3,
+   "style": "pearl",
+   "v": 0.0
+  }
+ ],
+ "leds": [
+  {
+   "at": [
+    660,
+    1530
+   ],
+   "color": [
+    1.0,
+    0.9,
+    0.7
+   ],
+   "strength": 18
+  }
+ ],
+ "footswitches": [
+  [
+   660,
+   2190,
+   1.0
+  ]
+ ],
+ "screws": [],
+ "rimcolor": [
+  1.0,
+  0.9,
+  0.75
+ ],
+ "art": "art/empyrean_art.png",
+ "glow": "art/empyrean_glow.png"
+}
