@@ -22,7 +22,7 @@ If an ASIO driver is installed the app picks it by itself on the first start. In
 
 | Part | Where |
 |---|---|
-| Signal chain: input → gate → transpose → synth (pre) → pedals → [HYDRA before amp] → amp → cab → [HYDRA after amp] → EQ → FX → special FX → doubler → width → output | `Source/DSP/Engine.cpp` |
+| Signal chain: input → gate → transpose → [KERAUNOS before amp] → pedals → [SIREN before amp] → [HYDRA before amp] → amp → cab → [SIREN after amp] → [HYDRA after amp] → EQ → [KERAUNOS after amp] → FX → special FX → KHAOS → doubler → width → + AETHER → output | `Source/DSP/Engine.cpp` |
 | Amps: 9 in-house amps in the **OBSIDIAN AMPS** folder (modelled circuit by circuit, see below), *NAM Loader* (up to 4 `.nam` captures) | `Source/DSP/AmpModels.h`, `AmpSection.h`, `NamEngine.*` |
 | Cab: two mics (model, position, distance, level, pan, solo/mute/phase), IR loading, built-in cabs | `Source/DSP/CabSection.h` |
 | 29 pedals / effects (drive, fuzz, boost, comp, wah, whammy, octave, sub, delay, reverb, shimmer, swell, freeze, tape stop, looper, glitch, chorus, flanger, phaser, tremolo, vibrato/rotary, ring mod, bitcrusher, filters, limiter) | `Source/DSP/Modules/*.cpp` |
@@ -167,6 +167,11 @@ diminished, whole tone, Hirajoshi, bebop and more). Notes outside the mode eithe
 the nearest scale note (FOLLOW) or keep the last harmony (HOLD). HUMANIZE adds a little drift in pitch,
 timing and level; SPREAD widens or narrows the pans; MIX is dry and harmony at full in the middle.
 PLACE: after the amp (harmonies of your amp sound, stereo) or before it (the voices go through the amp).
+
+**With SIREN**: SIREN joins before HYDRA, so the synth gets harmonies too, wherever each one sits (with SIREN
+after the amp and HYDRA before it, SIREN runs through a second HYDRA with the same settings). HYDRA listens to
+the clean guitar; when SIREN plays without it (KEYS, MIDI, or HOLD after the string stopped) it listens to
+SIREN instead. **AETHER is never harmonized**: it joins at the very end of the chain.
 
 * **LEAD** (single notes, the main mode). Its own pitch tracker listens to the clean guitar (NSDF, the
   window grows with the period: a high note is known in a couple of periods). Each voice is a

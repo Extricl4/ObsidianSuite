@@ -178,6 +178,9 @@ private:
     } p {};
     void readHarmonyParams (dsp::hydra::Params& hp);
     dsp::hydra::Harmonizer harmonizer;
+    dsp::hydra::Harmonizer synthHarm;          // SIREN's own HYDRA when SIREN sits after the amp and HYDRA before it
+    bool synthHarmWas = false;
+    std::vector<float> hydraDet;               // what HYDRA listens to when SIREN plays without the guitar
     std::vector<float> di;
     int harmPlace = 0; bool harmMoving = false;
 };

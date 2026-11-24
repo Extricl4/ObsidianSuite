@@ -1197,6 +1197,75 @@ int runSelfTest (const juce::StringArray& args)
         p.presetManager().loadInit();
     }
 
+    // ---------------------------------------------------------------- 6c. SIREN through HYDRA, AETHER kept out
+    r.head ("SIREN with HYDRA (AETHER stays out of it)");
+    {
+        auto& e = p.engine();
+        // HYDRA: one voice an octave down, voices only (mix 100); SIREN: a plain sine, synth only (mix 100)
+        auto rig = [&] (int synthPost, int harmPlace) {
+            p.presetManager().loadInit();
+            for (auto id : { "amp.on", "cab.on", "doubler.on", "gate.on", "eq.on" }) setNorm (p, id, 0);
+            for (int v = 1; v <= 6; ++v) setNorm (p, "harm.v" + juce::String (v) + ".on", 0);
+            setNorm (p, "harm.on", 1); setReal (p, "harm.mix", 100); setReal (p, "harm.human", 0); setReal (p, "harm.place", (float) harmPlace);
+            setReal (p, "harm.v1.on", 1); setReal (p, "harm.v1.level", 100); setReal (p, "harm.v1.pan", 0); setReal (p, "harm.v1.smart", 0); setReal (p, "harm.v1.semi", -12);
+            setNorm (p, "synth.on", 1); setReal (p, "syn.mix", 100); setReal (p, "syn.post", (float) synthPost);
+            setReal (p, "syn.a.wave", 3); setReal (p, "syn.a.voices", 1); setNorm (p, "syn.b.on", 0); setReal (p, "syn.sub.level", 0); setReal (p, "syn.noise.level", 0);
+            setNorm (p, "syn.flt.on", 0); setReal (p, "syn.lfo.depth", 0); setReal (p, "syn.space", 0); setReal (p, "syn.char", 0); setReal (p, "syn.chord", 0);
+            setNorm (p, "syn.arp.on", 0); setNorm (p, "syn.hold", 0);
+            render (p, SR, BLOCK, 0.5, [] (int) { return 0.f; });             // HYDRA settles in its place
+        };
+        auto a3 = [&] (int i) { const double t = i / SR; double v = 0;
+            for (int h = 1; h <= 6; ++h) v += std::sin (juce::MathConstants<double>::twoPi * 220.0 * h * t) / h;
+            return (float) (0.25 * v * std::exp (-t * 0.6) * juce::jmin (1.0, t / 0.002)); };
+        auto pitchOf = [&] (std::function<float (int)> in, double secs) {
+            std::vector<float> cap; render (p, SR, BLOCK, secs, in, 2, &cap);
+            return detectPitch (std::vector<float> (cap.begin() + (long) (0.5 * SR), cap.end()), SR); };
+        auto cents = [] (float got, float want) { return got > 0 ? std::abs (1200.f * std::log2 (got / want)) : 9999.f; };
+        struct C { int post, place; const char* name; };
+        juce::String res; int good = 0;
+        for (auto c : { C { 1, 0, "both after the amp" }, C { 1, 1, "SIREN after, HYDRA before" }, C { 0, 1, "both before" }, C { 0, 0, "SIREN before, HYDRA after" } })
+        {
+            rig (c.post, c.place);
+            const float f = pitchOf (a3, 1.2);
+            if (cents (f, 110.f) < 25.f) ++good;
+            res << c.name << " " << juce::String (f, 1) << " Hz, ";
+        }
+        r.check (good == 4, "HYDRA harmonizes SIREN wherever each sits (A3 played, SIREN an octave down: " + res.dropLastCharacters (2) + ")");
+        // without HYDRA SIREN plays the note itself
+        rig (1, 0); setNorm (p, "harm.on", 0); render (p, SR, BLOCK, 0.3, [] (int) { return 0.f; });
+        { const float f = pitchOf (a3, 1.2); r.check (cents (f, 220.f) < 25.f, "with HYDRA off SIREN plays the A3 itself (" + juce::String (f, 1) + " Hz)"); }
+        // no guitar: SIREN played on the KEYS gets its harmonies too (HYDRA listens to SIREN then)
+        {
+            rig (1, 0);
+            e.uiSynthNote (57, true, 0.9f);
+            const float f = pitchOf ([] (int) { return 0.f; }, 1.2);
+            e.uiSynthNote (57, false); render (p, SR, BLOCK, 1.0, [] (int) { return 0.f; });
+            r.check (cents (f, 110.f) < 25.f, "SIREN played on the KEYS (no guitar) is harmonized too (" + juce::String (f, 1) + " Hz, want 110)");
+        }
+        // AETHER is never harmonized: a drone sounds the same with HYDRA on or off
+        {
+            auto aether = [&] (bool harm) {
+                rig (1, 0); setReal (p, "syn.mix", 0); setNorm (p, "harm.on", harm ? 1.f : 0.f);
+                setNorm (p, "atm.on", 1); setNorm (p, "atm.bed.on", 0); setNorm (p, "atm.tex.on", 0); setNorm (p, "atm.drn.on", 1);
+                setReal (p, "atm.drn.voice", 0); setReal (p, "atm.drn.chord", 0); setNorm (p, "atm.drn.follow", 0); setReal (p, "atm.drn.motion", 0); setReal (p, "atm.drn.detune", 0);
+                setReal (p, "atm.follow", 0); setReal (p, "atm.space", 0); setReal (p, "atm.evolve", 0);
+                render (p, SR, BLOCK, 1.5, [] (int) { return 0.f; });
+                std::vector<float> cap; const auto st = render (p, SR, BLOCK, 1.0, [] (int) { return 0.f; }, 2, &cap);
+                return std::make_pair (st.rms, detectPitch (cap, SR)); };
+            const auto off = aether (false), on = aether (true);
+            const float dDb = 20.f * std::log10 (juce::jmax (1e-9f, on.first) / juce::jmax (1e-9f, off.first));
+            const bool samePitch = (off.second <= 0 && on.second <= 0) || cents (on.second, off.second) < 15.f;
+            r.check (off.first > 1e-4f && std::abs (dDb) < 1.5f && samePitch, juce::String::formatted ("AETHER never goes through HYDRA: a drone is the same with it on (%+.1f dB, %.1f vs %.1f Hz)", dDb, on.second, off.second));
+        }
+        // CPU: SIREN after the amp with HYDRA before it runs a second HYDRA for SIREN
+        {
+            rig (1, 1); for (int v = 1; v <= 6; ++v) setNorm (p, "harm.v" + juce::String (v) + ".on", 1);
+            auto st = render (p, SR, BLOCK, 2.0, a3);
+            r.check (st.finite && st.peak < 1.99f, "six voices on guitar and SIREN (two HYDRAs): clean, " + juce::String (st.avgLoad * 100, 1) + "% of one core");
+        }
+        p.presetManager().loadInit();
+    }
+
     // ---------------------------------------------------------------- 7. NAM
     r.head ("NAM captures");
     {

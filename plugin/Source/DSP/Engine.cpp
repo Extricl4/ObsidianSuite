@@ -45,7 +45,7 @@ void Engine::prepare (double sampleRate, int block)
     ampSection.prepare (sr, maxBlock); cabSection.prepare (sr, maxBlock); eq.prepare (sr);
     for (auto& r : racks) r.prepare (ctxProto);
     doubler.prepare (sr); width.prepare (sr); metronome.prepare (sr);
-    harmonizer.prepare (sr, maxBlock); di.assign ((size_t) maxBlock, 0.f);
+    harmonizer.prepare (sr, maxBlock); synthHarm.prepare (sr, maxBlock); synthHarmWas = false; di.assign ((size_t) maxBlock, 0.f); hydraDet.assign ((size_t) maxBlock, 0.f);
     // Re-prepare loaded captures for this rate.
     for (int c = 0; c < AmpSection::kChannels; ++c)
         if (auto* e = ampSection.channelSlot (c).get()) e->prepare (sr, maxBlock);
@@ -201,7 +201,7 @@ void Engine::process (juce::AudioBuffer<float>& buffer, int numIn, const HostInf
         if (hp.place != harmPlace && ! harmMoving) harmMoving = true;
         if (harmMoving)
         {
-            if (harmonizer.isQuiet()) { harmPlace = hp.place; harmMoving = false; harmonizer.reset(); }
+            if (harmonizer.isQuiet() && (! synthHarmWas || synthHarm.isQuiet())) { harmPlace = hp.place; harmMoving = false; harmonizer.reset(); synthHarm.reset(); synthHarmWas = false; }
             else hp.on = false;
         }
 
@@ -228,6 +228,14 @@ void Engine::process (juce::AudioBuffer<float>& buffer, int numIn, const HostInf
             synthFade.gains (synthG.data(), n);
             for (int i = 0; i < n; ++i) synthG[(size_t) i] *= synthMix;
         }
+        // HYDRA hears the clean guitar, unless SIREN plays without it (KEYS, MIDI or HOLD after the string
+        // stopped): then it hears SIREN, so the synth's notes get their harmonies too
+        const float* det = di.data();
+        if (synthOn && synth.currentSource() != 0 && synth.currentActivity() > 0.002f && synthMix > 0.01f)
+        {
+            for (int i = 0; i < n; ++i) hydraDet[(size_t) i] = 0.5f * (synthL[(size_t) i] + synthR[(size_t) i]);
+            det = hydraDet.data();
+        }
 
         // ---- KERAUNOS before the amp (mono; the SFX tab's switch bypasses it too) ---------------
         const bool sfxOn = v (p.sfxOn) > 0.5f;
@@ -249,13 +257,22 @@ void Engine::process (juce::AudioBuffer<float>& buffer, int numIn, const HostInf
             racks[0].process (chans, 1, n, ctxProto, v (p.preOn) > 0.5f);
         }
 
-        // ---- HYDRA before the amp (the voices go through it) ---------------------------------
-        if (harmPlace == 1) harmonizer.process (di.data(), x, nullptr, x, nullptr, n, hp);
-
-        // ---- SIREN before the amp: joins here, after the pedals and HYDRA, so they keep playing the
-        //      guitar alone (SIREN, AETHER and HYDRA all at once don't get in each other's way) -------
+        // ---- SIREN before the amp: joins after the pedals (they keep playing the guitar alone) and
+        //      before HYDRA, so HYDRA harmonizes the synth too -----------------------------------------
         if (synthOn && ! synthPost)
             for (int i = 0; i < n; ++i) { const float m = synthG[(size_t) i]; x[i] = x[i] * (1.f - m) + 0.5f * (synthL[(size_t) i] + synthR[(size_t) i]) * m; }
+
+        // ---- HYDRA before the amp (the voices go through it) ---------------------------------
+        if (harmPlace == 1) harmonizer.process (det, x, nullptr, x, nullptr, n, hp);
+        // SIREN after the amp, HYDRA before it: SIREN gets harmonies of its own (a second HYDRA, same settings)
+        const bool synthHarmNow = synthOn && synthPost && harmPlace == 1;
+        if (synthHarmNow)
+        {
+            if (! synthHarmWas) synthHarm.reset();
+            synthHarm.process (det, synthL.data(), synthR.data(), synthL.data(), synthR.data(), n, hp);
+        }
+        else if (synthHarmWas) synthHarm.reset();          // stopped: nothing of it lingers (and it counts as quiet)
+        synthHarmWas = synthHarmNow;
 
         // ---- amp ----------------------------------------------------------------------------
         ampSection.process (x, n, v (p.ampOn) > 0.5f, (int) std::round (v (p.ampChannel)), v (p.ampGain), v (p.ampBass), v (p.ampMid),
@@ -280,10 +297,6 @@ void Engine::process (juce::AudioBuffer<float>& buffer, int numIn, const HostInf
         else { std::copy (x, x + n, L); std::copy (x, x + n, outR); }
         cabWasActive = cabFade.active();
 
-        // ---- HYDRA after the amp: harmonies of the amp's sound, like a second guitarist -------
-        //      (before SIREN joins, so it harmonizes the guitar, not the synth)
-        if (harmPlace == 0) harmonizer.process (di.data(), L, outR, L, outR, n, hp);
-
         // ---- synth post-amp ----------------------------------------------------------------
         if (synthOn && synthPost)
             for (int i = 0; i < n; ++i)
@@ -292,6 +305,10 @@ void Engine::process (juce::AudioBuffer<float>& buffer, int numIn, const HostInf
                 L[i] = L[i] * (1.f - m) + synthL[(size_t) i] * m;
                 outR[i] = outR[i] * (1.f - m) + synthR[(size_t) i] * m;
             }
+
+        // ---- HYDRA after the amp: harmonies of the amp's sound and SIREN, like a second player ---
+        //      (AETHER joins at the very end: its atmospheres are never harmonized)
+        if (harmPlace == 0) harmonizer.process (det, L, outR, L, outR, n, hp);
 
         float* st[2] = { L, outR };
 
