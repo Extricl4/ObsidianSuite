@@ -4,13 +4,14 @@
 //  (so the self-test can run it without a host).
 //
 //   input -> gain -> gate -> transpose -> [synth pre] -> PEDALS (mono)
-//         -> AMP (mono) -> CAB (mono -> stereo) -> [synth post] -> EQ
+//         -> AMP (mono) -> CAB (mono -> stereo) -> [synth post] -> [AETHER] -> EQ
 //         -> FX -> SPECIAL FX -> doubler -> width -> output -> metronome
 // =============================================================================
 #include "../Core/Params.h"
 #include "Sections.h"
 #include "PitchTracker.h"
 #include "GuitarSynth.h"
+#include "Atmos.h"
 #include "Harmonizer.h"
 #include <array>
 #include "AmpSection.h"
@@ -75,6 +76,10 @@ public:
     float synthNote() const                       { return synth.currentNote(); }
     int   synthStep() const                       { return synth.currentStep(); }
     int   synthSource() const                     { return synth.currentSource(); }
+    /** AETHER, for its page: how busy each layer is (0 bed, 1 drone, 2 texture) and a count of texture events. */
+    float atmosActivity (int layer) const          { return atmosFade.active() ? atmos.activity (layer) : 0.f; }
+    int   atmosEvents() const                     { return atmos.events(); }
+    float atmosRoot() const                       { return atmosFade.active() ? atmos.droneRoot() : -1.f; }
     /** HYDRA, for the HARMONY page: the note it hears (-1: none), in CHORDS the chord's notes. */
     int   harmonyNote() const                     { return harmonizer.uiNote.load(); }
     juce::Array<juce::var> harmonyChord() const
@@ -104,6 +109,7 @@ public:
 
 private:
     void readSynthParams (dsp::SynthParams& sp, const HostInfo& h);
+    void readAtmosParams (dsp::AtmosParams& ap);
 
     double sr = 48000; int maxBlock = 512; bool prepared = false;
     ParamCache params;
@@ -111,6 +117,7 @@ private:
     dsp::Transposer transposer;
     dsp::PitchTracker pitch;
     dsp::GuitarSynth synth;
+    dsp::Atmos atmos;
     dsp::AmpSection ampSection;
     dsp::CabSection cabSection;
     dsp::GraphicEq eq;
@@ -122,14 +129,14 @@ private:
     dsp::PeakMeter inMeter, outMeterL, outMeterR;
     dsp::SpectrumTap spectrum;
     dsp::Smoother inGainSm, outGainSm, tunerMute;
-    dsp::SectionFade cabFade, eqFade, synthFade;       // click-free on / off of those sections
-    bool cabWasActive = true, eqWasActive = true;
+    dsp::SectionFade cabFade, eqFade, synthFade, atmosFade;   // click-free on / off of those sections
+    bool cabWasActive = true, eqWasActive = true, atmosWasActive = false;
     dsp::ModuleContext ctxProto;
     std::atomic<bool> metroRunning { false };
     std::atomic<double> lastBpm { 120.0 };
     std::atomic<float> cpu { 0.f };
 
-    std::vector<float> mono, synthL, synthR, scratchR, dryL, dryR, synthG;
+    std::vector<float> mono, synthL, synthR, scratchR, dryL, dryR, synthG, atmL, atmR, atmG;
     std::atomic<unsigned> synthSteps[16];
     static constexpr int kMaxSynthNotes = 256;
     dsp::SynthNote synthNotes[kMaxSynthNotes]; int numSynthNotes = 0;
@@ -146,6 +153,7 @@ private:
         std::atomic<float>* cabLc, *cabHc;
         // synth: every parameter, by SynthDefs index
         std::atomic<float>* syn[obs::synthdefs::count];
+        std::atomic<float>* atm[obs::atmosdefs::count];   // AETHER, by AtmosDefs index
         // HYDRA: by HarmonyDefs index
         std::atomic<float>* harm[obs::harmdefs::gCount];
         std::atomic<float>* harmV[obs::harmdefs::kVoices][obs::harmdefs::vCount];

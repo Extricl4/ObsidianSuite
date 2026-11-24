@@ -127,6 +127,29 @@ On the SYNTH page, **AUDITION** and the computer keys A–K play it too.
   The steps are saved with the preset.
 * **Output**: level, mix, space (stereo echoes), **character** (clean, analog, 8-bit, VHS), before or after the amp
 * **DICE** rolls a whole new sound (keeps mix, level, key and your playing settings), with undo.
+* **Presets**: 75 sounds in folders (arcade, cartoon, leads, bass, pads, arps, FX). The **HORROR** folder
+  (blood red) has 12 that each bring their own atmosphere: loading one also sets AETHER and turns it on.
+
+### AETHER (the SYNTH page's second page)
+
+The switch above the display flips between **SIREN** (the synth) and **AETHER**: noise, ambience and
+atmospheres that play by themselves around your playing, no notes needed. It has its own POWER
+(independent of SIREN's), and its dot on the switch lights while it plays. Engine: `Source/DSP/Atmos.h`
+(settings `AtmosDefs.h`, `atm.*`), added after the cab and synth, before the EQ and FX.
+
+* **BED**: hiss, wind (gusts, a howl), rain (drops on a hiss), surf (waves left and right), rumble (deep
+  earth, a sub), static (an old radio, crackle, a tuning whistle), breath (slow breathing, rasping when DEEP).
+  The knobs are named for what they do with each bed (WIND: PITCH, GUSTS, HOWL).
+* **DRONE**: organ, strings, choir (drifting vowels), glass (bell FM), abyss (a growling sub), descent and
+  ascent (Shepard tones that fall or rise forever); chords from one note to a dread cluster; octave;
+  in SIREN's key, or **FOLLOW** moves it to the note you play.
+* **TEXTURE**: vinyl, fire, drips, metal (struck and scraped plates), shimmer (glass in your key), whispers,
+  heart (STUMBLE makes it skip), knocks, moans (voices in pain), flesh (wet, cracking, tearing).
+* **VOID**: SIZE (a room to an endless void) and SPACE, drawn live. In the strip: EVOLVE (everything drifts),
+  FOLLOW (duck under your playing or swell with it), **FREEZE** (holds the space forever), WIDTH, GRIT, TONE, LEVEL.
+* **MOOD** (calm, dream, eerie, dread, horror) decides what the three dice, **MUTATE** (nudge everything)
+  and **SUMMON** (a whole new world, with a name) reach for. **SCENES**: 29 ready-made atmospheres
+  (nature, dream, dark, horror), levelled so they sit under the guitar.
 
 ## HYDRA, the harmonizer (HARMONY page)
 
@@ -291,13 +314,16 @@ Pantera presets are tuned by hand (listed in `KEEP`).
 ## Tests
 
 * `"Obsidian Amp Suite.exe" --selftest report.txt` renders every pedal in every slot with random settings,
-  every sample rate and buffer size, checks transpose pitch accuracy, the synth, HYDRA (pitch of every voice,
+  every sample rate and buffer size, checks transpose pitch accuracy, the synth, AETHER (every bed, voice and texture, random worlds, FREEZE, FOLLOW), HYDRA (pitch of every voice,
   how fast it follows, bypass, moving it while playing), presets, DAW state and CPU. Add `--nam file.nam` to test a capture, and `--packs` to play every file of the installed pedal and amp
   pack (every capture amp: all its captures load, the gain is swept, every button is pressed, level and CPU).
   The GitHub build runs it on every push.
 * `python plugin/tools/ui-test/run.py` runs the real UI in headless Chrome against a fake engine and clicks
   through every page (screenshots in `tools/ui-test/out`). Refresh its data with
   `"Obsidian Amp Suite.exe" --dump-ui-state plugin/tools/ui-test/state.json`.
+* `"Obsidian Amp Suite.exe" --render-sounds <folder> <spec.json>` renders any list of settings (and MIDI notes)
+  to WAV, for sound design. `python -I plugin/tools/presets/aether_check.py <folder> [--fix]` uses it to
+  measure the loudness of every AETHER scene against its folder's target (and with `--fix`, sets their LEVEL).
 * `"Obsidian Amp Suite.exe" --render-synth <folder>` renders synth patches to WAV; `python plugin/tools/amp-lab/synthcheck.py <folder>`
   measures their level, DC and aliasing. `plugin/tools/amp-lab` also has the amp measurement tools (`amplab.cpp`, `level.cpp`).
 

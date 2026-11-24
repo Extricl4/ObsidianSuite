@@ -508,6 +508,7 @@ function showMeters(m) {
   if (window.obsSynth && window.obsSynth.live) safe('synth live', () => {
     window.obsSynth.live({ note: m.synNote, step: m.synStep, level: Math.min(1, (m.synth || 0) * 1.4), src: ['guitar', 'midi', 'hold'][m.synSrc] || 'guitar' });
     if (m.bpm) window.obsSynth.setBpm(m.bpm);
+    if (window.obsSynth.atmLive) window.obsSynth.atmLive({ act: m.atm || [0, 0, 0], ev: m.atmEv || 0, root: m.atmRoot == null ? -1 : m.atmRoot });
   });
   if (!meterEls) {
     meterEls = (typeof meters !== 'undefined' ? meters : []).map(x => x.d);

@@ -26,6 +26,7 @@ void Engine::attach (juce::AudioProcessorValueTreeState& state)
     }
     p.cabLc = g ("cab.lc"); p.cabHc = g ("cab.hc");
     for (int i = 0; i < obs::synthdefs::count; ++i) p.syn[i] = g (obs::synthdefs::table()[i].id);
+    for (int i = 0; i < obs::atmosdefs::count; ++i) p.atm[i] = g (obs::atmosdefs::table()[i].id);
     for (int i = 0; i < obs::harmdefs::gCount; ++i) p.harm[i] = g (obs::harmdefs::globals()[i].id);
     for (int v = 0; v < obs::harmdefs::kVoices; ++v)
         for (int i = 0; i < obs::harmdefs::vCount; ++i)
@@ -38,7 +39,7 @@ void Engine::prepare (double sampleRate, int block)
 {
     sr = sampleRate; maxBlock = juce::jmax (16, block);
     ctxProto.sampleRate = sr; ctxProto.maxBlock = maxBlock; ctxProto.oversampling = oversampling.load(); ctxProto.pitch = &pitch;
-    gate.prepare (sr); transposer.prepare (sr, maxBlock); pitch.prepare (sr); synth.prepare (sr);
+    gate.prepare (sr); transposer.prepare (sr, maxBlock); pitch.prepare (sr); synth.prepare (sr); atmos.prepare (sr, maxBlock);
     ampSection.prepare (sr, maxBlock); cabSection.prepare (sr, maxBlock); eq.prepare (sr);
     for (auto& r : racks) r.prepare (ctxProto);
     doubler.prepare (sr); width.prepare (sr); metronome.prepare (sr);
@@ -50,8 +51,10 @@ void Engine::prepare (double sampleRate, int block)
     inGainSm.reset (sr, 30.f, 1.f); outGainSm.reset (sr, 30.f, 1.f); tunerMute.reset (sr, 40.f, 1.f);
     mono.assign ((size_t) maxBlock, 0.f); scratchR.assign ((size_t) maxBlock, 0.f); synthL.assign ((size_t) maxBlock, 0.f); synthR.assign ((size_t) maxBlock, 0.f);
     dryL.assign ((size_t) maxBlock, 0.f); dryR.assign ((size_t) maxBlock, 0.f); synthG.assign ((size_t) maxBlock, 0.f);
+    atmL.assign ((size_t) maxBlock, 0.f); atmR.assign ((size_t) maxBlock, 0.f); atmG.assign ((size_t) maxBlock, 0.f);
     cabFade.reset (sr, p.cabOn == nullptr || p.cabOn->load() > 0.5f); eqFade.reset (sr, p.eqOn == nullptr || p.eqOn->load() > 0.5f);
     synthFade.reset (sr, p.synthOn != nullptr && p.synthOn->load() > 0.5f);
+    atmosFade.reset (sr, p.atm[obs::atmosdefs::on] != nullptr && p.atm[obs::atmosdefs::on]->load() > 0.5f); atmosWasActive = atmosFade.active();
     cabWasActive = cabFade.active(); eqWasActive = eqFade.active();
     prepared = true;
 }
@@ -73,6 +76,16 @@ int Engine::latencySamples()
     l += ampSection.namLatency ((int) p.ampChannel->load());
     for (auto& r : racks) l += r.latency();
     return l;
+}
+
+void Engine::readAtmosParams (AtmosParams& ap)
+{
+    for (int i = 0; i < obs::atmosdefs::count; ++i) ap.v[i] = p.atm[i]->load (std::memory_order_relaxed);
+    ap.key = (int) std::lround (p.syn[obs::synthdefs::key]->load (std::memory_order_relaxed));
+    ap.tuneHz = p.syn[obs::synthdefs::tune]->load (std::memory_order_relaxed);
+    // the guitar as it sounds (after TRANSPOSE), for a drone that follows it
+    ap.guitarHz = pitch.frequency() * std::exp2 (std::round (p.transpose->load (std::memory_order_relaxed)) / 12.f);
+    ap.guitarConf = pitch.confidence();
 }
 
 void Engine::readSynthParams (SynthParams& sp, const HostInfo& h)
@@ -243,6 +256,18 @@ void Engine::process (juce::AudioBuffer<float>& buffer, int numIn, const HostInf
 
         // ---- HYDRA after the amp: harmonies of the amp's sound, like a second guitarist -------
         if (harmPlace == 0) harmonizer.process (di.data(), L, outR, L, outR, n, hp);
+
+        // ---- AETHER: noise, ambience, atmospheres, added over the rig (the EQ and FX still shape it) ----
+        atmosFade.set (v (p.atm[obs::atmosdefs::on]) > 0.5f);
+        if (atmosFade.active())
+        {
+            if (! atmosWasActive) atmos.reset();              // coming back on: start fresh, no old tail
+            AtmosParams ap; readAtmosParams (ap);
+            atmos.process (di.data(), atmL.data(), atmR.data(), n, ap);
+            atmosFade.gains (atmG.data(), n);
+            for (int i = 0; i < n; ++i) { L[i] += atmL[(size_t) i] * atmG[(size_t) i]; outR[i] += atmR[(size_t) i] * atmG[(size_t) i]; }
+        }
+        atmosWasActive = atmosFade.active();
 
         float* st[2] = { L, outR };
 

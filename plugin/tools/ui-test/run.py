@@ -186,7 +186,7 @@ async def run(standalone):
         check(pn == ['Coin Bling', 'ARCADE', 'Coin Bling'], f'SYNTH shows the loaded preset under SIREN and under PRESETS ({pn})')
         await pg.evaluate("obsSynth.reset && obsSynth.reset()"); await pg.wait_for_timeout(100)
         defs = await pg.evaluate("obsSynth.defs")
-        meta = {q['id']: q for q in state['params'] if q['id'].startswith('syn.')}
+        meta = {q['id']: q for q in state['params'] if q['id'].startswith(('syn.', 'atm.'))}
         bad = []
         TYPES = {'f': 'float', 'log': 'float', 'int': 'int', 'bool': 'bool', 'choice': 'choice'}
         for d in defs:
@@ -197,7 +197,7 @@ async def run(standalone):
             if d[1] == 'f' and abs((d[6] if len(d) > 6 else 1) - q['skew']) > 1e-4: bad.append(d[0] + ' skew')
             if d[1] == 'choice' and q.get('choices') and d[5].split('|') != q['choices']: bad.append(d[0] + ' choices')
         extra = sorted(set(meta) - {d[0] for d in defs})
-        check(not bad and not extra, f'synth page and engine agree on all {len(defs)} synth parameters' + (f' (mismatch: {bad[:6]} extra: {extra[:6]})' if bad or extra else ''))
+        check(not bad and not extra, f'synth page and engine agree on all {len(defs)} SIREN and AETHER parameters' + (f' (mismatch: {bad[:6]} extra: {extra[:6]})' if bad or extra else ''))
         shown = await pg.evaluate("document.querySelector('.sy-dev').classList.contains('off')")
         await pg.evaluate("window.__mock.log.length=0")
         await pg.locator('.sy-pb').first.click(); await pg.wait_for_timeout(400)
@@ -244,13 +244,13 @@ async def run(standalone):
         check(await pg.evaluate("![...document.querySelectorAll('.sy-dev .tx b')].some(b=>/AUDITION/.test(b.textContent))"), 'no AUDITION button on the synth')
         # presets: the browser lists them, loading one sends the sound (not mix / output / key)
         n_pr = await pg.evaluate("obsSynth.presets.length")
-        await pg.locator('.sy-prbtn').click(); await pg.wait_for_timeout(150)
-        tiles = await pg.locator('.sy-pr').count()
-        await pg.locator('.sy-prs-cats button[data-c="ARCADE"]').click(); await pg.wait_for_timeout(100)
-        arcade = await pg.locator('.sy-pr').count()
+        await pg.locator('.sy-siren .sy-prbtn').click(); await pg.wait_for_timeout(150)
+        tiles = await pg.locator('.sy-prs.sy-siren .sy-pr').count()
+        await pg.locator('.sy-prs.sy-siren .sy-prs-cats button[data-c="ARCADE"]').click(); await pg.wait_for_timeout(100)
+        arcade = await pg.locator('.sy-prs.sy-siren .sy-pr').count()
         check(n_pr >= 50 and tiles == n_pr and 0 < arcade < n_pr, f'synth preset browser: {n_pr} presets, ARCADE shows {arcade}')
         await pg.evaluate("window.__mock.log.length=0")
-        await pg.locator('.sy-pr').first.click(); await pg.wait_for_timeout(200)
+        await pg.locator('.sy-prs.sy-siren .sy-pr').first.click(); await pg.wait_for_timeout(200)
         sent = await pg.evaluate("Object.fromEntries(window.__mock.log.filter(x=>x[0]==='setParam'&&x[1].startsWith('syn.')).map(x=>[x[1],x[2]]))")
         name = await pg.evaluate("document.querySelector('.sy-prname').textContent")
         r = await pg.evaluate("obsSynth.read()")
@@ -263,10 +263,10 @@ async def run(standalone):
             if (!d) out.push(p.name + ': ' + k); else if (typeof v === 'string' ? !(d[5] || '').split('|').some(o => o.toLowerCase() === v.toLowerCase()) : (v < d[2] || v > d[3])) out.push(p.name + ': ' + k + '=' + v); } });
           return out; }""")
         check(not bad, 'every synth preset uses real settings and choices' + (f' ({bad[:4]})' if bad else ''))
-        await pg.locator('.sy-prnav button').nth(1).click(); await pg.wait_for_timeout(150)
+        await pg.locator('.sy-siren .sy-prnav button').nth(1).click(); await pg.wait_for_timeout(150)
         name2 = await pg.evaluate("document.querySelector('.sy-prname').textContent")
         check(name2 == 'Ghost Siren', f'the next-preset arrow loads the next one ({name2})')
-        await pg.locator('.sy-prs .x').click(); await pg.wait_for_timeout(100)
+        await pg.locator('.sy-prs.sy-siren .x').click(); await pg.wait_for_timeout(100)
         # RESET: everything back to default (key and tuning stay), UNDO brings the preset back
         await pg.evaluate("window.__mock.emit('obs:params', {'syn.key': 9/11, 'syn.mix': 0.9})"); await pg.wait_for_timeout(150)
         await pg.evaluate("window.__mock.log.length=0")
@@ -274,7 +274,7 @@ async def run(standalone):
         r = await pg.evaluate("obsSynth.read()")
         check(abs(r['syn.mix'] - 0.5) < 1e-6 and abs(r['syn.key'] - 9 / 11) < 1e-6 and r['syn.arp.on'] == 0 and abs(r['syn.char'] - 1 / 3) < 1e-6
               and await pg.evaluate("document.querySelector('.sy-prname').textContent") == 'Init', 'RESET puts the synth back to default (key stays)')
-        await pg.locator('.sy-undo').click(); await pg.wait_for_timeout(150)
+        await pg.locator('.sy-siren .sy-undo').click(); await pg.wait_for_timeout(150)
         r = await pg.evaluate("obsSynth.read()")
         check(abs(r['syn.mix'] - 0.9) < 1e-6 and abs(r['syn.char'] - 2 / 3) < 1e-6 and abs(r['syn.lfo.depth'] - 1) < 1e-6, 'UNDO brings back the sound from before RESET')
         # every number and label of the synth stays inside its box, at default, lowest and highest values
@@ -296,15 +296,108 @@ async def run(standalone):
         await pg.wait_for_timeout(400)        # let the UNDO above reach the engine first
         before = await pg.evaluate("JSON.stringify(obsSynth.read())")
         await pg.evaluate("window.__mock.log.length=0")
-        await pg.locator('.sy-btn.r:not(.sy-reset)').click(); await pg.wait_for_timeout(150)
+        await pg.locator('.sy-siren .sy-btn.r:not(.sy-reset)').click(); await pg.wait_for_timeout(150)
         n_sent = await pg.evaluate("window.__mock.log.filter(x=>x[0]==='setParam'&&x[1].startsWith('syn.')).length")
         rolled = await pg.evaluate("obsSynth.read()")
         kept = sum(1 for k in ('syn.mix', 'syn.level', 'syn.key', 'syn.tune') if abs(rolled[k] - json.loads(before)[k]) > 1e-6)
-        await pg.locator('.sy-undo').click(); await pg.wait_for_timeout(150)
+        await pg.locator('.sy-siren .sy-undo').click(); await pg.wait_for_timeout(150)
         after = await pg.evaluate("JSON.stringify(obsSynth.read())")
         diff = [k for k, v in json.loads(before).items() if abs(v - json.loads(after)[k]) > 1e-6]
         check(n_sent > 15 and kept == 0 and not diff, f'DICE changes {n_sent} settings (not mix/level/key), UNDO restores them' + (f' (kept {kept}, differ {diff[:5]})' if kept or diff else ''))
         await pg.screenshot(path=str(OUT / 'synth.png'))
+        # ---- AETHER (SIREN's second page): noise, ambience, atmospheres
+        await pg.locator('.sy-page button[data-p="aether"]').click(); await pg.wait_for_timeout(200)
+        shown = await pg.evaluate("[document.querySelector('.sy-dev').classList.contains('page-aether'), !!document.querySelector('.sy-top.sy-aether').offsetParent, !document.querySelector('.sy-top.sy-siren').offsetParent]")
+        check(shown == [True, True, True], f'the AETHER switch shows the AETHER page in place of SIREN ({shown})')
+        await pg.evaluate("window.__mock.emit('obs:params', {'atm.on': 0})"); await pg.wait_for_timeout(150)
+        await pg.evaluate("window.__mock.log.length=0")
+        await pg.locator('.sy-top.sy-aether .sy-pb').first.click(); await pg.wait_for_timeout(200)
+        check(await pg.evaluate("window.__mock.sent('atm.on')") == 1 and await pg.evaluate("document.querySelector('.sy-page button[data-p=\"aether\"] i').classList.contains('lit')"),
+              'AETHER POWER turns it on in the engine (and lights its dot on the page switch)')
+        await pg.evaluate("window.__mock.emit('obs:params', {'atm.bed.type': 0})"); await pg.wait_for_timeout(150)
+        await pg.evaluate("window.__mock.log.length=0")
+        await pg.locator('.ae-grid[data-param="atm.bed.type"] button[data-i="2"]').click(); await pg.wait_for_timeout(150)
+        v = await pg.evaluate("window.__mock.sent('atm.bed.type')")
+        labels = await pg.evaluate("[...document.querySelectorAll('.sy-aether .sy-kl')].slice(0, 4).map(e => e.textContent)")
+        check(v is not None and abs(v - 2 / 6) < 1e-6 and labels[:3] == ['TONE', 'AMOUNT', 'DROPS'], f'RAIN -> atm.bed.type = {v}; the knobs follow the bed ({labels[:3]})')
+        k = pg.locator('.sy-kn[data-param="atm.drn.tone"]'); box = await k.bounding_box()
+        await pg.evaluate("window.__mock.log.length=0")
+        await pg.mouse.move(box['x'] + box['width'] / 2, box['y'] + box['height'] / 2); await pg.mouse.down()
+        await pg.mouse.move(box['x'] + box['width'] / 2, box['y'] - 30, steps=5); await pg.mouse.up(); await pg.wait_for_timeout(150)
+        cmds = await pg.evaluate("window.__mock.log.map(x=>x[0]+':'+(x[1]||''))")
+        check('beginGesture:atm.drn.tone' in cmds and 'setParam:atm.drn.tone' in cmds, 'dragging the drone TONE sends it with a gesture')
+        # SUMMON: a whole new world, only AETHER's settings, in the MOOD; UNDO brings the old one back
+        await pg.evaluate("document.querySelector('.sy-sel[data-param=\"ui.mood\"] .opt:nth-of-type(5)').click()"); await pg.wait_for_timeout(100)
+        before = await pg.evaluate("JSON.stringify(obsSynth.read())")
+        await pg.evaluate("window.__mock.log.length=0")
+        await pg.locator('.ae-summon').click(); await pg.wait_for_timeout(200)
+        sent = await pg.evaluate("window.__mock.log.filter(x=>x[0]==='setParam').map(x=>x[1])")
+        nm = await pg.evaluate("document.querySelector('.ae-badge .pn u').textContent")
+        check(len(sent) > 10 and all(x.startswith('atm.') for x in sent) and 'atm.level' not in sent and nm != 'DEFAULT',
+              f'SUMMON rolls a new world: {len(set(sent))} AETHER settings, nothing of SIREN, LEVEL kept ("{nm}")')
+        await pg.locator('.sy-aether .sy-undo').click(); await pg.wait_for_timeout(200)
+        after = await pg.evaluate("JSON.stringify(obsSynth.read())")
+        diff = [k for k, v in json.loads(before).items() if abs(v - json.loads(after)[k]) > 1e-6]
+        check(not diff, 'AETHER UNDO brings the world from before SUMMON back' + (f' ({diff[:5]})' if diff else ''))
+        await pg.evaluate("window.__mock.log.length=0")
+        await pg.locator('.ae-dice').nth(2).click(); await pg.wait_for_timeout(150)
+        sent = await pg.evaluate("window.__mock.log.filter(x=>x[0]==='setParam').map(x=>x[1])")
+        check(sent and all(x.startswith('atm.tex.') for x in sent), f'the TEXTURE dice changes only the texture ({sorted(set(sent))[:6]})')
+        # scenes
+        n_sc = await pg.evaluate("obsSynth.aetherScenes.length")
+        await pg.locator('.sy-aether .sy-prbtn').click(); await pg.wait_for_timeout(150)
+        await pg.locator('.sy-prs.sy-aether .sy-prs-cats button[data-c="HORROR"]').click(); await pg.wait_for_timeout(100)
+        hor = await pg.locator('.sy-prs.sy-aether .sy-pr.hor').count()
+        await pg.evaluate("window.__mock.emit('obs:params', {'atm.tex.type': 0})"); await pg.wait_for_timeout(150)
+        await pg.evaluate("window.__mock.log.length=0")
+        await pg.locator('.sy-prs.sy-aether .sy-pr').first.click(); await pg.wait_for_timeout(300)
+        sent = await pg.evaluate("Object.fromEntries(window.__mock.log.filter(x=>x[0]==='setParam').map(x=>[x[1],x[2]]))")
+        mood = await pg.evaluate("document.querySelector('.sy-sel[data-param=\"ui.mood\"] .opt.on').textContent")
+        check(n_sc >= 25 and hor >= 10 and abs(sent.get('atm.tex.type', -1) - 8 / 9) < 1e-6 and sent.get('atm.on') in (None, 1) and mood == 'HORROR' and not any(k.startswith('syn.') for k in sent),
+              f'AETHER scenes: {n_sc}, {hor} under HORROR in red; "Flesh Choir" sends moans and sets the MOOD ({mood})')
+        await pg.locator('.sy-prs.sy-aether .x').click(); await pg.wait_for_timeout(100)
+        bad = await pg.evaluate("""() => { const D = Object.fromEntries(obsSynth.defs.map(d => [d[0], d])), out = [];
+          const chk = (who, a) => { for (const k in a) { const d = D['atm.' + k], v = a[k];
+            if (!d) out.push(who + ': ' + k); else if (typeof v === 'string' ? !(d[5] || '').split('|').some(o => o.toLowerCase() === v.toLowerCase()) : (v < d[2] || v > d[3])) out.push(who + ': ' + k + '=' + v); } };
+          obsSynth.aetherScenes.forEach(s => chk(s.name, s.a)); obsSynth.presets.filter(p => p.a).forEach(p => chk(p.name, p.a)); return out; }""")
+        check(not bad, 'every AETHER scene (and HORROR preset atmosphere) uses real settings and choices' + (f' ({bad[:4]})' if bad else ''))
+        # the engine's meters light the display and the VOID
+        await pg.evaluate("window.__mock.meterExtra = {atm: [.6, .5, .4], atmEv: 3, atmRoot: 45}"); await pg.wait_for_timeout(120)
+        await pg.evaluate("window.__mock.meterExtra = {atm: [.6, .5, .4], atmEv: 7, atmRoot: 45}"); await pg.wait_for_timeout(400)
+        w = await pg.evaluate("[...document.querySelectorAll('.ae-disp .r em')].map(e => parseFloat(e.style.width) || 0)")
+        check(sum(1 for x in w if x > 20) >= 2, f'AETHER display meters follow the engine ({w})')
+        await pg.evaluate("window.__mock.meterExtra = null")
+        # labels fit, at the ends of every setting
+        fit = await pg.evaluate("""async () => {
+          const out = [], dev = document.querySelector('.sy-dev'), wait = () => new Promise(r => setTimeout(r, 40));
+          const ids = obsSynth.ids.filter(id => id.startsWith('atm.'));
+          for (const n of [0, 1, .37, .63]) {
+            obsSynth.write(Object.fromEntries(ids.map(id => [id, n]))); await wait();
+            dev.querySelectorAll('.sy-aether .sy-kv,.sy-aether .sy-kl,.sy-aether .sy-val,.sy-aether .sy-eng,.sy-aether .sy-pbv,.ae-grid button,.sy-aether .sy-seg button,.sy-aether .sy-chip,.ae-hint,.ae-notes,.sy-aether .sy-sh h3').forEach(e => {
+              if (!e.offsetParent) return; const box = (e.closest('.sy-sec') || dev).getBoundingClientRect(), r = e.getBoundingClientRect();
+              if (r.left < box.left + 3 || r.right > box.right - 3 || r.top < box.top + 2 || r.bottom > box.bottom - 3) out.push((e.textContent || '').trim() + ' @' + n);
+            }); }
+          obsSynth.aetherReset(); return [...new Set(out)]; }""")
+        check(not fit, 'every AETHER number and label stays inside its box' + (f' ({fit[:5]})' if fit else ''))
+        await pg.screenshot(path=str(OUT / 'aether.png'))
+        # a HORROR preset on SIREN brings its atmosphere and turns AETHER on
+        await pg.locator('.sy-page button[data-p="siren"]').click(); await pg.wait_for_timeout(150)
+        await pg.evaluate("window.__mock.emit('obs:params', {'atm.on': 0})"); await pg.wait_for_timeout(150)
+        await pg.evaluate("window.__mock.log.length=0")
+        hi = await pg.evaluate("obsSynth.presets.findIndex(p => p.name === 'Abattoir')")
+        await pg.evaluate(f"obsSynth.loadPreset({hi})"); await pg.wait_for_timeout(900)      # not a click: the bridge's regular scan sends it
+        sent = await pg.evaluate("Object.fromEntries(window.__mock.log.filter(x=>x[0]==='setParam').map(x=>[x[1],x[2]]))")
+        cls = await pg.evaluate("[document.querySelector('.sy-badge .pn').classList.contains('hor'), document.querySelector('.ae-badge .pn u').textContent]")
+        check(sent.get('atm.on') == 1 and abs(sent.get('atm.tex.type', -1) - 1) < 1e-6 and any(k.startswith('syn.') for k in sent) and cls == [True, 'Abattoir'],
+              f'the HORROR preset "Abattoir" sets SIREN and its atmosphere, AETHER turns on, the name shows in red ({cls}, on {sent.get("atm.on")}, texture {sent.get("atm.tex.type")})')
+        await pg.locator('.sy-siren .sy-prbtn').click(); await pg.wait_for_timeout(150)
+        await pg.locator('.sy-prs.sy-siren .sy-prs-cats button[data-c="HORROR"]').click(); await pg.wait_for_timeout(100)
+        n_h = await pg.locator('.sy-prs.sy-siren .sy-pr.hor').count()
+        check(n_h >= 10, f'SIREN presets: a HORROR folder in blood red ({n_h} presets)')
+        await pg.screenshot(path=str(OUT / 'synth-horror.png'))
+        await pg.locator('.sy-prs.sy-siren .x').click(); await pg.wait_for_timeout(100)
+        await pg.evaluate("window.__mock.emit('obs:params', {'atm.on': 0})"); await pg.wait_for_timeout(100)
+
 
         # ---- HARMONY page (HYDRA)
         await pg.evaluate("setTab('HARMONY')"); await pg.wait_for_timeout(150)

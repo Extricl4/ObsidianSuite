@@ -7,7 +7,8 @@
    * In the plugin, plugin/WebUI/obsidian-bridge.js connects it to the engine
      through window.obsSynth (read / write / steps / live / noteOut).
    * In a browser it plays by itself (Web Audio): keys A-K.
-   The parameter list mirrors plugin/Source/DSP/SynthDefs.h.
+   The parameter list mirrors plugin/Source/DSP/SynthDefs.h (and AtmosDefs.h for the
+   AETHER page, which aether.js builds on the same device).
    ============================================================================= */
 (function () {
 'use strict';
@@ -45,6 +46,17 @@ const DEFS = [
   ['syn.arp.len', 'int', 1, 16, 16, 'steps'], ['syn.arp.oct', 'choice', 0, 3, 1, '1|2|3|4'], ['syn.arp.gate', 'f', 5, 100, 60, '%', 1], ['syn.arp.swing', 'f', 0, 75, 0, '%', 1],
   ['syn.mix', 'f', 0, 100, 50, '%', 1], ['syn.level', 'f', -24, 12, 0, 'dB', 1], ['syn.space', 'f', 0, 100, 20, '%', 1],
   ['syn.char', 'choice', 0, 3, 1, 'Clean|Analog|8-bit|VHS'], ['syn.post', 'bool', 0, 1, 1],
+  /* AETHER (noise, ambience, atmospheres): same as AtmosDefs.h */
+  ['atm.on', 'bool', 0, 1, 0], ['atm.level', 'f', -36, 6, -6, 'dB', 1], ['atm.follow', 'f', -100, 100, 0, '%', 1], ['atm.evolve', 'f', 0, 100, 35, '%', 1],
+  ['atm.grit', 'f', 0, 100, 0, '%', 1], ['atm.tone', 'f', -100, 100, 0, '%', 1], ['atm.width', 'f', 0, 100, 80, '%', 1], ['atm.space', 'f', 0, 100, 45, '%', 1],
+  ['atm.size', 'f', 0, 100, 60, '%', 1], ['atm.freeze', 'bool', 0, 1, 0],
+  ['atm.bed.on', 'bool', 0, 1, 1], ['atm.bed.type', 'choice', 0, 6, 1, 'Hiss|Wind|Rain|Surf|Rumble|Static|Breath'], ['atm.bed.tone', 'f', 0, 100, 50, '%', 1],
+  ['atm.bed.motion', 'f', 0, 100, 35, '%', 1], ['atm.bed.depth', 'f', 0, 100, 50, '%', 1], ['atm.bed.level', 'f', 0, 100, 60, '%', 1],
+  ['atm.drn.on', 'bool', 0, 1, 1], ['atm.drn.voice', 'choice', 0, 6, 1, 'Organ|Strings|Choir|Glass|Abyss|Descent|Ascent'],
+  ['atm.drn.chord', 'choice', 0, 7, 1, 'Root|Fifth|Octaves|Minor|Sus|Tritone|Cluster|Dread'], ['atm.drn.oct', 'choice', 0, 3, 1, 'Sub|Low|Mid|High'],
+  ['atm.drn.follow', 'bool', 0, 1, 0], ['atm.drn.detune', 'f', 0, 100, 25, '%', 1], ['atm.drn.tone', 'f', 0, 100, 45, '%', 1], ['atm.drn.motion', 'f', 0, 100, 30, '%', 1], ['atm.drn.level', 'f', 0, 100, 35, '%', 1],
+  ['atm.tex.on', 'bool', 0, 1, 0], ['atm.tex.type', 'choice', 0, 9, 1, 'Vinyl|Fire|Drips|Metal|Shimmer|Whispers|Heartbeat|Knocks|Moans|Flesh'],
+  ['atm.tex.density', 'f', 0, 100, 40, '%', 1], ['atm.tex.tone', 'f', 0, 100, 50, '%', 1], ['atm.tex.chaos', 'f', 0, 100, 40, '%', 1], ['atm.tex.level', 'f', 0, 100, 50, '%', 1],
 ];
 const P = {}, S = {};
 DEFS.forEach(([id, type, min, max, def, extra, skew]) => {
@@ -92,6 +104,11 @@ function fmt(id, v = S[id]) {
     case 'syn.noise.color': return v < 34 ? 'Dark' : v < 67 ? 'Pink' : 'Bright';
     case 'syn.lfo.rate': return v < 1 ? v.toFixed(2) + ' Hz' : v.toFixed(1) + ' Hz';
     case 'syn.arp.len': return Math.round(v) + ' steps';
+    case 'atm.level': return sg(v, 1) + ' dB';
+    case 'atm.follow': return Math.abs(v) < 2 ? 'Off' : (v < 0 ? 'Duck ' : 'Swell ') + Math.round(Math.abs(v)) + '%';
+    case 'atm.tone': return Math.abs(v) < 2 ? 'Neutral' : (v < 0 ? 'Dark ' : 'Bright ') + Math.round(Math.abs(v));
+    case 'atm.size': { const t = 1.2 * Math.pow(25, v / 100); return (t < 10 ? t.toFixed(1) : Math.round(t)) + ' s'; }   // the tail it leaves (as in Atmos.h)
+    case 'atm.space': return v < 1 ? 'Dry' : Math.round(v) + '%';
   }
   if (p.unit === 'ms') return ms(v);
   if (p.unit === 'Hz') return hz(v);
@@ -143,7 +160,18 @@ css.textContent = `
 .sy-screw::after { content: ''; position: absolute; left: 1px; right: 1px; top: 4px; height: 1px; background: rgba(0,0,0,.7); transform: rotate(35deg); }
 .sy-screw.tl { top: 15px; left: 15px; } .sy-screw.tr { top: 15px; right: 15px; } .sy-screw.bl { bottom: 15px; left: 15px; } .sy-screw.br { bottom: 15px; right: 15px; }
 /* ---- top strip: hardware controls ---- */
-.sy-top { position: absolute; left: 40px; right: 40px; top: 20px; height: 128px; display: flex; align-items: flex-start; justify-content: space-between; }
+.sy-top { position: absolute; left: 40px; right: 40px; top: 20px; height: 128px; display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
+.sy-tg-l, .sy-tg-r { flex: 1; min-width: 0; display: flex; align-items: flex-start; justify-content: space-between; }
+/* page switch (SIREN | AETHER), above the display in the middle of the strip */
+.sy-page { position: absolute; z-index: 6; left: 50%; top: 17px; transform: translateX(-50%); display: flex; gap: 2px; padding: 2px; border-radius: 8px; background: #08080a;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.9), inset 0 0 0 1px rgba(255,255,255,.05), 0 1px 0 rgba(255,255,255,.07); }
+.sy-page button { width: 84px; height: 19px; border: none; border-radius: 6px; background: none; color: #6f6f76; font: inherit; font-size: 8.5px; font-weight: 600; letter-spacing: .24em; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 7px; padding: 0 0 0 .24em; transition: color .15s, background .15s; }
+.sy-page button i { width: 5px; height: 5px; border-radius: 50%; background: #2c2c31; transition: background .2s, box-shadow .2s; }
+.sy-page button i.lit { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+.sy-page button:hover { color: #e9e6df; }
+.sy-page button.on { color: #f1eee7; background: linear-gradient(#303035, #1d1d21); box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 1px 2px rgba(0,0,0,.6); }
+.sy-dev.page-aether .sy-siren, .sy-dev:not(.page-aether) .sy-aether { display: none !important; }
 .sy-hw { display: flex; flex-direction: column; align-items: center; gap: 7px; min-width: 70px; }
 .sy-eng { font-size: 9.5px; font-weight: 600; letter-spacing: .22em; color: #cfccc5; text-shadow: 0 1px 0 rgba(0,0,0,.9); white-space: nowrap; }
 .sy-val { font-size: 11px; color: #e9e6df; font-variant-numeric: tabular-nums; white-space: nowrap; min-height: 14px; }
@@ -191,7 +219,7 @@ css.textContent = `
 .sy-key.on { color: #f1eee7; transform: translateY(1px); background: linear-gradient(#2e2e33, #1a1a1d 60%, #141416); box-shadow: 0 1px 2px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,255,255,.14), inset 0 2px 4px rgba(0,0,0,.5), 0 0 0 1px #0a0a0b; }
 .sy-key.on::before { background: radial-gradient(circle at 40% 35%, #fff, var(--accent) 60%); box-shadow: 0 0 8px var(--accent), 0 0 2px var(--accent); }
 /* LED display */
-.sy-led { position: relative; width: 176px; height: 92px; margin-top: 18px; border-radius: 10px; cursor: pointer; box-sizing: border-box; padding: 8px 12px;
+.sy-led { position: relative; width: 176px; height: 92px; margin-top: 26px; border-radius: 10px; cursor: pointer; box-sizing: border-box; padding: 8px 12px;
   background: linear-gradient(#060607, #0b0b0d); box-shadow: inset 0 2px 8px rgba(0,0,0,.95), inset 0 0 0 1px rgba(255,255,255,.04), 0 1px 0 rgba(255,255,255,.08);
   display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .sy-led .n { font-family: 'Orbitron', 'Saira', sans-serif; font-size: 30px; font-weight: 500; color: var(--accent); text-shadow: 0 0 12px var(--accent); line-height: 1; letter-spacing: .04em; }
@@ -224,7 +252,7 @@ css.textContent = `
 .sy-vis canvas { display: block; width: 100%; height: 100%; }
 .sy-knobs { display: flex; justify-content: space-around; align-items: flex-start; flex: none; }
 .sy-lbl { font-size: 8.5px; font-weight: 600; letter-spacing: .2em; color: #6f6f76; white-space: nowrap; }
-.sy-dev.off .sy-screen { opacity: .4; filter: grayscale(.8); }
+.sy-dev.off .sy-screen.sy-siren { opacity: .4; filter: grayscale(.8); }
 .sy-dev.off .sy-led .n, .sy-dev.off .sy-led .s { opacity: .15; text-shadow: none; }
 /* screen knobs (section colour arcs) */
 .sy-ctl { display: flex; flex-direction: column; align-items: center; min-width: 0; }
@@ -328,6 +356,16 @@ css.textContent = `
 .sy-pr:hover { box-shadow: inset 0 0 0 1px rgba(255,255,255,.16), inset 0 1px 0 rgba(255,255,255,.07); }
 .sy-pr.on { box-shadow: inset 0 0 0 1px var(--cc), 0 0 14px color-mix(in srgb, var(--cc) 30%, transparent); }
 .sy-pr.on b { color: var(--cc); }
+/* HORROR: blood red into black */
+.sy-prs-cats button.hor i { background: radial-gradient(circle at 35% 35%, #ff4a4f, #8a0b12 55%, #000 100%); box-shadow: 0 0 7px #a3121a; }
+.sy-prs-cats button.hor.on { background: linear-gradient(90deg, #3d0609, #150405 70%, #0d0d0f); box-shadow: inset 0 0 0 1px rgba(170,22,30,.45), inset 2px 0 0 #c41a24; }
+.sy-pr.hor { background: linear-gradient(135deg, rgba(150,12,22,.42), rgba(45,4,8,.6) 45%, #070708 88%); box-shadow: inset 0 0 0 1px rgba(150,20,30,.38), inset 0 1px 0 rgba(255,90,90,.08); }
+.sy-pr.hor::before { background: linear-gradient(#ff3a43, #3a0206); opacity: 1; }
+.sy-pr.hor b { color: #f4e2e2; } .sy-pr.hor small { color: #a8817f; }
+.sy-pr.hor:hover { box-shadow: inset 0 0 0 1px rgba(225,40,50,.65); }
+.sy-pr.hor.on { box-shadow: inset 0 0 0 1px #d01c26, 0 0 18px rgba(175,15,25,.6); } .sy-pr.hor.on b { color: #ff5a61; }
+.sy-badge .pn.hor i { background: radial-gradient(circle at 35% 35%, #ff4a4f, #8a0b12 60%, #000); box-shadow: 0 0 9px #c41a24; }
+.sy-badge .pn.hor em { color: #e0303a; }
 .sy-btn { display: flex; align-items: center; gap: 12px; cursor: pointer; border: none; background: none; padding: 0; font: inherit; color: inherit; }
 .sy-btn .round { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #e9e6df;
   background: radial-gradient(circle at 38% 30%, #4a4a50, #1a1a1d 62%, #0c0c0d); box-shadow: 0 0 0 2px #8f8e89, 0 0 0 3px #232326, 0 6px 12px rgba(0,0,0,.8), inset 0 1px 1px rgba(255,255,255,.25); transition: box-shadow .15s, color .15s; }
@@ -567,33 +605,36 @@ rootEl.appendChild(dev); SP.appendChild(rootEl);
 dev.insertAdjacentHTML('beforeend', '<svg width="0" height="0" style="position:absolute"><defs><radialGradient id="sySelG" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#5a5a62"/><stop offset=".6" stop-color="#1c1c20"/><stop offset="1" stop-color="#0c0c0d"/></radialGradient></defs></svg>');
 
 /* ---- top strip: what you reach for while playing ---- */
-const topStrip = el('div', 'sy-top'); dev.appendChild(topStrip);
+const topStrip = el('div', 'sy-top sy-siren'); dev.appendChild(topStrip);
 let powered = true;
 const PWR_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/></svg>';
 const HOLD_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 7c-3.3 0-5 2.2-5 5s1.7 5 5 5c4 0 6-10 10-10 2.6 0 4 2.2 4 5s-1.4 5-4 5c-4 0-6-10-10-10z" transform="translate(-1 0)"/></svg>';
 const powerW = pushBtn(() => powered, v => { setPowerUi(v); if (window.obsSynth && window.obsSynth.powerOut) window.obsSynth.powerOut(v); }, 'POWER', PWR_IC, 'ON', 'OFF', 'Synth on / off (also: double-click the SYNTH tab)');
-function setPowerUi(v) { powered = !!v; dev.classList.toggle('off', !powered); powerW._draw(); }
+function setPowerUi(v) { powered = !!v; dev.classList.toggle('off', !powered); powerW._draw(); if (pageDots) pageDots(); }
+let pageDots = null;
 const led = el('div', 'sy-led', '<span class="k"></span><span class="tn"></span><div class="n">–</div><div class="s">PLAY A NOTE</div><div class="bar"><i></i></div>');
 led.title = 'Click for key, scale, tuning and playing settings';
 const noteScr = led;
 const drawLedInfo = () => { led.querySelector('.k').textContent = fmt('syn.key').toUpperCase() + ' ' + fmt('syn.scale').toUpperCase(); led.querySelector('.tn').textContent = 'A' + Math.round(S['syn.tune']); };
 drawLedInfo(); onChange(i => { if (/^syn\.(key|scale|tune)$/.test(i)) drawLedInfo(); });
 const ledW = el('div', 'sy-hw'); ledW.appendChild(led);
-topStrip.append(powerW,
+/* the strip: a group left and right of the display, which sits in the middle (under the page switch) */
+function stripGroups(strip, left, mid, right) {
+  const gl = el('div', 'sy-tg-l'), gr = el('div', 'sy-tg-r'); gl.append(...left); gr.append(...right); strip.append(gl, mid, gr); }
+const holdW = pushBtn(() => on('syn.hold'), v => set('syn.hold', v ? 1 : 0, 'ui'), 'HOLD', HOLD_IC, 'ON', 'OFF', 'The last note keeps playing after you stop (a drone to play over)');
+const postW = pairBtn('syn.post', 'AMP', [['AFTER', 1], ['BEFORE', 0]], 'AFTER: the synth joins after the cab · BEFORE: it plays through the amp');
+stripGroups(topStrip, [powerW,
   mknob('syn.sens', 'SENSITIVITY', { tip: 'How strongly the synth reacts to your playing' }),
   mknob('syn.glide', 'GLIDE', { tip: 'Slide time between notes' }),
   sel('syn.chord', 'CHORD', ['OFF', 'OCT', 'PWR', 'TRIAD', 'SUS', '7TH', '9TH'], { tip: 'Play one note, hear a chord. Triad, 7th and 9th follow the key and scale.' }),
-  pushBtn(() => on('syn.hold'), v => set('syn.hold', v ? 1 : 0, 'ui'), 'HOLD', HOLD_IC, 'ON', 'OFF', 'The last note keeps playing after you stop (a drone to play over)'),
-  ledW,
-  pairBtn('syn.post', 'AMP', [['AFTER', 1], ['BEFORE', 0]], 'AFTER: the synth joins after the cab · BEFORE: it plays through the amp'),
+  holdW], ledW, [postW,
   sel('syn.char', 'CHARACTER', ['CLEAN', 'ANALOG', '8-BIT', 'VHS'], { span: 180, tip: 'Clean, warm analog drift, chiptune, or wobbly tape' }),
   mknob('syn.space', 'SPACE', { tip: 'Stereo echoes and room, just for the synth' }),
   mknob('syn.mix', 'MIX', { tip: 'Guitar and synth blend: 0% guitar only, 100% synth only' }),
-  mknob('syn.level', 'OUTPUT'));
-const holdW = topStrip.children[4], postW = topStrip.children[6];
+  mknob('syn.level', 'OUTPUT')]);
 onChange(i => { if (i === 'syn.hold') holdW._draw(); if (i === 'syn.post') postW._draw(); });
 /* playing settings, behind the display */
-const pop = el('div', 'sy-pop');
+const pop = el('div', 'sy-pop sy-siren');
 pop.innerHTML = '<h4>PLAYING</h4>';
 const popRow1 = row([pill('syn.key', 'KEY'), pill('syn.scale', 'SCALE'), pill('syn.tune', 'TUNING', { fmt: () => 'A ' + Math.round(S['syn.tune']) + ' Hz' })]);
 const popRow2 = el('div', 'sy-knobs'); popRow2.style.gap = '18px';
@@ -605,11 +646,11 @@ led.addEventListener('click', e => { e.stopPropagation(); pop.classList.toggle('
 document.addEventListener('pointerdown', e => { if (pop.classList.contains('show') && !pop.contains(e.target) && !led.contains(e.target)) pop.classList.remove('show'); });
 
 /* ---- the screen ---- */
-const screen = el('div', 'sy-screen'); dev.appendChild(screen);
-function section(title, width, color) {
+const screen = el('div', 'sy-screen sy-siren'); dev.appendChild(screen);
+function section(title, width, color, into = screen) {
   const s = el('section', 'sy-sec'); s.style.width = width + 'px'; s.style.setProperty('--sc', color);
   const h = el('div', 'sy-sh'); h.appendChild(el('h3', null, title)); s.appendChild(h);
-  const b = el('div', 'sy-body'); s.appendChild(b); s._h = h; s._b = b; screen.appendChild(s); return s;
+  const b = el('div', 'sy-body'); s.appendChild(b); s._h = h; s._b = b; into.appendChild(s); return s;
 }
 function dimWhen(sec, id) { const d = () => sec.classList.toggle('sy-off', !on(id)); d(); onChange(i => { if (i === id) d(); }); }
 
@@ -798,7 +839,7 @@ function drawLane() {
 onChange(i => { if (i === 'syn.arp.len') drawLane(); });
 
 /* ---- bottom band: presets, name badge, reset and dice ---- */
-const bot = el('div', 'sy-bot'); dev.appendChild(bot);
+const bot = el('div', 'sy-bot sy-siren'); dev.appendChild(bot);
 const prBtn = el('button', 'sy-btn sy-prbtn', '<span class="round">' + IC.list + '</span><span class="tx"><b>PRESETS</b><small class="sy-prname">Init</small></span>');
 prBtn.title = 'Browse the synth sounds';
 const prNav = el('div', 'sy-prnav', '<button aria-label="Previous synth preset">' + IC.prev + '</button><button aria-label="Next synth preset">' + IC.next + '</button>');
@@ -956,11 +997,13 @@ let playStep = -1;
 function showStep(i) { if (i === playStep) return; playStep = i; [...lane.children].forEach((s, k) => s.classList.toggle('play', k === i)); }
 
 /* ------------------------------------------------------------ dice */
+const kit = {};                 // shared with aether.js, the AETHER page (filled in at the end)
 let undoState = null;
 const rr = (a, b) => a + Math.random() * (b - a), ri = (a, b) => Math.floor(rr(a, b + 1)), pick = a => a[Math.floor(Math.random() * a.length)];
 const wpick = ws => { let t = Math.random() * ws.reduce((x, y) => x + y, 0); for (let i = 0; i < ws.length; i++) { t -= ws[i]; if (t <= 0) return i; } return ws.length - 1; };
 const KEEP = ['syn.sens', 'syn.gate', 'syn.dyn', 'syn.key', 'syn.scale', 'syn.tune', 'syn.mix', 'syn.level', 'syn.post'];
-function keepUndo() { undoState = { S: { ...S }, steps: steps.map(s => ({ ...s })), name: prName }; undo.disabled = false; }
+function keepUndo(withAether) { undoState = { S: { ...S }, steps: steps.map(s => ({ ...s })), name: prName, atm: !!withAether, aether: withAether && kit.aetherState ? kit.aetherState() : null }; undo.disabled = false; }
+const isSyn = id => id.startsWith('syn.'), isAtm = id => id.startsWith('atm.');
 function flash() { screen.classList.remove('sy-flash'); void screen.offsetWidth; screen.classList.add('sy-flash'); }
 function roll() {
   keepUndo();
@@ -995,7 +1038,8 @@ function roll() {
   flash();
 }
 dice.addEventListener('click', roll);
-undo.addEventListener('click', () => { if (!undoState) return; const u = undoState; for (const id in u.S) set(id, u.S[id], 'dice'); steps = u.steps; drawLane(); stepsChanged('dice');
+undo.addEventListener('click', () => { if (!undoState) return; const u = undoState; for (const id in u.S) if (isSyn(id) || (u.atm && isAtm(id))) set(id, u.S[id], 'dice'); steps = u.steps; drawLane(); stepsChanged('dice');
+  if (u.aether && kit.aetherRestore) kit.aetherRestore(u.aether);
   showPreset(u.name, PRESETS.findIndex(p => p.name === u.name)); undoState = null; undo.disabled = true; });
 
 /* ------------------------------------------------------------ presets and reset */
@@ -1009,7 +1053,7 @@ const prNameEl = prBtn.querySelector('.sy-prname');
 function drawPrName() {
   prNameEl.textContent = prName; prNameEl.title = prName;
   const pn = badge.querySelector('.pn'), pr = PRESETS[prIdx], col = prName === 'Custom' ? '#8d8d93' : pr ? catCol(pr.cat) : 'var(--accent)';
-  pn.style.setProperty('--pc', col); pn.querySelector('u').textContent = prName;
+  pn.style.setProperty('--pc', col); pn.querySelector('u').textContent = prName; pn.classList.toggle('hor', !!pr && pr.cat === 'HORROR' && prName !== 'Custom');
   pn.querySelector('em').textContent = prName === 'Custom' ? 'FROM THE MAIN PRESET' : pr ? pr.cat : '';
 }
 function showPreset(name, i) { prName = name; prIdx = i; drawPrName(); markPr(); }
@@ -1029,39 +1073,42 @@ function presetSteps(st) {
 }
 function loadPreset(i) {
   const pr = PRESETS[i]; if (!pr) return;
-  keepUndo();
+  keepUndo(!!pr.a);
   const want = {};
   for (const k in pr.v) { const id = 'syn.' + k, v = presetValue(id, pr.v[k]); if (v !== undefined) want[id] = v; }
-  for (const id in P) if (!PKEEP.includes(id)) set(id, id in want ? want[id] : P[id].def, 'preset');
+  for (const id in P) if (isSyn(id) && !PKEEP.includes(id)) set(id, id in want ? want[id] : P[id].def, 'preset');
   steps = presetSteps(pr.steps); drawLane(); stepsChanged('preset');
+  // a preset with an AETHER part ("a": the HORROR ones) also sets the atmosphere around it, and turns it on
+  if (pr.a && kit.loadAether) kit.loadAether(pr.a, pr.name, pr.cat);
   showPreset(pr.name, i); flash();
 }
 function resetAll() {
   keepUndo();
-  for (const id in P) if (!RESET_KEEP.includes(id)) set(id, P[id].def, 'preset');
+  for (const id in P) if (isSyn(id) && !RESET_KEEP.includes(id)) set(id, P[id].def, 'preset');
   steps = presetSteps(null); drawLane(); stepsChanged('preset');
   showPreset('Init', -1); flash();
 }
 reset.addEventListener('click', resetAll);
 // a knob you turn marks the preset as edited (*); a sound that comes from the plugin (a rig preset, automation) is "Custom"
-onChange((id, v, from) => { if (PKEEP.includes(id)) return;
+onChange((id, v, from) => { if (!isSyn(id) || PKEEP.includes(id)) return;
   if (from === 'ui' && !/\*$/.test(prName)) { prName += ' *'; drawPrName(); }
   else if (from === 'plugin' && prName !== 'Custom') { prName = 'Custom'; prIdx = -1; drawPrName(); markPr(); } });
 stepListeners.push(from => { if (from === 'ui' && !/\*$/.test(prName)) { prName += ' *'; drawPrName(); } });
 /* the browser */
-const CATS = [['ALL', 'var(--accent)'], ['ARCADE', '#ffd23f'], ['CARTOON', '#ff9ec7'], ['SYN', '#ff5d5d'], ['LEADS', 'var(--h-osc)'], ['BASS', 'var(--h-sub)'], ['PADS & KEYS', 'var(--h-mot)'], ['ARPS', 'var(--h-flt)'], ['FX & WEIRD', '#9dff8a']];
+const CATS = [['ALL', 'var(--accent)'], ['ARCADE', '#ffd23f'], ['CARTOON', '#ff9ec7'], ['SYN', '#ff5d5d'], ['LEADS', 'var(--h-osc)'], ['BASS', 'var(--h-sub)'], ['PADS & KEYS', 'var(--h-mot)'], ['ARPS', 'var(--h-flt)'], ['FX & WEIRD', '#9dff8a'], ['HORROR', '#c41a24']];
+const horCls = c => c === 'HORROR' ? ' hor' : '';
 const catCol = c => (CATS.find(x => x[0] === c) || CATS[0])[1];
 let prCat = 'ALL';
-const prs = el('div', 'sy-prs');
+const prs = el('div', 'sy-prs sy-siren');
 prs.innerHTML = '<div class="sy-prs-h"><b>SYNTH PRESETS</b><span>' + PRESETS.length + ' sounds · click one and play, the window stays open</span><button class="x" aria-label="Close">✕</button></div><div class="sy-prs-b"><div class="sy-prs-cats"></div><div class="sy-prs-list"></div></div>';
 dev.appendChild(prs);
 const prCats = prs.querySelector('.sy-prs-cats'), prList = prs.querySelector('.sy-prs-list');
-prCats.innerHTML = CATS.map(([c, col]) => '<button data-c="' + c + '" style="--cc:' + col + '"><i></i>' + c + '<em>' + (c === 'ALL' ? PRESETS.length : PRESETS.filter(p => p.cat === c).length) + '</em></button>').join('');
+prCats.innerHTML = CATS.map(([c, col]) => '<button class="' + horCls(c).trim() + '" data-c="' + c + '" style="--cc:' + col + '"><i></i>' + c + '<em>' + (c === 'ALL' ? PRESETS.length : PRESETS.filter(p => p.cat === c).length) + '</em></button>').join('');
 function drawPrList() {
   if (!prList) return;
   [...prCats.children].forEach(b => b.classList.toggle('on', b.dataset.c === prCat));
   prList.innerHTML = PRESETS.map((p, i) => [p, i]).filter(([p]) => prCat === 'ALL' || p.cat === prCat)
-    .map(([p, i]) => '<button class="sy-pr' + (i === prIdx ? ' on' : '') + '" data-i="' + i + '" style="--cc:' + catCol(p.cat) + '" title="' + p.note.replace(/"/g, '&quot;') + '"><b>' + p.name + '</b><small>' + p.note + '</small></button>').join('');
+    .map(([p, i]) => '<button class="sy-pr' + horCls(p.cat) + (i === prIdx ? ' on' : '') + '" data-i="' + i + '" style="--cc:' + catCol(p.cat) + '" title="' + p.note.replace(/"/g, '&quot;') + '"><b>' + p.name + '</b><small>' + p.note + '</small></button>').join('');
 }
 prCats.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; prCat = b.dataset.c; drawPrList(); prList.scrollTop = 0; });
 prList.addEventListener('click', e => { const b = e.target.closest('.sy-pr'); if (b) loadPreset(+b.dataset.i); });
@@ -1225,7 +1272,7 @@ function noteOff(t) {
 }
 let rebuildT = null;
 onChange((id, v, from) => {
-  if (!ac || !voice) return;
+  if (!ac || !voice || !id.startsWith('syn.')) return;
   if (id === 'syn.hold' && !on('syn.hold') && held === null) { stopArp(); noteOff(); }
   clearTimeout(rebuildT);
   rebuildT = setTimeout(() => { if (!voice) return; const old = voice; voice = makeVoice(curNotes || old.notes); setPitches(curNotes || old.notes, ac.currentTime, 0);
@@ -1305,7 +1352,7 @@ setInterval(() => { if (inPlugin() || window.__obsSynthLive) return; showNote(li
 window.obsSynth = {
   ids: DEFS.map(d => d[0]),
   defs: DEFS,
-  read() { const o = {}; for (const id in P) o[id] = toN(id); return o; },
+  read() { const o = {}; for (const id in P) if (isSyn(id) || isAtm(id)) o[id] = toN(id); return o; },
   write(vals) { quiet++; try { for (const id in vals) if (P[id]) set(id, toV(id, vals[id]), 'plugin'); } finally { quiet--; } },
   /* steps: 16 packed numbers (see SynthDefs.h) */
   getSteps() { return steps.map(packStep); },
@@ -1318,14 +1365,40 @@ window.obsSynth = {
   noteOut: null,              // set by the bridge: (midi, isOn) -> engine
   powerOut: null,             // set by the bridge: turns the synth section on
   setPower(isOn) { if (!!isOn !== powered) setPowerUi(isOn); },
+  /* AETHER's meters from the engine: { act: [bed, drone, texture] 0..1, ev: texture event count } */
+  atmLive(m) { if (kit.aetherLive) kit.aetherLive(m); },
   dice: roll,
   reset: resetAll,
   presets: PRESETS,
   loadPreset,
 };
 
+/* ------------------------------------------------------------ AETHER: the second page (aether.js builds it on this device) */
+Object.assign(kit, { el, P, S, set, onChange, on, fmt, toN, toV, clamp, sg, knob, toggle, chip, seg, pill, mknob, sel, pushBtn, row, spacer, section, IC, hidpi, tc, accent, FONT, dev, SP, root,
+  PWR_IC, stripGroups, presetValue, NOTE_NAMES, catCol, horCls, isPowered: () => powered, audio: () => audio(), ctx: () => ac, out: () => comp, inPlugin });
+const pageSw = el('div', 'sy-page', '<button data-p="siren" title="SIREN: the synth your guitar plays"><i></i>SIREN</button><button data-p="aether" title="AETHER: noise, ambience and atmospheres around your playing"><i></i>AETHER</button>');
+dev.appendChild(pageSw);
+let page = 'siren';
+try { if (sessionStorage.getItem('obs.synthPage') === 'aether') page = 'aether'; } catch (_) {}
+function showPage(p) {
+  page = p === 'aether' && kit.hasAether ? 'aether' : 'siren';
+  dev.classList.toggle('page-aether', page === 'aether');
+  [...pageSw.children].forEach(b => b.classList.toggle('on', b.dataset.p === page));
+  pop.classList.remove('show'); prOpen(false);
+  try { sessionStorage.setItem('obs.synthPage', page); } catch (_) {}
+  if (kit.pageShown) kit.pageShown(page);
+  if (page === 'siren') setTimeout(redrawAll, 20);
+}
+pageSw.addEventListener('click', e => { const b = e.target.closest('button'); if (b) showPage(b.dataset.p); });
+pageDots = () => { pageSw.children[0].firstChild.classList.toggle('lit', powered); pageSw.children[1].firstChild.classList.toggle('lit', on('atm.on')); };
+onChange(id => { if (id === 'atm.on') pageDots(); });
+kit.showPage = showPage; kit.page = () => page;
+window.obsSynth.showPage = showPage;
+window.__sirenKit = kit;
+
 /* ------------------------------------------------------------ start */
 buildEnvKnobs(); showTab(0); tabDots(); showMot(0); motDots(); drawLane();
 setTimeout(redrawAll, 60);
+setTimeout(() => { showPage(page); pageDots(); }, 0);       // once aether.js (the next script) has built its page
 })();
 </script>

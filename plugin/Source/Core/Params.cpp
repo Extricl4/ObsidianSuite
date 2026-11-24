@@ -1,5 +1,6 @@
 #include "Params.h"
 #include "../DSP/SynthDefs.h"
+#include "../DSP/AtmosDefs.h"
 #include "../DSP/HarmonyDefs.h"
 
 namespace obs
@@ -75,6 +76,21 @@ std::vector<ParamDef> build()
     for (int i = 0; i < obs::synthdefs::count; ++i)
     {
         const auto& d = obs::synthdefs::table()[i];
+        switch (d.type)
+        {
+            case obs::synthdefs::F:      p.f  (d.id, d.name, d.min, d.max, d.def, d.unit, d.skew); break;
+            case obs::synthdefs::LOG:    p.lg (d.id, d.name, d.min, d.max, d.def, d.unit); break;
+            case obs::synthdefs::INT:    p.i  (d.id, d.name, (int) d.min, (int) d.max, (int) d.def, d.unit); break;
+            case obs::synthdefs::BOOL:   p.b  (d.id, d.name, d.def > 0.5f); break;
+            case obs::synthdefs::CHOICE: p.c  (d.id, d.name, juce::StringArray::fromTokens (d.unit, "|", ""), (int) d.def); break;
+        }
+    }
+
+    // ---- AETHER (SIREN's second page: noise, ambience, atmospheres): see DSP/AtmosDefs.h -----------
+    p.group = "aether";
+    for (int i = 0; i < obs::atmosdefs::count; ++i)
+    {
+        const auto& d = obs::atmosdefs::table()[i];
         switch (d.type)
         {
             case obs::synthdefs::F:      p.f  (d.id, d.name, d.min, d.max, d.def, d.unit, d.skew); break;

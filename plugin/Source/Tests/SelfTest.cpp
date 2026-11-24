@@ -12,6 +12,7 @@
 #include "../DSP/HarmonyDefs.h"
 #include "../Core/Updater.h"
 #include "../PluginProcessor.h"
+#include "../DSP/AtmosDefs.h"
 #include <set>
 #include "../DSP/Modules/ModuleRegistry.h"
 
@@ -1043,6 +1044,134 @@ int runSelfTest (const juce::StringArray& args)
         p.presetManager().loadInit();
     }
 
+    // ---------------------------------------------------------------- 6b. AETHER (SIREN's second page)
+    r.head ("AETHER");
+    {
+        auto& e = p.engine();
+        auto quietRig = [&] { p.presetManager().loadInit();
+            for (auto id : { "synth.on", "amp.on", "cab.on", "eq.on", "pre.on", "post.on", "sfx.on", "doubler.on", "gate.on", "harm.on" }) setNorm (p, id, 0); };
+        auto silence = [] (int) { return 0.f; };
+        auto db = [] (float x) { return juce::Decibels::gainToDecibels (x, -120.f); };
+        quietRig();
+        render (p, SR, BLOCK, 3.0, silence);                   // tails of what played before die away
+        auto off = render (p, SR, BLOCK, 0.5, silence);
+        r.check (off.peak < 1.0e-6f, "off: adds nothing (peak " + juce::String (db (off.peak), 1) + " dB)");
+        setNorm (p, "atm.on", 1);
+        render (p, SR, BLOCK, 1.0, silence);
+        auto def = render (p, SR, BLOCK, 2.0, silence);
+        r.check (def.finite && db (def.rms) > -48.f && db (def.rms) < -24.f, "on, as it starts (wind and a strings fifth): " + juce::String (db (def.rms), 1) + " dB, well under the guitar");
+
+        // every bed, voice and texture alone: finite, there, and not too loud
+        auto layer = [&] (const char* onId, const char* typeId, int n, float minDb, juce::StringArray names, const juce::String& what) {
+            bool ok = true; juce::String bad; float lo = 0, hi = -120;
+            for (int t = 0; t < n; ++t)
+            {
+                quietRig(); setNorm (p, "atm.on", 1); setReal (p, "atm.space", 0);
+                for (auto id : { "atm.bed.on", "atm.drn.on", "atm.tex.on" }) setNorm (p, id, 0);
+                setNorm (p, onId, 1); setReal (p, typeId, (float) t); setReal (p, "atm.tex.density", 70);
+                render (p, SR, BLOCK, 0.3, silence);
+                auto st = render (p, SR, BLOCK, 3.0, silence);
+                const float d = db (st.rms); lo = juce::jmin (lo, d); hi = juce::jmax (hi, d);
+                if (! st.finite || st.peak >= 1.f || d < minDb || d > -14.f) { ok = false; bad << " " << names[t] << " (" << juce::String (d, 1) << " dB)"; }
+            }
+            r.check (ok, "every " + what + " alone plays, clean (" + juce::String (lo, 1) + " .. " + juce::String (hi, 1) + " dB)" + bad);
+        };
+        layer ("atm.bed.on", "atm.bed.type", obs::atmosdefs::kBedTypes, -50.f, juce::StringArray::fromTokens ("Hiss Wind Rain Surf Rumble Static Breath", false), "bed");
+        layer ("atm.drn.on", "atm.drn.voice", obs::atmosdefs::kVoices, -50.f, juce::StringArray::fromTokens ("Organ Strings Choir Glass Abyss Descent Ascent", false), "drone voice");
+        layer ("atm.tex.on", "atm.tex.type", obs::atmosdefs::kTextures, -75.f, juce::StringArray::fromTokens ("Vinyl Fire Drips Metal Shimmer Whispers Heartbeat Knocks Moans Flesh", false), "texture");
+
+        // anything SUMMON or a hand could set: 24 random settings, extremes included
+        {
+            juce::Random rnd (77); bool ok = true; float worst = 0; juce::String bad;
+            quietRig(); setNorm (p, "atm.on", 1);
+            for (int k = 0; k < 24; ++k)
+            {
+                for (int i = 0; i < obs::atmosdefs::count; ++i)
+                {
+                    const auto& d = obs::atmosdefs::table()[i];
+                    if (i == obs::atmosdefs::on) continue;
+                    const float x = k < 4 ? (k % 2 ? 1.f : 0.f) : rnd.nextFloat();     // the first four: everything at one end
+                    setReal (p, d.id, d.type == obs::synthdefs::BOOL || d.type == obs::synthdefs::CHOICE ? std::round (d.min + x * (d.max - d.min)) : d.min + x * (d.max - d.min));
+                }
+                setReal (p, "atm.level", k < 4 ? 6.f : -6.f);
+                auto st = render (p, SR, BLOCK, 0.6, silence);
+                worst = juce::jmax (worst, st.peak);
+                if (! st.finite || st.peak > 1.f) { ok = false; bad << " #" << k; }
+            }
+            r.check (ok, "24 random worlds (and everything at both ends, LEVEL +6 dB) stay finite and under 0 dBFS (peak " + juce::String (db (worst), 1) + " dB)" + bad);
+        }
+
+        // FREEZE holds what is in the space, even with every layer off; letting go lets it die away
+        {
+            quietRig(); setNorm (p, "atm.on", 1); setReal (p, "atm.space", 100); setReal (p, "atm.size", 70); setReal (p, "atm.drn.level", 70);
+            render (p, SR, BLOCK, 2.0, silence);
+            setNorm (p, "atm.freeze", 1); render (p, SR, BLOCK, 0.3, silence);
+            for (auto id : { "atm.bed.on", "atm.drn.on", "atm.tex.on" }) setNorm (p, id, 0);
+            render (p, SR, BLOCK, 1.0, silence);
+            auto held = render (p, SR, BLOCK, 2.0, silence);
+            setNorm (p, "atm.freeze", 0); setReal (p, "atm.size", 0);
+            render (p, SR, BLOCK, 3.0, silence);
+            auto gone = render (p, SR, BLOCK, 1.0, silence);
+            r.check (held.finite && db (held.rms) > -60.f && db (held.peak) < 0.f && db (gone.rms) < db (held.rms) - 25.f,
+                     "FREEZE holds the space with every layer off (" + juce::String (db (held.rms), 1) + " dB), letting go dies away (" + juce::String (db (gone.rms), 1) + " dB)");
+        }
+
+        // FOLLOW: ducks under the guitar (measured on the side channel: the guitar is in the middle, the atmosphere is wide)
+        {
+            auto side = [&] (std::function<float (int)> in, double secs) {
+                juce::AudioBuffer<float> b (2, BLOCK); juce::MidiBuffer m; double s2 = 0; long cnt = 0;
+                for (int done = 0; done < (int) (SR * secs); done += BLOCK)
+                {
+                    for (int i = 0; i < BLOCK; ++i) { const float x = in (done + i); b.setSample (0, i, x); b.setSample (1, i, x); }
+                    p.processBlock (b, m);
+                    for (int i = 0; i < BLOCK; ++i) { const float sd = 0.5f * (b.getSample (0, i) - b.getSample (1, i)); s2 += (double) sd * sd; ++cnt; }
+                }
+                return db ((float) std::sqrt (s2 / juce::jmax (1L, cnt))); };
+            quietRig(); setNorm (p, "atm.on", 1); setReal (p, "atm.follow", -100); setReal (p, "atm.width", 100); setReal (p, "atm.space", 0);
+            side (silence, 1.0);
+            const float alone = side (silence, 1.5);
+            side (riff, 0.8);
+            const float playing = side (riff, 1.5);
+            setReal (p, "atm.follow", 100);
+            side (silence, 1.5);
+            const float swellQuiet = side (silence, 1.0);
+            side (riff, 0.8);
+            const float swellPlaying = side (riff, 1.5);
+            r.check (playing < alone - 10.f && swellPlaying > swellQuiet + 10.f,
+                     "FOLLOW ducks under your playing (" + juce::String (alone, 1) + " -> " + juce::String (playing, 1) + " dB) or swells with it ("
+                     + juce::String (swellQuiet, 1) + " -> " + juce::String (swellPlaying, 1) + " dB)");
+        }
+
+        // the drone can follow the guitar: a plucked A2 takes it to A
+        {
+            quietRig(); setNorm (p, "atm.on", 1); setNorm (p, "atm.drn.follow", 1);
+            render (p, SR, BLOCK, 1.5, [&] (int i) { if (i % (int) (SR * 0.5) == 0) g.pluck (110.f, 0.5f); return g.next(); });
+            const int root = (int) std::lround (e.atmosRoot());
+            r.check (root >= 0 && root % 12 == 9, "the drone follows a plucked A2 to A (root " + juce::String (root) + ")");
+        }
+
+        // the page's meters
+        {
+            quietRig(); setNorm (p, "atm.on", 1); setNorm (p, "atm.tex.on", 1); setReal (p, "atm.tex.type", 6); setReal (p, "atm.tex.density", 100);
+            const int ev0 = e.atmosEvents();
+            render (p, SR, BLOCK, 2.0, silence);
+            r.check (e.atmosActivity (0) > 0.01f && e.atmosActivity (1) > 0.01f && e.atmosEvents() - ev0 >= 3,
+                     "meters for the page: bed " + juce::String (e.atmosActivity (0), 2) + ", drone " + juce::String (e.atmosActivity (1), 2) + ", "
+                     + juce::String (e.atmosEvents() - ev0) + " heartbeats in 2 s");
+        }
+
+        // CPU: the heaviest world (rain with drops, a 4-note choir, metal at full density, the biggest space)
+        {
+            quietRig(); setNorm (p, "atm.on", 1); setReal (p, "atm.bed.type", 2); setReal (p, "atm.bed.motion", 100);
+            setReal (p, "atm.drn.voice", 2); setReal (p, "atm.drn.chord", 7); setNorm (p, "atm.tex.on", 1); setReal (p, "atm.tex.type", 3); setReal (p, "atm.tex.density", 100);
+            setReal (p, "atm.size", 100); setReal (p, "atm.space", 100); setReal (p, "atm.grit", 80); setReal (p, "atm.evolve", 100);
+            render (p, SR, BLOCK, 1.0, silence);
+            auto heavy = render (p, SR, BLOCK, 2.0, silence);
+            r.check (heavy.finite && heavy.avgLoad < 0.2, "heaviest atmosphere: " + juce::String (heavy.avgLoad * 100, 2) + "% of one core");
+        }
+        p.presetManager().loadInit();
+    }
+
     // ---------------------------------------------------------------- 7. NAM
     r.head ("NAM captures");
     {
@@ -1841,6 +1970,99 @@ int renderPedalDemos (const juce::File& dir)
         std::cout << "level " << key << " " << juce::Decibels::gainToDecibels (st.rms / 0.0565f) << " dB vs dry" << std::endl;
     }
     std::cout << "Wrote " << written << " pedal demos to " << dir.getFullPathName() << std::endl;
+    return written > 0 ? 0 : 1;
+}
+} // namespace obs
+
+namespace obs
+{
+// =============================================================================
+//  Sound renderer, for sound design (AETHER scenes, synth presets). Run:
+//      "Obsidian Amp Suite" --render-sounds <out folder> <spec.json>
+//  spec: [ { "name": "x", "seconds": 12, "params": { "atm.on": 1, "atm.bed.type": "Rain", ... },
+//            "notes": [ [midi, start s, length s, velocity], ... ], "guitar": false, "steps": [16 numbers] } ]
+//  Every sound starts from the init preset with the amp, cab and effects off (unless "rig": true).
+//  Choices can be given by name. Writes <out>/<name>.wav and prints the level of each.
+// =============================================================================
+int renderSounds (const juce::File& dir, const juce::File& specFile)
+{
+    const auto spec = Rig::readJson (specFile);
+    auto* list = spec.getArray();
+    if (list == nullptr) { std::cout << "Can't read " << specFile.getFullPathName() << std::endl; return 1; }
+    dir.createDirectory();
+    Rig::asyncFileLoads = false;
+    auto proc = std::make_unique<ObsidianProcessor>();
+    auto& p = *proc;
+    const double sr = 48000; const int block = 256;
+    p.setPlayConfigDetails (2, 2, sr, block); p.prepareToPlay (sr, block);
+    std::vector<float> riff; dsp::CaptureAmp::testRiff (riff, sr, 3.0);
+    int written = 0;
+    for (auto& e : *list)
+    {
+        p.presetManager().loadInit();
+        {   // let the last sound die away (its tails and fades) before the next one starts
+            juce::AudioBuffer<float> b (2, block); juce::MidiBuffer m;
+            for (int i = 0; i < (int) (0.25 * sr) / block; ++i) { b.clear(); p.processBlock (b, m); }
+        }
+        if (! (bool) e.getProperty ("rig", false))
+            for (auto id : { "amp.on", "cab.on", "doubler.on", "gate.on", "eq.on", "post.on", "pre.on", "sfx.on" }) setNorm (p, id, 0);
+        if (auto* prm = e["params"].getDynamicObject())
+            for (auto& kv : prm->getProperties())
+            {
+                auto* rp = dynamic_cast<juce::RangedAudioParameter*> (p.state().getParameter (kv.name.toString()));
+                if (rp == nullptr) { std::cout << "  no setting " << kv.name.toString() << std::endl; continue; }
+                if (kv.value.isString())
+                {
+                    auto* ch = dynamic_cast<juce::AudioParameterChoice*> (rp);
+                    const int k = ch != nullptr ? ch->choices.indexOf (kv.value.toString(), true) : -1;
+                    if (k < 0) { std::cout << "  " << kv.name.toString() << " has no choice " << kv.value.toString() << std::endl; continue; }
+                    rp->setValueNotifyingHost (rp->convertTo0to1 ((float) k));
+                }
+                else rp->setValueNotifyingHost (rp->convertTo0to1 ((float) (double) kv.value));
+            }
+        if (auto* st = e["steps"].getArray(); st != nullptr && st->size() == 16)
+        {
+            unsigned steps[16]; for (int i = 0; i < 16; ++i) steps[i] = (unsigned) (int) (*st)[i];
+            p.engine().setSynthSteps (steps);
+        }
+        struct N { int note; double start, len; int vel; };
+        std::vector<N> notes;
+        if (auto* ns = e["notes"].getArray())
+            for (auto& n : *ns) notes.push_back ({ (int) n[0], (double) n[1], (double) n[2], n.size() > 3 ? (int) n[3] : 110 });
+        const bool guitar = (bool) e.getProperty ("guitar", false);
+        const double total = (double) e.getProperty ("seconds", 10.0);
+        juce::AudioBuffer<float> out (2, (int) (total * sr)); out.clear();
+        juce::AudioBuffer<float> buf (2, block); juce::MidiBuffer midi;
+        double sumSq = 0; float peak = 0;
+        for (int pos = 0; pos + block <= out.getNumSamples(); pos += block)
+        {
+            buf.clear(); midi.clear();
+            if (guitar) for (int i = 0; i < block; ++i) { const float x = riff[(size_t) (pos + i) % riff.size()] * 0.9f; buf.setSample (0, i, x); buf.setSample (1, i, x); }
+            for (auto& n : notes)
+            {
+                const int on = (int) (n.start * sr), off = (int) ((n.start + n.len) * sr);
+                if (on >= pos && on < pos + block) midi.addEvent (juce::MidiMessage::noteOn (1, n.note, (juce::uint8) n.vel), on - pos);
+                if (off >= pos && off < pos + block) midi.addEvent (juce::MidiMessage::noteOff (1, n.note), off - pos);
+            }
+            p.processBlock (buf, midi);
+            for (int c = 0; c < 2; ++c)
+            {
+                out.copyFrom (c, pos, buf, c, 0, block);
+                for (int i = 0; i < block; ++i) { const float v = buf.getSample (c, i); sumSq += (double) v * v; peak = juce::jmax (peak, std::abs (v)); }
+            }
+        }
+        const auto name = e["name"].toString();
+        auto f = dir.getChildFile (name + ".wav"); f.deleteFile();
+        juce::WavAudioFormat wav;
+        if (auto os = std::unique_ptr<juce::OutputStream> (f.createOutputStream()))
+            if (auto w = std::unique_ptr<juce::AudioFormatWriter> (wav.createWriterFor (os.get(), sr, 2, 24, {}, 0)))
+            { os.release(); w->writeFromAudioSampleBuffer (out, 0, out.getNumSamples()); ++written; }
+        const double rms = std::sqrt (sumSq / juce::jmax (1.0, 2.0 * out.getNumSamples()));
+        std::cout << name << "  rms " << juce::String (juce::Decibels::gainToDecibels ((float) rms, -120.f), 1)
+                  << " dB  peak " << juce::String (juce::Decibels::gainToDecibels (peak, -120.f), 1) << " dB" << std::endl;
+    }
+    p.releaseResources();
+    std::cout << "Wrote " << written << " sounds to " << dir.getFullPathName() << std::endl;
     return written > 0 ? 0 : 1;
 }
 } // namespace obs

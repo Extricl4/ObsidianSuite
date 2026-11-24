@@ -20,6 +20,7 @@ int runSelfTest (const juce::StringArray& args);
 int writeFactoryPresets (const juce::File& dir, const juce::File& spec, float targetDb);
 int renderSynthDemos (const juce::File& dir);
 int renderPedalDemos (const juce::File& dir);
+int renderSounds (const juce::File& dir, const juce::File& spec);
 
 /** Opens MIDI inputs as they appear, like JUCE's own auto-open, but following Settings > MIDI > "MIDI input".
     (JUCE's turns every device on half a second after launch, which undid picking one device.)
@@ -113,6 +114,13 @@ public:
             const auto cwd = juce::File::getCurrentWorkingDirectory();
             setApplicationReturnValue (writeFactoryPresets (cwd.getChildFile (args[i + 1].unquoted()), cwd.getChildFile (args[i + 2].unquoted()),
                                                             args.size() > i + 3 && ! args[i + 3].startsWith ("--") ? args[i + 3].getFloatValue() : -20.f));
+            quit();
+            return;
+        }
+        if (const int i = args.indexOf ("--render-sounds"); i >= 0)
+        {
+            const auto cwd = juce::File::getCurrentWorkingDirectory();
+            setApplicationReturnValue (renderSounds (cwd.getChildFile (args[i + 1].unquoted()), cwd.getChildFile (args[i + 2].unquoted())));
             quit();
             return;
         }

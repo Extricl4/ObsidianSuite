@@ -4,12 +4,67 @@
    without "syn.", choices go by name ('Pulse', '1/16', '8-bit'). Loading one keeps your mix, output,
    key, tuning and playing settings. "steps" is the arpeggiator lane in short form:
    on / acc / tie as 'x.x.', note (scale steps 0-14) / oct (-1..2) / rat (1-4) / ch (chance %) as lists.
-   These are our own takes on the kind of sound in the name, not copies of anyone's patch. */
+   These are our own takes on the kind of sound in the name, not copies of anyone's patch.
+   A preset can also carry an AETHER part ("a", the HORROR ones): ids of AETHER's settings
+   without "atm.", choices by name. Loading it sets the atmosphere around the sound and
+   turns AETHER on; presets without one leave AETHER alone.
+   OBS_AETHER_SCENES (at the end) are AETHER's own scenes (its SCENES button). */
 (function () {
 const solo = { 'b.on': 0, 'sub.level': 0 };                       // start from osc A alone
 const mono = { 'a.voices': '1' };
 const P = (cat, name, note, v, steps) => ({ cat, name, note, v: Object.assign({}, solo, v), steps });
 const all = 'xxxxxxxxxxxxxxxx';
+const H = (name, note, v, a) => Object.assign(P('HORROR', name, note, v), { a });
+
+/* AETHER parts of the HORROR presets (also among AETHER's scenes, under HORROR) */
+const A = {
+  flesh:  { level: -6.5, evolve: 70, grit: 15, tone: -30, space: 70, size: 85, follow: 30,
+            'bed.type': 'Wind', 'bed.tone': 30, 'bed.motion': 40, 'bed.depth': 70, 'bed.level': 45,
+            'drn.voice': 'Choir', 'drn.chord': 'Dread', 'drn.oct': 'Low', 'drn.detune': 70, 'drn.tone': 35, 'drn.motion': 55, 'drn.level': 42,
+            'tex.on': 1, 'tex.type': 'Moans', 'tex.density': 38, 'tex.tone': 35, 'tex.chaos': 70, 'tex.level': 55 },
+  saw:    { level: -4.5, evolve: 40, grit: 40, tone: -10, space: 45, size: 55,
+            'bed.type': 'Static', 'bed.tone': 40, 'bed.motion': 50, 'bed.depth': 40, 'bed.level': 35, 'drn.on': 0,
+            'tex.on': 1, 'tex.type': 'Metal', 'tex.density': 60, 'tex.tone': 35, 'tex.chaos': 40, 'tex.level': 68 },
+  descent:{ level: -10, evolve: 50, tone: -35, space: 65, size: 85,
+            'bed.type': 'Rumble', 'bed.tone': 25, 'bed.motion': 30, 'bed.depth': 60, 'bed.level': 50,
+            'drn.voice': 'Descent', 'drn.chord': 'Tritone', 'drn.detune': 30, 'drn.tone': 40, 'drn.motion': 40, 'drn.level': 60,
+            'tex.on': 1, 'tex.type': 'Heartbeat', 'tex.density': 20, 'tex.tone': 30, 'tex.chaos': 50, 'tex.level': 48 },
+  walls:  { level: 0, evolve: 55, tone: -40, space: 40, size: 50,
+            'bed.type': 'Breath', 'bed.tone': 30, 'bed.motion': 25, 'bed.depth': 55, 'bed.level': 55,
+            'drn.voice': 'Abyss', 'drn.chord': 'Root', 'drn.oct': 'Sub', 'drn.tone': 25, 'drn.motion': 30, 'drn.level': 34,
+            'tex.on': 1, 'tex.type': 'Knocks', 'tex.density': 38, 'tex.tone': 25, 'tex.chaos': 75, 'tex.level': 80 },
+  wound:  { level: -6, grit: 30, space: 55, size: 65, tone: -10, follow: -40,
+            'bed.type': 'Breath', 'bed.tone': 55, 'bed.motion': 55, 'bed.depth': 95, 'bed.level': 46, 'drn.on': 0,
+            'tex.on': 1, 'tex.type': 'Moans', 'tex.density': 42, 'tex.tone': 75, 'tex.chaos': 85, 'tex.level': 55 },
+  asylum: { level: -2.5, evolve: 60, tone: -20, space: 70, size: 80,
+            'bed.type': 'Static', 'bed.tone': 35, 'bed.motion': 25, 'bed.depth': 45, 'bed.level': 42,
+            'drn.voice': 'Glass', 'drn.chord': 'Tritone', 'drn.oct': 'Mid', 'drn.detune': 45, 'drn.tone': 35, 'drn.motion': 35, 'drn.level': 36,
+            'tex.on': 1, 'tex.type': 'Whispers', 'tex.density': 32, 'tex.tone': 45, 'tex.chaos': 60, 'tex.level': 62 },
+  abattoir:{ level: -7, evolve: 45, grit: 50, tone: -25, space: 40, size: 50,
+            'bed.type': 'Rumble', 'bed.tone': 40, 'bed.motion': 35, 'bed.depth': 55, 'bed.level': 48,
+            'drn.voice': 'Abyss', 'drn.chord': 'Cluster', 'drn.oct': 'Sub', 'drn.detune': 50, 'drn.tone': 45, 'drn.motion': 60, 'drn.level': 34,
+            'tex.on': 1, 'tex.type': 'Flesh', 'tex.density': 52, 'tex.tone': 40, 'tex.chaos': 55, 'tex.level': 70 },
+  terror: { level: -0.5, evolve: 50, follow: 40, space: 30, size: 45,
+            'bed.type': 'Breath', 'bed.tone': 60, 'bed.motion': 85, 'bed.depth': 75, 'bed.level': 62,
+            'drn.voice': 'Strings', 'drn.chord': 'Cluster', 'drn.oct': 'Mid', 'drn.detune': 80, 'drn.tone': 40, 'drn.motion': 50, 'drn.level': 40,
+            'tex.on': 1, 'tex.type': 'Heartbeat', 'tex.density': 75, 'tex.tone': 30, 'tex.chaos': 55, 'tex.level': 80 },
+  mass:   { level: -8.5, evolve: 65, tone: -25, space: 80, size: 95, follow: 25,
+            'bed.type': 'Rumble', 'bed.tone': 30, 'bed.motion': 25, 'bed.depth': 65, 'bed.level': 45,
+            'drn.voice': 'Choir', 'drn.chord': 'Dread', 'drn.detune': 55, 'drn.tone': 45, 'drn.motion': 45, 'drn.level': 50,
+            'tex.on': 1, 'tex.type': 'Moans', 'tex.density': 26, 'tex.tone': 20, 'tex.chaos': 60, 'tex.level': 42 },
+  possessed:{ level: -2, evolve: 75, grit: 55, tone: -30, space: 55, size: 70, follow: 60,
+            'bed.type': 'Breath', 'bed.tone': 15, 'bed.motion': 30, 'bed.depth': 100, 'bed.level': 50,
+            'drn.voice': 'Abyss', 'drn.chord': 'Tritone', 'drn.oct': 'Sub', 'drn.detune': 60, 'drn.tone': 50, 'drn.motion': 70, 'drn.level': 40,
+            'tex.on': 1, 'tex.type': 'Whispers', 'tex.density': 60, 'tex.tone': 30, 'tex.chaos': 90, 'tex.level': 60 },
+  radio:  { level: -10, evolve: 70, grit: 35, tone: -5, space: 45, size: 60,
+            'bed.type': 'Static', 'bed.tone': 55, 'bed.motion': 60, 'bed.depth': 90, 'bed.level': 50,
+            'drn.voice': 'Glass', 'drn.chord': 'Tritone', 'drn.detune': 40, 'drn.tone': 25, 'drn.motion': 40, 'drn.level': 22,
+            'tex.on': 1, 'tex.type': 'Whispers', 'tex.density': 45, 'tex.tone': 60, 'tex.chaos': 70, 'tex.level': 55 },
+  agony:  { level: -10, evolve: 70, tone: -15, space: 70, size: 80, follow: 20,
+            'bed.type': 'Wind', 'bed.tone': 40, 'bed.motion': 55, 'bed.depth': 90, 'bed.level': 45,
+            'drn.voice': 'Strings', 'drn.chord': 'Cluster', 'drn.oct': 'Mid', 'drn.detune': 85, 'drn.tone': 50, 'drn.motion': 60, 'drn.level': 40,
+            'tex.on': 1, 'tex.type': 'Moans', 'tex.density': 55, 'tex.tone': 60, 'tex.chaos': 80, 'tex.level': 55 },
+};
 
 window.OBS_SYNTH_PRESETS = [
   /* ---------------------------------------------------------------- ARCADE */
@@ -204,6 +259,114 @@ window.OBS_SYNTH_PRESETS = [
     'lfo.shape': 'Sine', 'lfo.rate': 0.35, 'lfo.depth': 35, 'lfo.target': 'Cutoff', 'env.a.att': 150, 'env.a.sus': 100, 'env.a.rel': 900, space: 70, char: 'VHS' }),
   P('FX & WEIRD', 'Haunted Whistle', 'A thin ghostly whistle drifting off key', { ...mono, 'a.wave': 'Sine', 'a.pitch': 24, 'noise.level': 12, 'noise.color': 85, 'flt.type': 'Bandpass', 'flt.cutoff': 2200, 'flt.res': 30, 'flt.env': 0,
     glide: 220, legato: 1, 'lfo.shape': 'Drift', 'lfo.rate': 1.2, 'lfo.depth': 45, 'lfo.target': 'Pitch', 'env.a.att': 180, 'env.a.sus': 100, 'env.a.rel': 900, space: 75, char: 'VHS' }),
+
+  /* ---------------------------------------------------------------- HORROR (each one brings its own atmosphere: AETHER turns on) */
+  H('Flesh Choir', 'A choir of the damned: dissonant voices moaning through a vowel', { 'a.wave': 'Super', 'a.detune': 45, 'a.level': 95,
+    'b.on': 1, 'b.wave': 'Saw', 'b.pitch': 1, 'b.fine': -18, 'b.level': 75, 'b.voices': '3', 'b.detune': 35, chord: 'Octaves',
+    'flt.type': 'Vowel', 'flt.cutoff': 700, 'flt.res': 60, 'flt.drive': 55, 'flt.env': 0, 'flt.key': 30,
+    'lfo.shape': 'Drift', 'lfo.rate': 0.35, 'lfo.depth': 55, 'lfo.target': 'Cutoff', 'env.a.att': 700, 'env.a.dec': 2000, 'env.a.sus': 90, 'env.a.rel': 2600, char: 'VHS', space: 75 }, A.flesh),
+  H('Bone Saw', 'Serrated, grinding metal: a tritone sawing back and forth', { 'a.wave': 'Saw', 'a.voices': '3', 'a.detune': 30,
+    'b.on': 1, 'b.wave': 'Saw', 'b.pitch': 6, 'b.fine': 12, 'b.level': 85, 'noise.level': 25, 'noise.color': 80,
+    'flt.type': 'Bandpass', 'flt.cutoff': 1400, 'flt.res': 50, 'flt.drive': 90, 'flt.env': 20,
+    'lfo.shape': 'Triangle', 'lfo.rate': 3.2, 'lfo.depth': 70, 'lfo.target': 'Cutoff', 'env.a.att': 30, 'env.a.sus': 95, 'env.a.rel': 500, char: 'Analog', space: 30, 'a.level': 95 }, A.saw),
+  H('The Descent', 'Falling forever: it sinks under you and never reaches the bottom', { 'a.wave': 'Sine', 'a.level': 75,
+    'b.on': 1, 'b.wave': 'Super', 'b.pitch': -12, 'b.shape': 60, 'b.level': 50, 'sub.level': 40, 'sub.oct': '-2',
+    'flt.cutoff': 900, 'flt.res': 30, 'flt.env': -20, 'lfo.shape': 'Saw', 'lfo.rate': 0.12, 'lfo.depth': 60, 'lfo.target': 'Pitch',
+    glide: 400, 'env.a.att': 400, 'env.a.sus': 100, 'env.a.rel': 3000, space: 80 }, A.descent),
+  H('Something in the Walls', 'Scratching, knocking, breathing. You are not alone in the house.', { ...mono, 'a.wave': 'Saw', 'a.pitch': 0, 'a.level': 90,
+    'noise.level': 85, 'noise.color': 55, 'flt.type': 'Bandpass', 'flt.cutoff': 800, 'flt.res': 35, 'flt.env': 40, 'env.f.att': 5, 'env.f.dec': 200, 'env.f.sus': 10,
+    'lfo.shape': 'Random', 'lfo.rate': 9, 'lfo.depth': 35, 'lfo.target': 'Cutoff', 'env.a.att': 8, 'env.a.dec': 600, 'env.a.sus': 55, 'env.a.rel': 500, space: 35, 'flt.drive': 60 }, A.walls),
+  H('Wound', 'A scream that shakes and breaks: raw, trembling, in pain', { 'a.wave': 'Saw', 'a.voices': '3', 'a.detune': 18,
+    'b.on': 1, 'b.wave': 'Pulse', 'b.shape': 70, 'b.pitch': 1, 'b.fine': 25, 'b.level': 55,
+    'flt.type': 'Vowel', 'flt.cutoff': 1500, 'flt.res': 80, 'flt.drive': 85, 'flt.env': 45, 'env.f.att': 250, 'env.f.dec': 1200, 'env.f.sus': 40,
+    'lfo.shape': 'Drift', 'lfo.rate': 9, 'lfo.depth': 35, 'lfo.target': 'Pitch', 'lfo.fade': 600, glide: 280, legato: 1,
+    'env.a.att': 60, 'env.a.dec': 1500, 'env.a.sus': 85, 'env.a.rel': 900, char: 'VHS', space: 45 }, A.wound),
+  H('Asylum Night', 'A warped music box in an empty ward. The radio was never turned off.', { ...mono, 'a.wave': 'Triangle', 'a.pitch': 12,
+    'b.on': 1, 'b.wave': 'Sine', 'b.pitch': 23, 'b.fine': -20, 'b.level': 50, 'b.voices': '1', 'flt.on': 0,
+    'env.a.att': 1, 'env.a.dec': 1400, 'env.a.sus': 0, 'env.a.rel': 1400, 'lfo.shape': 'Drift', 'lfo.rate': 0.6, 'lfo.depth': 25, 'lfo.target': 'Pitch', char: 'VHS', space: 80, 'a.level': 90 }, A.asylum),
+  H('Abattoir', 'Meat hooks and machinery. Heavy, wet and wrong.', { 'a.wave': 'Saw', 'a.pitch': -12, 'a.voices': '3', 'a.detune': 40,
+    'b.on': 1, 'b.wave': 'Pulse', 'b.pitch': -11, 'b.level': 65, 'sub.level': 60,
+    'flt.type': 'Ladder 24', 'flt.cutoff': 350, 'flt.res': 55, 'flt.drive': 100, 'flt.env': 55, 'env.f.att': 4, 'env.f.dec': 350, 'env.f.sus': 20,
+    'lfo.shape': 'Square', 'lfo.rate': 7, 'lfo.depth': 35, 'lfo.target': 'Volume', 'env.a.att': 5, 'env.a.sus': 90, 'env.a.rel': 350, char: 'Analog', space: 25 }, A.abattoir),
+  H('Night Terror', 'Frozen in the dark: a racing heart, panting, a tone that will not stop', { ...mono, 'a.wave': 'Sine', 'a.pitch': 24, 'a.level': 55,
+    'b.on': 1, 'b.wave': 'Sine', 'b.pitch': 24, 'b.fine': 35, 'b.level': 45, 'b.voices': '1', 'flt.on': 0,
+    'lfo.shape': 'Random', 'lfo.rate': 14, 'lfo.depth': 12, 'lfo.target': 'Pitch', 'env.a.att': 1200, 'env.a.sus': 100, 'env.a.rel': 2500, char: 'Clean', space: 60 }, A.terror),
+  H('Black Mass', 'A congregation of the damned under a tritone organ. Enormous.', { 'a.wave': 'Super', 'a.detune': 35, 'a.level': 85,
+    'b.on': 1, 'b.wave': 'Super', 'b.pitch': 6, 'b.detune': 30, 'b.level': 60, 'sub.level': 50, chord: 'Octaves',
+    'flt.type': 'Ladder 12', 'flt.cutoff': 1100, 'flt.res': 25, 'flt.drive': 55, 'flt.env': 15,
+    'lfo.shape': 'Sine', 'lfo.rate': 0.18, 'lfo.depth': 30, 'lfo.target': 'Cutoff', 'env.a.att': 900, 'env.a.dec': 3000, 'env.a.sus': 95, 'env.a.rel': 3500, char: 'Analog', space: 90 }, A.mass),
+  H('Possessed', 'Something speaks through you. Low, distorted, not human.', { 'a.wave': 'Saw', 'a.pitch': -24, 'a.voices': '3', 'a.detune': 25,
+    'b.on': 1, 'b.wave': 'Saw', 'b.pitch': -12, 'b.fine': 30, 'b.level': 80, 'sub.level': 70, 'noise.level': 20, 'noise.color': 40,
+    'flt.type': 'Vowel', 'flt.cutoff': 400, 'flt.res': 65, 'flt.drive': 100, 'flt.env': 30, 'env.f.att': 300, 'env.f.dec': 1500, 'env.f.sus': 50,
+    'lfo.shape': 'Drift', 'lfo.rate': 1.6, 'lfo.depth': 45, 'lfo.target': 'Cutoff', glide: 450, legato: 1,
+    'env.a.att': 120, 'env.a.sus': 90, 'env.a.rel': 1200, char: 'VHS', space: 50, 'a.level': 100 }, A.possessed),
+  H('Dead Radio', 'Voices between the stations. Someone is still broadcasting.', { ...mono, 'a.wave': 'Pulse', 'a.shape': 60, 'a.level': 100,
+    'noise.level': 40, 'noise.color': 75, 'flt.type': 'Bandpass', 'flt.cutoff': 1600, 'flt.res': 45, 'flt.drive': 80, 'flt.env': 0,
+    'lfo.shape': 'Random', 'lfo.rate': 6, 'lfo.depth': 30, 'lfo.target': 'Pitch', 'env.a.att': 20, 'env.a.sus': 80, 'env.a.rel': 600, char: 'VHS', space: 40 }, A.radio),
+  H('Agony', 'Strings that wail and tear at each other. Pain with no end.', { 'a.wave': 'Super', 'a.detune': 60, 'a.level': 40,
+    'b.on': 1, 'b.wave': 'Saw', 'b.pitch': 1, 'b.voices': '5', 'b.detune': 45, 'b.level': 38,
+    'flt.type': 'Lowpass', 'flt.cutoff': 1300, 'flt.res': 35, 'flt.drive': 40, 'flt.env': 40, 'env.f.att': 900, 'env.f.dec': 2000, 'env.f.sus': 60,
+    'lfo.shape': 'Sine', 'lfo.rate': 6.5, 'lfo.depth': 18, 'lfo.target': 'Pitch', 'lfo.fade': 1500, glide: 220,
+    'env.a.att': 500, 'env.a.sus': 95, 'env.a.rel': 2200, char: 'Analog', space: 65 }, A.agony),
+];
+
+/* AETHER's scenes: whole atmospheres (ids without "atm.", choices by name; what is not listed is the default) */
+const SC = (cat, name, note, a) => ({ cat, name, note, a });
+window.OBS_AETHER_SCENES = [
+  /* NATURE */
+  SC('NATURE', 'Rain on Glass', 'Rain against a window, the gutter dripping', { level: -6, space: 35, size: 40, 'bed.type': 'Rain', 'bed.tone': 70, 'bed.motion': 40, 'bed.depth': 70, 'bed.level': 65, 'drn.on': 0,
+    'tex.on': 1, 'tex.type': 'Drips', 'tex.density': 25, 'tex.tone': 70, 'tex.chaos': 50, 'tex.level': 40 }),
+  SC('NATURE', 'Night Wind', 'Wind around the house, strings far off', { level: -11, space: 40, 'bed.type': 'Wind', 'bed.tone': 35, 'bed.motion': 45, 'bed.depth': 60, 'bed.level': 70,
+    'drn.voice': 'Strings', 'drn.chord': 'Fifth', 'drn.tone': 30, 'drn.level': 26 }),
+  SC('NATURE', 'Ocean Floor', 'Deep under the waves, bubbles rising', { level: -8.5, tone: -30, space: 70, size: 85, 'bed.type': 'Surf', 'bed.tone': 20, 'bed.motion': 25, 'bed.depth': 70, 'bed.level': 62,
+    'drn.voice': 'Choir', 'drn.chord': 'Octaves', 'drn.tone': 20, 'drn.level': 22, 'tex.on': 1, 'tex.type': 'Drips', 'tex.density': 30, 'tex.tone': 25, 'tex.chaos': 70, 'tex.level': 42 }),
+  SC('NATURE', 'Campfire', 'A fire crackling under the night air', { level: -2.5, space: 15, size: 30, follow: -40, 'bed.type': 'Wind', 'bed.tone': 25, 'bed.motion': 20, 'bed.depth': 25, 'bed.level': 48, 'drn.on': 0,
+    'tex.on': 1, 'tex.type': 'Fire', 'tex.density': 55, 'tex.tone': 45, 'tex.level': 85 }),
+  SC('NATURE', 'Thunderhead', 'A downpour, and the sky rolling overhead', { level: -6.5, evolve: 70, space: 50, size: 70, 'bed.type': 'Rain', 'bed.tone': 55, 'bed.motion': 85, 'bed.depth': 80, 'bed.level': 66,
+    'drn.voice': 'Abyss', 'drn.chord': 'Root', 'drn.oct': 'Sub', 'drn.tone': 25, 'drn.motion': 60, 'drn.level': 36 }),
+  SC('NATURE', 'Shoreline', 'Waves on the sand, slow and even', { level: -6.5, space: 30, size: 45, follow: -30, 'bed.type': 'Surf', 'bed.tone': 55, 'bed.motion': 35, 'bed.depth': 55, 'bed.level': 68, 'drn.on': 0 }),
+  /* DREAM */
+  SC('DREAM', 'Deep Space', 'Drifting between the stars, glass all around', { level: -11, evolve: 70, space: 85, size: 95, 'bed.type': 'Hiss', 'bed.tone': 25, 'bed.motion': 20, 'bed.depth': 40, 'bed.level': 35,
+    'drn.voice': 'Glass', 'drn.chord': 'Sus', 'drn.oct': 'Mid', 'drn.detune': 35, 'drn.tone': 55, 'drn.motion': 40, 'drn.level': 50,
+    'tex.on': 1, 'tex.type': 'Shimmer', 'tex.density': 30, 'tex.tone': 75, 'tex.chaos': 40, 'tex.level': 45 }),
+  SC('DREAM', 'Cathedral', 'A choir in a stone hall', { level: -11, tone: -10, space: 75, size: 90, 'bed.type': 'Hiss', 'bed.tone': 15, 'bed.depth': 30, 'bed.level': 25,
+    'drn.voice': 'Choir', 'drn.chord': 'Fifth', 'drn.detune': 30, 'drn.tone': 45, 'drn.motion': 40, 'drn.level': 55 }),
+  SC('DREAM', 'Glass Garden', 'Wind chimes of glass in a soft breeze', { level: -7.5, tone: 25, space: 70, size: 80, 'bed.type': 'Wind', 'bed.tone': 70, 'bed.motion': 25, 'bed.depth': 30, 'bed.level': 30,
+    'drn.voice': 'Glass', 'drn.chord': 'Octaves', 'drn.oct': 'High', 'drn.level': 30, 'tex.on': 1, 'tex.type': 'Shimmer', 'tex.density': 55, 'tex.tone': 85, 'tex.level': 55 }),
+  SC('DREAM', 'Old Record', 'A warm organ on a dusty record', { level: -4, grit: 15, tone: -20, space: 20, size: 35, 'bed.type': 'Hiss', 'bed.tone': 60, 'bed.motion': 10, 'bed.depth': 20, 'bed.level': 25,
+    'drn.voice': 'Organ', 'drn.chord': 'Sus', 'drn.oct': 'Mid', 'drn.detune': 20, 'drn.tone': 35, 'drn.motion': 25, 'drn.level': 45,
+    'tex.on': 1, 'tex.type': 'Vinyl', 'tex.density': 50, 'tex.tone': 55, 'tex.level': 60 }),
+  SC('DREAM', 'Ascension', 'Rising, and rising, and rising', { level: -12.5, space: 75, size: 90, 'bed.type': 'Wind', 'bed.tone': 60, 'bed.depth': 35, 'bed.level': 30,
+    'drn.voice': 'Ascent', 'drn.chord': 'Fifth', 'drn.oct': 'Mid', 'drn.detune': 20, 'drn.tone': 55, 'drn.motion': 35, 'drn.level': 60,
+    'tex.on': 1, 'tex.type': 'Shimmer', 'tex.density': 25, 'tex.level': 35 }),
+  /* DARK */
+  SC('DARK', 'The Cellar', 'Damp stone, dripping, something low in the dark', { level: -4.5, tone: -35, space: 45, size: 55, 'bed.type': 'Rumble', 'bed.tone': 20, 'bed.motion': 25, 'bed.depth': 45, 'bed.level': 60,
+    'drn.voice': 'Strings', 'drn.chord': 'Minor', 'drn.tone': 20, 'drn.level': 20, 'tex.on': 1, 'tex.type': 'Drips', 'tex.density': 30, 'tex.tone': 30, 'tex.chaos': 70, 'tex.level': 65 }),
+  SC('DARK', 'Haunted Ward', 'An old radio in an empty hospital. Someone whispers.', { level: -5.5, evolve: 60, space: 60, size: 75, 'bed.type': 'Static', 'bed.tone': 30, 'bed.motion': 30, 'bed.depth': 55, 'bed.level': 40,
+    'drn.voice': 'Glass', 'drn.chord': 'Tritone', 'drn.oct': 'Mid', 'drn.detune': 50, 'drn.tone': 40, 'drn.level': 35,
+    'tex.on': 1, 'tex.type': 'Whispers', 'tex.density': 35, 'tex.tone': 45, 'tex.chaos': 60, 'tex.level': 55 }),
+  SC('DARK', 'Number Station', 'A shortwave signal that should not be there', { level: -13, grit: 30, space: 30, 'bed.type': 'Static', 'bed.tone': 65, 'bed.motion': 45, 'bed.depth': 90, 'bed.level': 60,
+    'drn.voice': 'Organ', 'drn.chord': 'Root', 'drn.oct': 'Mid', 'drn.detune': 5, 'drn.tone': 30, 'drn.level': 20 }),
+  SC('DARK', 'Heartbeat', 'Breathing slowly, the heart loud in your ears', { level: -3.5, space: 25, size: 35, 'bed.type': 'Breath', 'bed.tone': 40, 'bed.motion': 30, 'bed.depth': 30, 'bed.level': 45,
+    'drn.voice': 'Abyss', 'drn.chord': 'Root', 'drn.oct': 'Sub', 'drn.level': 30, 'tex.on': 1, 'tex.type': 'Heartbeat', 'tex.density': 45, 'tex.chaos': 30, 'tex.level': 80 }),
+  SC('DARK', 'Night Visitors', 'Wind, and knocking on the door at three in the morning', { level: -4.5, space: 55, size: 70, 'bed.type': 'Wind', 'bed.tone': 25, 'bed.motion': 30, 'bed.depth': 50, 'bed.level': 55,
+    'drn.voice': 'Strings', 'drn.chord': 'Tritone', 'drn.tone': 25, 'drn.level': 20, 'tex.on': 1, 'tex.type': 'Knocks', 'tex.density': 30, 'tex.tone': 40, 'tex.chaos': 60, 'tex.level': 65 }),
+  SC('DARK', 'Mineshaft', 'Down where the light does not reach. Metal groans.', { level: -11, tone: -30, space: 65, size: 85, 'bed.type': 'Rumble', 'bed.tone': 30, 'bed.depth': 50, 'bed.level': 45,
+    'drn.voice': 'Descent', 'drn.chord': 'Minor', 'drn.detune': 30, 'drn.tone': 40, 'drn.motion': 30, 'drn.level': 55,
+    'tex.on': 1, 'tex.type': 'Metal', 'tex.density': 20, 'tex.chaos': 50, 'tex.level': 42 }),
+  /* HORROR: the atmospheres of SIREN's HORROR presets */
+  SC('HORROR', 'Flesh Choir', 'Moaning voices over a dread chord, wind in the rafters', A.flesh),
+  SC('HORROR', 'Bone Saw', 'Metal grinding and scraping through static', A.saw),
+  SC('HORROR', 'The Descent', 'A falling tone, the ground rumbling, a slow heart', A.descent),
+  SC('HORROR', 'Something in the Walls', 'Breathing behind the plaster, knocking, a sub', A.walls),
+  SC('HORROR', 'Wound', 'Ragged, rasping breath and distant wails', A.wound),
+  SC('HORROR', 'Asylum Night', 'A radio in the ward, glass, whispers', A.asylum),
+  SC('HORROR', 'Abattoir', 'Wet, cracking, tearing, over a churning sub', A.abattoir),
+  SC('HORROR', 'Night Terror', 'Panting and a racing, stumbling heart', A.terror),
+  SC('HORROR', 'Black Mass', 'A choir of the damned in an endless hall', A.mass),
+  SC('HORROR', 'Possessed', 'Whispering everywhere, a growl, a throat that rasps', A.possessed),
+  SC('HORROR', 'Dead Radio', 'Static and voices between the stations', A.radio),
+  SC('HORROR', 'Agony', 'Howling wind, tearing strings, voices in pain', A.agony),
 ];
 })();
 </script>
