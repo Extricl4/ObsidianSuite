@@ -113,6 +113,8 @@ void Engine::readSynthParams (SynthParams& sp, const HostInfo& h)
     // The guitar notes follow the plugin's transpose.
     sp.transposeSemis = std::round (p.transpose->load (std::memory_order_relaxed));
     sp.bpm = h.bpm; sp.hostPlaying = h.playing; sp.ppq = h.ppq;
+    sp.bend = uiBend.load (std::memory_order_relaxed) + midiBend.load (std::memory_order_relaxed);
+    sp.mod = juce::jmax (uiMod.load (std::memory_order_relaxed), midiMod.load (std::memory_order_relaxed));
 }
 
 void Engine::readHarmonyParams (dsp::hydra::Params& hp)

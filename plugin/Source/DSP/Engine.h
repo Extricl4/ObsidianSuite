@@ -106,6 +106,11 @@ public:
     }
     /** Message thread: the UI's AUDITION button / computer keys. */
     /** A note from the page (SIREN's KEYS, the computer keys); velocity 0..1. */
+    /** The KEYS' wheels and MIDI's: pitch bend in semitones, mod wheel 0..1 (vibrato). */
+    void uiSynthBend (float semis)  { uiBend.store (juce::jlimit (-24.f, 24.f, semis)); }
+    void uiSynthMod (float amount)  { uiMod.store (juce::jlimit (0.f, 1.f, amount)); }
+    void midiSynthBend (float semis) { midiBend.store (juce::jlimit (-24.f, 24.f, semis)); }
+    void midiSynthMod (float amount) { midiMod.store (juce::jlimit (0.f, 1.f, amount)); }
     void uiSynthNote (int note, bool on, float velocity = 0.85f)
     {
         int s1, n1, s2, n2; uiNotes.prepareToWrite (1, s1, n1, s2, n2);
@@ -157,6 +162,7 @@ private:
     static constexpr int kMaxSynthNotes = 256;
     dsp::SynthNote synthNotes[kMaxSynthNotes]; int numSynthNotes = 0;
     juce::AbstractFifo uiNotes { 64 }; std::array<int, 64> uiNoteBuf {};
+    std::atomic<float> uiBend { 0 }, uiMod { 0 }, midiBend { 0 }, midiMod { 0 };
 
     // Cached parameter pointers (read every block, lock-free).
     struct P

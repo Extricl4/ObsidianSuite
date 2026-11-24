@@ -135,6 +135,8 @@ void ObsidianProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
             else if (msg.isNoteOff())                        dsp.addSynthNote (meta.samplePosition, msg.getNoteNumber(), 0.f);
             else if (msg.isAllNotesOff() || msg.isAllSoundOff())
                 dsp.addSynthNote (meta.samplePosition, -1, 0.f);     // one "all notes off" (DAWs send it on all 16 channels)
+            else if (msg.isPitchWheel())                     dsp.midiSynthBend ((float) (msg.getPitchWheelValue() - 8192) / 8192.f * 2.f);   // +-2 semitones
+            else if (msg.isControllerOfType (1))             dsp.midiSynthMod ((float) msg.getControllerValue() / 127.f);                  // mod wheel: vibrato
         }
     }
 

@@ -23,10 +23,12 @@ namespace
 struct Report
 {
     juce::StringArray lines; int failures = 0, checks = 0;
-    void ok (const juce::String& s)   { ++checks; lines.add ("  ok    " + s); }
-    void fail (const juce::String& s) { ++checks; ++failures; lines.add ("  FAIL  " + s); }
-    void info (const juce::String& s) { lines.add ("        " + s); }
-    void head (const juce::String& s) { lines.add (""); lines.add ("== " + s); }
+    juce::File progress;                    // written line by line, so a crash still shows how far it got
+    void add (const juce::String& s)  { lines.add (s); if (progress != juce::File()) progress.appendText (s + "\n", false, false); }
+    void ok (const juce::String& s)   { ++checks; add ("  ok    " + s); }
+    void fail (const juce::String& s) { ++checks; ++failures; add ("  FAIL  " + s); }
+    void info (const juce::String& s) { add ("        " + s); }
+    void head (const juce::String& s) { add (""); add ("== " + s); }
     void check (bool cond, const juce::String& s) { cond ? ok (s) : fail (s); }
 };
 
@@ -295,7 +297,8 @@ int runSelfTest (const juce::StringArray& args)
         if (args[i] == "--nam" && i + 1 < args.size()) namFile = juce::File (args[i + 1].unquoted());
         else if (args[i] != "--selftest" && ! args[i].startsWith ("--") && (i == 0 || args[i - 1] != "--nam")) reportFile = juce::File::getCurrentWorkingDirectory().getChildFile (args[i].unquoted());
     }
-    r.lines.add (OBSIDIAN_PRODUCT_NAME " " OBSIDIAN_VERSION_STRING " self-test   (" + juce::SystemStats::getCpuModel() + ", " + juce::SystemStats::getOperatingSystemName() + ")");
+    if (reportFile != juce::File()) { r.progress = reportFile.getSiblingFile (reportFile.getFileNameWithoutExtension() + "-progress.txt"); r.progress.deleteFile(); }
+    r.add (OBSIDIAN_PRODUCT_NAME " " OBSIDIAN_VERSION_STRING " self-test   (" + juce::SystemStats::getCpuModel() + ", " + juce::SystemStats::getOperatingSystemName() + ")");
 
     const double SR = 48000; const int BLOCK = 256;
     auto proc = std::make_unique<ObsidianProcessor>();
@@ -1209,7 +1212,7 @@ int runSelfTest (const juce::StringArray& args)
             setNorm (p, "harm.on", 1); setReal (p, "harm.mix", 100); setReal (p, "harm.human", 0); setReal (p, "harm.place", (float) harmPlace);
             setReal (p, "harm.v1.on", 1); setReal (p, "harm.v1.level", 100); setReal (p, "harm.v1.pan", 0); setReal (p, "harm.v1.smart", 0); setReal (p, "harm.v1.semi", -12);
             setNorm (p, "synth.on", 1); setReal (p, "syn.mix", 100); setReal (p, "syn.post", (float) synthPost);
-            setReal (p, "syn.a.wave", 3); setReal (p, "syn.a.voices", 1); setNorm (p, "syn.b.on", 0); setReal (p, "syn.sub.level", 0); setReal (p, "syn.noise.level", 0);
+            setReal (p, "syn.a.wave", 3); setReal (p, "syn.a.voices", 0); setNorm (p, "syn.b.on", 0); setReal (p, "syn.sub.level", 0); setReal (p, "syn.noise.level", 0);
             setNorm (p, "syn.flt.on", 0); setReal (p, "syn.lfo.depth", 0); setReal (p, "syn.space", 0); setReal (p, "syn.char", 0); setReal (p, "syn.chord", 0);
             setNorm (p, "syn.arp.on", 0); setNorm (p, "syn.hold", 0);
             render (p, SR, BLOCK, 0.5, [] (int) { return 0.f; });             // HYDRA settles in its place
@@ -1241,6 +1244,25 @@ int runSelfTest (const juce::StringArray& args)
             const float f = pitchOf ([] (int) { return 0.f; }, 1.2);
             e.uiSynthNote (57, false); render (p, SR, BLOCK, 1.0, [] (int) { return 0.f; });
             r.check (cents (f, 110.f) < 25.f, "SIREN played on the KEYS (no guitar) is harmonized too (" + juce::String (f, 1) + " Hz, want 110)");
+        }
+        // the KEYS' wheels: pitch bend moves SIREN's note, the mod wheel adds vibrato; both from MIDI too
+        {
+            rig (1, 0); setNorm (p, "harm.on", 0); render (p, SR, BLOCK, 0.3, [] (int) { return 0.f; });
+            e.uiSynthNote (57, true, 0.9f);
+            e.uiSynthBend (2.f); const float up = pitchOf ([] (int) { return 0.f; }, 1.0);
+            e.uiSynthBend (0.f); e.midiSynthBend (-2.f); const float down = pitchOf ([] (int) { return 0.f; }, 1.0);
+            e.midiSynthBend (0.f);
+            // vibrato: the pitch wobbles (short windows disagree), without it they agree
+            auto spread = [&] {
+                std::vector<float> cap; render (p, SR, BLOCK, 1.0, [] (int) { return 0.f; }, 2, &cap);
+                float lo = 1e9f, hi = 0;
+                for (int k = 0; k < 6; ++k) { const auto a = (size_t) ((0.3 + k * 0.1) * SR); const float f = detectPitch (std::vector<float> (cap.begin() + (long) a, cap.begin() + (long) (a + 6200)), SR);
+                    if (f > 0) { lo = juce::jmin (lo, f); hi = juce::jmax (hi, f); } }
+                return hi > lo ? 1200.f * std::log2 (hi / lo) : 0.f; };
+            const float flat = spread(); e.uiSynthMod (1.f); const float wobble = spread(); e.uiSynthMod (0.f);
+            e.uiSynthNote (57, false); render (p, SR, BLOCK, 1.0, [] (int) { return 0.f; });
+            r.check (cents (up, 246.94f) < 25.f && cents (down, 196.f) < 25.f && wobble > 30.f && flat < 10.f,
+                     juce::String::formatted ("the KEYS' wheels: BEND +2 st %.1f Hz (want 246.9), MIDI bend -2 st %.1f Hz (want 196.0), MOD vibrato %.0f cents (none: %.0f)", up, down, wobble, flat));
         }
         // AETHER is never harmonized: a drone sounds the same with HYDRA on or off
         {

@@ -34,6 +34,8 @@ struct SynthParams
     unsigned steps[16] {};                  // packed arpeggiator steps
     double bpm = 120; bool hostPlaying = false; double ppq = 0;
     float transposeSemis = 0;               // the plugin's transpose (the guitar notes follow it)
+    float bend = 0;                         // pitch wheel, semitones (the KEYS' wheel, or MIDI)
+    float mod = 0;                          // mod wheel 0..1: vibrato
     float get (int i) const                 { return v[i]; }
     int   choice (int i) const              { return (int) std::lround (v[i]); }
     bool  on (int i) const                  { return v[i] >= 0.5f; }
@@ -73,7 +75,7 @@ public:
         lfoPhase = 0; lfoHeld = 0; lfoSmooth = 0; lfoTarget = 0; lfoFade = 1;
         arpActive = false; arpPhase = 0; arpStep = -1; arpIdx = 0; arpDir = 1; arpGate = false; arpGateOff = 0; ratchetLeft = 0; arpNote = 0;
         crushHold = 0; crushL = crushR = 0; crushCount = 0;
-        vhsLp1 = vhsLp2 = vhsLp3 = vhsLp4 = 0; wow = 0; flutter = 0; noiseLp = 0;
+        vhsLp1 = vhsLp2 = vhsLp3 = vhsLp4 = 0; wow = 0; flutter = 0; noiseLp = 0; bendNow = 0; modNow = 0; vibPh = 0;
         echoL.clear(); echoR.clear(); for (auto& a : diffL) a.clear(); for (auto& a : diffR) a.clear();
         echoLpL = echoLpR = 0;
         dcL.reset(); dcR.reset(); overL.reset(); overR.reset(); wasActive = false;
@@ -594,7 +596,11 @@ private:
             auto& s = notes[i]; if (! s.on) continue;
             s.cur = glideCoef > 0 ? s.target + (s.cur - s.target) * glideCoef : s.target;
         }
-        const float semisBase = pitchMod + charCents * 0.01f;
+        // the pitch wheel glides (no zipper), the mod wheel adds a vibrato (5.5 Hz, up to +-0.6 st)
+        const float wa = 1.f - std::exp (-(float) kCtl / (0.012f * (float) sr));
+        bendNow += (clampf (p.bend, -24.f, 24.f) - bendNow) * wa; modNow += (clampf (p.mod, 0.f, 1.f) - modNow) * wa;
+        vibPh += 5.5f * kCtl / (float) sr; if (vibPh >= 1) vibPh -= 1;
+        const float semisBase = pitchMod + charCents * 0.01f + bendNow + std::sin (kTwoPi * vibPh) * 0.6f * modNow;
         syncOn = p.on (sd::bSync) && p.on (sd::bOn) && p.get (sd::bLevel) > 0.f;
         for (int o = 0; o < 2; ++o)
         {
@@ -823,6 +829,7 @@ private:
     // character
     int character = 0, crushCount = 0; float crushHold = 0, crushL = 0, crushR = 0;
     float vhsLp1 = 0, vhsLp2 = 0, vhsLp3 = 0, vhsLp4 = 0, wow = 0, flutter = 0;
+    float bendNow = 0, modNow = 0, vibPh = 0;          // pitch wheel (smoothed), mod wheel vibrato
     // space
     DelayLine echoL, echoR; Allpass diffL[2], diffR[2]; OnePole echoDamp; float echoLpL = 0, echoLpR = 0, echoSamples = 1000, echoFb = 0.3f, echoWet = 0;
     DcBlocker dcL, dcR;

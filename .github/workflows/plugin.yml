@@ -54,6 +54,7 @@ jobs:
           Copy-Item -Recurse -Force plugin\Content\Captures, plugin\Content\IRs, plugin\Content\Amps, plugin\Content\Faces $docs
           $p = Start-Process -FilePath $exe -ArgumentList '--selftest','selftest.txt','--packs' -Wait -PassThru -NoNewWindow
           if (Test-Path selftest.txt) { Get-Content selftest.txt }
+          elseif (Test-Path selftest-progress.txt) { Write-Host "--- the self-test stopped early (exit code $('0x{0:X8}' -f $p.ExitCode)); it got this far:"; Get-Content selftest-progress.txt | Select-Object -Last 40 }
           if ($p.ExitCode -ne 0) { if (Test-Path selftest.txt) { ./plugin/tools/ci-report.ps1 selftest.txt } ; exit 1 }
 
       - name: Package

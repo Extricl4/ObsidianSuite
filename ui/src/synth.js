@@ -375,6 +375,38 @@ css.textContent = `
 .sy-keys-h > span { font-size: 9.5px; color: #6f6f76; letter-spacing: .04em; white-space: nowrap; }
 .sy-keys-h .sp { flex: 1; }
 .sy-keys-h .sy-seg { width: auto; } .sy-keys-h .sy-seg button { padding: 0 9px; }
+.sy-keys-g { display: flex; align-items: center; gap: 6px; flex: none; }
+.sy-keys-g .cap { font-size: 7.5px; font-weight: 600; letter-spacing: .18em; color: #6f6f76; }
+.sy-keys-h .sy-pill { height: 25px; flex: none; }
+.sy-keys-m { display: flex; gap: 14px; flex: 1; min-height: 0; }
+.sy-keys-l { width: 226px; flex: none; display: flex; gap: 14px; padding: 2px 4px 0 2px; box-sizing: border-box; }
+.sy-keys-wc { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.sy-keys-wh { display: flex; gap: 10px; }
+.sy-keys-wc .range .sy-seg button { padding: 0 6px; }
+.sy-whl { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 40px; }
+.sy-whl .cap { font-size: 8px; font-weight: 600; letter-spacing: .18em; color: #a3a3a8; }
+.sy-whl .v { font-size: 9.5px; color: #e9e6df; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sy-whl .slot { position: relative; width: 34px; height: 168px; border-radius: 9px; padding: 5px; box-sizing: border-box; cursor: ns-resize; touch-action: none;
+  background: linear-gradient(#060607, #0d0d0f); box-shadow: inset 0 2px 8px rgba(0,0,0,.95), inset 0 0 0 1px rgba(255,255,255,.05), 0 1px 0 rgba(255,255,255,.08); }
+.sy-whl .w { position: relative; width: 100%; height: 100%; border-radius: 6px; overflow: hidden;
+  background: repeating-linear-gradient(180deg, #2c2c31 0 3px, #151517 3px 6px); box-shadow: inset 0 10px 14px rgba(0,0,0,.75), inset 0 -10px 14px rgba(0,0,0,.75), inset 1px 0 0 rgba(255,255,255,.08); }
+.sy-whl .mk { position: absolute; left: 0; right: 0; height: 4px; margin-top: -2px; background: #8d8a83; box-shadow: 0 0 0 1px rgba(0,0,0,.6); transition: background .15s, box-shadow .15s; }
+.sy-whl.spring .w::after { content: ''; position: absolute; left: 3px; right: 3px; top: 50%; height: 1px; background: rgba(255,255,255,.12); }
+.sy-whl.moved .mk, .sy-whl.drag .mk { background: var(--accent); box-shadow: 0 0 8px var(--accent), 0 0 0 1px rgba(0,0,0,.6); }
+.sy-whl .slot:hover .w { box-shadow: inset 0 10px 14px rgba(0,0,0,.75), inset 0 -10px 14px rgba(0,0,0,.75), inset 0 0 0 1px rgba(255,255,255,.14); }
+.sy-keys-pc { display: flex; flex-direction: column; gap: 10px; flex: 1; min-width: 0; padding-top: 2px; }
+.sy-keys-pc .sy-ctl { margin-right: 2px; }
+.sy-keys-tip { font-size: 8.5px; line-height: 1.45; color: #6f6f76; text-align: center; letter-spacing: .02em; }
+.sy-keys-tip b { color: var(--accent); font-weight: 600; }
+.sy-kb2 { height: 52px; border: none; border-radius: 10px; cursor: pointer; font: inherit; color: #cfccc5; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  background: linear-gradient(#2a2a2f, #18181b 70%, #141416); box-shadow: 0 2px 4px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.12), inset 0 0 0 1px rgba(255,255,255,.05); transition: transform .06s; }
+.sy-kb2 b { font-size: 9.5px; font-weight: 600; letter-spacing: .2em; } .sy-kb2 small { font-size: 8px; letter-spacing: .08em; color: #6f6f76; }
+.sy-kb2:hover { color: #f1eee7; }
+.sy-kb2.on { color: #111113; transform: translateY(1px); background: var(--accent); box-shadow: 0 0 16px color-mix(in srgb, var(--accent) 55%, transparent), inset 0 1px 0 rgba(255,255,255,.4); }
+.sy-kb2.on small { color: #3a3a3e; }
+.sy-pk.sus.w { background: linear-gradient(#cdeee9, #9fded6 70%, #7fcfc5); } .sy-pk.sus.b { background: linear-gradient(#123f3a, #2c8f84); }
+.sy-pk.lat::after, .sy-pad.lat::after { content: '●'; position: absolute; top: 6px; left: 50%; transform: translateX(-50%); font-size: 8px; color: #06302b; width: auto; height: auto; background: none; box-shadow: none; border-radius: 0; }
+.sy-pad { position: relative; } .sy-pad.sus { background: linear-gradient(rgba(63,208,192,.28), rgba(63,208,192,.1)); }
 .sy-keys-h .x { width: 26px; height: 26px; border-radius: 8px; border: 1px solid rgba(255,255,255,.1); background: none; color: #a3a3a8; cursor: pointer; font: inherit; font-size: 13px; padding: 0; flex: none; }
 .sy-keys-h .x:hover { color: #e9e6df; border-color: rgba(255,255,255,.22); }
 .sy-keys-oct { display: flex; align-items: center; height: 25px; border-radius: 8px; background: #0e0e10; box-shadow: inset 0 0 0 1px rgba(255,255,255,.05); flex: none; }
@@ -1163,51 +1195,76 @@ prNav.children[1].addEventListener('click', () => stepPreset(1));
 drawPrList();
 
 /* ============================================================ KEYS: play SIREN without a guitar */
-/* An on-screen keyboard over the screen (the sound knobs above stay in reach), or 16 pads that only
-   play notes of the key. Mouse, touch, or the computer keys (A W S E D F T G Y H U J K O L P ;  Z X: octave). */
-const KB = { oct: 36, view: 'piano', scale: 'all', vel: 'height', labels: true };
+/* A keyboard over the screen (or 16 pads that only play notes of the key), with what a synth keyboard has
+   on its left: a PITCH BEND wheel that springs back, a MOD wheel (vibrato), GLIDE and SLIDE, SUSTAIN (a pedal:
+   hold SPACE) and LATCH (a key stays on until you press it again). LOCK TO KEY turns wrong notes into right ones.
+   Mouse, touch or the computer keys (A W S E D F T G Y H U J K O L P ;  Z X: octave, ↑ ↓: bend, SPACE: sustain). */
+const KB = { oct: 36, view: 'piano', scale: 'all', vel: 'height', labels: true, range: 2 };
 try { Object.assign(KB, JSON.parse(localStorage.getItem('obs.sirenKeys') || '{}')); } catch (_) {}
 const kbSave = () => { try { localStorage.setItem('obs.sirenKeys', JSON.stringify(KB)); } catch (_) {} };
-KB.oct = clamp(Math.round(KB.oct / 12) * 12, 12, 72);
+KB.oct = clamp(Math.round(KB.oct / 12) * 12, 12, 72); if (![2, 7, 12].includes(KB.range)) KB.range = 2; if (KB.scale === 'snap') KB.scale = 'lock';
 const KEYMAP = { a: 0, w: 1, s: 2, e: 3, d: 4, f: 5, t: 6, g: 7, y: 8, h: 9, u: 10, j: 11, k: 12, o: 13, l: 14, p: 15, ';': 16 };
 const KEYCHAR = Object.fromEntries(Object.entries(KEYMAP).map(([c, o]) => [o, c.toUpperCase()]));
 const PADKEYS = ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i'];          // in PADS: bottom row, then top row
 const padNote = i => { const sc = SCALES[Math.round(S['syn.scale'])]; return scaleTone(KB.oct + 12 + Math.round(S['syn.key']), i, sc); };
-const kbHeld = new Map();                    // source ('ptr:<id>' / 'key:<char>') -> midi note sounding
+const kbHeld = new Map();                    // who holds a note: 'ptr:<id>', 'key:<char>', 'latch' -> midi note
+const kbSus = new Set();                     // let go while SUSTAIN was down: still sounding
+let susDown = false, latch = false;
 const isBlackKey = m => [1, 3, 6, 8, 10].includes(((m % 12) + 12) % 12);
 const inScale = m => { const sc = SCALES[Math.round(S['syn.scale'])], rel = ((m - Math.round(S['syn.key'])) % 12 + 12) % 12; return sc.includes(rel); };
 const isRoot = m => ((m - Math.round(S['syn.key'])) % 12 + 12) % 12 === 0;
-function snapNote(m) { if (KB.scale !== 'snap' || inScale(m)) return m; for (let d = 1; d < 7; d++) { if (inScale(m - d)) return m - d; if (inScale(m + d)) return m + d; } return m; }
+function snapNote(m) { if (KB.scale !== 'lock' || inScale(m)) return m; for (let d = 1; d < 7; d++) { if (inScale(m - d)) return m - d; if (inScale(m + d)) return m + d; } return m; }
 const noteLbl = m => NOTE_NAMES[((m % 12) + 12) % 12] + (Math.floor(m / 12) - 1);
 const kbKeys = el('div', 'sy-keys sy-siren');
-kbKeys.innerHTML = '<div class="sy-keys-h"><b>KEYS</b><span>play SIREN without your guitar</span><i class="sp"></i></div><div class="sy-keys-b"></div>';
+kbKeys.innerHTML = '<div class="sy-keys-h"><b>KEYS</b><i class="sp"></i></div><div class="sy-keys-m"><div class="sy-keys-l"></div><div class="sy-keys-b"></div></div>';
 dev.appendChild(kbKeys);
-const kbHead = kbKeys.querySelector('.sy-keys-h'), kbBody = kbKeys.querySelector('.sy-keys-b');
-const kSeg = (opts, get, setv, tip) => { const s = el('div', 'sy-seg small'); if (tip) s.title = tip;
+const kbHead = kbKeys.querySelector('.sy-keys-h'), kbBody = kbKeys.querySelector('.sy-keys-b'), kbLeft = kbKeys.querySelector('.sy-keys-l');
+const kSeg = (opts, get, setv, tip, cap) => { const w = el('div', 'sy-keys-g'); if (cap) w.appendChild(el('span', 'cap', cap)); const s = el('div', 'sy-seg small'); if (tip) w.title = tip;
   s.innerHTML = opts.map(([v, l]) => '<button data-v="' + v + '">' + l + '</button>').join('');
   const draw = () => [...s.children].forEach(b => b.classList.toggle('on', b.dataset.v === String(get())));
-  s.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; setv(b.dataset.v); kbSave(); draw(); buildKb(); drawOct(); }); draw(); s._draw = draw; return s; };
-const viewSeg = kSeg([['piano', 'PIANO'], ['pads', 'PADS']], () => KB.view, v => { KB.view = v; }, 'PIANO: every note · PADS: only notes of the key, so every pad fits');
+  s.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; setv(b.dataset.v); kbSave(); draw(); buildKb(); drawOct(); }); draw(); w.appendChild(s); w._draw = draw; return w; };
+const viewSeg = kSeg([['piano', 'PIANO'], ['pads', 'PADS']], () => KB.view, v => { KB.view = v; }, 'PIANO: every note · PADS: 16 pads, only notes of the key, so every pad fits');
 const octBox = el('div', 'sy-keys-oct', '<button aria-label="Octave down">‹</button><span></span><button aria-label="Octave up">›</button>');
 octBox.title = 'Octave (computer keys: Z and X)';
-const scaleSeg = kSeg([['all', 'ALL NOTES'], ['key', 'IN KEY'], ['snap', 'SNAP']], () => KB.scale, v => { KB.scale = v; }, 'ALL NOTES: as they are · IN KEY: notes outside the key fade · SNAP: notes outside the key play the nearest one in it');
-const velSeg = kSeg([['soft', 'SOFT'], ['hard', 'HARD'], ['height', 'BY HEIGHT']], () => KB.vel, v => { KB.vel = v; }, 'How hard the notes play. BY HEIGHT: lower on the key plays harder, like a real one');
+const keyPill = pill('syn.key', 'KEY', { tip: 'The key SIREN plays in (PADS, SHOW KEY and LOCK follow it)' }), scalePill = pill('syn.scale', 'SCALE', { tip: 'The scale (PADS, SHOW KEY and LOCK follow it)' });
+const scaleSeg = kSeg([['all', 'ALL'], ['key', 'SHOW KEY'], ['lock', 'LOCK']], () => KB.scale, v => { KB.scale = v; },
+  'ALL: every note as it is · SHOW KEY: notes outside the key fade · LOCK: notes outside the key play the nearest one in it (nothing sounds wrong)', 'NOTES');
+const velSeg = kSeg([['soft', 'SOFT'], ['hard', 'HARD'], ['height', 'BY HEIGHT']], () => KB.vel, v => { KB.vel = v; }, 'How hard the notes play. BY HEIGHT: lower on the key plays harder, like a real one', 'VELOCITY');
 const lblChip = el('button', 'sy-chip', 'LABELS'); lblChip.title = 'Note names and computer keys on the keys';
-const holdChip = chip('syn.hold', 'HOLD', 'The last note keeps playing after you let go');
 const kbClose = el('button', 'x', '✕'); kbClose.setAttribute('aria-label', 'Close the keys');
-kbHead.append(viewSeg, octBox, scaleSeg, velSeg, lblChip, holdChip, kbClose);
+kbHead.append(viewSeg, octBox, keyPill, scalePill, scaleSeg, velSeg, lblChip, kbClose);
 const drawOct = () => { octBox.querySelector('span').textContent = KB.view === 'pads' ? noteLbl(padNote(0)) + ' – ' + noteLbl(padNote(15)) : noteLbl(KB.oct) + ' – ' + noteLbl(KB.oct + 36); lblChip.classList.toggle('on', KB.labels); };
 octBox.children[0].onclick = () => shiftOct(-12); octBox.children[2].onclick = () => shiftOct(12);
 lblChip.onclick = () => { KB.labels = !KB.labels; kbSave(); drawOct(); buildKb(); };
 function shiftOct(d) { allOff(); KB.oct = clamp(KB.oct + d, 12, 72); kbSave(); drawOct(); buildKb(); }
 const velFor = (ev, keyEl) => { if (KB.vel === 'soft') return .5; if (KB.vel === 'hard') return 1;
   const r = keyEl.getBoundingClientRect(); return clamp(.3 + .7 * (ev.clientY - r.top) / Math.max(1, r.height), .3, 1); };
-function kbOn(src, m, vel) { m = snapNote(m); const old = kbHeld.get(src); if (old === m) return; if (old != null) releaseKey(old); kbHeld.set(src, m); press(m, 'KEYS', vel); drawKbLit(); }
-function kbOff(src) { const m = kbHeld.get(src); if (m == null) return; kbHeld.delete(src); if (![...kbHeld.values()].includes(m)) releaseKey(m); drawKbLit(); }
-function allOff() { [...kbHeld.keys()].forEach(kbOff); }
-function drawKbLit() { const lit = new Set(kbHeld.values()); kbBody.querySelectorAll('[data-m]').forEach(k => k.classList.toggle('lit', lit.has(+k.dataset.m))); }
+const keyVel = () => KB.vel === 'soft' ? .5 : KB.vel === 'hard' ? 1 : .85;
+/* notes: one place decides what sounds (the synth plays one note, or one chord, at a time) */
+const heldElsewhere = (m, except) => [...kbHeld.entries()].some(([k, n]) => n === m && k !== except);
+function letGo(m) { if (heldElsewhere(m)) return; if (susDown) { kbSus.add(m); return; } releaseKey(m); }
+function freeSustained(except) { [...kbSus].forEach(n => { if (n !== except && !heldElsewhere(n)) releaseKey(n); }); kbSus.clear(); }
+function kbOn(src, m, vel, moving) {
+  m = snapNote(m); const old = kbHeld.get(src); if (old === m) return;
+  const slide = on('syn.legato') && (moving || old != null || kbHeld.size > (kbHeld.has(src) ? 1 : 0));
+  freeSustained(m);
+  kbHeld.set(src, m);
+  if (slide) { press(m, 'KEYS', vel, true); if (old != null && old !== m) letGo(old); }        // SLIDE: the new note first, so it glides
+  else { if (old != null) { if (!heldElsewhere(old, src)) releaseKey(old); } press(m, 'KEYS', vel); }
+  drawKbLit();
+}
+function kbOff(src) { const m = kbHeld.get(src); if (m == null) return; kbHeld.delete(src); letGo(m); drawKbLit(); }
+function allOff() { susDown = false; susBtn.classList.remove('on'); [...kbHeld.keys()].forEach(k => { const m = kbHeld.get(k); kbHeld.delete(k); if (!heldElsewhere(m)) releaseKey(m); }); freeSustained(); drawKbLit(); }
+function setSustain(down) { if (susDown === !!down) return; susDown = !!down; susBtn.classList.toggle('on', susDown); if (!susDown) freeSustained(); drawKbLit(); }
+function setLatch(v, quiet) { latch = !!v; latchBtn.classList.toggle('on', latch); if (!latch && kbHeld.has('latch')) kbOff('latch'); if (!quiet) drawKbLit(); }
+function tapLatch(m, vel) { m = snapNote(m); if (kbHeld.get('latch') === m) kbOff('latch'); else kbOn('latch', m, vel); }
+function drawKbLit() {
+  const lit = new Set(kbHeld.values()), lat = kbHeld.get('latch'); if (typeof drawTip === 'function') drawTip();
+  kbBody.querySelectorAll('[data-m]').forEach(k => { const m = +k.dataset.m; k.classList.toggle('lit', lit.has(m)); k.classList.toggle('sus', !lit.has(m) && kbSus.has(m)); k.classList.toggle('lat', m === lat); });
+}
 function buildKb() {
-  allOff(); kbBody.replaceChildren(); kbBody.className = 'sy-keys-b ' + KB.view;
+  [...kbHeld.keys()].filter(k => k !== 'latch').forEach(k => kbOff(k));
+  kbBody.replaceChildren(); kbBody.className = 'sy-keys-b ' + KB.view;
   if (KB.view === 'pads') {
     const root = KB.oct + 12 + Math.round(S['syn.key']), sc = SCALES[Math.round(S['syn.scale'])];
     for (let i = 0; i < 16; i++) {
@@ -1233,11 +1290,64 @@ function buildKb() {
   }
   drawKbLit();
 }
-kbBody.addEventListener('pointerdown', e => { const k = e.target.closest('[data-m]'); if (!k || e.button !== 0) return; e.preventDefault(); kbBody.setPointerCapture(e.pointerId); kbOn('ptr:' + e.pointerId, +k.dataset.m, velFor(e, k)); });
+kbBody.addEventListener('pointerdown', e => { const k = e.target.closest('[data-m]'); if (!k || e.button !== 0) return; e.preventDefault();
+  if (latch) { tapLatch(+k.dataset.m, velFor(e, k)); return; }
+  kbBody.setPointerCapture(e.pointerId); kbOn('ptr:' + e.pointerId, +k.dataset.m, velFor(e, k)); });
 kbBody.addEventListener('pointermove', e => { if (!kbHeld.has('ptr:' + e.pointerId)) return; const t = document.elementFromPoint(e.clientX, e.clientY), k = t && t.closest && t.closest('[data-m]');
-  if (k && kbBody.contains(k) && +k.dataset.m !== kbHeld.get('ptr:' + e.pointerId)) kbOn('ptr:' + e.pointerId, +k.dataset.m, velFor(e, k)); });
+  if (k && kbBody.contains(k) && snapNote(+k.dataset.m) !== kbHeld.get('ptr:' + e.pointerId)) kbOn('ptr:' + e.pointerId, +k.dataset.m, velFor(e, k), true); });
 ['pointerup', 'pointercancel'].forEach(t => kbBody.addEventListener(t, e => kbOff('ptr:' + e.pointerId)));
-const kbOpen = open => { kbKeys.classList.toggle('show', open); kbBtn.classList.toggle('on', open); if (open) { prOpen(false); pop.classList.remove('show'); drawOct(); buildKb(); } else allOff(); };
+
+/* the left side: wheels, glide / slide, sustain, latch */
+let bendV = 0, modV = 0, bendRaf = 0;
+const sendBend = () => { const st = bendV * KB.range; if (inPlugin()) { if (window.obsSynth.bendOut) window.obsSynth.bendOut(st); } else if (ac && audio.bend) audio.bend.offset.setTargetAtTime(st * 100, ac.currentTime, .008); };
+const sendMod = () => { if (inPlugin()) { if (window.obsSynth.modOut) window.obsSynth.modOut(modV); } else if (ac && audio.vib) audio.vib.gain.setTargetAtTime(modV * 60, ac.currentTime, .02); };
+function wheel(name, tip, spring) {
+  const w = el('div', 'sy-whl' + (spring ? ' spring' : ''), '<span class="cap">' + name + '</span><div class="slot"><div class="w"><i class="mk"></i></div></div><span class="v"></span>');
+  w.title = tip; const slot = w.querySelector('.slot'), ww = w.querySelector('.w'), mk = w.querySelector('.mk'), val = w.querySelector('.v');
+  w._draw = v => { const y = spring ? 50 - v * 42 : 92 - v * 84; mk.style.top = y + '%'; ww.style.backgroundPositionY = (-v * (spring ? 60 : 120)).toFixed(1) + 'px'; w.classList.toggle('moved', Math.abs(v) > .005); };
+  w._slot = slot; w._val = val; return w;
+}
+const bendW = wheel('BEND', 'Pitch bend: drag up or down, it springs back when you let go (computer keys: ↑ ↓)', true);
+const modW = wheel('MOD', 'Mod wheel: vibrato, stays where you leave it (double-click: off)', false);
+const drawBend = () => { bendW._draw(bendV); const st = bendV * KB.range; bendW._val.textContent = (Math.abs(st) < .05 ? '0' : sg(st, 1)) + ' st'; };
+const drawMod = () => { modW._draw(modV); modW._val.textContent = Math.round(modV * 100) + '%'; };
+function setBend(v, spring) {
+  cancelAnimationFrame(bendRaf); bendV = clamp(v, -1, 1); drawBend(); sendBend();
+  if (spring) { const t0 = performance.now(), from = bendV; const step = () => { const u = Math.min(1, (performance.now() - t0) / 140); bendV = from * (1 - u) * (1 - u); drawBend(); sendBend(); if (u < 1) bendRaf = requestAnimationFrame(step); }; bendRaf = requestAnimationFrame(step); }
+}
+const setMod = v => { modV = clamp(v, 0, 1); drawMod(); sendMod(); };
+const dragWheel = (w, get, apply, done) => {
+  let d = null;
+  w._slot.addEventListener('pointerdown', e => { if (e.button !== 0) return; e.preventDefault(); w._slot.setPointerCapture(e.pointerId); d = { y: e.clientY, v: get() }; w.classList.add('drag'); });
+  w._slot.addEventListener('pointermove', e => { if (!d) return; const sc = (document.getElementById('app') && document.getElementById('app').getBoundingClientRect().width / 1376) || 1; apply(d.v + (d.y - e.clientY) / sc / 70); });
+  const end = () => { if (!d) return; d = null; w.classList.remove('drag'); if (done) done(); };
+  w._slot.addEventListener('pointerup', end); w._slot.addEventListener('pointercancel', end);
+};
+dragWheel(bendW, () => bendV, v => setBend(v), () => setBend(bendV, true));
+dragWheel(modW, () => modV, v => setMod(v));
+modW._slot.addEventListener('dblclick', () => setMod(0));
+modW._slot.addEventListener('wheel', e => { e.preventDefault(); setMod(modV + (e.deltaY < 0 ? .05 : -.05)); }, { passive: false });
+const rangeSeg = kSeg([['2', '±2'], ['7', '±7'], ['12', '±12']], () => String(KB.range), v => { KB.range = +v; drawBend(); }, 'How far the bend wheel goes: a whole tone, a fifth or an octave');
+rangeSeg.classList.add('range');
+const wheels = el('div', 'sy-keys-wh'); wheels.append(bendW, modW);
+const whCol = el('div', 'sy-keys-wc'); whCol.append(wheels, rangeSeg);
+const glideK = knob('syn.glide', { label: 'GLIDE', size: 34, tip: 'How long a slide between notes takes' });
+const slideChip = chip('syn.legato', 'SLIDE', 'Notes glide into each other: drag across the keys, or hold one key and press the next');
+const kbBtn2 = (cls, label, sub, tip) => { const b = el('button', 'sy-kb2 ' + cls, '<b>' + label + '</b><small>' + sub + '</small>'); b.title = tip; return b; };
+const susBtn = kbBtn2('sus', 'SUSTAIN', 'hold SPACE', 'Like a piano pedal: while it\'s down, notes keep ringing after you let go (until the next note)');
+const latchBtn = kbBtn2('latch', 'LATCH', 'keys stay on', 'Press a key and it stays on; press it again to stop, or another key to move');
+susBtn.addEventListener('pointerdown', e => { e.preventDefault(); setSustain(true); });
+['pointerup', 'pointerleave', 'pointercancel'].forEach(t => susBtn.addEventListener(t, () => setSustain(false)));
+latchBtn.addEventListener('click', () => setLatch(!latch));
+const kbTip = el('div', 'sy-keys-tip');
+const drawTip = () => { const lat = kbHeld.get('latch'), ring = [...kbSus].map(noteLbl);
+  kbTip.innerHTML = lat != null ? '<b>' + noteLbl(lat) + '</b> stays on · press it again to stop' : latch ? 'Press a key: it stays on' : susDown ? (ring.length ? 'Ringing: <b>' + ring.join(' ') + '</b>' : 'Sustain is down') : 'SPACE sustain · ↑ ↓ bend · Z X octave'; };
+const playCol = el('div', 'sy-keys-pc'); playCol.append(row([glideK, slideChip], 'gap: 12px; align-items: center'), susBtn, latchBtn, kbTip);
+kbLeft.append(whCol, playCol);
+drawBend(); drawMod(); drawTip();
+
+const kbOpen = open => { kbKeys.classList.toggle('show', open); kbBtn.classList.toggle('on', open); if (open) { prOpen(false); pop.classList.remove('show'); drawOct(); buildKb(); }
+  else { allOff(); setLatch(false); setBend(0); setMod(0); } };
 kbClose.onclick = () => kbOpen(false);
 kbBtn.addEventListener('click', e => { e.stopPropagation(); kbOpen(!kbKeys.classList.contains('show')); });
 onChange(id => { if (/^syn\.(key|scale)$/.test(id) && kbKeys.classList.contains('show')) { buildKb(); drawOct(); } });
@@ -1268,6 +1378,9 @@ function audio() {
   spaceIn.connect(lp); lp.connect(dl); dl.connect(fbl); fbl.connect(dr); dr.connect(fbr); fbr.connect(dl);
   dl.connect(m, 0, 0); dr.connect(m, 0, 1); m.connect(spaceWet); spaceWet.connect(comp);
   audio.dl = dl; audio.dr = dr;
+  // the KEYS' wheels: a pitch offset (cents) and a vibrato every oscillator listens to
+  audio.bend = ac.createConstantSource(); audio.bend.offset.value = 0; audio.bend.start();
+  const vib = ac.createOscillator(); vib.frequency.value = 5.5; audio.vib = ac.createGain(); audio.vib.gain.value = 0; vib.connect(audio.vib); vib.start();
   outNode.connect(comp); outNode.connect(spaceIn); comp.connect(ac.destination);
   return ac;
 }
@@ -1309,6 +1422,7 @@ function makeVoice(notes) {
       const side = w === 4 && i !== 3 ? (.3 + S['syn.' + x + '.shape'] / 100 * .7) : 1;
       g.gain.value = lvl * lvl * side / Math.sqrt(cnt) * .32 / Math.sqrt(nNotes);
       o.connect(g); g.connect(p); p.connect(v.mix); o.start();
+      if (audio.bend) { audio.bend.connect(o.detune); audio.vib.connect(o.detune); }
       v.oscs.push({ o, ni, semi: S['syn.' + x + '.pitch'] }); v.stop.push(o);
     }
   };
@@ -1446,12 +1560,12 @@ function startArp() {
   tick();
 }
 function stopArp() { if (!arp) return; clearTimeout(arp.timer); arp = null; live.step = -1; }
-function press(m, src, vel = .9) {
+function press(m, src, vel = .9, slide = false) {
   if (!powered && !inPlugin()) return;
   if (inPlugin()) { held = m; if (window.obsSynth.noteOut) window.obsSynth.noteOut(m, true, vel); return; }
   srcName = src || 'KEYS'; held = m;
   if (on('syn.arp.on')) { live.note = m; live.src = srcName; startArp(); }
-  else noteOn(chordNotes(m), vel, undefined, on('syn.legato'));
+  else noteOn(chordNotes(m), vel, undefined, slide || on('syn.legato'));
 }
 function releaseKey(m) {
   if (inPlugin()) { if (held === m) held = null; if (window.obsSynth.noteOut) window.obsSynth.noteOut(m, false); return; }
@@ -1460,15 +1574,21 @@ function releaseKey(m) {
   if (on('syn.arp.on')) { stopArp(); live.note = null; } else { noteOff(); live.note = null; }
 }
 onChange(id => { if (inPlugin() || !ac) return; if (id === 'syn.arp.on') { if (!on(id)) { stopArp(); if (held == null) noteOff(); } else if (held != null) { noteOff(); startArp(); } } });
-addEventListener('keydown', e => { if (SP.style.display === 'none' || dev.classList.contains('page-aether') || e.repeat || e.ctrlKey || e.metaKey || e.altKey || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+const kbKeysOn = () => kbKeys.classList.contains('show');
+addEventListener('keydown', e => { if (SP.style.display === 'none' || dev.classList.contains('page-aether') || e.ctrlKey || e.metaKey || e.altKey || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
   const c = e.key.toLowerCase();
+  if (kbKeysOn() && c === ' ') { e.preventDefault(); if (!e.repeat) setSustain(true); return; }
+  if (kbKeysOn() && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) { e.preventDefault(); if (!e.repeat) setBend(e.key === 'ArrowUp' ? 1 : -1); return; }
+  if (e.repeat) return;
   if (c === 'z' || c === 'x') { e.preventDefault(); shiftOct(c === 'z' ? -12 : 12); return; }
-  const vel = KB.vel === 'soft' ? .5 : KB.vel === 'hard' ? 1 : .85;
-  if (KB.view === 'pads') { const i = PADKEYS.indexOf(c); if (i < 0) return; e.preventDefault(); kbOn('key:' + c, padNote(i), vel); return; }
-  const o = KEYMAP[c]; if (o == null) return; e.preventDefault();
-  kbOn('key:' + c, KB.oct + 12 + o, vel); });
-addEventListener('keyup', e => { const c = e.key.toLowerCase(); if (KEYMAP[c] == null && !PADKEYS.includes(c)) return; kbOff('key:' + c); });
-addEventListener('blur', () => allOff());
+  const m = KB.view === 'pads' ? (PADKEYS.includes(c) ? padNote(PADKEYS.indexOf(c)) : null) : (KEYMAP[c] != null ? KB.oct + 12 + KEYMAP[c] : null);
+  if (m == null) return; e.preventDefault();
+  if (latch && kbKeysOn()) tapLatch(m, keyVel()); else kbOn('key:' + c, m, keyVel()); });
+addEventListener('keyup', e => { const c = e.key.toLowerCase();
+  if (c === ' ') { if (susDown || kbKeysOn()) e.preventDefault(); setSustain(false); return; }
+  if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { if (bendV !== 0) setBend(bendV, true); return; }
+  if (KEYMAP[c] == null && !PADKEYS.includes(c)) return; kbOff('key:' + c); });
+addEventListener('blur', () => { [...kbHeld.keys()].filter(k => k !== 'latch').forEach(k => kbOff(k)); setSustain(false); if (bendV) setBend(bendV, true); });
 /* browser: show what the preview plays */
 setInterval(() => { if (inPlugin() || window.__obsSynthLive) return; showNote(live.note, live.src, live.note != null ? .7 : 0); showStep(on('syn.arp.on') ? live.step : -1); }, 50);
 

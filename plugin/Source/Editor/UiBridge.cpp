@@ -213,6 +213,8 @@ void UiBridge::buildCommands()
     // synth: a note from the UI (AUDITION, computer keys) and the arpeggiator steps
     c["synthNote"]    = [this] (const juce::Array<juce::var>& a, Completion d) { proc.engine().uiSynthNote (juce::jlimit (0, 127, argInt (a, 0, 40)), a.size() > 1 && (bool) a[1],
                                                                                          a.size() > 2 ? juce::jlimit (0.05f, 1.f, (float) (double) a[2]) : 0.85f); d (true); };
+    c["synthBend"]    = [this] (const juce::Array<juce::var>& a, Completion d) { proc.engine().uiSynthBend (a.size() > 0 ? (float) (double) a[0] : 0.f); d (true); };
+    c["synthMod"]     = [this] (const juce::Array<juce::var>& a, Completion d) { proc.engine().uiSynthMod (a.size() > 0 ? (float) (double) a[0] : 0.f); d (true); };
     c["setSynthSteps"]= [this] (const juce::Array<juce::var>& a, Completion d)
     {
         proc.rig().setSynthSteps (a.size() > 0 ? a[0] : juce::var());

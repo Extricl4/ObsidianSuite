@@ -234,6 +234,9 @@ function setupBindings() {
       if (isOn && (vals['synth.on'] || 0) < .5) { power(true); say('Synth switched on'); }
       call('synthNote', note, !!isOn, vel == null ? .85 : +vel);
     };
+    // the KEYS' wheels: pitch bend (semitones) and mod wheel (vibrato 0..1)
+    S.bendOut = st => call('synthBend', +st || 0);
+    S.modOut = v => call('synthMod', +v || 0);
     // show "the synth is off" on its page whenever the section is bypassed
     const showPower = () => { if (S.setPower) S.setPower((vals['synth.on'] || 0) >= .5); };
     showPower(); setInterval(showPower, 300);

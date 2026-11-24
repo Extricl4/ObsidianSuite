@@ -117,9 +117,13 @@ No guitar around? **KEYS** (bottom left of SIREN) opens a keyboard over the scre
 
 * **PIANO**: three octaves (‹ › or Z / X move them). Lower on a key plays harder (**BY HEIGHT**), or pick SOFT / HARD.
 * **PADS**: 16 pads, every one a note of the key and scale (the root is outlined), so nothing sounds wrong.
-* **ALL NOTES / IN KEY / SNAP**: IN KEY fades the notes outside the key, SNAP plays the nearest one in it.
+* **KEY / SCALE** right on the bar; **NOTES**: ALL, SHOW KEY (notes outside the key fade), **LOCK** (they play the nearest one in it).
+* On the left, like a synth keyboard: a **BEND** wheel that springs back (±2, ±7 or ±12 st; ↑ ↓ on the computer),
+  a **MOD** wheel (vibrato, stays put), **GLIDE** and **SLIDE** (drag across the keys or overlap them: the notes glide),
+  **SUSTAIN** (a pedal: hold SPACE or the button, notes ring after you let go) and **LATCH** (a key stays on until
+  you press it again). A line under them says what is held.
 * Computer keys: A W S E D F T G Y H U J K O L P ; like Ableton (A = C), or in PADS A–K the bottom row, Q–I the top.
-* HOLD keeps the last note going. The keyboard remembers its view and octave.
+* MIDI keyboards: the pitch wheel (±2 st) and the mod wheel (CC 1) play SIREN too.
 
 * **Play**: threshold, sensitivity, glide, dynamics, LEGATO, **HOLD** (the last note drones on),
   **CHORD** (one note plays octaves, power chord, sus, or a triad / 7th / 9th in your key and scale)
