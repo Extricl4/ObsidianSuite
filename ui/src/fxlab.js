@@ -790,7 +790,7 @@ window.obsFxLab = {
   read() { const o = {}; IDS.forEach(id => { o[id] = toN(id); }); return o; },
   write(vals) { for (const id in vals) if (P[id] && isFx(id)) set(id, toV(id, vals[id]), 'plugin'); },
   /* the engine's meters: { pos 0..1, step 0..15, type -1.., ev count, bpm } */
-  live(m) { if (!m) return; lastLive = performance.now(); if (m.pos != null) shownPos = +m.pos; if (m.step != null) liveStep = on('glt.on') ? +m.step : -1; if (m.type != null) liveType = on('glt.on') ? +m.type : -1; if (m.ev != null) liveEv = +m.ev; if (m.bpm > 20) bpm = +m.bpm; },
+  live(m) { if (!m || (m.step == null && m.pos == null)) return; lastLive = performance.now(); if (m.pos != null) shownPos = +m.pos; if (m.step != null) liveStep = on('glt.on') ? +m.step : -1; if (m.type != null) liveType = on('glt.on') ? +m.type : -1; if (m.ev != null) liveEv = +m.ev; if (m.bpm > 20) bpm = +m.bpm; },
   setSection(isOn) { sfxOn = !!isOn; dev.classList.toggle('sfx-off', !sfxOn); },
   paramOut: null,       // set by the bridge: (id, 0..1) -> the engine at once (TRIGGER, HOLD)
   sectionOut: null,     // set by the bridge: turns the SFX tab on
