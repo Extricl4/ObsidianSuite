@@ -955,6 +955,11 @@ int runSelfTest (const juce::StringArray& args)
         e.uiSynthNote (64, false);
         render (p, SR, BLOCK, 1.0, [&] (int) { return 0.f; });
         r.check (e.synthActivity() < 0.01f, "the UI's AUDITION note off releases it");
+        // the on-screen KEYS send how hard a key was hit
+        auto keyAct = [&] (float vel) { e.uiSynthNote (57, true, vel); float m = 0; render (p, SR, BLOCK, 0.3, [&] (int) { m = juce::jmax (m, e.synthActivity()); return 0.f; });
+                                        e.uiSynthNote (57, false); render (p, SR, BLOCK, 1.0, [&] (int) { return 0.f; }); return m; };
+        const float soft = keyAct (0.3f), hard = keyAct (1.0f);
+        r.check (soft > 0.02f && hard > soft * 2.f && e.synthActivity() < 0.01f, juce::String::formatted ("on-screen KEYS: a soft key plays softer than a hard one (%.2f vs %.2f) and lets go", soft, hard));
         // stuck notes: MIDI from the DAW, through processBlock like a host sends it
         auto midiBlock = [&] (std::function<void (juce::MidiBuffer&)> fill) { juce::AudioBuffer<float> b (2, BLOCK); b.clear(); juce::MidiBuffer m; fill (m); p.processBlock (b, m); };
         midiBlock ([] (juce::MidiBuffer& m) { m.addEvent (juce::MidiMessage::noteOn (1, 76, 0.9f), 0); });

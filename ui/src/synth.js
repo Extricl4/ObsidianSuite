@@ -321,9 +321,9 @@ css.textContent = `
 .sy-badge .pn i { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--pc); box-shadow: 0 0 8px var(--pc); }
 .sy-badge .pn u { overflow: hidden; text-overflow: ellipsis; text-decoration: none; }
 .sy-badge .pn em { flex: none; font-style: normal; font-size: 8px; letter-spacing: .2em; color: var(--pc); opacity: .85; }
-.sy-wave { position: absolute; top: 18px; width: 150px; height: 24px; opacity: .45; color: var(--accent); }
+.sy-wave { position: absolute; top: 18px; width: 92px; height: 24px; opacity: .45; color: var(--accent); }
 .sy-wave.l { right: calc(50% + 136px); } .sy-wave.r { left: calc(50% + 136px); transform: scaleX(-1); }
-.sy-prwrap { display: flex; align-items: center; gap: 12px; }
+.sy-prwrap { display: flex; align-items: center; gap: 12px; } .sy-prwrap .sy-kbbtn { margin-left: 10px; }
 .sy-prbtn .tx small { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--accent); opacity: .95; font-size: 11px; font-weight: 600; letter-spacing: .04em; }
 .sy-prnav { display: flex; gap: 4px; }
 .sy-prnav button { width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgba(255,255,255,.12); background: none; color: #8d8d93; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; }
@@ -366,6 +366,44 @@ css.textContent = `
 .sy-pr.hor.on { box-shadow: inset 0 0 0 1px #d01c26, 0 0 18px rgba(175,15,25,.6); } .sy-pr.hor.on b { color: #ff5a61; }
 .sy-badge .pn.hor i { background: radial-gradient(circle at 35% 35%, #ff4a4f, #8a0b12 60%, #000); box-shadow: 0 0 9px #c41a24; }
 .sy-badge .pn.hor em { color: #e0303a; }
+/* KEYS: a keyboard over the screen */
+.sy-keys { position: absolute; z-index: 15; left: 22px; right: 22px; top: 158px; height: 316px; border-radius: 16px; display: none; flex-direction: column; box-sizing: border-box; padding: 10px 14px 14px;
+  background: radial-gradient(120% 90% at 50% 0%, #141418, #09090b 70%); box-shadow: inset 0 0 0 1px rgba(255,255,255,.07), inset 0 1px 0 rgba(255,255,255,.1), 0 18px 40px rgba(0,0,0,.75); }
+.sy-keys.show { display: flex; }
+.sy-keys-h { display: flex; align-items: center; gap: 12px; height: 28px; flex: none; margin-bottom: 10px; }
+.sy-keys-h b { font-size: 10.5px; font-weight: 600; letter-spacing: .24em; color: #e9e6df; }
+.sy-keys-h > span { font-size: 9.5px; color: #6f6f76; letter-spacing: .04em; white-space: nowrap; }
+.sy-keys-h .sp { flex: 1; }
+.sy-keys-h .sy-seg { width: auto; } .sy-keys-h .sy-seg button { padding: 0 9px; }
+.sy-keys-h .x { width: 26px; height: 26px; border-radius: 8px; border: 1px solid rgba(255,255,255,.1); background: none; color: #a3a3a8; cursor: pointer; font: inherit; font-size: 13px; padding: 0; flex: none; }
+.sy-keys-h .x:hover { color: #e9e6df; border-color: rgba(255,255,255,.22); }
+.sy-keys-oct { display: flex; align-items: center; height: 25px; border-radius: 8px; background: #0e0e10; box-shadow: inset 0 0 0 1px rgba(255,255,255,.05); flex: none; }
+.sy-keys-oct button { width: 24px; height: 25px; border: none; background: none; color: #a3a3a8; font: inherit; font-size: 15px; cursor: pointer; padding: 0; }
+.sy-keys-oct button:hover { color: var(--accent); }
+.sy-keys-oct span { min-width: 64px; text-align: center; font-size: 9.5px; font-weight: 600; letter-spacing: .08em; color: #e9e6df; font-variant-numeric: tabular-nums; }
+.sy-keys-b { position: relative; flex: 1; min-height: 0; touch-action: none; user-select: none; }
+.sy-pk { position: absolute; top: 0; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; padding-bottom: 10px; }
+.sy-pk.w { bottom: 0; border-radius: 0 0 8px 8px; z-index: 1; background: linear-gradient(#d9d6cf, #f1eee7 18%, #e6e3dc 92%, #bdbab3); box-shadow: inset -1px 0 0 rgba(0,0,0,.25), inset 0 -4px 0 rgba(0,0,0,.18), 0 2px 3px rgba(0,0,0,.6); }
+.sy-pk.b { height: 60%; border-radius: 0 0 6px 6px; z-index: 2; background: linear-gradient(#2a2a2e, #141416 80%, #0b0b0c); box-shadow: inset 0 -5px 0 rgba(255,255,255,.06), inset 1px 0 0 rgba(255,255,255,.08), 0 4px 6px rgba(0,0,0,.8); padding-bottom: 8px; }
+.sy-pk em { font-style: normal; font-size: 8.5px; font-weight: 600; letter-spacing: .06em; color: #8d8a83; }
+.sy-pk.b em { color: #6f6f76; }
+.sy-pk u { text-decoration: none; font-size: 9px; font-weight: 600; letter-spacing: .06em; color: #55534e; }
+.sy-pk.root u { color: #111; } .sy-pk.w.root::after { content: ''; position: absolute; top: 8px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+.sy-pk.ink.w::before { content: ''; position: absolute; top: 20px; width: 4px; height: 4px; border-radius: 50%; background: #8d8a83; }
+.sy-pk.w.off { background: linear-gradient(#8f8c86, #a19e97 18%, #97948d 92%, #77746e); }
+.sy-pk.b.off { background: linear-gradient(#1a1a1c, #0c0c0d); }
+.sy-pk.w.lit { background: linear-gradient(#bff3ec, #6fe0d3 70%, #3fd0c0); box-shadow: inset 0 -3px 0 rgba(0,0,0,.2), 0 0 22px rgba(63,208,192,.55); transform: translateY(1px); }
+.sy-pk.b.lit { background: linear-gradient(#1d6f66, #3fd0c0); box-shadow: 0 0 16px rgba(63,208,192,.8); }
+.sy-pk.lit u, .sy-pk.lit em { color: #06302b; }
+.sy-keys-b.pads { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.sy-pad { border: none; border-radius: 12px; cursor: pointer; font: inherit; color: #e9e6df; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.015)), #121215; box-shadow: inset 0 0 0 1px rgba(255,255,255,.08), inset 0 1px 0 rgba(255,255,255,.1), 0 4px 10px rgba(0,0,0,.6); transition: transform .05s; }
+.sy-pad b { font-size: 16px; font-weight: 600; letter-spacing: .04em; } .sy-pad small { font-size: 8px; letter-spacing: .18em; color: #6f6f76; }
+.sy-pad.root { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 55%, transparent), inset 0 1px 0 rgba(255,255,255,.1), 0 4px 10px rgba(0,0,0,.6); } .sy-pad.root small { color: var(--accent); }
+.sy-pad:hover { box-shadow: inset 0 0 0 1px rgba(255,255,255,.2), 0 4px 10px rgba(0,0,0,.6); }
+.sy-pad.lit { background: linear-gradient(rgba(63,208,192,.5), rgba(63,208,192,.18)); box-shadow: inset 0 0 0 1px #3fd0c0, 0 0 24px rgba(63,208,192,.45); transform: translateY(1px); }
+.sy-pad em { font-style: normal; font-size: 8.5px; font-weight: 600; color: #55555b; letter-spacing: .1em; }
+.sy-kbbtn.on .round { color: var(--accent); box-shadow: 0 0 0 2px var(--accent), 0 0 0 3px #232326, 0 0 18px var(--accent), inset 0 1px 1px rgba(255,255,255,.25); }
 .sy-btn { display: flex; align-items: center; gap: 12px; cursor: pointer; border: none; background: none; padding: 0; font: inherit; color: inherit; }
 .sy-btn .round { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #e9e6df;
   background: radial-gradient(circle at 38% 30%, #4a4a50, #1a1a1d 62%, #0c0c0d); box-shadow: 0 0 0 2px #8f8e89, 0 0 0 3px #232326, 0 6px 12px rgba(0,0,0,.8), inset 0 1px 1px rgba(255,255,255,.25); transition: box-shadow .15s, color .15s; }
@@ -843,7 +881,9 @@ const bot = el('div', 'sy-bot sy-siren'); dev.appendChild(bot);
 const prBtn = el('button', 'sy-btn sy-prbtn', '<span class="round">' + IC.list + '</span><span class="tx"><b>PRESETS</b><small class="sy-prname">Init</small></span>');
 prBtn.title = 'Browse the synth sounds';
 const prNav = el('div', 'sy-prnav', '<button aria-label="Previous synth preset">' + IC.prev + '</button><button aria-label="Next synth preset">' + IC.next + '</button>');
-const prWrap = el('div', 'sy-prwrap'); prWrap.append(prBtn, prNav);
+const kbBtn = el('button', 'sy-btn sy-kbbtn', '<span class="round"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M7.2 5v8.5M12 5v8.5M16.8 5v8.5" stroke-width="1.6"/><path d="M7.2 19v-5.5M12 19v-5.5M16.8 19v-5.5" stroke-width="1.2" opacity=".6"/></svg></span><span class="tx"><b>KEYS</b><small>no guitar needed</small></span>');
+kbBtn.title = 'Play SIREN on the screen or the computer keys (when your guitar is not around)';
+const prWrap = el('div', 'sy-prwrap'); prWrap.append(prBtn, prNav, kbBtn);
 const waveSvg = '<svg viewBox="0 0 380 24" preserveAspectRatio="none"><path d="' + Array.from({ length: 77 }, (_, i) => (i ? 'L' : 'M') + (i * 5) + ' ' + (12 + Math.sin(i * .42) * 9 * Math.pow(i / 76, 1.6)).toFixed(1)).join(' ') + '" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>';
 const badge = el('div', 'sy-badge', '<b>SIREN</b><div class="pn" title="The loaded synth preset"><i></i><u>INIT</u><em></em></div>');
 const wl = el('div', 'sy-wave l', waveSvg), wr = el('div', 'sy-wave r', waveSvg);
@@ -1112,7 +1152,7 @@ function drawPrList() {
 }
 prCats.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; prCat = b.dataset.c; drawPrList(); prList.scrollTop = 0; });
 prList.addEventListener('click', e => { const b = e.target.closest('.sy-pr'); if (b) loadPreset(+b.dataset.i); });
-const prOpen = open => { prs.classList.toggle('show', open); prBtn.classList.toggle('on', open); if (open) { pop.classList.remove('show'); drawPrList(); const o = prList.querySelector('.on'); if (o) o.scrollIntoView({ block: 'nearest' }); } };
+const prOpen = open => { prs.classList.toggle('show', open); prBtn.classList.toggle('on', open); if (open) { pop.classList.remove('show'); if (typeof kbOpen === 'function' && kbKeys.classList.contains('show')) kbOpen(false); drawPrList(); const o = prList.querySelector('.on'); if (o) o.scrollIntoView({ block: 'nearest' }); } };
 prBtn.addEventListener('click', e => { e.stopPropagation(); prOpen(!prs.classList.contains('show')); });
 prs.querySelector('.x').addEventListener('click', () => prOpen(false));
 document.addEventListener('pointerdown', e => { if (prs.classList.contains('show') && !prs.contains(e.target) && !prWrap.contains(e.target)) prOpen(false); });
@@ -1121,6 +1161,87 @@ const stepPreset = d => { if (!PRESETS.length) return; const list = PRESETS.map(
 prNav.children[0].addEventListener('click', () => stepPreset(-1));
 prNav.children[1].addEventListener('click', () => stepPreset(1));
 drawPrList();
+
+/* ============================================================ KEYS: play SIREN without a guitar */
+/* An on-screen keyboard over the screen (the sound knobs above stay in reach), or 16 pads that only
+   play notes of the key. Mouse, touch, or the computer keys (A W S E D F T G Y H U J K O L P ;  Z X: octave). */
+const KB = { oct: 36, view: 'piano', scale: 'all', vel: 'height', labels: true };
+try { Object.assign(KB, JSON.parse(localStorage.getItem('obs.sirenKeys') || '{}')); } catch (_) {}
+const kbSave = () => { try { localStorage.setItem('obs.sirenKeys', JSON.stringify(KB)); } catch (_) {} };
+KB.oct = clamp(Math.round(KB.oct / 12) * 12, 12, 72);
+const KEYMAP = { a: 0, w: 1, s: 2, e: 3, d: 4, f: 5, t: 6, g: 7, y: 8, h: 9, u: 10, j: 11, k: 12, o: 13, l: 14, p: 15, ';': 16 };
+const KEYCHAR = Object.fromEntries(Object.entries(KEYMAP).map(([c, o]) => [o, c.toUpperCase()]));
+const PADKEYS = ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i'];          // in PADS: bottom row, then top row
+const padNote = i => { const sc = SCALES[Math.round(S['syn.scale'])]; return scaleTone(KB.oct + 12 + Math.round(S['syn.key']), i, sc); };
+const kbHeld = new Map();                    // source ('ptr:<id>' / 'key:<char>') -> midi note sounding
+const isBlackKey = m => [1, 3, 6, 8, 10].includes(((m % 12) + 12) % 12);
+const inScale = m => { const sc = SCALES[Math.round(S['syn.scale'])], rel = ((m - Math.round(S['syn.key'])) % 12 + 12) % 12; return sc.includes(rel); };
+const isRoot = m => ((m - Math.round(S['syn.key'])) % 12 + 12) % 12 === 0;
+function snapNote(m) { if (KB.scale !== 'snap' || inScale(m)) return m; for (let d = 1; d < 7; d++) { if (inScale(m - d)) return m - d; if (inScale(m + d)) return m + d; } return m; }
+const noteLbl = m => NOTE_NAMES[((m % 12) + 12) % 12] + (Math.floor(m / 12) - 1);
+const kbKeys = el('div', 'sy-keys sy-siren');
+kbKeys.innerHTML = '<div class="sy-keys-h"><b>KEYS</b><span>play SIREN without your guitar</span><i class="sp"></i></div><div class="sy-keys-b"></div>';
+dev.appendChild(kbKeys);
+const kbHead = kbKeys.querySelector('.sy-keys-h'), kbBody = kbKeys.querySelector('.sy-keys-b');
+const kSeg = (opts, get, setv, tip) => { const s = el('div', 'sy-seg small'); if (tip) s.title = tip;
+  s.innerHTML = opts.map(([v, l]) => '<button data-v="' + v + '">' + l + '</button>').join('');
+  const draw = () => [...s.children].forEach(b => b.classList.toggle('on', b.dataset.v === String(get())));
+  s.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; setv(b.dataset.v); kbSave(); draw(); buildKb(); drawOct(); }); draw(); s._draw = draw; return s; };
+const viewSeg = kSeg([['piano', 'PIANO'], ['pads', 'PADS']], () => KB.view, v => { KB.view = v; }, 'PIANO: every note · PADS: only notes of the key, so every pad fits');
+const octBox = el('div', 'sy-keys-oct', '<button aria-label="Octave down">‹</button><span></span><button aria-label="Octave up">›</button>');
+octBox.title = 'Octave (computer keys: Z and X)';
+const scaleSeg = kSeg([['all', 'ALL NOTES'], ['key', 'IN KEY'], ['snap', 'SNAP']], () => KB.scale, v => { KB.scale = v; }, 'ALL NOTES: as they are · IN KEY: notes outside the key fade · SNAP: notes outside the key play the nearest one in it');
+const velSeg = kSeg([['soft', 'SOFT'], ['hard', 'HARD'], ['height', 'BY HEIGHT']], () => KB.vel, v => { KB.vel = v; }, 'How hard the notes play. BY HEIGHT: lower on the key plays harder, like a real one');
+const lblChip = el('button', 'sy-chip', 'LABELS'); lblChip.title = 'Note names and computer keys on the keys';
+const holdChip = chip('syn.hold', 'HOLD', 'The last note keeps playing after you let go');
+const kbClose = el('button', 'x', '✕'); kbClose.setAttribute('aria-label', 'Close the keys');
+kbHead.append(viewSeg, octBox, scaleSeg, velSeg, lblChip, holdChip, kbClose);
+const drawOct = () => { octBox.querySelector('span').textContent = KB.view === 'pads' ? noteLbl(padNote(0)) + ' – ' + noteLbl(padNote(15)) : noteLbl(KB.oct) + ' – ' + noteLbl(KB.oct + 36); lblChip.classList.toggle('on', KB.labels); };
+octBox.children[0].onclick = () => shiftOct(-12); octBox.children[2].onclick = () => shiftOct(12);
+lblChip.onclick = () => { KB.labels = !KB.labels; kbSave(); drawOct(); buildKb(); };
+function shiftOct(d) { allOff(); KB.oct = clamp(KB.oct + d, 12, 72); kbSave(); drawOct(); buildKb(); }
+const velFor = (ev, keyEl) => { if (KB.vel === 'soft') return .5; if (KB.vel === 'hard') return 1;
+  const r = keyEl.getBoundingClientRect(); return clamp(.3 + .7 * (ev.clientY - r.top) / Math.max(1, r.height), .3, 1); };
+function kbOn(src, m, vel) { m = snapNote(m); const old = kbHeld.get(src); if (old === m) return; if (old != null) releaseKey(old); kbHeld.set(src, m); press(m, 'KEYS', vel); drawKbLit(); }
+function kbOff(src) { const m = kbHeld.get(src); if (m == null) return; kbHeld.delete(src); if (![...kbHeld.values()].includes(m)) releaseKey(m); drawKbLit(); }
+function allOff() { [...kbHeld.keys()].forEach(kbOff); }
+function drawKbLit() { const lit = new Set(kbHeld.values()); kbBody.querySelectorAll('[data-m]').forEach(k => k.classList.toggle('lit', lit.has(+k.dataset.m))); }
+function buildKb() {
+  allOff(); kbBody.replaceChildren(); kbBody.className = 'sy-keys-b ' + KB.view;
+  if (KB.view === 'pads') {
+    const root = KB.oct + 12 + Math.round(S['syn.key']), sc = SCALES[Math.round(S['syn.scale'])];
+    for (let i = 0; i < 16; i++) {
+      const row = i < 8 ? 1 : 0, deg = row ? i : i - 8, idx = row ? deg : deg + 8;   // bottom row low, top row high
+      const m = scaleTone(root, idx, sc), n = idx % sc.length + 1;
+      const p = el('button', 'sy-pad' + (isRoot(m) ? ' root' : ''), '<b>' + noteLbl(m) + '</b><small>' + (isRoot(m) ? 'ROOT' : 'DEGREE ' + n) + '</small>' + (KB.labels ? '<em>' + PADKEYS[idx].toUpperCase() + '</em>' : ''));
+      p.dataset.m = m; p.dataset.i = idx; p.style.gridRow = String(row + 1); p.style.gridColumn = String(deg + 1); kbBody.appendChild(p);
+    }
+  } else {
+    let wi = 0; const whites = [];
+    for (let m = KB.oct; m <= KB.oct + 36; m++) if (!isBlackKey(m)) whites.push(m);
+    const W = 100 / whites.length;
+    for (let m = KB.oct; m <= KB.oct + 36; m++) {
+      const black = isBlackKey(m), off = KB.scale !== 'all' && !inScale(m);
+      const k = el('div', 'sy-pk ' + (black ? 'b' : 'w') + (off ? ' off' : '') + (isRoot(m) ? ' root' : '') + (!off && KB.scale !== 'all' ? ' ink' : ''));
+      k.dataset.m = m;
+      if (black) { k.style.left = 'calc(' + (wi * W) + '% - ' + (W * .32) + '%)'; k.style.width = (W * .64) + '%'; }
+      else { k.style.left = (wi * W) + '%'; k.style.width = W + '%'; wi++; }
+      const ch = KEYCHAR[m - KB.oct - 12];
+      if (KB.labels) k.innerHTML = (ch ? '<em>' + ch + '</em>' : '') + (!black && (m % 12 === 0 || isRoot(m)) ? '<u>' + noteLbl(m) + '</u>' : '');
+      kbBody.appendChild(k);
+    }
+  }
+  drawKbLit();
+}
+kbBody.addEventListener('pointerdown', e => { const k = e.target.closest('[data-m]'); if (!k || e.button !== 0) return; e.preventDefault(); kbBody.setPointerCapture(e.pointerId); kbOn('ptr:' + e.pointerId, +k.dataset.m, velFor(e, k)); });
+kbBody.addEventListener('pointermove', e => { if (!kbHeld.has('ptr:' + e.pointerId)) return; const t = document.elementFromPoint(e.clientX, e.clientY), k = t && t.closest && t.closest('[data-m]');
+  if (k && kbBody.contains(k) && +k.dataset.m !== kbHeld.get('ptr:' + e.pointerId)) kbOn('ptr:' + e.pointerId, +k.dataset.m, velFor(e, k)); });
+['pointerup', 'pointercancel'].forEach(t => kbBody.addEventListener(t, e => kbOff('ptr:' + e.pointerId)));
+const kbOpen = open => { kbKeys.classList.toggle('show', open); kbBtn.classList.toggle('on', open); if (open) { prOpen(false); pop.classList.remove('show'); drawOct(); buildKb(); } else allOff(); };
+kbClose.onclick = () => kbOpen(false);
+kbBtn.addEventListener('click', e => { e.stopPropagation(); kbOpen(!kbKeys.classList.contains('show')); });
+onChange(id => { if (/^syn\.(key|scale)$/.test(id) && kbKeys.classList.contains('show')) { buildKb(); drawOct(); } });
+
 
 /* ============================================================ preview engine (browser only) */
 /* In the plugin the C++ engine plays; here a small Web Audio version does, so the page can be tried anywhere. */
@@ -1325,12 +1446,12 @@ function startArp() {
   tick();
 }
 function stopArp() { if (!arp) return; clearTimeout(arp.timer); arp = null; live.step = -1; }
-function press(m, src) {
-  if (!powered) return;
-  if (inPlugin()) { held = m; if (window.obsSynth.noteOut) window.obsSynth.noteOut(m, true); return; }
+function press(m, src, vel = .9) {
+  if (!powered && !inPlugin()) return;
+  if (inPlugin()) { held = m; if (window.obsSynth.noteOut) window.obsSynth.noteOut(m, true, vel); return; }
   srcName = src || 'KEYS'; held = m;
   if (on('syn.arp.on')) { live.note = m; live.src = srcName; startArp(); }
-  else noteOn(chordNotes(m), .9, undefined, on('syn.legato'));
+  else noteOn(chordNotes(m), vel, undefined, on('syn.legato'));
 }
 function releaseKey(m) {
   if (inPlugin()) { if (held === m) held = null; if (window.obsSynth.noteOut) window.obsSynth.noteOut(m, false); return; }
@@ -1339,12 +1460,15 @@ function releaseKey(m) {
   if (on('syn.arp.on')) { stopArp(); live.note = null; } else { noteOff(); live.note = null; }
 }
 onChange(id => { if (inPlugin() || !ac) return; if (id === 'syn.arp.on') { if (!on(id)) { stopArp(); if (held == null) noteOff(); } else if (held != null) { noteOff(); startArp(); } } });
-const KEYS = { a: 40, w: 41, s: 42, e: 43, d: 43, f: 45, t: 46, g: 47, h: 48, u: 49, j: 50, k: 52, o: 51, l: 53 };
-const down = new Set();
-addEventListener('keydown', e => { if (SP.style.display === 'none' || e.repeat || e.ctrlKey || e.metaKey || e.altKey || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
-  const m = KEYS[e.key.toLowerCase()]; if (m == null) return; e.preventDefault(); down.add(m); press(m, 'KEYS'); });
-addEventListener('keyup', e => { const m = KEYS[e.key.toLowerCase()]; if (m == null || !down.has(m)) return; down.delete(m); releaseKey(m); });
-addEventListener('blur', () => { down.forEach(m => releaseKey(m)); down.clear(); });
+addEventListener('keydown', e => { if (SP.style.display === 'none' || dev.classList.contains('page-aether') || e.repeat || e.ctrlKey || e.metaKey || e.altKey || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+  const c = e.key.toLowerCase();
+  if (c === 'z' || c === 'x') { e.preventDefault(); shiftOct(c === 'z' ? -12 : 12); return; }
+  const vel = KB.vel === 'soft' ? .5 : KB.vel === 'hard' ? 1 : .85;
+  if (KB.view === 'pads') { const i = PADKEYS.indexOf(c); if (i < 0) return; e.preventDefault(); kbOn('key:' + c, padNote(i), vel); return; }
+  const o = KEYMAP[c]; if (o == null) return; e.preventDefault();
+  kbOn('key:' + c, KB.oct + 12 + o, vel); });
+addEventListener('keyup', e => { const c = e.key.toLowerCase(); if (KEYMAP[c] == null && !PADKEYS.includes(c)) return; kbOff('key:' + c); });
+addEventListener('blur', () => allOff());
 /* browser: show what the preview plays */
 setInterval(() => { if (inPlugin() || window.__obsSynthLive) return; showNote(live.note, live.src, live.note != null ? .7 : 0); showStep(on('syn.arp.on') ? live.step : -1); }, 50);
 

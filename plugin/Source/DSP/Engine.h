@@ -105,10 +105,12 @@ public:
         if (numSynthNotes < kMaxSynthNotes) synthNotes[numSynthNotes++] = { offset, note, vel };
     }
     /** Message thread: the UI's AUDITION button / computer keys. */
-    void uiSynthNote (int note, bool on)
+    /** A note from the page (SIREN's KEYS, the computer keys); velocity 0..1. */
+    void uiSynthNote (int note, bool on, float velocity = 0.85f)
     {
         int s1, n1, s2, n2; uiNotes.prepareToWrite (1, s1, n1, s2, n2);
-        if (n1 > 0) { uiNoteBuf[(size_t) s1] = on ? note : -1 - note; uiNotes.finishedWrite (1); }
+        const int vel = juce::jlimit (1, 127, (int) std::lround (velocity * 127.f));
+        if (n1 > 0) { uiNoteBuf[(size_t) s1] = on ? (note | (vel << 8)) : -1 - note; uiNotes.finishedWrite (1); }
     }
     float cpuLoad() const                         { return cpu.load(); }
     bool  takeClip()                              { return outMeterL.takeClip() | outMeterR.takeClip(); }

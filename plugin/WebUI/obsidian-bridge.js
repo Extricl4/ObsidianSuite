@@ -230,9 +230,9 @@ function setupBindings() {
     const power = on => { vals['synth.on'] = on ? 1 : 0; last['synth.on'] = vals['synth.on']; call('setParam', 'synth.on', on ? 1 : 0);
       if (on) bypassed.delete('SYNTH'); else bypassed.add('SYNTH'); if (typeof styleTabs === 'function') styleTabs(); if (S.setPower) S.setPower(on); };
     S.powerOut = on => power(on);
-    S.noteOut = (note, isOn) => {
+    S.noteOut = (note, isOn, vel) => {
       if (isOn && (vals['synth.on'] || 0) < .5) { power(true); say('Synth switched on'); }
-      call('synthNote', note, !!isOn);
+      call('synthNote', note, !!isOn, vel == null ? .85 : +vel);
     };
     // show "the synth is off" on its page whenever the section is bypassed
     const showPower = () => { if (S.setPower) S.setPower((vals['synth.on'] || 0) >= .5); };
