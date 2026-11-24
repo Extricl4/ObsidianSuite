@@ -253,7 +253,9 @@ function drawHints() {
 }
 const dimSec = (sec, id) => { const d = () => sec.classList.toggle('sy-off', !on(id)); d(); onChange(i => { if (i === id) d(); }); };
 dimSec(cBed, 'atm.bed.on'); dimSec(cDrn, 'atm.drn.on'); dimSec(cTex, 'atm.tex.on');
-const drawPower = () => dev.classList.toggle('aoff', !on('atm.on'));
+/* AETHER plays only with its POWER on and the SYNTH tab on (double-clicking the tab bypasses both) */
+const alive = () => on('atm.on') && K.isPowered();
+const drawPower = () => dev.classList.toggle('aoff', !alive());
 onChange(id => {
   if (id === 'atm.on') drawPower();
   if (/^atm\.(bed|drn|tex)\.(type|voice|chord|on)$/.test(id) || id === 'atm.freeze' || id === 'atm.size' || id === 'atm.drn.follow' || id === 'syn.key') drawDisplay();
@@ -440,7 +442,7 @@ function bedShape(t, x) {           // x 0..1 = 20 Hz .. 20 kHz (log)
 }
 function drawBedVis(tNow) {
   const [g, w, h] = hidpi(bedVis._cv); if (!g) return;
-  const t = Math.round(S['atm.bed.type']), live = on('atm.on') && on('atm.bed.on'), a = live ? .25 + .75 * Math.min(1, actSm[0] * 1.6) : .12, c = hueOf('bed');
+  const t = Math.round(S['atm.bed.type']), live = alive() && on('atm.bed.on'), a = live ? .25 + .75 * Math.min(1, actSm[0] * 1.6) : .12, c = hueOf('bed');
   const n = 56, bw = w / n;
   for (let i = 0; i < n; i++) {
     const x = (i + .5) / n, base = bedShape(t, x), jit = live ? .65 + .35 * Math.sin(tNow / (90 + i * 7) + i * 1.7) * Math.sin(tNow / 333 + i) : 1;
@@ -453,7 +455,7 @@ function drawBedVis(tNow) {
 /* DRONE: the notes it holds, on a keyboard of two octaves (lit keys), or falling / rising partials */
 function drawDroneVis() {
   const [g, w, h] = hidpi(drnVis._cv); if (!g) return;
-  const v = Math.round(S['atm.drn.voice']), c = hueOf('drn'), live = on('atm.on') && on('atm.drn.on');
+  const v = Math.round(S['atm.drn.voice']), c = hueOf('drn'), live = alive() && on('atm.drn.on');
   if (v >= 5) {                       // Shepard: octave partials under a bell, gliding
     const t = performance.now() / 1000, sp = (.02 + S['atm.drn.motion'] / 100 * .2) * (v === 5 ? -1 : 1), pos = ((t * sp) % 1 + 1) % 1;
     for (let k = 0; k < 9; k++) { const y = (k + pos) / 9, x = y * w, a = Math.sin(Math.PI * y);
@@ -473,7 +475,7 @@ function drawDroneVis() {
 /* TEXTURE: a seismograph, each event a tick that scrolls away */
 function drawTexVis(tNow) {
   const [g, w, h] = hidpi(texVis._cv); if (!g) return;
-  const c = hueOf('tex'), live = on('atm.on') && on('atm.tex.on');
+  const c = hueOf('tex'), live = alive() && on('atm.tex.on');
   g.strokeStyle = tc('e9e6df', .05); g.beginPath(); g.moveTo(0, h / 2 + .5); g.lineTo(w, h / 2 + .5); g.stroke();
   const span = 6000;
   ticks = ticks.filter(k => tNow - k.t < span);
@@ -488,7 +490,7 @@ const fog = Array.from({ length: 70 }, () => ({ x: Math.random(), y: Math.random
 function drawMood() { voidMood.textContent = MOODS[mood()]; voidMood.style.color = MOOD_COL[mood()]; summon.style.setProperty('--mc', MOOD_COL[mood()]); }
 function drawVoid(tNow, dt) {
   const [g, w, h] = hidpi(voidVis._cv); if (!g) return;
-  const live = on('atm.on'), frz = on('atm.freeze'), mc = MOOD_COL[mood()], size = S['atm.size'] / 100, wid = S['atm.width'] / 100;
+  const live = alive(), frz = on('atm.freeze'), mc = MOOD_COL[mood()], size = S['atm.size'] / 100, wid = S['atm.width'] / 100;
   const cx = w / 2, cy = h / 2, R0 = Math.min(w, h) * (.28 + .2 * size);
   const bg = g.createRadialGradient(cx, cy, 4, cx, cy, Math.max(w, h) * .7);
   bg.addColorStop(0, rgba(mc, live ? .16 : .05)); bg.addColorStop(.5, rgba(mc, live ? .05 : .02)); bg.addColorStop(1, 'transparent');
@@ -528,7 +530,7 @@ function drawVoid(tNow, dt) {
   const cg = g.createRadialGradient(cx, cy, 0, cx, cy, 16 + 10 * core); cg.addColorStop(0, frz ? rgba('#e6f7ff', core) : tc('ffffff', core)); cg.addColorStop(.3, rgba(mc, core * .5)); cg.addColorStop(1, rgba(mc, 0));
   g.fillStyle = cg; g.beginPath(); g.arc(cx, cy, 30, 0, 7); g.fill();
   if (frz) { g.fillStyle = 'rgba(191,233,255,.85)'; g.font = '600 8.5px ' + FONT(); g.textAlign = 'center'; g.fillText('FROZEN', cx, h - 10); g.textAlign = 'left'; }
-  if (!live) { g.fillStyle = tc('e9e6df', .35); g.font = '600 8.5px ' + FONT(); g.textAlign = 'center'; g.fillText('PRESS POWER', cx, h - 10); g.textAlign = 'left'; }
+  if (!live) { g.fillStyle = tc('e9e6df', .35); g.font = '600 8.5px ' + FONT(); g.textAlign = 'center'; g.fillText(on('atm.on') ? 'THE SYNTH TAB IS OFF' : 'PRESS POWER', cx, h - 10); g.textAlign = 'left'; }
 }
 function newEvent(level) {
   const a = clamp(level == null ? rr(.3, 1) : level, .1, 1), now = performance.now();
@@ -538,7 +540,7 @@ function newEvent(level) {
 /* the display's meters */
 function drawMeters() {
   const ems = disp.querySelectorAll('.r em');
-  ['atm.bed.on', 'atm.drn.on', 'atm.tex.on'].forEach((id, i) => { ems[i].style.width = (on('atm.on') && on(id) ? Math.round(Math.min(1, actSm[i] * 1.6) * 100) : 0) + '%'; });
+  ['atm.bed.on', 'atm.drn.on', 'atm.tex.on'].forEach((id, i) => { ems[i].style.width = (alive() && on(id) ? Math.round(Math.min(1, actSm[i] * 1.6) * 100) : 0) + '%'; });
 }
 let shown = false, lastT = performance.now();
 function loop() {
@@ -567,6 +569,7 @@ Object.assign(K, {
     if (typeof m.ev === 'number') { const n = m.ev - lastEv; if (lastEv && n > 0 && n < 50) for (let i = 0; i < Math.min(n, 6); i++) newEvent(); lastEv = m.ev; }
     if (typeof m.root === 'number' && m.root >= 0) { const r = Math.round(m.root); if (r !== liveRoot) { liveRoot = r; if (on('atm.drn.follow')) { drawDroneInfo(); } } }
   },
+  powerChanged() { drawPower(); if (inPlugin()) return; if (alive()) pvRebuild(['all']); else if (PV.on) pvGlobal(); },
   pageShown(p) { if (p === 'aether') { scOpen(false); setTimeout(() => { drawDroneVis(); drawDisplay(); }, 20); } else scOpen(false); },
 });
 Object.assign(window.obsSynth, { aetherSummon: summonWorld, aetherMutate: mutateWorld, aetherReset: resetAether, aetherScenes: SCENES, aetherLoadScene: loadScene,
@@ -711,7 +714,7 @@ function pvSchedule() {
 function pvGlobal() {
   if (!PV.on) return;
   const ac = PV.ac, now = ac.currentTime, grit = S['atm.grit'] / 100, tilt = S['atm.tone'] / 100;
-  PV.out.gain.setTargetAtTime(on('atm.on') ? Math.pow(10, S['atm.level'] / 20) * .9 : 0, now, .05);
+  PV.out.gain.setTargetAtTime(alive() ? Math.pow(10, S['atm.level'] / 20) * .9 : 0, now, .05);
   PV.lo.gain.setTargetAtTime(-tilt * 7, now, .05); PV.hi.gain.setTargetAtTime(tilt * 7, now, .05);
   const c = new Float32Array(1024), dr = 1 + grit * grit * 22, q = grit > .55 ? 2 + (1 - grit) * 60 : 0;
   for (let i = 0; i < 1024; i++) { const x = i / 511.5 - 1; let y = grit > .002 ? x + (Math.tanh(x * dr) / Math.tanh(dr * .5) * .5 - x) * Math.min(1, grit * 3) : x; if (q) y = Math.round(y * q) / q; c[i] = y; }
@@ -735,7 +738,7 @@ let pvT = null; const pvWant = new Set();
 function pvRebuild(what) {
   if (inPlugin()) return;
   what.forEach(w => pvWant.add(w));
-  if (!on('atm.on')) { if (PV.on) pvGlobal(); return; }
+  if (!alive()) { if (PV.on) pvGlobal(); return; }
   if (!PV.on) { pvBuild(); pvWant.add('all'); }
   pvGlobal();
   clearTimeout(pvT);
@@ -753,7 +756,7 @@ onChange((id, v, from) => {
   if (/^atm\.tex\.(type|on|tone|density)$/.test(id)) w.push('tex');
   pvRebuild(w);
 });
-setInterval(() => { if (!inPlugin() && PV.on && on('atm.on')) pvSchedule(); }, 50);
+setInterval(() => { if (!inPlugin() && PV.on && alive()) pvSchedule(); }, 50);
 
 /* ------------------------------------------------------------ start */
 bedKnobs._relabel(); drnKnobs._relabel(); texKnobs._relabel(); drawHints(); drawDisplay(); drawDroneInfo(); drawPower(); drawMood(); drawMoodOpts(); drawScName();

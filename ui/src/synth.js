@@ -680,7 +680,11 @@ let powered = true;
 const PWR_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/></svg>';
 const HOLD_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 7c-3.3 0-5 2.2-5 5s1.7 5 5 5c4 0 6-10 10-10 2.6 0 4 2.2 4 5s-1.4 5-4 5c-4 0-6-10-10-10z" transform="translate(-1 0)"/></svg>';
 const powerW = pushBtn(() => powered, v => { setPowerUi(v); if (window.obsSynth && window.obsSynth.powerOut) window.obsSynth.powerOut(v); }, 'POWER', PWR_IC, 'ON', 'OFF', 'Synth on / off (also: double-click the SYNTH tab)');
-function setPowerUi(v) { powered = !!v; dev.classList.toggle('off', !powered); powerW._draw(); if (pageDots) pageDots(); }
+function setPowerUi(v) { const was = powered; powered = !!v; dev.classList.toggle('off', !powered); powerW._draw(); if (pageDots) pageDots();
+  if (was && !powered) {                                     // bypassed (POWER, or a double-click on the SYNTH tab): everything stops
+    if (typeof allOff === 'function') { allOff(); setBend(0); }
+    if (!inPlugin() && ac) { stopArp(); noteOff(); held = null; live.note = null; } }
+  if (was !== powered && kit.powerChanged) kit.powerChanged(powered); }
 let pageDots = null;
 const led = el('div', 'sy-led', '<span class="k"></span><span class="tn"></span><div class="n">–</div><div class="s">PLAY A NOTE</div><div class="bar"><i></i></div>');
 led.title = 'Click for key, scale, tuning and playing settings';

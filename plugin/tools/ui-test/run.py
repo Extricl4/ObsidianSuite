@@ -483,6 +483,19 @@ async def run(standalone):
         await pg.evaluate("window.__mock.emit('obs:params', {'atm.on': 0})"); await pg.wait_for_timeout(100)
 
 
+        # ---- a double-click on the SYNTH tab bypasses all of it: SIREN, its KEYS and AETHER
+        await pg.evaluate("window.__mock.emit('obs:params', {'synth.on': 1, 'atm.on': 1})"); await pg.wait_for_timeout(900)
+        await pg.evaluate("setTab('SYNTH'); obsSynth.showPage('siren')"); await pg.wait_for_timeout(200)
+        await pg.locator('.sy-siren .sy-kbbtn').click(); await pg.locator('.sy-kb2.latch').click()
+        kb_ = await pg.locator('.sy-keys .sy-keys-b [data-m]').nth(5).bounding_box(); await pg.mouse.click(kb_['x'] + kb_['width'] / 2, kb_['y'] + kb_['height'] * .85); await pg.wait_for_timeout(150)
+        await pg.evaluate("window.__mock.log.length=0")
+        await pg.locator('button', has_text='SYNTH').first.dblclick(); await pg.wait_for_timeout(700)
+        byp = await pg.evaluate("[window.__mock.sent('synth.on'), document.querySelector('.sy-dev').classList.contains('off'), document.querySelector('.sy-dev').classList.contains('aoff'), window.__mock.log.filter(x=>x[0]==='synthNote').map(x=>x[2])]")
+        check(byp == [0, True, True, [False]], f'double-clicking the SYNTH tab bypasses SIREN, lets go of a latched key and greys AETHER ({byp})')
+        await pg.locator('.sy-keys .x').click(); await pg.wait_for_timeout(100)
+        await pg.locator('button', has_text='SYNTH').first.dblclick(); await pg.wait_for_timeout(700)
+        await pg.evaluate("window.__mock.emit('obs:params', {'atm.on': 0})"); await pg.wait_for_timeout(500)
+
         # ---- SFX GLITCH page: KERAUNOS and KHAOS
         await pg.evaluate("setTab('SFX')"); await pg.wait_for_timeout(150)
         defs = await pg.evaluate("obsFxLab.defs")
@@ -545,6 +558,9 @@ async def run(standalone):
         # SFX tab bypassed: the page says so; switching a unit on wakes the tab
         await pg.evaluate("window.__mock.emit('obs:params', {'sfx.on': 0, 'ker.on': 0})"); await pg.wait_for_timeout(900)
         off = await pg.evaluate("document.querySelector('.fl-dev').classList.contains('sfx-off')")
+        await pg.wait_for_timeout(400)
+        still = await pg.evaluate("[document.querySelector('.fl-led .gv').textContent, document.querySelectorAll('.fl-type.play').length]")
+        check(still == ['STOPPED', 0], f'with the SFX tab bypassed nothing on the GLITCH page moves ({still})')
         await pg.evaluate("window.__mock.log.length=0")
         await pg.locator('.fl-dev .sy-pb[data-param="ker.on"]').click(); await pg.wait_for_timeout(200)
         check(off and await pg.evaluate("window.__mock.sent('sfx.on')") == 1, f'with the SFX tab bypassed the page shows it, and KERAUNOS ON turns the tab back on ({off})')

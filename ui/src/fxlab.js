@@ -288,6 +288,7 @@ const pageDots = () => { pageSw.children[1].firstChild.classList.toggle('lit', o
 /* send right away (momentary buttons): the bridge sets this */
 const sendNow = id => { if (window.obsFxLab && window.obsFxLab.paramOut) window.obsFxLab.paramOut(id, toN(id)); };
 let sfxOn = true;
+const kerAct = () => on('ker.on') && sfxOn, gltAct = () => on('glt.on') && sfxOn;      // playing (not off, not bypassed)
 const wakeSection = () => { if (!sfxOn && window.obsFxLab && window.obsFxLab.sectionOut) window.obsFxLab.sectionOut(true); };
 onChange((id, v, from) => { if ((id === 'ker.on' || id === 'glt.on') && v >= .5 && from === 'ui') wakeSection(); });
 
@@ -620,16 +621,16 @@ const sim = {
     else if (m === 1) { if (now > this.nextPick) { this.env = .4 + .6 * R(); this.nextPick = now + 300 + R() * 500; } this.env *= Math.exp(-dt / (40 + (1 - sp) * 1200)); target = clamp(this.env * (.3 + 1.4 * S['ker.sens'] / 100), 0, 1); }
     else if (m === 2) { const hz = .05 * Math.pow(2, sp * 7.3); this.lfo += hz * dt / 1000; if (this.lfo >= 1) { this.lfo -= 1; this.rFrom = this.rTo; this.rTo = R(); } const ph = this.lfo;
       target = shape === 0 ? ph : shape === 1 ? 1 - ph : shape === 2 ? 1 - Math.abs(2 * ph - 1) : this.rFrom + (this.rTo - this.rFrom) * ph * ph * (3 - 2 * ph); }
-    else { if (now > this.nextPick && on('ker.on')) { this.fire(); this.nextPick = now + 900 + R() * 900; }
+    else { if (now > this.nextPick && kerAct()) { this.fire(); this.nextPick = now + 900 + R() * 900; }
       const T = 1500 * Math.pow(2, -sp * 6.2);
       if (this.trigT >= 0) { this.trigT += dt; const u = this.trigT / T;
         target = shape === 0 ? (u < 1 ? u : u < 3 ? 1 : u < 4 ? 4 - u : 0) : shape === 1 ? (u < 1 ? 1 - u : u < 3 ? 0 : u < 4 ? u - 3 : 1) : shape === 2 ? (u < 1 ? u : u < 2 ? 2 - u : 0) : (u < 1 ? this.from + (this.to - this.from) * u : this.to);
         if (u > 4) this.trigT = -1; }
       else target = shape === 1 ? 1 : shape === 3 ? this.to : 0; }
     this.pos += (clamp(target, 0, 1) - this.pos) * (1 - Math.exp(-dt / (m === 0 ? 30 : 12)));
-    shownPos = on('ker.on') ? this.pos : (m === 0 ? S['ker.pos'] / 100 : 0);
+    shownPos = kerAct() ? this.pos : (m === 0 ? S['ker.pos'] / 100 : 0);
     // KHAOS
-    if (!on('glt.on')) { liveStep = -1; liveType = -1; this.cur = null; return; }
+    if (!gltAct()) { liveStep = -1; liveType = -1; this.cur = null; return; }
     const sb = GRID_BEATS[Math.round(S['glt.grid'])], beat = (now - this.t0) / 1000 * bpm / 60, step = Math.floor(beat / sb);
     if (step !== this.last) {
       this.last = step; const s = ((step % 16) + 16) % 16;
@@ -652,6 +653,7 @@ function frame() {
   const now = performance.now(), dt = Math.min(100, now - simLast); simLast = now;
   const live = inPlugin() && now - lastLive < 1500;
   if (!live) sim.tick(dt);
+  if (!gltAct()) { liveType = -1; liveStep = -1; }
   if (liveType >= 0 && (liveType !== lastHistType || liveStep !== lastHistStep) && (liveType !== lastHistType || hist[liveStep] == null || now - hist[liveStep].at > 400)) noteGlitch(liveStep, liveType);
   if (liveType !== lastHistType) lastHistStep = liveStep;
   lastHistType = liveType;
@@ -668,7 +670,7 @@ function drawLed() {
   const a = algo(), col = algoCol(a), ef = effectAt(a, shownPos);
   lk.style.setProperty('--lc', col);
   ledK.m.textContent = fmt('ker.mode').toUpperCase(); ledK.n.textContent = ALGOS[a].toUpperCase(); ledK.v.textContent = ef.t; ledK.b.style.width = (shownPos * 100).toFixed(1) + '%';
-  led.classList.toggle('k-off', !on('ker.on')); led.classList.toggle('g-off', !on('glt.on'));
+  led.classList.toggle('k-off', !kerAct()); led.classList.toggle('g-off', !gltAct());
   const t = liveType;
   lg.style.setProperty('--lc', t >= 0 ? typeCol(t) : '#6f6f76');
   ledG.m.textContent = (seqMode() ? 'SEQUENCE' : 'RANDOM ' + Math.round(S['glt.chance']) + '%') + ' · ' + fmt('glt.grid');
@@ -790,8 +792,8 @@ window.obsFxLab = {
   read() { const o = {}; IDS.forEach(id => { o[id] = toN(id); }); return o; },
   write(vals) { for (const id in vals) if (P[id] && isFx(id)) set(id, toV(id, vals[id]), 'plugin'); },
   /* the engine's meters: { pos 0..1, step 0..15, type -1.., ev count, bpm } */
-  live(m) { if (!m || (m.step == null && m.pos == null)) return; lastLive = performance.now(); if (m.pos != null) shownPos = +m.pos; if (m.step != null) liveStep = on('glt.on') ? +m.step : -1; if (m.type != null) liveType = on('glt.on') ? +m.type : -1; if (m.ev != null) liveEv = +m.ev; if (m.bpm > 20) bpm = +m.bpm; },
-  setSection(isOn) { sfxOn = !!isOn; dev.classList.toggle('sfx-off', !sfxOn); },
+  live(m) { if (!m || (m.step == null && m.pos == null)) return; lastLive = performance.now(); if (m.pos != null) shownPos = kerAct() ? +m.pos : mode() === 0 ? S['ker.pos'] / 100 : 0; if (m.step != null) liveStep = gltAct() ? +m.step : -1; if (m.type != null) liveType = gltAct() ? +m.type : -1; if (m.ev != null) liveEv = +m.ev; if (m.bpm > 20) bpm = +m.bpm; },
+  setSection(isOn) { sfxOn = !!isOn; dev.classList.toggle('sfx-off', !sfxOn); if (!sfxOn) { liveStep = -1; liveType = -1; sim.cur = null; } },
   paramOut: null,       // set by the bridge: (id, 0..1) -> the engine at once (TRIGGER, HOLD)
   sectionOut: null,     // set by the bridge: turns the SFX tab on
   showPage, presets: PRESETS, loadPreset, dice: () => roll(), reset: () => resetB.click(),
