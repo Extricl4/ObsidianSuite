@@ -285,6 +285,15 @@ dsp::IrFile fakeIr (double sr, float seconds, float rt60, int channels, juce::Ra
 }
 } // namespace
 
+#if defined (_MSC_VER)
+ #define OBS_NOINLINE __declspec (noinline)
+#else
+ #define OBS_NOINLINE __attribute__ ((noinline))
+#endif
+// The checks live in their own (big) function: if its stack frame ever were too big, the progress file
+// already says the self-test started (CI prints it), instead of the app dying without a trace.
+OBS_NOINLINE static int runSelfTestBody (Report& r, const juce::StringArray& args, juce::File reportFile, juce::File namFile, bool packs, double start);
+
 int runSelfTest (const juce::StringArray& args)
 {
     Report r;
@@ -299,6 +308,12 @@ int runSelfTest (const juce::StringArray& args)
     }
     if (reportFile != juce::File()) { r.progress = reportFile.getSiblingFile (reportFile.getFileNameWithoutExtension() + "-progress.txt"); r.progress.deleteFile(); }
     r.add (OBSIDIAN_PRODUCT_NAME " " OBSIDIAN_VERSION_STRING " self-test   (" + juce::SystemStats::getCpuModel() + ", " + juce::SystemStats::getOperatingSystemName() + ")");
+    return runSelfTestBody (r, args, reportFile, namFile, packs, start);
+}
+
+OBS_NOINLINE static int runSelfTestBody (Report& r, const juce::StringArray& args, juce::File reportFile, juce::File namFile, bool packs, double start)
+{
+    juce::ignoreUnused (args);
 
     const double SR = 48000; const int BLOCK = 256;
     auto proc = std::make_unique<ObsidianProcessor>();
@@ -743,7 +758,7 @@ int runSelfTest (const juce::StringArray& args)
         }
         // off means off: switched off (after its fade) it hands the signal through untouched, whatever its settings
         {
-            dsp::hydra::Harmonizer h; h.prepare (SR, BLOCK);
+            auto hOwner = std::make_unique<dsp::hydra::Harmonizer>(); auto& h = *hOwner; h.prepare (SR, BLOCK);     // 132 KB: not on the stack
             dsp::hydra::Params hp; hp.on = true;
             for (auto& v : hp.v) { v.on = true; v.level = 1.f; }
             hp.track = 1; hp.mix = 0.8f;

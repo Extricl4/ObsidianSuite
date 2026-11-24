@@ -177,6 +177,8 @@ target_link_libraries(ObsidianSuite
 
 if(MSVC)
     target_compile_options(ObsidianSuite PRIVATE /wd4244 /wd4267 /wd4305 /wd4100)
+    # the self-test runs on the app's main thread in one long function: give that thread 16 MB of stack, not Windows' 1 MB
+    target_link_options(ObsidianSuite_Standalone PRIVATE /STACK:16777216)
 endif()
 
 # The offline self-test lives inside the standalone app:  "Obsidian Amp Suite" --selftest <report.txt>
