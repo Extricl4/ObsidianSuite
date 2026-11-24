@@ -302,53 +302,43 @@ const H = (name, note, v, a) => Object.assign(P('HORROR', name, note, v), { a })
 
 /* AETHER parts of the HORROR presets (also among AETHER's scenes, under HORROR) */
 const A = {
-  flesh:  { level: -6.5, evolve: 70, grit: 15, tone: -30, space: 70, size: 85, follow: 30,
-            'bed.type': 'Wind', 'bed.tone': 30, 'bed.motion': 40, 'bed.depth': 70, 'bed.level': 45,
-            'drn.voice': 'Choir', 'drn.chord': 'Dread', 'drn.oct': 'Low', 'drn.detune': 70, 'drn.tone': 35, 'drn.motion': 55, 'drn.level': 42,
-            'tex.on': 1, 'tex.type': 'Moans', 'tex.density': 38, 'tex.tone': 35, 'tex.chaos': 70, 'tex.level': 55 },
-  saw:    { level: -4.5, evolve: 40, grit: 40, tone: -10, space: 45, size: 55,
-            'bed.type': 'Static', 'bed.tone': 40, 'bed.motion': 50, 'bed.depth': 40, 'bed.level': 35, 'drn.on': 0,
-            'tex.on': 1, 'tex.type': 'Metal', 'tex.density': 60, 'tex.tone': 35, 'tex.chaos': 40, 'tex.level': 68 },
-  descent:{ level: -10, evolve: 50, tone: -35, space: 65, size: 85,
-            'bed.type': 'Rumble', 'bed.tone': 25, 'bed.motion': 30, 'bed.depth': 60, 'bed.level': 50,
-            'drn.voice': 'Descent', 'drn.chord': 'Tritone', 'drn.detune': 30, 'drn.tone': 40, 'drn.motion': 40, 'drn.level': 60,
-            'tex.on': 1, 'tex.type': 'Heartbeat', 'tex.density': 20, 'tex.tone': 30, 'tex.chaos': 50, 'tex.level': 48 },
-  walls:  { level: 0, evolve: 55, tone: -40, space: 40, size: 50,
-            'bed.type': 'Breath', 'bed.tone': 30, 'bed.motion': 25, 'bed.depth': 55, 'bed.level': 55,
-            'drn.voice': 'Abyss', 'drn.chord': 'Root', 'drn.oct': 'Sub', 'drn.tone': 25, 'drn.motion': 30, 'drn.level': 34,
-            'tex.on': 1, 'tex.type': 'Knocks', 'tex.density': 38, 'tex.tone': 25, 'tex.chaos': 75, 'tex.level': 80 },
-  wound:  { level: -6, grit: 30, space: 55, size: 65, tone: -10, follow: -40,
-            'bed.type': 'Breath', 'bed.tone': 55, 'bed.motion': 55, 'bed.depth': 95, 'bed.level': 46, 'drn.on': 0,
-            'tex.on': 1, 'tex.type': 'Moans', 'tex.density': 42, 'tex.tone': 75, 'tex.chaos': 85, 'tex.level': 55 },
-  asylum: { level: -2.5, evolve: 60, tone: -20, space: 70, size: 80,
-            'bed.type': 'Static', 'bed.tone': 35, 'bed.motion': 25, 'bed.depth': 45, 'bed.level': 42,
-            'drn.voice': 'Glass', 'drn.chord': 'Tritone', 'drn.oct': 'Mid', 'drn.detune': 45, 'drn.tone': 35, 'drn.motion': 35, 'drn.level': 36,
-            'tex.on': 1, 'tex.type': 'Whispers', 'tex.density': 32, 'tex.tone': 45, 'tex.chaos': 60, 'tex.level': 62 },
-  abattoir:{ level: -7, evolve: 45, grit: 50, tone: -25, space: 40, size: 50,
-            'bed.type': 'Rumble', 'bed.tone': 40, 'bed.motion': 35, 'bed.depth': 55, 'bed.level': 48,
-            'drn.voice': 'Abyss', 'drn.chord': 'Cluster', 'drn.oct': 'Sub', 'drn.detune': 50, 'drn.tone': 45, 'drn.motion': 60, 'drn.level': 34,
-            'tex.on': 1, 'tex.type': 'Flesh', 'tex.density': 52, 'tex.tone': 40, 'tex.chaos': 55, 'tex.level': 70 },
-  terror: { level: -0.5, evolve: 50, follow: 40, space: 30, size: 45,
-            'bed.type': 'Breath', 'bed.tone': 60, 'bed.motion': 85, 'bed.depth': 75, 'bed.level': 62,
-            'drn.voice': 'Strings', 'drn.chord': 'Cluster', 'drn.oct': 'Mid', 'drn.detune': 80, 'drn.tone': 40, 'drn.motion': 50, 'drn.level': 40,
-            'tex.on': 1, 'tex.type': 'Heartbeat', 'tex.density': 75, 'tex.tone': 30, 'tex.chaos': 55, 'tex.level': 80 },
-  mass:   { level: -8.5, evolve: 65, tone: -25, space: 80, size: 95, follow: 25,
-            'bed.type': 'Rumble', 'bed.tone': 30, 'bed.motion': 25, 'bed.depth': 65, 'bed.level': 45,
-            'drn.voice': 'Choir', 'drn.chord': 'Dread', 'drn.detune': 55, 'drn.tone': 45, 'drn.motion': 45, 'drn.level': 50,
-            'tex.on': 1, 'tex.type': 'Moans', 'tex.density': 26, 'tex.tone': 20, 'tex.chaos': 60, 'tex.level': 42 },
-  possessed:{ level: -2, evolve: 75, grit: 55, tone: -30, space: 55, size: 70, follow: 60,
-            'bed.type': 'Breath', 'bed.tone': 15, 'bed.motion': 30, 'bed.depth': 100, 'bed.level': 50,
-            'drn.voice': 'Abyss', 'drn.chord': 'Tritone', 'drn.oct': 'Sub', 'drn.detune': 60, 'drn.tone': 50, 'drn.motion': 70, 'drn.level': 40,
-            'tex.on': 1, 'tex.type': 'Whispers', 'tex.density': 60, 'tex.tone': 30, 'tex.chaos': 90, 'tex.level': 60 },
-  radio:  { level: -10, evolve: 70, grit: 35, tone: -5, space: 45, size: 60,
-            'bed.type': 'Static', 'bed.tone': 55, 'bed.motion': 60, 'bed.depth': 90, 'bed.level': 50,
-            'drn.voice': 'Glass', 'drn.chord': 'Tritone', 'drn.detune': 40, 'drn.tone': 25, 'drn.motion': 40, 'drn.level': 22,
-            'tex.on': 1, 'tex.type': 'Whispers', 'tex.density': 45, 'tex.tone': 60, 'tex.chaos': 70, 'tex.level': 55 },
-  agony:  { level: -10, evolve: 70, tone: -15, space: 70, size: 80, follow: 20,
-            'bed.type': 'Wind', 'bed.tone': 40, 'bed.motion': 55, 'bed.depth': 90, 'bed.level': 45,
-            'drn.voice': 'Strings', 'drn.chord': 'Cluster', 'drn.oct': 'Mid', 'drn.detune': 85, 'drn.tone': 50, 'drn.motion': 60, 'drn.level': 40,
-            'tex.on': 1, 'tex.type': 'Moans', 'tex.density': 55, 'tex.tone': 60, 'tex.chaos': 80, 'tex.level': 55 },
+  // each one is led by ONE sound of its own; the others stay out or far behind
+  flesh:    { level: -10, evolve: 70, tone: -25, space: 80, size: 90, follow: 30, 'bed.on': 0,                       // lead: a choir on a dread chord
+              'drn.voice': 'Choir', 'drn.chord': 'Dread', 'drn.oct': 'Low', 'drn.detune': 70, 'drn.tone': 40, 'drn.motion': 60, 'drn.level': 62,
+              'tex.on': 1, 'tex.type': 'Moans', 'tex.density': 18, 'tex.tone': 30, 'tex.chaos': 70, 'tex.level': 36 },
+  saw:      { level: -3.5, evolve: 40, grit: 35, tone: -5, space: 40, size: 50, 'bed.on': 0, 'drn.on': 0,             // lead: metal being sawn and scraped
+              'tex.on': 1, 'tex.type': 'Metal', 'tex.density': 78, 'tex.tone': 45, 'tex.chaos': 25, 'tex.level': 76 },
+  descent:  { level: -14, evolve: 45, tone: -30, space: 70, size: 85,                                                // lead: a tone that falls forever
+              'bed.type': 'Rumble', 'bed.tone': 25, 'bed.motion': 30, 'bed.depth': 50, 'bed.level': 26,
+              'drn.voice': 'Descent', 'drn.chord': 'Tritone', 'drn.detune': 30, 'drn.tone': 45, 'drn.motion': 45, 'drn.level': 70 },
+  walls:    { level: 0, evolve: 50, tone: -35, space: 28, size: 32, 'drn.on': 0,                                    // lead: knocking, close, in the house
+              'bed.type': 'Breath', 'bed.tone': 30, 'bed.motion': 25, 'bed.depth': 45, 'bed.level': 30,
+              'tex.on': 1, 'tex.type': 'Knocks', 'tex.density': 45, 'tex.tone': 25, 'tex.chaos': 70, 'tex.level': 82 },
+  wound:    { level: -5.5, grit: 20, space: 22, size: 30, tone: -5, follow: -40, 'drn.on': 0,                         // lead: ragged breathing right next to you
+              'bed.type': 'Breath', 'bed.tone': 55, 'bed.motion': 62, 'bed.depth': 100, 'bed.level': 78 },
+  asylum:   { level: -9, evolve: 55, tone: -20, space: 72, size: 82, 'drn.on': 0,                                    // lead: a broken music box, off key
+              'bed.type': 'Static', 'bed.tone': 35, 'bed.motion': 20, 'bed.depth': 35, 'bed.level': 30,
+              'tex.on': 1, 'tex.type': 'Shimmer', 'tex.density': 52, 'tex.tone': 30, 'tex.chaos': 90, 'tex.level': 72 },
+  abattoir: { level: -3, evolve: 45, grit: 40, tone: -25, space: 35, size: 45, 'drn.on': 0,                          // lead: wet, cracking, tearing
+              'bed.type': 'Rumble', 'bed.tone': 45, 'bed.motion': 40, 'bed.depth': 55, 'bed.level': 38,
+              'tex.on': 1, 'tex.type': 'Flesh', 'tex.density': 62, 'tex.tone': 40, 'tex.chaos': 55, 'tex.level': 82 },
+  terror:   { level: 3, evolve: 50, follow: 40, space: 25, size: 35, 'drn.on': 0,                                    // lead: a racing, stumbling heart
+              'bed.type': 'Breath', 'bed.tone': 60, 'bed.motion': 92, 'bed.depth': 70, 'bed.level': 44,
+              'tex.on': 1, 'tex.type': 'Heartbeat', 'tex.density': 82, 'tex.tone': 30, 'tex.chaos': 62, 'tex.level': 82 },
+  mass:     { level: -11.5, evolve: 55, tone: -20, space: 85, size: 95, follow: 25,                                     // lead: an organ on a dread chord
+              'bed.type': 'Rumble', 'bed.tone': 30, 'bed.motion': 25, 'bed.depth': 60, 'bed.level': 30,
+              'drn.voice': 'Organ', 'drn.chord': 'Dread', 'drn.detune': 30, 'drn.tone': 65, 'drn.motion': 35, 'drn.level': 70 },
+  possessed:{ level: -2.5, evolve: 75, grit: 45, tone: -25, space: 50, size: 65, follow: 60, 'bed.on': 0,              // lead: whispering all around you
+              'drn.voice': 'Abyss', 'drn.chord': 'Tritone', 'drn.oct': 'Sub', 'drn.detune': 60, 'drn.tone': 50, 'drn.motion': 70, 'drn.level': 34,
+              'tex.on': 1, 'tex.type': 'Whispers', 'tex.density': 72, 'tex.tone': 30, 'tex.chaos': 95, 'tex.level': 80 },
+  radio:    { level: -11.5, evolve: 70, grit: 30, tone: 0, space: 35, size: 50, 'drn.on': 0,                           // lead: a radio between stations
+              'bed.type': 'Static', 'bed.tone': 55, 'bed.motion': 65, 'bed.depth': 95, 'bed.level': 74,
+              'tex.on': 1, 'tex.type': 'Whispers', 'tex.density': 28, 'tex.tone': 60, 'tex.chaos': 70, 'tex.level': 36 },
+  agony:    { level: -11, evolve: 70, tone: -10, space: 70, size: 80, follow: 20, 'drn.on': 0,                        // lead: voices wailing in pain
+              'bed.type': 'Wind', 'bed.tone': 40, 'bed.motion': 55, 'bed.depth': 90, 'bed.level': 36,
+              'tex.on': 1, 'tex.type': 'Moans', 'tex.density': 66, 'tex.tone': 72, 'tex.chaos': 85, 'tex.level': 80 },
 };
+
 
 window.OBS_SYNTH_PRESETS = [
   /* ---------------------------------------------------------------- ARCADE */
@@ -575,10 +565,10 @@ window.OBS_SYNTH_PRESETS = [
   H('Night Terror', 'Frozen in the dark: a racing heart, panting, a tone that will not stop', { ...mono, 'a.wave': 'Sine', 'a.pitch': 24, 'a.level': 55,
     'b.on': 1, 'b.wave': 'Sine', 'b.pitch': 24, 'b.fine': 35, 'b.level': 45, 'b.voices': '1', 'flt.on': 0,
     'lfo.shape': 'Random', 'lfo.rate': 14, 'lfo.depth': 12, 'lfo.target': 'Pitch', 'env.a.att': 1200, 'env.a.sus': 100, 'env.a.rel': 2500, char: 'Clean', space: 60 }, A.terror),
-  H('Black Mass', 'A congregation of the damned under a tritone organ. Enormous.', { 'a.wave': 'Super', 'a.detune': 35, 'a.level': 85,
-    'b.on': 1, 'b.wave': 'Super', 'b.pitch': 6, 'b.detune': 30, 'b.level': 60, 'sub.level': 50, chord: 'Octaves',
-    'flt.type': 'Ladder 12', 'flt.cutoff': 1100, 'flt.res': 25, 'flt.drive': 55, 'flt.env': 15,
-    'lfo.shape': 'Sine', 'lfo.rate': 0.18, 'lfo.depth': 30, 'lfo.target': 'Cutoff', 'env.a.att': 900, 'env.a.dec': 3000, 'env.a.sus': 95, 'env.a.rel': 3500, char: 'Analog', space: 90 }, A.mass),
+  H('Black Mass', 'A church organ on a tritone, too big for the room', { 'a.wave': 'Pulse', 'a.shape': 0, 'a.level': 20, 'a.voices': '1',
+    'b.on': 1, 'b.wave': 'Sine', 'b.pitch': 6, 'b.level': 18, 'b.voices': '1', 'sub.level': 15, chord: 'Octaves',
+    'flt.type': 'Lowpass', 'flt.cutoff': 2400, 'flt.res': 10, 'flt.drive': 30, 'flt.env': 0, 'flt.key': 30,
+    'lfo.shape': 'Sine', 'lfo.rate': 5.8, 'lfo.depth': 22, 'lfo.target': 'Volume', 'env.a.att': 60, 'env.a.dec': 3000, 'env.a.sus': 100, 'env.a.rel': 2200, char: 'Analog', space: 85 }, A.mass),
   H('Possessed', 'Something speaks through you. Low, distorted, not human.', { 'a.wave': 'Saw', 'a.pitch': -24, 'a.voices': '3', 'a.detune': 25,
     'b.on': 1, 'b.wave': 'Saw', 'b.pitch': -12, 'b.fine': 30, 'b.level': 80, 'sub.level': 70, 'noise.level': 20, 'noise.color': 40,
     'flt.type': 'Vowel', 'flt.cutoff': 400, 'flt.res': 65, 'flt.drive': 100, 'flt.env': 30, 'env.f.att': 300, 'env.f.dec': 1500, 'env.f.sus': 50,
@@ -587,11 +577,11 @@ window.OBS_SYNTH_PRESETS = [
   H('Dead Radio', 'Voices between the stations. Someone is still broadcasting.', { ...mono, 'a.wave': 'Pulse', 'a.shape': 60, 'a.level': 100,
     'noise.level': 40, 'noise.color': 75, 'flt.type': 'Bandpass', 'flt.cutoff': 1600, 'flt.res': 45, 'flt.drive': 80, 'flt.env': 0,
     'lfo.shape': 'Random', 'lfo.rate': 6, 'lfo.depth': 30, 'lfo.target': 'Pitch', 'env.a.att': 20, 'env.a.sus': 80, 'env.a.rel': 600, char: 'VHS', space: 40 }, A.radio),
-  H('Agony', 'Strings that wail and tear at each other. Pain with no end.', { 'a.wave': 'Super', 'a.detune': 60, 'a.level': 40,
-    'b.on': 1, 'b.wave': 'Saw', 'b.pitch': 1, 'b.voices': '5', 'b.detune': 45, 'b.level': 38,
-    'flt.type': 'Lowpass', 'flt.cutoff': 1300, 'flt.res': 35, 'flt.drive': 40, 'flt.env': 40, 'env.f.att': 900, 'env.f.dec': 2000, 'env.f.sus': 60,
-    'lfo.shape': 'Sine', 'lfo.rate': 6.5, 'lfo.depth': 18, 'lfo.target': 'Pitch', 'lfo.fade': 1500, glide: 220,
-    'env.a.att': 500, 'env.a.sus': 95, 'env.a.rel': 2200, char: 'Analog', space: 65 }, A.agony),
+  H('Agony', 'A voice-like string wail that bends, shakes and cracks', { ...mono, 'a.wave': 'Saw', 'a.pitch': 12, 'a.level': 38,
+    'b.on': 1, 'b.wave': 'Saw', 'b.pitch': 13, 'b.fine': -10, 'b.level': 23, 'b.voices': '1',
+    'flt.type': 'Lowpass', 'flt.cutoff': 1400, 'flt.res': 30, 'flt.drive': 45, 'flt.env': 55, 'env.f.att': 700, 'env.f.dec': 1600, 'env.f.sus': 55,
+    'lfo.shape': 'Sine', 'lfo.rate': 6.2, 'lfo.depth': 32, 'lfo.target': 'Pitch', 'lfo.fade': 900, glide: 320, legato: 1,
+    'env.a.att': 250, 'env.a.sus': 95, 'env.a.rel': 1600, char: 'Analog', space: 60 }, A.agony),
 ];
 
 /* AETHER's scenes: whole atmospheres (ids without "atm.", choices by name; what is not listed is the default) */
@@ -600,57 +590,54 @@ window.OBS_AETHER_SCENES = [
   /* NATURE */
   SC('NATURE', 'Rain on Glass', 'Rain against a window, the gutter dripping', { level: -6, space: 35, size: 40, 'bed.type': 'Rain', 'bed.tone': 70, 'bed.motion': 40, 'bed.depth': 70, 'bed.level': 65, 'drn.on': 0,
     'tex.on': 1, 'tex.type': 'Drips', 'tex.density': 25, 'tex.tone': 70, 'tex.chaos': 50, 'tex.level': 40 }),
-  SC('NATURE', 'Night Wind', 'Wind around the house, strings far off', { level: -11, space: 40, 'bed.type': 'Wind', 'bed.tone': 35, 'bed.motion': 45, 'bed.depth': 60, 'bed.level': 70,
-    'drn.voice': 'Strings', 'drn.chord': 'Fifth', 'drn.tone': 30, 'drn.level': 26 }),
-  SC('NATURE', 'Ocean Floor', 'Deep under the waves, bubbles rising', { level: -8.5, tone: -30, space: 70, size: 85, 'bed.type': 'Surf', 'bed.tone': 20, 'bed.motion': 25, 'bed.depth': 70, 'bed.level': 62,
-    'drn.voice': 'Choir', 'drn.chord': 'Octaves', 'drn.tone': 20, 'drn.level': 22, 'tex.on': 1, 'tex.type': 'Drips', 'tex.density': 30, 'tex.tone': 25, 'tex.chaos': 70, 'tex.level': 42 }),
+  SC('NATURE', 'Night Wind', 'Wind around the house, gusting and howling', { level: -15.5, space: 35, 'bed.type': 'Wind', 'bed.tone': 35, 'bed.motion': 50, 'bed.depth': 75, 'bed.level': 75, 'drn.on': 0 }),
+  SC('NATURE', 'Ocean Floor', 'Deep under the waves, bubbles rising', { level: -8, tone: -35, space: 75, size: 85, 'bed.type': 'Surf', 'bed.tone': 15, 'bed.motion': 20, 'bed.depth': 70, 'bed.level': 55, 'drn.on': 0,
+    'tex.on': 1, 'tex.type': 'Drips', 'tex.density': 45, 'tex.tone': 20, 'tex.chaos': 80, 'tex.level': 62 }),
   SC('NATURE', 'Campfire', 'A fire crackling under the night air', { level: -2.5, space: 15, size: 30, follow: -40, 'bed.type': 'Wind', 'bed.tone': 25, 'bed.motion': 20, 'bed.depth': 25, 'bed.level': 48, 'drn.on': 0,
     'tex.on': 1, 'tex.type': 'Fire', 'tex.density': 55, 'tex.tone': 45, 'tex.level': 85 }),
-  SC('NATURE', 'Thunderhead', 'A downpour, and the sky rolling overhead', { level: -6.5, evolve: 70, space: 50, size: 70, 'bed.type': 'Rain', 'bed.tone': 55, 'bed.motion': 85, 'bed.depth': 80, 'bed.level': 66,
+  SC('NATURE', 'Thunderhead', 'A downpour, and the sky rolling overhead', { level: -8, evolve: 70, space: 50, size: 70, 'bed.type': 'Rain', 'bed.tone': 55, 'bed.motion': 85, 'bed.depth': 80, 'bed.level': 66,
     'drn.voice': 'Abyss', 'drn.chord': 'Root', 'drn.oct': 'Sub', 'drn.tone': 25, 'drn.motion': 60, 'drn.level': 36 }),
-  SC('NATURE', 'Shoreline', 'Waves on the sand, slow and even', { level: -6.5, space: 30, size: 45, follow: -30, 'bed.type': 'Surf', 'bed.tone': 55, 'bed.motion': 35, 'bed.depth': 55, 'bed.level': 68, 'drn.on': 0 }),
+  SC('NATURE', 'Shoreline', 'Waves on the sand, slow and even', { level: -6, space: 30, size: 45, follow: -30, 'bed.type': 'Surf', 'bed.tone': 55, 'bed.motion': 35, 'bed.depth': 55, 'bed.level': 68, 'drn.on': 0 }),
   /* DREAM */
-  SC('DREAM', 'Deep Space', 'Drifting between the stars, glass all around', { level: -11, evolve: 70, space: 85, size: 95, 'bed.type': 'Hiss', 'bed.tone': 25, 'bed.motion': 20, 'bed.depth': 40, 'bed.level': 35,
-    'drn.voice': 'Glass', 'drn.chord': 'Sus', 'drn.oct': 'Mid', 'drn.detune': 35, 'drn.tone': 55, 'drn.motion': 40, 'drn.level': 50,
-    'tex.on': 1, 'tex.type': 'Shimmer', 'tex.density': 30, 'tex.tone': 75, 'tex.chaos': 40, 'tex.level': 45 }),
-  SC('DREAM', 'Cathedral', 'A choir in a stone hall', { level: -11, tone: -10, space: 75, size: 90, 'bed.type': 'Hiss', 'bed.tone': 15, 'bed.depth': 30, 'bed.level': 25,
-    'drn.voice': 'Choir', 'drn.chord': 'Fifth', 'drn.detune': 30, 'drn.tone': 45, 'drn.motion': 40, 'drn.level': 55 }),
-  SC('DREAM', 'Glass Garden', 'Wind chimes of glass in a soft breeze', { level: -7.5, tone: 25, space: 70, size: 80, 'bed.type': 'Wind', 'bed.tone': 70, 'bed.motion': 25, 'bed.depth': 30, 'bed.level': 30,
-    'drn.voice': 'Glass', 'drn.chord': 'Octaves', 'drn.oct': 'High', 'drn.level': 30, 'tex.on': 1, 'tex.type': 'Shimmer', 'tex.density': 55, 'tex.tone': 85, 'tex.level': 55 }),
-  SC('DREAM', 'Old Record', 'A warm organ on a dusty record', { level: -4, grit: 15, tone: -20, space: 20, size: 35, 'bed.type': 'Hiss', 'bed.tone': 60, 'bed.motion': 10, 'bed.depth': 20, 'bed.level': 25,
+  SC('DREAM', 'Deep Space', 'Drifting between the stars, glass all around', { level: -12, evolve: 70, space: 85, size: 95, 'bed.on': 0,
+    'drn.voice': 'Glass', 'drn.chord': 'Sus', 'drn.oct': 'Mid', 'drn.detune': 35, 'drn.tone': 55, 'drn.motion': 40, 'drn.level': 58,
+    'tex.on': 1, 'tex.type': 'Shimmer', 'tex.density': 25, 'tex.tone': 75, 'tex.chaos': 40, 'tex.level': 40 }),
+  SC('DREAM', 'Cathedral', 'A choir in a stone hall', { level: -11, tone: -10, space: 75, size: 90, 'bed.on': 0,
+    'drn.voice': 'Choir', 'drn.chord': 'Fifth', 'drn.detune': 30, 'drn.tone': 45, 'drn.motion': 40, 'drn.level': 60 }),
+  SC('DREAM', 'Glass Garden', 'Glass chimes in a soft breeze', { level: -10.5, tone: 25, space: 70, size: 80, 'bed.type': 'Wind', 'bed.tone': 70, 'bed.motion': 25, 'bed.depth': 25, 'bed.level': 28, 'drn.on': 0,
+    'tex.on': 1, 'tex.type': 'Shimmer', 'tex.density': 58, 'tex.tone': 85, 'tex.chaos': 30, 'tex.level': 68 }),
+  SC('DREAM', 'Old Record', 'A warm organ on a dusty record', { level: -5, grit: 15, tone: -20, space: 20, size: 35, 'bed.type': 'Hiss', 'bed.tone': 60, 'bed.motion': 10, 'bed.depth': 20, 'bed.level': 25,
     'drn.voice': 'Organ', 'drn.chord': 'Sus', 'drn.oct': 'Mid', 'drn.detune': 20, 'drn.tone': 35, 'drn.motion': 25, 'drn.level': 45,
     'tex.on': 1, 'tex.type': 'Vinyl', 'tex.density': 50, 'tex.tone': 55, 'tex.level': 60 }),
-  SC('DREAM', 'Ascension', 'Rising, and rising, and rising', { level: -12.5, space: 75, size: 90, 'bed.type': 'Wind', 'bed.tone': 60, 'bed.depth': 35, 'bed.level': 30,
+  SC('DREAM', 'Ascension', 'Rising, and rising, and rising', { level: -12, space: 75, size: 90, 'bed.type': 'Wind', 'bed.tone': 60, 'bed.depth': 35, 'bed.level': 30,
     'drn.voice': 'Ascent', 'drn.chord': 'Fifth', 'drn.oct': 'Mid', 'drn.detune': 20, 'drn.tone': 55, 'drn.motion': 35, 'drn.level': 60,
     'tex.on': 1, 'tex.type': 'Shimmer', 'tex.density': 25, 'tex.level': 35 }),
   /* DARK */
-  SC('DARK', 'The Cellar', 'Damp stone, dripping, something low in the dark', { level: -4.5, tone: -35, space: 45, size: 55, 'bed.type': 'Rumble', 'bed.tone': 20, 'bed.motion': 25, 'bed.depth': 45, 'bed.level': 60,
-    'drn.voice': 'Strings', 'drn.chord': 'Minor', 'drn.tone': 20, 'drn.level': 20, 'tex.on': 1, 'tex.type': 'Drips', 'tex.density': 30, 'tex.tone': 30, 'tex.chaos': 70, 'tex.level': 65 }),
-  SC('DARK', 'Haunted Ward', 'An old radio in an empty hospital. Someone whispers.', { level: -5.5, evolve: 60, space: 60, size: 75, 'bed.type': 'Static', 'bed.tone': 30, 'bed.motion': 30, 'bed.depth': 55, 'bed.level': 40,
-    'drn.voice': 'Glass', 'drn.chord': 'Tritone', 'drn.oct': 'Mid', 'drn.detune': 50, 'drn.tone': 40, 'drn.level': 35,
-    'tex.on': 1, 'tex.type': 'Whispers', 'tex.density': 35, 'tex.tone': 45, 'tex.chaos': 60, 'tex.level': 55 }),
-  SC('DARK', 'Number Station', 'A shortwave signal that should not be there', { level: -13, grit: 30, space: 30, 'bed.type': 'Static', 'bed.tone': 65, 'bed.motion': 45, 'bed.depth': 90, 'bed.level': 60,
-    'drn.voice': 'Organ', 'drn.chord': 'Root', 'drn.oct': 'Mid', 'drn.detune': 5, 'drn.tone': 30, 'drn.level': 20 }),
-  SC('DARK', 'Heartbeat', 'Breathing slowly, the heart loud in your ears', { level: -3.5, space: 25, size: 35, 'bed.type': 'Breath', 'bed.tone': 40, 'bed.motion': 30, 'bed.depth': 30, 'bed.level': 45,
-    'drn.voice': 'Abyss', 'drn.chord': 'Root', 'drn.oct': 'Sub', 'drn.level': 30, 'tex.on': 1, 'tex.type': 'Heartbeat', 'tex.density': 45, 'tex.chaos': 30, 'tex.level': 80 }),
-  SC('DARK', 'Night Visitors', 'Wind, and knocking on the door at three in the morning', { level: -4.5, space: 55, size: 70, 'bed.type': 'Wind', 'bed.tone': 25, 'bed.motion': 30, 'bed.depth': 50, 'bed.level': 55,
-    'drn.voice': 'Strings', 'drn.chord': 'Tritone', 'drn.tone': 25, 'drn.level': 20, 'tex.on': 1, 'tex.type': 'Knocks', 'tex.density': 30, 'tex.tone': 40, 'tex.chaos': 60, 'tex.level': 65 }),
-  SC('DARK', 'Mineshaft', 'Down where the light does not reach. Metal groans.', { level: -11, tone: -30, space: 65, size: 85, 'bed.type': 'Rumble', 'bed.tone': 30, 'bed.depth': 50, 'bed.level': 45,
-    'drn.voice': 'Descent', 'drn.chord': 'Minor', 'drn.detune': 30, 'drn.tone': 40, 'drn.motion': 30, 'drn.level': 55,
-    'tex.on': 1, 'tex.type': 'Metal', 'tex.density': 20, 'tex.chaos': 50, 'tex.level': 42 }),
+  SC('DARK', 'The Cellar', 'Damp stone, water dripping in the dark', { level: -1.5, tone: -35, space: 50, size: 60, 'bed.type': 'Rumble', 'bed.tone': 20, 'bed.motion': 25, 'bed.depth': 40, 'bed.level': 40, 'drn.on': 0,
+    'tex.on': 1, 'tex.type': 'Drips', 'tex.density': 38, 'tex.tone': 30, 'tex.chaos': 70, 'tex.level': 70 }),
+  SC('DARK', 'Haunted Ward', 'Glass ringing out of tune in an empty hospital', { level: -10.5, evolve: 60, space: 65, size: 80, 'bed.type': 'Hiss', 'bed.tone': 30, 'bed.motion': 20, 'bed.depth': 40, 'bed.level': 22,
+    'drn.voice': 'Glass', 'drn.chord': 'Tritone', 'drn.oct': 'Mid', 'drn.detune': 55, 'drn.tone': 40, 'drn.motion': 45, 'drn.level': 62 }),
+  SC('DARK', 'Number Station', 'A shortwave signal that should not be there', { level: -9.5, grit: 30, space: 30, 'bed.type': 'Static', 'bed.tone': 70, 'bed.motion': 35, 'bed.depth': 60, 'bed.level': 55,
+    'drn.voice': 'Organ', 'drn.chord': 'Root', 'drn.oct': 'High', 'drn.detune': 0, 'drn.tone': 20, 'drn.motion': 0, 'drn.level': 42 }),
+  SC('DARK', 'Heartbeat', 'A slow heart, loud in your ears', { level: 0, space: 20, size: 30, 'bed.type': 'Breath', 'bed.tone': 40, 'bed.motion': 20, 'bed.depth': 20, 'bed.level': 24, 'drn.on': 0,
+    'tex.on': 1, 'tex.type': 'Heartbeat', 'tex.density': 25, 'tex.chaos': 20, 'tex.level': 82 }),
+  SC('DARK', 'Ghost Ship', 'An empty ship creaking on the waves', { level: 1.5, space: 55, size: 70, 'bed.type': 'Surf', 'bed.tone': 30, 'bed.motion': 30, 'bed.depth': 55, 'bed.level': 45, 'drn.on': 0,
+    'tex.on': 1, 'tex.type': 'Metal', 'tex.density': 35, 'tex.tone': 10, 'tex.chaos': 15, 'tex.level': 70 }),
+  SC('DARK', 'Mineshaft', 'Down where the light does not reach, metal groaning', { level: -7, tone: -30, space: 65, size: 85, 'bed.type': 'Rumble', 'bed.tone': 30, 'bed.motion': 35, 'bed.depth': 60, 'bed.level': 55, 'drn.on': 0,
+    'tex.on': 1, 'tex.type': 'Metal', 'tex.density': 25, 'tex.tone': 25, 'tex.chaos': 85, 'tex.level': 62 }),
   /* HORROR: the atmospheres of SIREN's HORROR presets */
-  SC('HORROR', 'Flesh Choir', 'Moaning voices over a dread chord, wind in the rafters', A.flesh),
-  SC('HORROR', 'Bone Saw', 'Metal grinding and scraping through static', A.saw),
-  SC('HORROR', 'The Descent', 'A falling tone, the ground rumbling, a slow heart', A.descent),
-  SC('HORROR', 'Something in the Walls', 'Breathing behind the plaster, knocking, a sub', A.walls),
-  SC('HORROR', 'Wound', 'Ragged, rasping breath and distant wails', A.wound),
-  SC('HORROR', 'Asylum Night', 'A radio in the ward, glass, whispers', A.asylum),
-  SC('HORROR', 'Abattoir', 'Wet, cracking, tearing, over a churning sub', A.abattoir),
-  SC('HORROR', 'Night Terror', 'Panting and a racing, stumbling heart', A.terror),
-  SC('HORROR', 'Black Mass', 'A choir of the damned in an endless hall', A.mass),
-  SC('HORROR', 'Possessed', 'Whispering everywhere, a growl, a throat that rasps', A.possessed),
-  SC('HORROR', 'Dead Radio', 'Static and voices between the stations', A.radio),
-  SC('HORROR', 'Agony', 'Howling wind, tearing strings, voices in pain', A.agony),
+  SC('HORROR', 'Flesh Choir', 'A choir of the damned on a dread chord', A.flesh),
+  SC('HORROR', 'Bone Saw', 'Metal being sawn and scraped', A.saw),
+  SC('HORROR', 'The Descent', 'A tone that falls forever, the ground rumbling', A.descent),
+  SC('HORROR', 'Something in the Walls', 'Knocking inside the walls, breathing behind them', A.walls),
+  SC('HORROR', 'Wound', 'Ragged, rasping breathing, right next to you', A.wound),
+  SC('HORROR', 'Asylum Night', 'A broken music box, a radio left on', A.asylum),
+  SC('HORROR', 'Abattoir', 'Wet, cracking, tearing, machines churning', A.abattoir),
+  SC('HORROR', 'Night Terror', 'A racing, stumbling heart and panting', A.terror),
+  SC('HORROR', 'Black Mass', 'An organ on a dread chord in an endless hall', A.mass),
+  SC('HORROR', 'Possessed', 'Whispering all around you, a growl under it', A.possessed),
+  SC('HORROR', 'Dead Radio', 'A radio between stations, voices in the static', A.radio),
+  SC('HORROR', 'Agony', 'Voices wailing in pain over a howling wind', A.agony),
 ];
 })();
 </script>
@@ -2153,6 +2140,7 @@ css.textContent = `
 .ae-dice { width: 26px; height: 22px; flex: none; border-radius: 6px; border: 1px solid rgba(255,255,255,.1); background: none; color: rgb(var(--cf_8d8d93)); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; transition: color .12s, border-color .12s, transform .08s; }
 .ae-dice:hover { color: var(--sc); border-color: color-mix(in srgb, var(--sc) 55%, transparent); }
 .ae-dice:active { transform: rotate(-14deg) scale(.94); }
+.ae-sub { font-size: 8.5px; color: rgb(var(--cf_6f6f76)); letter-spacing: .04em; white-space: nowrap; margin-left: 2px; }
 .ae-hint { font-size: 9px; color: rgb(var(--cf_6f6f76)); letter-spacing: .03em; text-align: center; min-height: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: none; }
 .ae-row { display: flex; align-items: center; gap: 8px; flex: none; }
 .ae-notes { font-size: 9.5px; color: rgb(var(--cf_a3a3a8)); letter-spacing: .08em; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -2183,12 +2171,12 @@ const strip = el('div', 'sy-top sy-aether'); dev.appendChild(strip);
 const powerW = pushBtn(() => on('atm.on'), v => set('atm.on', v ? 1 : 0, 'ui'), 'POWER', K.PWR_IC, 'ON', 'OFF', 'AETHER on / off (it plays by itself, with or without SIREN)');
 const freezeW = pushBtn(() => on('atm.freeze'), v => set('atm.freeze', v ? 1 : 0, 'ui'), 'FREEZE', ICA.freeze, 'HELD', 'OFF', 'Holds what is in the space, forever, and lets nothing new in');
 const disp = el('div', 'sy-led ae-disp', '<span class="k"></span><span class="tn"></span><div class="rows">' +
-  ['BED', 'DRONE', 'TEXTR'].map((l, i) => '<div class="r" style="--lc:' + ['var(--a-bed)', 'var(--a-drn)', 'var(--a-tex)'][i] + '"><b>' + l + '</b><u></u><i><em></em></i></div>').join('') + '</div>');
+  ['NOISE', 'DRONE', 'EVENT'].map((l, i) => '<div class="r" style="--lc:' + ['var(--a-bed)', 'var(--a-drn)', 'var(--a-tex)'][i] + '"><b>' + l + '</b><u></u><i><em></em></i></div>').join('') + '</div>');
 const dispW = el('div', 'sy-hw'); dispW.appendChild(disp);
 K.stripGroups(strip, [powerW,
   mknob('atm.evolve', 'EVOLVE', { tip: 'Every layer slowly drifts by itself: nothing stays the same for long' }),
   mknob('atm.follow', 'FOLLOW', { tip: 'Left: it ducks while you play and comes back when you stop. Right: your playing makes it swell.' }),
-  sel('ui.mood', 'MOOD', MOODS, { span: 200, tip: 'What the dice, MUTATE and SUMMON reach for: calm nature .. dream .. eerie .. dread .. horror' }),
+  sel('ui.mood', 'MOOD', MOODS, { span: 200, tip: 'The kind of world SUMMON and the dice make: calm nature .. dream .. eerie .. dread .. horror. The SCENES are made by hand.' }),
   freezeW], dispW, [
   mknob('atm.width', 'WIDTH', { tip: 'How wide it spreads around you' }),
   mknob('atm.grit', 'GRIT', { tip: 'Dirt: saturation, and above halfway it rots (lower rate, fewer bits)' }),
@@ -2196,6 +2184,7 @@ K.stripGroups(strip, [powerW,
   mknob('atm.level', 'LEVEL', { tip: 'How loud the atmosphere is under your playing' })]);
 onChange(id => { if (id === 'atm.on') powerW._draw(); if (id === 'atm.freeze') freezeW._draw(); });
 const moodSel = strip.querySelector('[data-param="ui.mood"]');
+const moodLbl = moodSel && moodSel.parentElement.querySelector('.sy-eng'); if (moodLbl) moodLbl.textContent = 'SUMMON MOOD';
 const drawMoodOpts = () => { if (!moodSel) return; [...moodSel.querySelectorAll('.opt')].forEach((o, i) => { o.style.color = i === mood() ? MOOD_COL[i] : ''; o.style.textShadow = i === mood() ? '0 0 8px ' + MOOD_COL[i] : ''; }); };
 
 /* ---- the screen ---- */
@@ -2220,9 +2209,10 @@ function typedKnobs(ids, labelsFor, fmtFor) {
 }
 
 /* BED */
-const cBed = section('BED', 300, 'var(--a-bed)', ascreen);
-const bedDice = diceBtn('Roll a new bed (follows the MOOD)', () => { keepUndo(); rollBed(); markScene(); flash(); });
-cBed._h.append(el('span', 'sy-sp'), bedDice, toggle('atm.bed.on', 'Bed on'));
+const sub = t => el('span', 'ae-sub', t);
+const cBed = section('NOISE', 300, 'var(--a-bed)', ascreen);
+const bedDice = diceBtn('Roll new noise (follows the MOOD)', () => { keepUndo(); rollBed(); markScene(); flash(); });
+cBed._h.append(sub('the air around you'), el('span', 'sy-sp'), bedDice, toggle('atm.bed.on', 'Noise on'));
 const bedGrid = grid('atm.bed.type', BEDS, 4);
 const bedVis = canvasBox(66);
 const bedKnobs = typedKnobs(['atm.bed.tone', 'atm.bed.motion', 'atm.bed.depth', 'atm.bed.level'], () => [...BED_INFO[Math.round(S['atm.bed.type'])].slice(0, 3), 'LEVEL']);
@@ -2232,7 +2222,7 @@ cBed._b.append(bedGrid, bedVis, bedKnobs, bedHint);
 /* DRONE */
 const cDrn = section('DRONE', 340, 'var(--a-drn)', ascreen);
 const drnDice = diceBtn('Roll a new drone (follows the MOOD)', () => { keepUndo(); rollDrone(); markScene(); flash(); });
-cDrn._h.append(el('span', 'sy-sp'), chip('atm.drn.follow', 'FOLLOW', 'The drone moves to the note you play (otherwise it stays on SIREN\'s key)'), drnDice, toggle('atm.drn.on', 'Drone on'));
+cDrn._h.append(sub('a chord that hangs'), el('span', 'sy-sp'), chip('atm.drn.follow', 'FOLLOW', 'The drone moves to the note you play (otherwise it stays on SIREN\'s key)'), drnDice, toggle('atm.drn.on', 'Drone on'));
 const drnGrid = grid('atm.drn.voice', VOICES, 4);
 const chordSeg = seg('atm.drn.chord', CHORDS, { small: true }); chordSeg.classList.add('tight');
 chordSeg.title = 'The chord the drone holds: from one note to a dread cluster';
@@ -2244,9 +2234,9 @@ const drnKnobs = typedKnobs(['atm.drn.detune', 'atm.drn.tone', 'atm.drn.motion',
 cDrn._b.append(drnGrid, chordSeg, octRow, drnVis, drnKnobs);
 
 /* TEXTURE */
-const cTex = section('TEXTURE', 320, 'var(--a-tex)', ascreen);
-const texDice = diceBtn('Roll a new texture (follows the MOOD)', () => { keepUndo(); rollTexture(); markScene(); flash(); });
-cTex._h.append(el('span', 'sy-sp'), texDice, toggle('atm.tex.on', 'Texture on'));
+const cTex = section('EVENTS', 320, 'var(--a-tex)', ascreen);
+const texDice = diceBtn('Roll new events (follows the MOOD)', () => { keepUndo(); rollTexture(); markScene(); flash(); });
+cTex._h.append(sub('sounds now and then'), el('span', 'sy-sp'), texDice, toggle('atm.tex.on', 'Events on'));
 const texGrid = grid('atm.tex.type', TEXS, 5);
 const texVis = canvasBox(66);
 const texKnobs = typedKnobs(['atm.tex.density', 'atm.tex.tone', 'atm.tex.chaos', 'atm.tex.level'], () => [...TEX_INFO[Math.round(S['atm.tex.type'])].slice(0, 3), 'LEVEL'],
@@ -2255,7 +2245,7 @@ const texHint = el('div', 'ae-hint');
 cTex._b.append(texGrid, texVis, texKnobs, texHint);
 
 /* VOID */
-const cVoid = section('VOID', 276, 'var(--a-void)', ascreen);
+const cVoid = section('SPACE', 276, 'var(--a-void)', ascreen);
 const voidMood = el('span', 'sy-lbl'); cVoid._h.append(el('span', 'sy-sp'), voidMood);
 const voidVis = canvasBox(0); voidVis.classList.add('ae-void');
 const voidKnobs = el('div', 'sy-knobs');
@@ -2629,6 +2619,7 @@ Object.assign(K, {
   pageShown(p) { if (p === 'aether') { scOpen(false); setTimeout(() => { drawDroneVis(); drawDisplay(); }, 20); } else scOpen(false); },
 });
 Object.assign(window.obsSynth, { aetherSummon: summonWorld, aetherMutate: mutateWorld, aetherReset: resetAether, aetherScenes: SCENES, aetherLoadScene: loadScene,
+  aetherPreview: () => PV,                 // the browser preview engine (for measuring it)
   aetherRollBed: () => { keepUndo(); rollBed(); markScene(); }, aetherRollDrone: () => { keepUndo(); rollDrone(); markScene(); }, aetherRollTexture: () => { keepUndo(); rollTexture(); markScene(); } });
 
 /* ============================================================ preview engine (browser only) */
@@ -2722,7 +2713,7 @@ function pvTexEvent(t) {
   if (ty === 0 || ty === 1) { const s = noise(.03), b = ac.createBiquadFilter(); b.type = 'bandpass'; b.frequency.value = (ty ? 1400 : 3000) * Math.pow(2, tone * 1.5 + rr(-.5, .5)); b.Q.value = 2; s.connect(b); b.connect(g); env(g, rr(.3, .9), .001, .01); end([s, b, g, pan], .3); }
   if (ty === 2) { const o = osc('sine', 450 * Math.pow(2, tone * 2.2 + rr(-.6, .6))); o.frequency.exponentialRampToValueAtTime(o.frequency.value * 2.1, t + .03); o.connect(g); env(g, rr(.2, .5), .002, .04); end([o, g, pan], .6); }
   if (ty === 3) { const s = noise(Math.random() < .4 ? .015 : rr(.6, 2)), base = 55 * Math.pow(2, tone * 3 + rr(-.8, .8));
-    [1, 2.32, 4.25, 6.63].forEach((r, k) => { const b = ac.createBiquadFilter(), bg = ac.createGain(); b.type = 'bandpass'; b.frequency.value = base * r; b.Q.value = 60; bg.gain.value = 9 / (k + 1); s.connect(b); b.connect(bg); bg.connect(g); });
+    [1, 2.32, 4.25, 6.63].forEach((r, k) => { const b = ac.createBiquadFilter(), bg = ac.createGain(); b.type = 'bandpass'; b.frequency.value = base * r; b.Q.value = 60; bg.gain.value = 260 / (k + 1); s.connect(b); b.connect(bg); bg.connect(g); });
     env(g, .5, .05, .6); end([s, g, pan], 4); }
   if (ty === 4) { const pent = [0, 2, 4, 7, 9], m = 72 + 12 * Math.floor(tone * 2) + Math.round(S['syn.key']) + pick(pent), o = osc('sine', 440 * Math.pow(2, (m - 69) / 12)); o.connect(g); const d = rr(.15, 1); env(g, rr(.08, .2), d * .3, d * .3); end([o, g, pan], d * 3); }
   if (ty === 5) { const s = noise(1.2), a = ac.createBiquadFilter(), b = ac.createBiquadFilter(); a.type = b.type = 'bandpass'; a.Q.value = 6; b.Q.value = 7;
@@ -2731,7 +2722,7 @@ function pvTexEvent(t) {
   if (ty === 6) { const gap = 60 / (42 + S['atm.tex.density'] * 1.18); [0, .28 * gap].forEach((dt, k) => { const o = ac.createOscillator(), og = ac.createGain(); o.frequency.setValueAtTime(k ? 74 : 58, t + dt); o.frequency.exponentialRampToValueAtTime(k ? 46 : 36, t + dt + .1);
     o.connect(og); og.connect(pan); og.gain.setValueAtTime(0, t + dt); og.gain.linearRampToValueAtTime(k ? .5 : .75, t + dt + .005); og.gain.setTargetAtTime(0, t + dt + .005, .08); o.start(t + dt); end([o, og], dt + .5); }); pan.pan.value = 0; end([pan, g], 1); }
   if (ty === 7) { const n = 2 + Math.floor(Math.random() * (1.5 + ch * 1.5)), gap = rr(.13, .23); for (let k = 0; k < n; k++) { const tk = t + k * gap, s = ac.createBufferSource(), b = ac.createBiquadFilter(), kg = ac.createGain();
-    s.buffer = PV.bufs.white; s.start(tk, Math.random() * 3, .004); b.type = 'bandpass'; b.frequency.value = 170 * Math.pow(2, tone * 1.3); b.Q.value = 5; s.connect(b); b.connect(kg); kg.connect(pan); kg.gain.value = 9; end([s, b, kg], k * gap + .4); } end([g, pan], n * gap + .5); }
+    s.buffer = PV.bufs.white; s.start(tk, Math.random() * 3, .004); b.type = 'bandpass'; b.frequency.value = 170 * Math.pow(2, tone * 1.3); b.Q.value = 5; s.connect(b); b.connect(kg); kg.connect(pan); kg.gain.value = 120; end([s, b, kg], k * gap + .4); } end([g, pan], n * gap + .5); }
   if (ty === 8) { const o = osc('sawtooth', 82 * Math.pow(2, tone * 2.4 + rr(-.45, .45))), dur = rr(1.3, 3.5), f0 = o.frequency.value, up = rr(1.5, 5.5);
     o.frequency.setValueAtTime(f0, t); o.frequency.linearRampToValueAtTime(f0 * Math.pow(2, up / 12), t + dur * .22); o.frequency.linearRampToValueAtTime(f0 * Math.pow(2, (up - 12 * rr(.3, 1)) / 12 - 1 / 12), t + dur);
     const fm = ac.createGain(); [[450, .5], [800, .3], [2830, .1]].forEach(([fq, a]) => { const b = ac.createBiquadFilter(), bg = ac.createGain(); b.type = 'bandpass'; b.frequency.value = fq; b.Q.value = 7; bg.gain.value = a * 5; fm.connect(b); b.connect(bg); bg.connect(g); });
@@ -2747,6 +2738,12 @@ function pvTexBed() {
   if (ty === 0) { const s = pvSrc(PV.bufs.crackle), hp = ac.createBiquadFilter(), g = ac.createGain(); s.playbackRate.value = .5 + d * 3; hp.type = 'highpass'; hp.frequency.value = 900; g.gain.value = 2; s.connect(hp); hp.connect(g); g.connect(L.g); L.nodes.push(s, hp, g); }
   if (ty === 1) { const s = pvSrc(PV.bufs.brown), lp = ac.createBiquadFilter(), g = ac.createGain(); lp.type = 'lowpass'; lp.frequency.value = 250 + tone * 900; g.gain.value = .5 + .4 * d; s.connect(lp); lp.connect(g); g.connect(L.g); L.nodes.push(s, lp, g, ...pvLfo(.4 + d, .25, g.gain)); }
 }
+//                Hiss Wind Rain Surf Rumble Static Breath
+const PV_BED_DB = [-7.5, 3.4, -7.2, -9.7, -13.6, 6.6, -1.9];
+//                Organ Strings Choir Glass Abyss Descent Ascent
+const PV_DRN_DB = [3.3, 7.5, 13.9, 2.4, -1.7, 1, 1.1];
+//                Vinyl Fire Drips Metal Shimmer Whispers Heart Knocks Moans Flesh
+const PV_TEX_DB = [5.6, -16.6, -0.5, -14.3, 0, 7, -3.8, -4.2, -3.8, -4.6];
 const TEX_RATE = [[.15, 2], [.8, 14], [.25, 7], [.06, 1.4], [.6, 22], [.15, 2.8], [0, 0], [.06, 1.2], [.05, .9], [.12, 3.5]];
 let pvNext = 0;
 function pvSchedule() {
@@ -2771,32 +2768,39 @@ function pvGlobal() {
   const mix = S['atm.space'] / 100; PV.wet.gain.setTargetAtTime(mix * 1.1, now, .05); PV.dry.gain.setTargetAtTime(1 - mix * .45, now, .05);
   const t60 = on('atm.freeze') ? 12 : 1.2 * Math.pow(25, S['atm.size'] / 100), key = t60.toFixed(1) + (on('atm.freeze') ? 'f' : '');
   if (key !== PV.irKey) { PV.irKey = key; PV.conv.buffer = ir(ac, Math.min(t60, 12), on('atm.freeze')); }
-  const lv = (L, id, idOn) => L.g.gain.setTargetAtTime(on(idOn) ? lvlOf(S[id]) : 0, now, .08);
-  lv(PV.bed, 'atm.bed.level', 'atm.bed.on'); lv(PV.drn, 'atm.drn.level', 'atm.drn.on'); lv(PV.tex, 'atm.tex.level', 'atm.tex.on');
+  // per sound, so the preview's balance follows the plugin's (measured in headless Chrome against the engine's renders)
+  const lv = (L, id, idOn, trim) => L.g.gain.setTargetAtTime(on(idOn) ? lvlOf(S[id]) * Math.pow(10, trim / 20) : 0, now, .08);
+  lv(PV.bed, 'atm.bed.level', 'atm.bed.on', PV_BED_DB[Math.round(S['atm.bed.type'])]);
+  lv(PV.drn, 'atm.drn.level', 'atm.drn.on', PV_DRN_DB[Math.round(S['atm.drn.voice'])]);
+  lv(PV.tex, 'atm.tex.level', 'atm.tex.on', PV_TEX_DB[Math.round(S['atm.tex.type'])]);
 }
 const rms = an => { const a = new Float32Array(an.fftSize); an.getFloatTimeDomainData(a); let s = 0; for (const x of a) s += x * x; return Math.sqrt(s / a.length) * 4; };
 function previewMeters() {
   if (!PV.on) { act = [0, 0, 0]; return; }
   act = [rms(PV.bed.an), rms(PV.drn.an), rms(PV.tex.an)];
 }
-let pvT = null;
+/* rebuild what changed: every layer named in `what` (a scene changes all three at once) */
+let pvT = null; const pvWant = new Set();
 function pvRebuild(what) {
   if (inPlugin()) return;
+  what.forEach(w => pvWant.add(w));
   if (!on('atm.on')) { if (PV.on) pvGlobal(); return; }
-  if (!PV.on) { pvBuild(); what = 'all'; }
+  if (!PV.on) { pvBuild(); pvWant.add('all'); }
   pvGlobal();
   clearTimeout(pvT);
-  pvT = setTimeout(() => { if (what === 'all' || what === 'bed') pvBed(); if (what === 'all' || what === 'drn') pvDrone(); if (what === 'all' || what === 'tex') pvTexBed(); }, 60);
+  pvT = setTimeout(() => {
+    const all = pvWant.has('all'); const w = new Set(pvWant); pvWant.clear();
+    if (all || w.has('bed')) pvBed(); if (all || w.has('drn')) pvDrone(); if (all || w.has('tex')) pvTexBed();
+  }, 30);
 }
-const pendingWhat = new Set();
 onChange((id, v, from) => {
   if (inPlugin() || !id.startsWith('atm.') && id !== 'syn.key' && id !== 'syn.tune') return;
-  if (id === 'atm.on') { if (on('atm.on')) { pendingWhat.add('all'); } else if (PV.on) { pvGlobal(); return; } }
-  if (/^atm\.bed\./.test(id) && !/level$/.test(id)) pendingWhat.add('bed');
-  if (/^atm\.drn\./.test(id) && !/level$/.test(id) || id === 'syn.key' || id === 'syn.tune' || id === 'atm.width') pendingWhat.add('drn');
-  if (/^atm\.tex\.(type|on|tone|density)$/.test(id)) pendingWhat.add('tex');
-  clearTimeout(pvRebuild.t);
-  pvRebuild.t = setTimeout(() => { const w = pendingWhat.has('all') ? ['all'] : [...pendingWhat]; pendingWhat.clear(); if (!w.length) pvRebuild('none'); w.forEach(x => pvRebuild(x)); }, 40);
+  const w = [];
+  if (id === 'atm.on' && on('atm.on')) w.push('all');
+  if (/^atm\.bed\./.test(id) && !/level$/.test(id)) w.push('bed');
+  if ((/^atm\.drn\./.test(id) && !/level$/.test(id)) || id === 'syn.key' || id === 'syn.tune' || id === 'atm.width') w.push('drn');
+  if (/^atm\.tex\.(type|on|tone|density)$/.test(id)) w.push('tex');
+  pvRebuild(w);
 });
 setInterval(() => { if (!inPlugin() && PV.on && on('atm.on')) pvSchedule(); }, 50);
 

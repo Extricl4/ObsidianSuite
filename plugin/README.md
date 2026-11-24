@@ -137,19 +137,19 @@ atmospheres that play by themselves around your playing, no notes needed. It has
 (independent of SIREN's), and its dot on the switch lights while it plays. Engine: `Source/DSP/Atmos.h`
 (settings `AtmosDefs.h`, `atm.*`), added after the cab and synth, before the EQ and FX.
 
-* **BED**: hiss, wind (gusts, a howl), rain (drops on a hiss), surf (waves left and right), rumble (deep
+* **NOISE** (the air around you): hiss, wind (gusts, a howl), rain (drops on a hiss), surf (waves left and right), rumble (deep
   earth, a sub), static (an old radio, crackle, a tuning whistle), breath (slow breathing, rasping when DEEP).
   The knobs are named for what they do with each bed (WIND: PITCH, GUSTS, HOWL).
-* **DRONE**: organ, strings, choir (drifting vowels), glass (bell FM), abyss (a growling sub), descent and
+* **DRONE** (a chord that hangs): organ, strings, choir (drifting vowels), glass (bell FM), abyss (a growling sub), descent and
   ascent (Shepard tones that fall or rise forever); chords from one note to a dread cluster; octave;
   in SIREN's key, or **FOLLOW** moves it to the note you play.
-* **TEXTURE**: vinyl, fire, drips, metal (struck and scraped plates), shimmer (glass in your key), whispers,
+* **EVENTS** (sounds now and then): vinyl, fire, drips, metal (struck and scraped plates), shimmer (glass in your key), whispers,
   heart (STUMBLE makes it skip), knocks, moans (voices in pain), flesh (wet, cracking, tearing).
-* **VOID**: SIZE (a room to an endless void) and SPACE, drawn live. In the strip: EVOLVE (everything drifts),
+* **SPACE**: SIZE (a room to an endless void) and how much goes in, drawn live. In the strip: EVOLVE (everything drifts),
   FOLLOW (duck under your playing or swell with it), **FREEZE** (holds the space forever), WIDTH, GRIT, TONE, LEVEL.
-* **MOOD** (calm, dream, eerie, dread, horror) decides what the three dice, **MUTATE** (nudge everything)
-  and **SUMMON** (a whole new world, with a name) reach for. **SCENES**: 29 ready-made atmospheres
-  (nature, dream, dark, horror), levelled so they sit under the guitar.
+* **SCENES**: 29 hand-made atmospheres (nature, dream, dark, horror), each led by one sound of its own and
+  levelled to sit under the guitar. **SUMMON MOOD** (calm .. horror) decides what the random buttons make:
+  the three dice, **MUTATE** (nudge everything) and **SUMMON** (a whole new world, with a name).
 
 ## HYDRA, the harmonizer (HARMONY page)
 

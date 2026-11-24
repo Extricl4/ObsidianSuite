@@ -91,6 +91,7 @@ css.textContent = `
 .ae-dice { width: 26px; height: 22px; flex: none; border-radius: 6px; border: 1px solid rgba(255,255,255,.1); background: none; color: #8d8d93; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; transition: color .12s, border-color .12s, transform .08s; }
 .ae-dice:hover { color: var(--sc); border-color: color-mix(in srgb, var(--sc) 55%, transparent); }
 .ae-dice:active { transform: rotate(-14deg) scale(.94); }
+.ae-sub { font-size: 8.5px; color: #6f6f76; letter-spacing: .04em; white-space: nowrap; margin-left: 2px; }
 .ae-hint { font-size: 9px; color: #6f6f76; letter-spacing: .03em; text-align: center; min-height: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: none; }
 .ae-row { display: flex; align-items: center; gap: 8px; flex: none; }
 .ae-notes { font-size: 9.5px; color: #a3a3a8; letter-spacing: .08em; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -121,12 +122,12 @@ const strip = el('div', 'sy-top sy-aether'); dev.appendChild(strip);
 const powerW = pushBtn(() => on('atm.on'), v => set('atm.on', v ? 1 : 0, 'ui'), 'POWER', K.PWR_IC, 'ON', 'OFF', 'AETHER on / off (it plays by itself, with or without SIREN)');
 const freezeW = pushBtn(() => on('atm.freeze'), v => set('atm.freeze', v ? 1 : 0, 'ui'), 'FREEZE', ICA.freeze, 'HELD', 'OFF', 'Holds what is in the space, forever, and lets nothing new in');
 const disp = el('div', 'sy-led ae-disp', '<span class="k"></span><span class="tn"></span><div class="rows">' +
-  ['BED', 'DRONE', 'TEXTR'].map((l, i) => '<div class="r" style="--lc:' + ['var(--a-bed)', 'var(--a-drn)', 'var(--a-tex)'][i] + '"><b>' + l + '</b><u></u><i><em></em></i></div>').join('') + '</div>');
+  ['NOISE', 'DRONE', 'EVENT'].map((l, i) => '<div class="r" style="--lc:' + ['var(--a-bed)', 'var(--a-drn)', 'var(--a-tex)'][i] + '"><b>' + l + '</b><u></u><i><em></em></i></div>').join('') + '</div>');
 const dispW = el('div', 'sy-hw'); dispW.appendChild(disp);
 K.stripGroups(strip, [powerW,
   mknob('atm.evolve', 'EVOLVE', { tip: 'Every layer slowly drifts by itself: nothing stays the same for long' }),
   mknob('atm.follow', 'FOLLOW', { tip: 'Left: it ducks while you play and comes back when you stop. Right: your playing makes it swell.' }),
-  sel('ui.mood', 'MOOD', MOODS, { span: 200, tip: 'What the dice, MUTATE and SUMMON reach for: calm nature .. dream .. eerie .. dread .. horror' }),
+  sel('ui.mood', 'MOOD', MOODS, { span: 200, tip: 'The kind of world SUMMON and the dice make: calm nature .. dream .. eerie .. dread .. horror. The SCENES are made by hand.' }),
   freezeW], dispW, [
   mknob('atm.width', 'WIDTH', { tip: 'How wide it spreads around you' }),
   mknob('atm.grit', 'GRIT', { tip: 'Dirt: saturation, and above halfway it rots (lower rate, fewer bits)' }),
@@ -134,6 +135,7 @@ K.stripGroups(strip, [powerW,
   mknob('atm.level', 'LEVEL', { tip: 'How loud the atmosphere is under your playing' })]);
 onChange(id => { if (id === 'atm.on') powerW._draw(); if (id === 'atm.freeze') freezeW._draw(); });
 const moodSel = strip.querySelector('[data-param="ui.mood"]');
+const moodLbl = moodSel && moodSel.parentElement.querySelector('.sy-eng'); if (moodLbl) moodLbl.textContent = 'SUMMON MOOD';
 const drawMoodOpts = () => { if (!moodSel) return; [...moodSel.querySelectorAll('.opt')].forEach((o, i) => { o.style.color = i === mood() ? MOOD_COL[i] : ''; o.style.textShadow = i === mood() ? '0 0 8px ' + MOOD_COL[i] : ''; }); };
 
 /* ---- the screen ---- */
@@ -158,9 +160,10 @@ function typedKnobs(ids, labelsFor, fmtFor) {
 }
 
 /* BED */
-const cBed = section('BED', 300, 'var(--a-bed)', ascreen);
-const bedDice = diceBtn('Roll a new bed (follows the MOOD)', () => { keepUndo(); rollBed(); markScene(); flash(); });
-cBed._h.append(el('span', 'sy-sp'), bedDice, toggle('atm.bed.on', 'Bed on'));
+const sub = t => el('span', 'ae-sub', t);
+const cBed = section('NOISE', 300, 'var(--a-bed)', ascreen);
+const bedDice = diceBtn('Roll new noise (follows the MOOD)', () => { keepUndo(); rollBed(); markScene(); flash(); });
+cBed._h.append(sub('the air around you'), el('span', 'sy-sp'), bedDice, toggle('atm.bed.on', 'Noise on'));
 const bedGrid = grid('atm.bed.type', BEDS, 4);
 const bedVis = canvasBox(66);
 const bedKnobs = typedKnobs(['atm.bed.tone', 'atm.bed.motion', 'atm.bed.depth', 'atm.bed.level'], () => [...BED_INFO[Math.round(S['atm.bed.type'])].slice(0, 3), 'LEVEL']);
@@ -170,7 +173,7 @@ cBed._b.append(bedGrid, bedVis, bedKnobs, bedHint);
 /* DRONE */
 const cDrn = section('DRONE', 340, 'var(--a-drn)', ascreen);
 const drnDice = diceBtn('Roll a new drone (follows the MOOD)', () => { keepUndo(); rollDrone(); markScene(); flash(); });
-cDrn._h.append(el('span', 'sy-sp'), chip('atm.drn.follow', 'FOLLOW', 'The drone moves to the note you play (otherwise it stays on SIREN\'s key)'), drnDice, toggle('atm.drn.on', 'Drone on'));
+cDrn._h.append(sub('a chord that hangs'), el('span', 'sy-sp'), chip('atm.drn.follow', 'FOLLOW', 'The drone moves to the note you play (otherwise it stays on SIREN\'s key)'), drnDice, toggle('atm.drn.on', 'Drone on'));
 const drnGrid = grid('atm.drn.voice', VOICES, 4);
 const chordSeg = seg('atm.drn.chord', CHORDS, { small: true }); chordSeg.classList.add('tight');
 chordSeg.title = 'The chord the drone holds: from one note to a dread cluster';
@@ -182,9 +185,9 @@ const drnKnobs = typedKnobs(['atm.drn.detune', 'atm.drn.tone', 'atm.drn.motion',
 cDrn._b.append(drnGrid, chordSeg, octRow, drnVis, drnKnobs);
 
 /* TEXTURE */
-const cTex = section('TEXTURE', 320, 'var(--a-tex)', ascreen);
-const texDice = diceBtn('Roll a new texture (follows the MOOD)', () => { keepUndo(); rollTexture(); markScene(); flash(); });
-cTex._h.append(el('span', 'sy-sp'), texDice, toggle('atm.tex.on', 'Texture on'));
+const cTex = section('EVENTS', 320, 'var(--a-tex)', ascreen);
+const texDice = diceBtn('Roll new events (follows the MOOD)', () => { keepUndo(); rollTexture(); markScene(); flash(); });
+cTex._h.append(sub('sounds now and then'), el('span', 'sy-sp'), texDice, toggle('atm.tex.on', 'Events on'));
 const texGrid = grid('atm.tex.type', TEXS, 5);
 const texVis = canvasBox(66);
 const texKnobs = typedKnobs(['atm.tex.density', 'atm.tex.tone', 'atm.tex.chaos', 'atm.tex.level'], () => [...TEX_INFO[Math.round(S['atm.tex.type'])].slice(0, 3), 'LEVEL'],
@@ -193,7 +196,7 @@ const texHint = el('div', 'ae-hint');
 cTex._b.append(texGrid, texVis, texKnobs, texHint);
 
 /* VOID */
-const cVoid = section('VOID', 276, 'var(--a-void)', ascreen);
+const cVoid = section('SPACE', 276, 'var(--a-void)', ascreen);
 const voidMood = el('span', 'sy-lbl'); cVoid._h.append(el('span', 'sy-sp'), voidMood);
 const voidVis = canvasBox(0); voidVis.classList.add('ae-void');
 const voidKnobs = el('div', 'sy-knobs');
@@ -567,6 +570,7 @@ Object.assign(K, {
   pageShown(p) { if (p === 'aether') { scOpen(false); setTimeout(() => { drawDroneVis(); drawDisplay(); }, 20); } else scOpen(false); },
 });
 Object.assign(window.obsSynth, { aetherSummon: summonWorld, aetherMutate: mutateWorld, aetherReset: resetAether, aetherScenes: SCENES, aetherLoadScene: loadScene,
+  aetherPreview: () => PV,                 // the browser preview engine (for measuring it)
   aetherRollBed: () => { keepUndo(); rollBed(); markScene(); }, aetherRollDrone: () => { keepUndo(); rollDrone(); markScene(); }, aetherRollTexture: () => { keepUndo(); rollTexture(); markScene(); } });
 
 /* ============================================================ preview engine (browser only) */
@@ -660,7 +664,7 @@ function pvTexEvent(t) {
   if (ty === 0 || ty === 1) { const s = noise(.03), b = ac.createBiquadFilter(); b.type = 'bandpass'; b.frequency.value = (ty ? 1400 : 3000) * Math.pow(2, tone * 1.5 + rr(-.5, .5)); b.Q.value = 2; s.connect(b); b.connect(g); env(g, rr(.3, .9), .001, .01); end([s, b, g, pan], .3); }
   if (ty === 2) { const o = osc('sine', 450 * Math.pow(2, tone * 2.2 + rr(-.6, .6))); o.frequency.exponentialRampToValueAtTime(o.frequency.value * 2.1, t + .03); o.connect(g); env(g, rr(.2, .5), .002, .04); end([o, g, pan], .6); }
   if (ty === 3) { const s = noise(Math.random() < .4 ? .015 : rr(.6, 2)), base = 55 * Math.pow(2, tone * 3 + rr(-.8, .8));
-    [1, 2.32, 4.25, 6.63].forEach((r, k) => { const b = ac.createBiquadFilter(), bg = ac.createGain(); b.type = 'bandpass'; b.frequency.value = base * r; b.Q.value = 60; bg.gain.value = 9 / (k + 1); s.connect(b); b.connect(bg); bg.connect(g); });
+    [1, 2.32, 4.25, 6.63].forEach((r, k) => { const b = ac.createBiquadFilter(), bg = ac.createGain(); b.type = 'bandpass'; b.frequency.value = base * r; b.Q.value = 60; bg.gain.value = 260 / (k + 1); s.connect(b); b.connect(bg); bg.connect(g); });
     env(g, .5, .05, .6); end([s, g, pan], 4); }
   if (ty === 4) { const pent = [0, 2, 4, 7, 9], m = 72 + 12 * Math.floor(tone * 2) + Math.round(S['syn.key']) + pick(pent), o = osc('sine', 440 * Math.pow(2, (m - 69) / 12)); o.connect(g); const d = rr(.15, 1); env(g, rr(.08, .2), d * .3, d * .3); end([o, g, pan], d * 3); }
   if (ty === 5) { const s = noise(1.2), a = ac.createBiquadFilter(), b = ac.createBiquadFilter(); a.type = b.type = 'bandpass'; a.Q.value = 6; b.Q.value = 7;
@@ -669,7 +673,7 @@ function pvTexEvent(t) {
   if (ty === 6) { const gap = 60 / (42 + S['atm.tex.density'] * 1.18); [0, .28 * gap].forEach((dt, k) => { const o = ac.createOscillator(), og = ac.createGain(); o.frequency.setValueAtTime(k ? 74 : 58, t + dt); o.frequency.exponentialRampToValueAtTime(k ? 46 : 36, t + dt + .1);
     o.connect(og); og.connect(pan); og.gain.setValueAtTime(0, t + dt); og.gain.linearRampToValueAtTime(k ? .5 : .75, t + dt + .005); og.gain.setTargetAtTime(0, t + dt + .005, .08); o.start(t + dt); end([o, og], dt + .5); }); pan.pan.value = 0; end([pan, g], 1); }
   if (ty === 7) { const n = 2 + Math.floor(Math.random() * (1.5 + ch * 1.5)), gap = rr(.13, .23); for (let k = 0; k < n; k++) { const tk = t + k * gap, s = ac.createBufferSource(), b = ac.createBiquadFilter(), kg = ac.createGain();
-    s.buffer = PV.bufs.white; s.start(tk, Math.random() * 3, .004); b.type = 'bandpass'; b.frequency.value = 170 * Math.pow(2, tone * 1.3); b.Q.value = 5; s.connect(b); b.connect(kg); kg.connect(pan); kg.gain.value = 9; end([s, b, kg], k * gap + .4); } end([g, pan], n * gap + .5); }
+    s.buffer = PV.bufs.white; s.start(tk, Math.random() * 3, .004); b.type = 'bandpass'; b.frequency.value = 170 * Math.pow(2, tone * 1.3); b.Q.value = 5; s.connect(b); b.connect(kg); kg.connect(pan); kg.gain.value = 120; end([s, b, kg], k * gap + .4); } end([g, pan], n * gap + .5); }
   if (ty === 8) { const o = osc('sawtooth', 82 * Math.pow(2, tone * 2.4 + rr(-.45, .45))), dur = rr(1.3, 3.5), f0 = o.frequency.value, up = rr(1.5, 5.5);
     o.frequency.setValueAtTime(f0, t); o.frequency.linearRampToValueAtTime(f0 * Math.pow(2, up / 12), t + dur * .22); o.frequency.linearRampToValueAtTime(f0 * Math.pow(2, (up - 12 * rr(.3, 1)) / 12 - 1 / 12), t + dur);
     const fm = ac.createGain(); [[450, .5], [800, .3], [2830, .1]].forEach(([fq, a]) => { const b = ac.createBiquadFilter(), bg = ac.createGain(); b.type = 'bandpass'; b.frequency.value = fq; b.Q.value = 7; bg.gain.value = a * 5; fm.connect(b); b.connect(bg); bg.connect(g); });
@@ -685,6 +689,12 @@ function pvTexBed() {
   if (ty === 0) { const s = pvSrc(PV.bufs.crackle), hp = ac.createBiquadFilter(), g = ac.createGain(); s.playbackRate.value = .5 + d * 3; hp.type = 'highpass'; hp.frequency.value = 900; g.gain.value = 2; s.connect(hp); hp.connect(g); g.connect(L.g); L.nodes.push(s, hp, g); }
   if (ty === 1) { const s = pvSrc(PV.bufs.brown), lp = ac.createBiquadFilter(), g = ac.createGain(); lp.type = 'lowpass'; lp.frequency.value = 250 + tone * 900; g.gain.value = .5 + .4 * d; s.connect(lp); lp.connect(g); g.connect(L.g); L.nodes.push(s, lp, g, ...pvLfo(.4 + d, .25, g.gain)); }
 }
+//                Hiss Wind Rain Surf Rumble Static Breath
+const PV_BED_DB = [-7.5, 3.4, -7.2, -9.7, -13.6, 6.6, -1.9];
+//                Organ Strings Choir Glass Abyss Descent Ascent
+const PV_DRN_DB = [3.3, 7.5, 13.9, 2.4, -1.7, 1, 1.1];
+//                Vinyl Fire Drips Metal Shimmer Whispers Heart Knocks Moans Flesh
+const PV_TEX_DB = [5.6, -16.6, -0.5, -14.3, 0, 7, -3.8, -4.2, -3.8, -4.6];
 const TEX_RATE = [[.15, 2], [.8, 14], [.25, 7], [.06, 1.4], [.6, 22], [.15, 2.8], [0, 0], [.06, 1.2], [.05, .9], [.12, 3.5]];
 let pvNext = 0;
 function pvSchedule() {
@@ -709,32 +719,39 @@ function pvGlobal() {
   const mix = S['atm.space'] / 100; PV.wet.gain.setTargetAtTime(mix * 1.1, now, .05); PV.dry.gain.setTargetAtTime(1 - mix * .45, now, .05);
   const t60 = on('atm.freeze') ? 12 : 1.2 * Math.pow(25, S['atm.size'] / 100), key = t60.toFixed(1) + (on('atm.freeze') ? 'f' : '');
   if (key !== PV.irKey) { PV.irKey = key; PV.conv.buffer = ir(ac, Math.min(t60, 12), on('atm.freeze')); }
-  const lv = (L, id, idOn) => L.g.gain.setTargetAtTime(on(idOn) ? lvlOf(S[id]) : 0, now, .08);
-  lv(PV.bed, 'atm.bed.level', 'atm.bed.on'); lv(PV.drn, 'atm.drn.level', 'atm.drn.on'); lv(PV.tex, 'atm.tex.level', 'atm.tex.on');
+  // per sound, so the preview's balance follows the plugin's (measured in headless Chrome against the engine's renders)
+  const lv = (L, id, idOn, trim) => L.g.gain.setTargetAtTime(on(idOn) ? lvlOf(S[id]) * Math.pow(10, trim / 20) : 0, now, .08);
+  lv(PV.bed, 'atm.bed.level', 'atm.bed.on', PV_BED_DB[Math.round(S['atm.bed.type'])]);
+  lv(PV.drn, 'atm.drn.level', 'atm.drn.on', PV_DRN_DB[Math.round(S['atm.drn.voice'])]);
+  lv(PV.tex, 'atm.tex.level', 'atm.tex.on', PV_TEX_DB[Math.round(S['atm.tex.type'])]);
 }
 const rms = an => { const a = new Float32Array(an.fftSize); an.getFloatTimeDomainData(a); let s = 0; for (const x of a) s += x * x; return Math.sqrt(s / a.length) * 4; };
 function previewMeters() {
   if (!PV.on) { act = [0, 0, 0]; return; }
   act = [rms(PV.bed.an), rms(PV.drn.an), rms(PV.tex.an)];
 }
-let pvT = null;
+/* rebuild what changed: every layer named in `what` (a scene changes all three at once) */
+let pvT = null; const pvWant = new Set();
 function pvRebuild(what) {
   if (inPlugin()) return;
+  what.forEach(w => pvWant.add(w));
   if (!on('atm.on')) { if (PV.on) pvGlobal(); return; }
-  if (!PV.on) { pvBuild(); what = 'all'; }
+  if (!PV.on) { pvBuild(); pvWant.add('all'); }
   pvGlobal();
   clearTimeout(pvT);
-  pvT = setTimeout(() => { if (what === 'all' || what === 'bed') pvBed(); if (what === 'all' || what === 'drn') pvDrone(); if (what === 'all' || what === 'tex') pvTexBed(); }, 60);
+  pvT = setTimeout(() => {
+    const all = pvWant.has('all'); const w = new Set(pvWant); pvWant.clear();
+    if (all || w.has('bed')) pvBed(); if (all || w.has('drn')) pvDrone(); if (all || w.has('tex')) pvTexBed();
+  }, 30);
 }
-const pendingWhat = new Set();
 onChange((id, v, from) => {
   if (inPlugin() || !id.startsWith('atm.') && id !== 'syn.key' && id !== 'syn.tune') return;
-  if (id === 'atm.on') { if (on('atm.on')) { pendingWhat.add('all'); } else if (PV.on) { pvGlobal(); return; } }
-  if (/^atm\.bed\./.test(id) && !/level$/.test(id)) pendingWhat.add('bed');
-  if (/^atm\.drn\./.test(id) && !/level$/.test(id) || id === 'syn.key' || id === 'syn.tune' || id === 'atm.width') pendingWhat.add('drn');
-  if (/^atm\.tex\.(type|on|tone|density)$/.test(id)) pendingWhat.add('tex');
-  clearTimeout(pvRebuild.t);
-  pvRebuild.t = setTimeout(() => { const w = pendingWhat.has('all') ? ['all'] : [...pendingWhat]; pendingWhat.clear(); if (!w.length) pvRebuild('none'); w.forEach(x => pvRebuild(x)); }, 40);
+  const w = [];
+  if (id === 'atm.on' && on('atm.on')) w.push('all');
+  if (/^atm\.bed\./.test(id) && !/level$/.test(id)) w.push('bed');
+  if ((/^atm\.drn\./.test(id) && !/level$/.test(id)) || id === 'syn.key' || id === 'syn.tune' || id === 'atm.width') w.push('drn');
+  if (/^atm\.tex\.(type|on|tone|density)$/.test(id)) w.push('tex');
+  pvRebuild(w);
 });
 setInterval(() => { if (!inPlugin() && PV.on && on('atm.on')) pvSchedule(); }, 50);
 
