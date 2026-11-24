@@ -3,4 +3,5 @@
 - Edit only the folder your chat is about (visuals/ amps & cabs, visuals/ pedals, ui/, plugin/), then commit and push.
 - Visual tweaks: edit `visuals/<amps|cabs|pedals>/<key>.json`, make a preview, render the final front view, then add it as a new version on that item's workshop page (links in README.md).
 - `visuals/legacy/` scripts are old generators. Don't re-run them; they would overwrite the hand-tweaked specs.
-- The cloud workspace restarts now and then. `visuals/render/queue.sh` resumes the front renders.
+- The cloud workspace restarts now and then. `visuals/render/queue.sh` resumes the front renders, `visuals/render/top.sh` the pedals' top views.
+- After changing a pedal's look: delete `visuals/renders/top/<key>_*.webp`, run `visuals/render/top.sh <key>`, then `python3 plugin/tools/faces/build_pedals.py <key>` so the plugin's board shows the new 3D face.

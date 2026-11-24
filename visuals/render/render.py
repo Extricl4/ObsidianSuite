@@ -7,16 +7,31 @@ _ARGS=sys.argv[sys.argv.index('--')+2:]
 def _fix(o):
     if isinstance(o,dict): return {k:_fix(v) for k,v in o.items()}
     if isinstance(o,list): return [_fix(v) for v in o]
-    if isinstance(o,str) and o.startswith('art/'): return _os.path.join(_ROOT,o)
+    if isinstance(o,str) and o.startswith('art/'):
+        for base in (_ROOT, _os.path.dirname(_os.path.abspath(_SPEC))):
+            if _os.path.exists(_os.path.join(base,o)): return _os.path.join(base,o)
+        return _os.path.join(_ROOT,o)
     return o
 spec=_fix(json.load(open(_SPEC)))
 _KEY=_os.path.splitext(_os.path.basename(_SPEC))[0]
 _os.makedirs(_os.path.join(_ROOT,'out','pedals'),exist_ok=True)
 spec['out']=_os.path.join(_ROOT,'out','pedals',_KEY+'.png')
+# top: a straight-down orthographic view of just the pedal (transparent background) for the plugin's board.
+# 'top off' renders it switched off (LED dark, no glow), 'top' / 'top on' switched on.
+TOPVIEW = 'top' in _ARGS
+LIT = not (TOPVIEW and 'off' in _ARGS)
+if TOPVIEW:
+    for _k, _v in spec.get('top', {}).items():      # per-pedal tweaks for the top view only
+        spec[_k] = {**spec[_k], **_v} if isinstance(_v, dict) and isinstance(spec.get(_k), dict) else _v
+    _w, _l = spec.get('size', [6.6, 12.0, 3.0])[:2]
+    _tp = spec.get('top_px', 60); spec['res'] = [int(round(_w * _tp)), int(round(_l * _tp))]; spec['samples'] = spec.get('top_samples', 32)
+    spec['jacks'] = False
+    _os.makedirs(_os.path.join(_ROOT,'out','top'),exist_ok=True)
+    spec['out'] = _os.path.join(_ROOT,'out','top',_KEY+('_on' if LIT else '_off')+'.png')
 if 'prev' in _ARGS:
     spec['samples']=6; _r=spec.get('res',[780,1170]); spec['res']=[_r[0]//2,_r[1]//2]; spec['out']=_os.path.join(_ROOT,'out','preview','pedal_'+_KEY+'.png'); _os.makedirs(_os.path.dirname(spec['out']),exist_ok=True)
 
-W, L, H = spec.get('size', [6.6, 12.0, 3.0])
+W, L, H = (list(spec.get('size', [6.6, 12.0, 3.0])) + [3.0])[:3]
 PX = spec.get('px', 200)
 def P(px, py): return ((px/PX) - W/2, L/2 - (py/PX))
 
@@ -24,10 +39,11 @@ bpy.ops.wm.read_factory_settings(use_empty=True)
 sc = bpy.context.scene
 sc.render.engine = 'CYCLES'; sc.cycles.samples = spec.get('samples', 24); sc.cycles.use_adaptive_sampling = True; sc.cycles.use_denoising = True
 sc.cycles.device = 'CPU'
-sc.render.resolution_x, sc.render.resolution_y = spec.get('res', [780, 1170]); sc.render.film_transparent = False
+sc.render.resolution_x, sc.render.resolution_y = spec.get('res', [780, 1170]); sc.render.film_transparent = TOPVIEW
 sc.view_settings.view_transform = 'AgX'; sc.view_settings.look = 'AgX - Medium High Contrast'
 
 def mat(name, base=(0.1,0.1,0.1,1), metal=0.0, rough=0.5, emit=None, estr=0, coat=0.0, bump=None, aniso=0.0):
+    if TOPVIEW and metal >= 0.9: rough = max(rough, 0.32)   # top view: satin metal, so flat chrome and gold tops catch the lights
     m = bpy.data.materials.new(name); m.use_nodes = True
     nt = m.node_tree; b = nt.nodes['Principled BSDF']
     b.inputs['Base Color'].default_value = base; b.inputs['Metallic'].default_value = metal; b.inputs['Roughness'].default_value = rough
@@ -112,7 +128,7 @@ if spec.get('art') and spec.get('engrave'):
 elif spec.get('art'):
     a = spec.get('artmat', {})
     plane(spec['art'], TOP+0.002, img_mat('art', spec['art'], a.get('rough',.3), a.get('metal',0)))
-if spec.get('glow'):
+if spec.get('glow') and LIT:
     plane(spec['glow'], TOP+0.004, img_mat('glow', spec['glow'], .4, 0, spec.get('glow_strength', 6)))
 
 M_CHROME = mat('chrome', (0.9,0.9,0.92,1), 1, .12)
@@ -147,8 +163,13 @@ def led(px, py, color, strength=40):
     x, y = P(px, py)
     t = add(bpy.ops.mesh.primitive_torus_add, major_radius=0.2, minor_radius=0.06, location=(x,y,TOP+0.05)); setmat(t, M_CHROME)
     s = add(bpy.ops.mesh.primitive_uv_sphere_add, radius=0.15, location=(x,y,TOP+0.06)); bpy.ops.object.shade_smooth()
+    if not LIT:     # switched off: a dark tinted lens
+        setmat(s, mat('ledoff', tuple(c * 0.18 for c in color)+(1,), 0, .12)); return
+    if TOPVIEW:     # seen from above at board size: keep the colour, not a white blob (bright colours get less power)
+        lum = max(0.05, 0.2126*color[0] + 0.7152*color[1] + 0.0722*color[2])
+        strength = min(strength * spec.get('top_led', 0.12), 1.8 / lum)
     setmat(s, mat('led', tuple(color)+(1,), 0, .1, emit=tuple(color)+(1,), estr=strength))
-    li = add(bpy.ops.object.light_add, type='POINT', location=(x,y,TOP+0.4)); li.data.energy = 2.5; li.data.color = color; li.data.shadow_soft_size = 0.1
+    li = add(bpy.ops.object.light_add, type='POINT', location=(x,y,TOP+0.4)); li.data.energy = 4 if TOPVIEW else 2.5; li.data.color = color; li.data.shadow_soft_size = 0.1
 def toggle(px, py, tilt=-20):
     x, y = P(px, py)
     n = add(bpy.ops.mesh.primitive_cylinder_add, vertices=6, radius=0.3, depth=0.14, location=(x,y,TOP+0.07)); setmat(n, M_CHROME)
@@ -174,6 +195,13 @@ for t in spec.get('toggles', []): toggle(*t)
 for s in spec.get('screws', []): screw(*s)
 for bt in spec.get('buttons', []): button(bt['at'][0], bt['at'][1], bt['w'], bt['h'], mat('btn', tuple(bt['color'])+(1,), bt.get('metal',0), bt.get('rough',.4), emit=tuple(bt['emit'])+(1,) if bt.get('emit') else None, estr=bt.get('estr',0)))
 if spec.get('jacks', True): jacks()
+for scr in spec.get('screens', []):
+    x, y = P(*scr['at']); sw, sh = scr['w'], scr['h']
+    bz = add(bpy.ops.mesh.primitive_cube_add, size=1, location=(x,y,TOP+0.04)); bz.scale=(sw+0.28, sh+0.28, 0.08); bpy.ops.object.transform_apply(scale=True); bevel(bz,0.05,3)
+    setmat(bz, mat('bezel', (0.03,0.03,0.035,1), 0.3, .45))
+    gl_ = add(bpy.ops.mesh.primitive_cube_add, size=1, location=(x,y,TOP+0.085)); gl_.scale=(sw, sh, 0.02); bpy.ops.object.transform_apply(scale=True)
+    c_ = tuple(scr.get('color', [0.4,0.8,1.0]))
+    setmat(gl_, mat('glass', (0.004,0.006,0.008,1), 0, .08, emit=c_+(1,) if LIT else None, estr=0.012 if LIT else 0))
 # extra geometry: treadle
 if spec.get('treadle'):
     tr = spec['treadle']; x, y = P(*tr['at'])
@@ -184,16 +212,25 @@ if spec.get('treadle'):
         p.rotation_euler=(math.radians(-6),0,0); setmat(p, img_mat('treadart', tr['art'], .35, 0, tr.get('glow',0)))
 
 # floor + lights + camera
-fl = add(bpy.ops.mesh.primitive_plane_add, size=200, location=(0,0,0)); setmat(fl, mat('floor', tuple(spec.get('floor',[0.012,0.012,0.014]))+(1,), 0, .32))
-w = bpy.data.worlds.new('w'); sc.world = w; w.use_nodes = True; w.node_tree.nodes['Background'].inputs[0].default_value = tuple(spec.get('world',[0.01,0.01,0.012]))+(1,); w.node_tree.nodes['Background'].inputs[1].default_value = 1
+if not TOPVIEW:
+    fl = add(bpy.ops.mesh.primitive_plane_add, size=200, location=(0,0,0)); setmat(fl, mat('floor', tuple(spec.get('floor',[0.012,0.012,0.014]))+(1,), 0, .32))
+w = bpy.data.worlds.new('w'); sc.world = w; w.use_nodes = True; w.node_tree.nodes['Background'].inputs[0].default_value = tuple(spec.get('top_world', [0.02,0.02,0.022]) if TOPVIEW else spec.get('world',[0.01,0.01,0.012]))+(1,); w.node_tree.nodes['Background'].inputs[1].default_value = 1
 def area(loc, size, energy, color=(1,1,1)):
     li = add(bpy.ops.object.light_add, type='AREA', location=loc); li.data.size = size; li.data.energy = energy; li.data.color = color
     d = Vector((0,0,1.5)) - Vector(loc); li.rotation_euler = d.to_track_quat('-Z','Y').to_euler(); return li
-area((-7,-10,20), 10, spec.get('key',1800)); area((9,8,12), 6, spec.get('rim',500), tuple(spec.get('rimcolor',[0.8,0.85,1])))
-area((0,-20,6), 14, 250)
+if TOPVIEW:     # light from the upper left of the picture, soft and even (like the flat faces)
+    area((-9,12,24), 14, spec.get('key',1800) * 0.9); area((10,-9,18), 12, 420, tuple(spec.get('rimcolor',[0.8,0.85,1])))
+    area((0,-26,16), 24, spec.get('top_fill', 900))     # fill from in front: not mirrored into the camera by metal tops
+else:
+    area((-7,-10,20), 10, spec.get('key',1800)); area((9,8,12), 6, spec.get('rim',500), tuple(spec.get('rimcolor',[0.8,0.85,1])))
+    area((0,-20,6), 14, 250)
 cam_data = bpy.data.cameras.new('cam'); cam_data.lens = spec.get('lens', 40); cam_data.sensor_fit = 'VERTICAL'; cam_data.sensor_height = 24
 cam = bpy.data.objects.new('cam', cam_data); sc.collection.objects.link(cam); sc.camera = cam
-cam.location = tuple(spec.get('cam', [0, -11, 28])); d = Vector(tuple(spec.get('target',[0,-0.9,1.5]))) - cam.location
-cam.rotation_euler = d.to_track_quat('-Z','Y').to_euler()
+if TOPVIEW:
+    cam_data.type = 'ORTHO'; cam_data.sensor_fit = 'AUTO'; cam_data.ortho_scale = max(W, L); cam_data.clip_end = 200
+    cam.location = (0, 0, 60); cam.rotation_euler = (0, 0, 0)
+else:
+    cam.location = tuple(spec.get('cam', [0, -11, 28])); d = Vector(tuple(spec.get('target',[0,-0.9,1.5]))) - cam.location
+    cam.rotation_euler = d.to_track_quat('-Z','Y').to_euler()
 sc.render.filepath = spec['out']; bpy.ops.render.render(write_still=True)
 print('RENDERED', spec['out'])

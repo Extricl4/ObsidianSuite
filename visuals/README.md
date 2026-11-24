@@ -16,12 +16,21 @@ python3 render/head.py   -- amps/nyx.json front        # straight-on, plugin vie
 python3 render/head.py   -- amps/nyx.json front prev   # quick preview (~20 s)
 python3 render/head.py   -- cabs/nyx_cab.json angle    # 3/4 showroom view
 python3 render/render.py -- pedals/seraph.json [prev]
+python3 render/render.py -- pedals/seraph.json top off # straight down, transparent, switched off (plugin board)
+render/top.sh [keys]                                   # every missing pedal top view -> renders/top/<key>_off|on.webp
 ```
 
 ## Engraved pedals (2026-11-21)
 New pedal art is drawn by `tools/art_<key>.py` (shared helpers in `tools/pedal_art_lib.py`: 3x supersampled plate, tapered strokes, vine scrolls, leaves, thorns).
 Add `"engrave": {rough, metal, depth, strength, distance}` to a pedal spec to cut the art into the surface instead of printing it on top.
 Wide pedals set `size`, `res` and `cam` (see `pedals/aeon.json`).
+
+## Pedal top views for the plugin (2026-11-24)
+`render.py ... top [off|on]` renders a pedal straight down with an orthographic camera and a transparent background,
+the picture exactly the enclosure (60 px/cm, `top_px` / `top_samples` / `top_led` in a spec override it), lit from the
+upper left. `off` leaves the LED dark and skips the glow layer. `render/top.sh` renders every pedal (and the plugin's
+WRAITH design) to `renders/top/<key>_off.webp` / `_on.webp`; `plugin/tools/faces/build_pedals.py` uses those
+instead of its flat drawing. Specs may also have `screens` (bezel plus dark glass, faintly lit when on).
 
 ## Finished amps (2026-11-21)
 Amps with their captures wired in live in `finished/` (see `finished/README.md`): `amps_data.py` says which

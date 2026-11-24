@@ -102,11 +102,12 @@ channel.
 
 ## Pedal faces
 
-The 31 pedal designs from the visuals chat (`visuals/pedals/*.json` + the artwork in `visuals/art`) show on the
-pedal board as their real faces: enclosure, artwork, knobs at their positions, toggles, LED and footswitch. The
-LED and the glowing parts of the artwork light up when the pedal is on, and the drawn footswitch switches it.
-`tools/faces/build_pedals.py` draws them (the 3D renders need Blender) into `WebUI/pedals/*.webp` and
-`WebUI/obsidian-pedals.js`; they are compiled into the plugin.
+The pedal designs from the visuals chat (`visuals/pedals/*.json` + the artwork in `visuals/art`) and WRAITH show
+on the pedal board as their real faces: 3D renders seen straight down (`visuals/render/top.sh` →
+`visuals/renders/top/<key>_off|on.webp`), switched off and switched on (LED lit, glowing artwork). The drawn
+footswitch switches the pedal. `tools/faces/build_pedals.py` scales the renders into `WebUI/pedals/*.webp` and writes
+the sizes and LED / footswitch / screen positions into `WebUI/obsidian-pedals.js`; they are compiled into the plugin.
+A design without a render is drawn flat with shading instead (`--flat` draws every pedal that way).
 
 ## The synth
 

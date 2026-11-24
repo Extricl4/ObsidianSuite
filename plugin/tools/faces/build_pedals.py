@@ -9,11 +9,16 @@ engraved top, and <key>_glow.png, the parts that light up). The 3D renders need 
 same design flat with shading: enclosure with sheen and bevel, the artwork, machined knobs at their real
 positions and values, toggles, buttons, LEDs, screws and the footswitch.
 
+3D faces: when the visuals chat has rendered a pedal straight down in Blender (visuals/render/top.sh ->
+visuals/renders/top/<key>_off.webp and _on.webp), those renders are used for the pictures instead of the
+flat drawing; the sizes and positions still come from the design. --flat draws every pedal flat anyway.
+
 The plugin's own designs (plugin/tools/faces/pedals/<key>.json, art made by make_art.py there) are read
 the same way; they may also have "screens": [{"at": [x, y], "w": cm, "h": cm, "color": [r, g, b]}], a glass
 display the board writes live text on (its place goes into obsidian-pedals.js as "screen").
 
     python3 plugin/tools/faces/build_pedals.py nampedal     # just these pedals (the others stay as they are)
+    python3 plugin/tools/faces/build_pedals.py --flat       # ignore the 3D renders
 
 Writes, for every pedal the plugin has:
     plugin/WebUI/pedals/<key>_off.webp   the pedal switched off
@@ -28,6 +33,7 @@ from PIL import Image, ImageFilter
 ROOT = Path(__file__).resolve().parents[3]
 VIS = ROOT / 'visuals'
 OWN = ROOT / 'plugin' / 'tools' / 'faces' / 'pedals'       # the plugin's own designs (not the visuals chat's)
+TOP = VIS / 'renders' / 'top'                              # the 3D top views (visuals/render/top.sh)
 OUT = ROOT / 'plugin' / 'WebUI' / 'pedals'
 JS = ROOT / 'plugin' / 'WebUI' / 'obsidian-pedals.js'
 PX_PER_CM = 40            # output scale (a standard 6.6 x 12 cm pedal -> 264 x 480 px)
@@ -250,10 +256,11 @@ def render(key, spec, lit):
 
 def main():
     import sys
-    only = set(sys.argv[1:])               # just these pedals; the others keep their pictures and entries
+    flat = '--flat' in sys.argv
+    only = set(a for a in sys.argv[1:] if not a.startswith('--'))   # just these pedals; the others keep theirs
     keys = plugin_keys()
     OUT.mkdir(parents=True, exist_ok=True)
-    data, made = {}, []
+    data, made, threed = {}, [], []
     if only and JS.exists():
         txt = JS.read_text(encoding='utf-8'); data = json.loads(txt[txt.index('{'):txt.rindex('}') + 1])
     designs = {f.stem: f for f in sorted((VIS / 'pedals').glob('*.json'))}
@@ -264,6 +271,9 @@ def main():
         if f.parent == OWN: spec['_dir'] = str(OWN)
         off, pos = render(key, spec, False)
         on, _ = render(key, spec, True)
+        if not flat and (TOP / f'{key}_off.webp').exists() and (TOP / f'{key}_on.webp').exists():
+            off, on = (Image.open(TOP / f'{key}_{st}.webp').convert('RGBA').resize((pos['w'], pos['h']), Image.LANCZOS) for st in ('off', 'on'))
+            threed.append(key)
         off.save(OUT / f'{key}_off.webp', 'WEBP', quality=86, method=6)
         on.save(OUT / f'{key}_on.webp', 'WEBP', quality=86, method=6)
         data[key] = pos; made.append(key)
@@ -273,6 +283,7 @@ def main():
                   'window.OBS_PEDALS = ' + json.dumps(data, separators=(',', ':')) + ';\n', encoding='utf-8')
     size = sum(p.stat().st_size for p in OUT.glob('*.webp'))
     print(f'{len(made)} pedal faces ({size / 1e6:.1f} MB): {" ".join(made)}')
+    print(f'{len(threed)} from the 3D renders' + (f'; drawn flat: {" ".join(k for k in made if k not in threed)}' if len(threed) < len(made) else ''))
     missing = sorted(keys - set(made))
     if missing and not only: print('plugin modules without a pedal design:', ' '.join(missing))
 
