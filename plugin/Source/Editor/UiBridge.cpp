@@ -461,6 +461,7 @@ void UiBridge::timerCallback()
         { "synth", e.synthActivity() }, { "bpm", e.effectiveBpm() }, { "busy", proc.rig().isBusy() },
         { "synNote", e.synthNote() }, { "synStep", e.synthStep() }, { "synSrc", e.synthSource() },
         { "atm", juce::Array<juce::var> { e.atmosActivity (0), e.atmosActivity (1), e.atmosActivity (2) } }, { "atmEv", e.atmosEvents() }, { "atmRoot", e.atmosRoot() },
+        { "kerPos", e.keraunosPos() }, { "gltStep", e.khaosStep() }, { "gltType", e.khaosGlitch() }, { "gltEv", e.khaosEvents() },
         { "hmNote", e.harmonyNote() }, { "hmChord", juce::var (e.harmonyChord()) },
         { "ampA", e.amp().playingA() }, { "ampB", e.amp().playingB() }, { "ampF", e.amp().playingBlend() }, { "cabIn", e.amp().cabInside() },
         { "latencyMs", proc.getSampleRate() > 0 ? proc.getLatencySamples() * 1000.0 / proc.getSampleRate() : 0.0 } });

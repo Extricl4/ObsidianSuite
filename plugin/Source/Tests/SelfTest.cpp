@@ -1049,7 +1049,8 @@ int runSelfTest (const juce::StringArray& args)
     {
         auto& e = p.engine();
         auto quietRig = [&] { p.presetManager().loadInit();
-            for (auto id : { "synth.on", "amp.on", "cab.on", "eq.on", "pre.on", "post.on", "sfx.on", "doubler.on", "gate.on", "harm.on" }) setNorm (p, id, 0); };
+            for (auto id : { "amp.on", "cab.on", "eq.on", "pre.on", "post.on", "sfx.on", "doubler.on", "gate.on", "harm.on" }) setNorm (p, id, 0);
+            setNorm (p, "synth.on", 1); setReal (p, "syn.mix", 0); };   // the SYNTH tab on (AETHER lives there), SIREN mixed out
         auto silence = [] (int) { return 0.f; };
         auto db = [] (float x) { return juce::Decibels::gainToDecibels (x, -120.f); };
         quietRig();
@@ -1148,6 +1149,25 @@ int runSelfTest (const juce::StringArray& args)
             render (p, SR, BLOCK, 1.5, [&] (int i) { if (i % (int) (SR * 0.5) == 0) g.pluck (110.f, 0.5f); return g.next(); });
             const int root = (int) std::lround (e.atmosRoot());
             r.check (root >= 0 && root % 12 == 9, "the drone follows a plucked A2 to A (root " + juce::String (root) + ")");
+        }
+
+        // it's its own sound at the end of the chain: the guitar's WIDTH (here: mono) doesn't fold it, and the SYNTH tab stops it
+        {
+            quietRig(); setNorm (p, "atm.on", 1); setNorm (p, "synth.on", 1); setReal (p, "width", 0); setReal (p, "atm.width", 100);
+            render (p, SR, BLOCK, 1.0, silence);
+            juce::AudioBuffer<float> b (2, BLOCK); juce::MidiBuffer m; double s2 = 0, m2 = 0;
+            for (int k = 0; k < (int) (SR * 1.5) / BLOCK; ++k)
+            {
+                b.clear(); p.processBlock (b, m);
+                for (int i = 0; i < BLOCK; ++i) { const double sd = 0.5 * (b.getSample (0, i) - b.getSample (1, i)), md = 0.5 * (b.getSample (0, i) + b.getSample (1, i)); s2 += sd * sd; m2 += md * md; }
+            }
+            const float sideDb = db ((float) std::sqrt (s2 / (SR * 1.5))), midDb = db ((float) std::sqrt (m2 / (SR * 1.5)));
+            setNorm (p, "synth.on", 0);
+            render (p, SR, BLOCK, 1.0, silence);
+            auto bypassed = render (p, SR, BLOCK, 0.5, silence);
+            r.check (sideDb > midDb - 12.f && bypassed.peak < 1.0e-6f,
+                     "AETHER is added after the guitar chain (with the guitar's WIDTH at mono it stays wide: side " + juce::String (sideDb, 1) + " dB, mid "
+                     + juce::String (midDb, 1) + " dB), and bypassing the SYNTH tab stops it");
         }
 
         // the page's meters

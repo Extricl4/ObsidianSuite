@@ -3,15 +3,18 @@
 //  Engine: the whole Obsidian signal chain, independent of the plugin wrapper
 //  (so the self-test can run it without a host).
 //
-//   input -> gain -> gate -> transpose -> [synth pre] -> PEDALS (mono)
-//         -> AMP (mono) -> CAB (mono -> stereo) -> [synth post] -> [AETHER] -> EQ
-//         -> FX -> SPECIAL FX -> doubler -> width -> output -> metronome
+//   input -> gain -> gate -> transpose -> [KERAUNOS pre] -> PEDALS (mono) -> [HYDRA pre] -> [SIREN pre]
+//         -> AMP (mono) -> CAB (mono -> stereo) -> [HYDRA post] -> [SIREN post] -> EQ -> [KERAUNOS post]
+//         -> FX -> SPECIAL FX -> KHAOS -> doubler -> width -> + AETHER -> output -> metronome
+//   SIREN listens to the guitar right after transpose; HYDRA to the clean input. HYDRA and the pedals
+//   play the guitar alone, and AETHER is its own sound added at the end, so all three work at once.
 // =============================================================================
 #include "../Core/Params.h"
 #include "Sections.h"
 #include "PitchTracker.h"
 #include "GuitarSynth.h"
 #include "Atmos.h"
+#include "FxLab.h"
 #include "Harmonizer.h"
 #include <array>
 #include "AmpSection.h"
@@ -80,6 +83,11 @@ public:
     float atmosActivity (int layer) const          { return atmosFade.active() ? atmos.activity (layer) : 0.f; }
     int   atmosEvents() const                     { return atmos.events(); }
     float atmosRoot() const                       { return atmosFade.active() ? atmos.droneRoot() : -1.f; }
+    /** The GLITCH page: where KERAUNOS's effect is (0..1), KHAOS's step (0..15), its glitch now (-1: none) and a count of glitches. */
+    float keraunosPos() const                     { return keraunos.position(); }
+    int   khaosStep() const                       { return gltFade.active() ? khaos.step() : -1; }
+    int   khaosGlitch() const                     { return gltFade.active() ? khaos.glitch() : -1; }
+    int   khaosEvents() const                     { return khaos.events(); }
     /** HYDRA, for the HARMONY page: the note it hears (-1: none), in CHORDS the chord's notes. */
     int   harmonyNote() const                     { return harmonizer.uiNote.load(); }
     juce::Array<juce::var> harmonyChord() const
@@ -110,6 +118,8 @@ public:
 private:
     void readSynthParams (dsp::SynthParams& sp, const HostInfo& h);
     void readAtmosParams (dsp::AtmosParams& ap);
+    void readKeraunosParams (dsp::KeraunosParams& kp);
+    void readKhaosParams (dsp::KhaosParams& kp, const HostInfo& h, int chunkStart);
 
     double sr = 48000; int maxBlock = 512; bool prepared = false;
     ParamCache params;
@@ -118,6 +128,10 @@ private:
     dsp::PitchTracker pitch;
     dsp::GuitarSynth synth;
     dsp::Atmos atmos;
+    dsp::Keraunos keraunos;
+    dsp::Khaos khaos;
+    dsp::SectionFade kerFade, gltFade;
+    bool kerWasActive = false, gltWasActive = false;
     dsp::AmpSection ampSection;
     dsp::CabSection cabSection;
     dsp::GraphicEq eq;
@@ -136,7 +150,7 @@ private:
     std::atomic<double> lastBpm { 120.0 };
     std::atomic<float> cpu { 0.f };
 
-    std::vector<float> mono, synthL, synthR, scratchR, dryL, dryR, synthG, atmL, atmR, atmG;
+    std::vector<float> mono, synthL, synthR, scratchR, dryL, dryR, synthG, atmL, atmR, atmG, fxDryL, fxDryR;
     std::atomic<unsigned> synthSteps[16];
     static constexpr int kMaxSynthNotes = 256;
     dsp::SynthNote synthNotes[kMaxSynthNotes]; int numSynthNotes = 0;
@@ -154,6 +168,8 @@ private:
         // synth: every parameter, by SynthDefs index
         std::atomic<float>* syn[obs::synthdefs::count];
         std::atomic<float>* atm[obs::atmosdefs::count];   // AETHER, by AtmosDefs index
+        std::atomic<float>* ker[obs::fxdefs::ker::count];  // KERAUNOS
+        std::atomic<float>* glt[obs::fxdefs::glt::count];  // KHAOS
         // HYDRA: by HarmonyDefs index
         std::atomic<float>* harm[obs::harmdefs::gCount];
         std::atomic<float>* harmV[obs::harmdefs::kVoices][obs::harmdefs::vCount];

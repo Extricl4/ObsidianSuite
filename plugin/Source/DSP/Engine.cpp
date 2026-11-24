@@ -27,6 +27,8 @@ void Engine::attach (juce::AudioProcessorValueTreeState& state)
     p.cabLc = g ("cab.lc"); p.cabHc = g ("cab.hc");
     for (int i = 0; i < obs::synthdefs::count; ++i) p.syn[i] = g (obs::synthdefs::table()[i].id);
     for (int i = 0; i < obs::atmosdefs::count; ++i) p.atm[i] = g (obs::atmosdefs::table()[i].id);
+    for (int i = 0; i < obs::fxdefs::ker::count; ++i) p.ker[i] = g (obs::fxdefs::ker::table()[i].id);
+    for (int i = 0; i < obs::fxdefs::glt::count; ++i) p.glt[i] = g (obs::fxdefs::glt::table()[i].id);
     for (int i = 0; i < obs::harmdefs::gCount; ++i) p.harm[i] = g (obs::harmdefs::globals()[i].id);
     for (int v = 0; v < obs::harmdefs::kVoices; ++v)
         for (int i = 0; i < obs::harmdefs::vCount; ++i)
@@ -39,7 +41,7 @@ void Engine::prepare (double sampleRate, int block)
 {
     sr = sampleRate; maxBlock = juce::jmax (16, block);
     ctxProto.sampleRate = sr; ctxProto.maxBlock = maxBlock; ctxProto.oversampling = oversampling.load(); ctxProto.pitch = &pitch;
-    gate.prepare (sr); transposer.prepare (sr, maxBlock); pitch.prepare (sr); synth.prepare (sr); atmos.prepare (sr, maxBlock);
+    gate.prepare (sr); transposer.prepare (sr, maxBlock); pitch.prepare (sr); synth.prepare (sr); atmos.prepare (sr, maxBlock); keraunos.prepare (sr); khaos.prepare (sr);
     ampSection.prepare (sr, maxBlock); cabSection.prepare (sr, maxBlock); eq.prepare (sr);
     for (auto& r : racks) r.prepare (ctxProto);
     doubler.prepare (sr); width.prepare (sr); metronome.prepare (sr);
@@ -52,9 +54,11 @@ void Engine::prepare (double sampleRate, int block)
     mono.assign ((size_t) maxBlock, 0.f); scratchR.assign ((size_t) maxBlock, 0.f); synthL.assign ((size_t) maxBlock, 0.f); synthR.assign ((size_t) maxBlock, 0.f);
     dryL.assign ((size_t) maxBlock, 0.f); dryR.assign ((size_t) maxBlock, 0.f); synthG.assign ((size_t) maxBlock, 0.f);
     atmL.assign ((size_t) maxBlock, 0.f); atmR.assign ((size_t) maxBlock, 0.f); atmG.assign ((size_t) maxBlock, 0.f);
+    fxDryL.assign ((size_t) maxBlock, 0.f); fxDryR.assign ((size_t) maxBlock, 0.f);
     cabFade.reset (sr, p.cabOn == nullptr || p.cabOn->load() > 0.5f); eqFade.reset (sr, p.eqOn == nullptr || p.eqOn->load() > 0.5f);
     synthFade.reset (sr, p.synthOn != nullptr && p.synthOn->load() > 0.5f);
-    atmosFade.reset (sr, p.atm[obs::atmosdefs::on] != nullptr && p.atm[obs::atmosdefs::on]->load() > 0.5f); atmosWasActive = atmosFade.active();
+    atmosFade.reset (sr, p.atm[obs::atmosdefs::on] != nullptr && p.atm[obs::atmosdefs::on]->load() > 0.5f && p.synthOn != nullptr && p.synthOn->load() > 0.5f); atmosWasActive = atmosFade.active();
+    kerFade.reset (sr, false); gltFade.reset (sr, false); kerWasActive = gltWasActive = false;
     cabWasActive = cabFade.active(); eqWasActive = eqFade.active();
     prepared = true;
 }
@@ -76,6 +80,20 @@ int Engine::latencySamples()
     l += ampSection.namLatency ((int) p.ampChannel->load());
     for (auto& r : racks) l += r.latency();
     return l;
+}
+
+void Engine::readKeraunosParams (KeraunosParams& kp)
+{
+    for (int i = 0; i < obs::fxdefs::ker::count; ++i) kp.v[i] = p.ker[i]->load (std::memory_order_relaxed);
+    kp.guitarHz = pitch.frequency(); kp.guitarConf = pitch.confidence();
+}
+
+void Engine::readKhaosParams (KhaosParams& kp, const HostInfo& h, int chunkStart)
+{
+    for (int i = 0; i < obs::fxdefs::glt::count; ++i) kp.v[i] = p.glt[i]->load (std::memory_order_relaxed);
+    kp.bpm = h.bpm > 0 ? h.bpm : 120.0;
+    kp.hostPlaying = h.playing && h.hasHostTempo;
+    kp.ppq = h.ppq + (double) chunkStart / sr * kp.bpm / 60.0;
 }
 
 void Engine::readAtmosParams (AtmosParams& ap)
@@ -209,9 +227,21 @@ void Engine::process (juce::AudioBuffer<float>& buffer, int numIn, const HostInf
             synthMix = sp.v[obs::synthdefs::mix] * 0.01f;
             synthFade.gains (synthG.data(), n);
             for (int i = 0; i < n; ++i) synthG[(size_t) i] *= synthMix;
-            if (! synthPost)
-                for (int i = 0; i < n; ++i) { const float m = synthG[(size_t) i]; x[i] = x[i] * (1.f - m) + 0.5f * (synthL[(size_t) i] + synthR[(size_t) i]) * m; }
         }
+
+        // ---- KERAUNOS before the amp (mono; the SFX tab's switch bypasses it too) ---------------
+        const bool sfxOn = v (p.sfxOn) > 0.5f;
+        kerFade.set (v (p.ker[obs::fxdefs::ker::on]) > 0.5f && sfxOn);
+        const int kerPlace = (int) std::lround (v (p.ker[obs::fxdefs::ker::place]));
+        auto runKeraunos = [&] (float* a, float* b)
+        {
+            if (! kerWasActive) keraunos.reset();
+            KeraunosParams kp; readKeraunosParams (kp);
+            std::copy (a, a + n, fxDryL.data()); if (b != nullptr) std::copy (b, b + n, fxDryR.data());
+            keraunos.process (a, b, n, kp);
+            if (! kerFade.full()) kerFade.mix (fxDryL.data(), b != nullptr ? fxDryR.data() : nullptr, a, b, n);
+        };
+        if (kerFade.active() && kerPlace == 0) runKeraunos (x, nullptr);
 
         // ---- pedals (mono) ----------------------------------------------------------------
         {
@@ -221,6 +251,11 @@ void Engine::process (juce::AudioBuffer<float>& buffer, int numIn, const HostInf
 
         // ---- HYDRA before the amp (the voices go through it) ---------------------------------
         if (harmPlace == 1) harmonizer.process (di.data(), x, nullptr, x, nullptr, n, hp);
+
+        // ---- SIREN before the amp: joins here, after the pedals and HYDRA, so they keep playing the
+        //      guitar alone (SIREN, AETHER and HYDRA all at once don't get in each other's way) -------
+        if (synthOn && ! synthPost)
+            for (int i = 0; i < n; ++i) { const float m = synthG[(size_t) i]; x[i] = x[i] * (1.f - m) + 0.5f * (synthL[(size_t) i] + synthR[(size_t) i]) * m; }
 
         // ---- amp ----------------------------------------------------------------------------
         ampSection.process (x, n, v (p.ampOn) > 0.5f, (int) std::round (v (p.ampChannel)), v (p.ampGain), v (p.ampBass), v (p.ampMid),
@@ -245,6 +280,10 @@ void Engine::process (juce::AudioBuffer<float>& buffer, int numIn, const HostInf
         else { std::copy (x, x + n, L); std::copy (x, x + n, outR); }
         cabWasActive = cabFade.active();
 
+        // ---- HYDRA after the amp: harmonies of the amp's sound, like a second guitarist -------
+        //      (before SIREN joins, so it harmonizes the guitar, not the synth)
+        if (harmPlace == 0) harmonizer.process (di.data(), L, outR, L, outR, n, hp);
+
         // ---- synth post-amp ----------------------------------------------------------------
         if (synthOn && synthPost)
             for (int i = 0; i < n; ++i)
@@ -253,21 +292,6 @@ void Engine::process (juce::AudioBuffer<float>& buffer, int numIn, const HostInf
                 L[i] = L[i] * (1.f - m) + synthL[(size_t) i] * m;
                 outR[i] = outR[i] * (1.f - m) + synthR[(size_t) i] * m;
             }
-
-        // ---- HYDRA after the amp: harmonies of the amp's sound, like a second guitarist -------
-        if (harmPlace == 0) harmonizer.process (di.data(), L, outR, L, outR, n, hp);
-
-        // ---- AETHER: noise, ambience, atmospheres, added over the rig (the EQ and FX still shape it) ----
-        atmosFade.set (v (p.atm[obs::atmosdefs::on]) > 0.5f);
-        if (atmosFade.active())
-        {
-            if (! atmosWasActive) atmos.reset();              // coming back on: start fresh, no old tail
-            AtmosParams ap; readAtmosParams (ap);
-            atmos.process (di.data(), atmL.data(), atmR.data(), n, ap);
-            atmosFade.gains (atmG.data(), n);
-            for (int i = 0; i < n; ++i) { L[i] += atmL[(size_t) i] * atmG[(size_t) i]; outR[i] += atmR[(size_t) i] * atmG[(size_t) i]; }
-        }
-        atmosWasActive = atmosFade.active();
 
         float* st[2] = { L, outR };
 
@@ -287,12 +311,39 @@ void Engine::process (juce::AudioBuffer<float>& buffer, int numIn, const HostInf
         spectrum.push (L, outR, n);              // EQ page analyzer (does nothing unless the page is open)
 
         // ---- FX, special FX ------------------------------------------------------------------
+        if (kerFade.active() && kerPlace == 1) runKeraunos (L, outR);          // KERAUNOS after the amp
+        kerWasActive = kerFade.active();
         racks[1].process (st, 2, n, ctxProto, v (p.postOn) > 0.5f);
         racks[2].process (st, 2, n, ctxProto, v (p.sfxOn) > 0.5f);
+
+        // ---- KHAOS: glitches made from what it just heard, on the beat ----------------------------
+        gltFade.set (v (p.glt[obs::fxdefs::glt::on]) > 0.5f && sfxOn);
+        if (gltFade.active())
+        {
+            if (! gltWasActive) khaos.reset();
+            KhaosParams kp; readKhaosParams (kp, host, start);
+            std::copy (L, L + n, fxDryL.data()); std::copy (outR, outR + n, fxDryR.data());
+            khaos.process (L, outR, n, kp);
+            if (! gltFade.full()) gltFade.mix (fxDryL.data(), fxDryR.data(), L, outR, n);
+        }
+        gltWasActive = gltFade.active();
 
         // ---- doubler, width, output ------------------------------------------------------------
         doubler.process (L, outR, n, v (p.doublerTime), v (p.doublerOn) > 0.5f);
         width.process (L, outR, n, v (p.width));
+
+        // ---- AETHER: its own sound, added at the very end. Nothing of the guitar chain (EQ, FX, glitch, doubler,
+        //      width) touches it, and it touches nothing; only OUTPUT sets the total. The SYNTH tab's switch stops it too.
+        atmosFade.set (v (p.atm[obs::atmosdefs::on]) > 0.5f && v (p.synthOn) > 0.5f);
+        if (atmosFade.active())
+        {
+            if (! atmosWasActive) atmos.reset();              // coming back on: start fresh, no old tail
+            AtmosParams ap; readAtmosParams (ap);
+            atmos.process (di.data(), atmL.data(), atmR.data(), n, ap);
+            atmosFade.gains (atmG.data(), n);
+            for (int i = 0; i < n; ++i) { L[i] += atmL[(size_t) i] * atmG[(size_t) i]; outR[i] += atmR[(size_t) i] * atmG[(size_t) i]; }
+        }
+        atmosWasActive = atmosFade.active();
         outGainSm.set (dbToGain (v (p.outGain)));
         tunerMute.set (tunerOpen.load() && muteWhileTuning.load() ? 0.f : 1.f);
         for (int i = 0; i < n; ++i)

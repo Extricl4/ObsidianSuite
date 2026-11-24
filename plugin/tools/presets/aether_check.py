@@ -3,7 +3,7 @@
 
     python -I plugin/tools/presets/aether_check.py <render folder> [--fix] [--only NAME]
 
-Every scene is rendered by the plugin on its own (16 s, nothing else playing:
+Every scene is rendered by the plugin on its own (16 s, nothing else playing, the SYNTH tab on:
 "Obsidian Amp Suite" --render-sounds), measured as integrated loudness (ITU-R BS.1770:
 K-weighting, 400 ms blocks, gated) and compared with its folder's target. --fix writes
 each scene's LEVEL so it lands on the target. The HORROR scenes are the atmospheres
@@ -59,7 +59,7 @@ def main():
     only = sys.argv[sys.argv.index('--only') + 1] if '--only' in sys.argv else None
     sc = [s for s in scenes() if not only or only.lower() in s['name'].lower()]
     spec = [{'name': s['cat'] + '_' + safe(s['name']), 'seconds': 16,
-             'params': dict({'synth.on': 0, 'atm.on': 1}, **{'atm.' + k: v for k, v in s['a'].items()})} for s in sc]
+             'params': dict({'synth.on': 1, 'syn.mix': 0, 'atm.on': 1}, **{'atm.' + k: v for k, v in s['a'].items()})} for s in sc]
     with tempfile.NamedTemporaryFile('w', suffix='.json', delete=False) as f: json.dump(spec, f); sp = f.name
     subprocess.run([EXE, '--render-sounds', str(out.resolve()), sp], check=True, capture_output=True, timeout=1800)
     text = PRESETS.read_text(encoding='utf-8'); worst = 0.0

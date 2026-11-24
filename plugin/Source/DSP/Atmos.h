@@ -20,6 +20,7 @@
 //   OUTPUT   FOLLOW (duck under the guitar or swell with it), EVOLVE (slow
 //            random drift of every layer), GRIT, TONE (dark .. bright), WIDTH
 //
+//  The engine adds it at the very end of the chain, after the guitar's EQ, effects, doubler and width.
 //  Settings are read every 32 samples; no allocation on the audio thread.
 // =============================================================================
 #include <array>
@@ -86,7 +87,7 @@ public:
         lowShL.reset(); lowShR.reset(); hiShL.reset(); hiShR.reset();
         crush = { 0, 0 }; crushN = 0; gritOn = 0;
         followG = 1; masterSm = 0; bedSm = drnSm = texSm = 0; inSm = 1;
-        drnMidi = -1; shownEvents.store (0);
+        drnMidi = -1;      // (the event count keeps counting: the page compares it)
         nextEvent = 0; vinylT = 0; ctlLeft = 0;
         for (auto& a : act) a.store (0.f);
         for (auto& a : actAcc) a = 0;
@@ -590,6 +591,7 @@ private:
         static const float lo[ad::kTextures] = { 0.15f, 0.8f, 0.25f, 0.06f, 0.6f, 0.15f, 0.f, 0.06f, 0.05f, 0.12f };
         static const float hi[ad::kTextures] = { 2.0f, 14.f, 7.f, 1.4f, 22.f, 2.8f, 0.f, 1.2f, 0.9f, 3.5f };
         const int tt = juce::jlimit (0, ad::kTextures - 1, texType);
+        if (tt != texTypeWas) { texTypeWas = tt; nextEvent = juce::jmin (nextEvent, (int) (0.05f * sr)); }
         texRate = lo[tt] + (hi[tt] - lo[tt]) * texD * texD;
         if (tt == ad::Heartbeat) texRate = (42.f + texD * 118.f) / 60.f;      // beats per second
         texLp.setLowpass (sr, 600.f * std::exp2 (texTn * 5.f));
@@ -1111,7 +1113,7 @@ private:
     Svf formL[3], formR[3], dLpL, dLpR;
 
     // texture
-    int texType = 1; float texD = 0.4f, texTn = 0.5f, texC = 0.4f, texRate = 1; int nextEvent = 0; bool anyEvents = false;
+    int texType = 1, texTypeWas = -1; float texD = 0.4f, texTn = 0.5f, texC = 0.4f, texRate = 1; int nextEvent = 0; bool anyEvents = false;
     Ev ev[kEvents];
     OnePole texLp, roarLp, roarLp2, vinHp; Drift roarDr; float brT2 = 0; float roarAmp = 0, vinylRate = 0, vinylClick = 0, vinylT = 0;
 
