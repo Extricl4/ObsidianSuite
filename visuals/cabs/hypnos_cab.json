@@ -1,0 +1,57 @@
+{
+ "builder": "cab",
+ "name": "Hypnos 2x12",
+ "based_on": "Bogner 2x12 (ZETA \"Bogner 1\")",
+ "size": [
+  76.0,
+  30.0,
+  52.0
+ ],
+ "border": {
+  "side": 3.4,
+  "bottom": 3.6,
+  "top": 3.6
+ },
+ "recess": 1.0,
+ "edge": 0.8,
+ "tolex": {
+  "kind": "taurus",
+  "color": [
+   0.011,
+   0.011,
+   0.012
+  ],
+  "rough": 0.55,
+  "sheen": 0.08
+ },
+ "grille": {
+  "cloth": "checker",
+  "tile_cm": 9.0,
+  "tint": [
+   0.75,
+   0.75,
+   0.75
+  ],
+  "rough": 0.8,
+  "sheen": 0.4,
+  "bump": 0.8
+ },
+ "corners": {
+  "kind": "chrome",
+  "size": 4.8,
+  "out": 0.45
+ },
+ "feet": 2.4,
+ "speakers": [
+  [
+   -16.95,
+   22.4,
+   14.0
+  ],
+  [
+   16.95,
+   22.4,
+   14.0
+  ]
+ ]
+}

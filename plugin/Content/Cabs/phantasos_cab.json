@@ -1,0 +1,30 @@
+{
+ "key": "phantasos_cab",
+ "name": "Phantasos 4x12",
+ "size": "4x12",
+ "basedOn": "Bogner 412ST / 412STH / 412STU 4x12",
+ "source": "Seacow Cabs 2021 Teaser Pack",
+ "voiceLabel": "CAB",
+ "voices": [
+  {
+   "name": "412ST · V30",
+   "irA": "Cabs/Phantasos/SC-Bog412ST-CNV30-421-Balanced.wav",
+   "irB": "Cabs/Phantasos/SC-Bog412ST-CNV30-421-Balanced.wav"
+  },
+  {
+   "name": "412STH · G12M",
+   "irA": "Cabs/Phantasos/SC-Bog412STH-G12M-R20-Thick.wav",
+   "irB": "Cabs/Phantasos/SC-Bog412STH-G12M-R20-Thick.wav"
+  },
+  {
+   "name": "412STU · G12T-75",
+   "irA": "Cabs/Phantasos/SC-Bog412STU-MT75-57-Dark.wav",
+   "irB": "Cabs/Phantasos/SC-Bog412STU-MT75-57-Dark.wav"
+  }
+ ],
+ "irA": "Cabs/Phantasos/SC-Bog412ST-CNV30-421-Balanced.wav",
+ "irB": "Cabs/Phantasos/SC-Bog412ST-CNV30-421-Balanced.wav",
+ "img": "cabs/phantasos_cab.webp",
+ "imgW": 593,
+ "imgH": 640
+}

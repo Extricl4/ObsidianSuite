@@ -64,6 +64,8 @@ public:
     static CaptureAmpFiles loadCaptureAmp (std::shared_ptr<const dsp::CaptureAmpMap> map, const juce::String& key, double rate, int block);
     // ---- cab -------------------------------------------------------------------------
     void setCab (const juce::String& libraryKey);
+    /** A cab whose file lists "voices" (album tones, mic positions, speakers): switch to voice n (its irA / irB). */
+    void setCabVoice (int voice);
     void loadIr (int mic, const juce::File& file);   // mic: 0 = A, 1 = B, 2 = both
     // ---- racks -----------------------------------------------------------------------
     void setModule (int rack, int slot, const juce::String& key, bool applyDefaults = true);

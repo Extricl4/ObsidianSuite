@@ -94,3 +94,44 @@ These files were made by other people and downloaded by Emil for his own rig. Al
 | Eos | 20 captures | Hiwatt Custom 100 DR103 1974 + Pink Floyd Comfortably Numb Tone Collection | daweed, frank67 |
 | Erebus | 1 captures | Bogner Uberschall MKII Ultra High Gain | amalgamaudio |
 | Dionysus | 8 captures | Bogner Ecstasy 101B Archive | Kenji Suzuki |
+
+# Obsidian cab pack
+
+Real-world IR cabs: each one is a cab file, its impulse responses and a straight-on picture.
+
+```
+Cabs\<key>.json            one file per cab, in the format the CHOOSE CAB list reads
+IRs\Cabs\<Cab>\*.wav       its impulse responses
+Faces\img\cabs\<key>.webp  its picture on the CAB page (plugin/tools/faces/build_cabs.py)
+```
+
+Each `Cabs\<key>.json` has `key`, `name`, `size`, `basedOn`, `irA` / `irB` (mic A and mic B, relative to `IRs`) and, when the
+cab came with several IR sets, `voices`: a list of `{ name, irA, irB }` with a `voiceLabel` (MIC, CAB, SPEAKER, ALBUM). The
+CAB page shows a button per voice; the album cab (Metallon) groups its voices by `album` and `song`, writes the album on its
+display and steps through the albums with the button drawn on the cab (`screen` / `button`: pixel boxes in the picture).
+Packs with two speakers and two mic positions per cab (ZETA) became four voices: POS 1 / POS 2 put both speakers on
+mic A and B at one position, SPKR 1 / SPKR 2 put one speaker's two positions on A and B.
+The looks are built by `visuals/render/cab.py` from `visuals/cabs/<key>.json` (see `visuals/README.md`).
+The self-test (`--packs` not needed) checks every cab's IRs load and that every voice button switches them.
+
+## Cab credits
+
+These files were made by other people and downloaded by Emil for his own rig. All rights stay with their creators.
+
+| Cab | Based on | Files | Source |
+|---|---|---|---|
+| Atlas 4x12 | Mesa/Boogie Rectifier Standard OS slant | 1 IR (SM57 + M160) | "Mesa_OS_4x12_IR" |
+| Brontes 4x12 | Marshall 1960AV (V30) | 2 IRs (EV MIX B/D) + 1 IR (R121) | "Marshall_4x12_V30_IR"; Seacow Cabs 2021 Teaser Pack |
+| Steropes 4x12 | Marshall JCM900 Lead 1960 | 3 IRs (SM57, e609, blended) | "Marshall_JCM900_LEAD-1960_CAB" |
+| Daedalus 4x12 | bespoke stealth cab | 1 IR | "TesseracT_4x12" |
+| Hypnos, Morpheus 2x12 · Phobetor 4x12 | Bogner 2x12 (two cabs) · Bogner 4x12 | 4 IRs each (2 speakers × 2 positions) | ZETA IR Pack |
+| Aetna, Lemnos 4x12 | Diezel 4x12 (two cabs) | 4 IRs each | ZETA IR Pack |
+| Prometheus 4x12 · Hesperia 2x12 | Mesa 4x12 · Orange 2x12 | 4 IRs each | ZETA IR Pack |
+| Phantasos 4x12 | Bogner 412ST / STH / STU | 3 IRs | Seacow Cabs 2021 Teaser Pack |
+| Asteria 2x12 | Vox V212C (Alnico Gold / Blue) | 2 IRs | Seacow Cabs 2021 Teaser Pack |
+| Ladon 4x12 · Pallas 4x12 | Orange PPC412 · David Laboga 412 Pro | 1 IR each | Seacow Cabs 2021 Teaser Pack |
+| Epimetheus 4x12 | Mesa 4x12 Half Back / Rectifier Traditional | 2 IRs | Seacow Cabs 2021 Teaser Pack |
+| Arges, Polyphemus, Gyges 4x12 | Marshall 1960BX · 1960TV · Mode Four | 1 IR each | Seacow Cabs 2021 Teaser Pack |
+| Deimos 4x12 · Scylla 4x12 | ENGL 412GS / 412VG · Zilla 412 OS Custom | 2 IRs · 1 IR | Seacow Cabs 2021 Teaser Pack |
+| Charybdis 6x10, Antaeus 4x10, Melas 4x10, Briareus 8x10 | Zilla 6x10 · SWR Goliath 4x10 · Darkglass DG410 · Aguilar DB810 (bass) | 1 IR each | Seacow Cabs 2021 Teaser Pack (Bass Volume 1) |
+| Metallon 4x12 | album tones | 20 IRs (Kill 'Em All to Hardwired, song variants, JC clean) | "Metallica classics IRs 2.2" |

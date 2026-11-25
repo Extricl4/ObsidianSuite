@@ -1,0 +1,25 @@
+{
+ "key": "steropes_cab",
+ "name": "Steropes 4x12",
+ "size": "4x12",
+ "basedOn": "Marshall JCM900 Lead 1960 4x12 (straight)",
+ "source": "Marshall_JCM900_LEAD-1960_CAB",
+ "voiceLabel": "MIC",
+ "voices": [
+  {
+   "name": "SM57 + E609",
+   "irA": "Cabs/Steropes/Marshall JCM900 LEAD-1960 SM57.wav",
+   "irB": "Cabs/Steropes/Marshall JCM900 LEAD-1960 SEHNNEISER e609.wav"
+  },
+  {
+   "name": "BLENDED",
+   "irA": "Cabs/Steropes/Marshall JCM900 LEAD-1960 BLENDED 3.wav",
+   "irB": "Cabs/Steropes/Marshall JCM900 LEAD-1960 BLENDED 3.wav"
+  }
+ ],
+ "irA": "Cabs/Steropes/Marshall JCM900 LEAD-1960 SM57.wav",
+ "irB": "Cabs/Steropes/Marshall JCM900 LEAD-1960 SEHNNEISER e609.wav",
+ "img": "cabs/steropes_cab.webp",
+ "imgW": 604,
+ "imgH": 640
+}

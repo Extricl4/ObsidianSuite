@@ -1,0 +1,25 @@
+{
+ "key": "deimos_cab",
+ "name": "Deimos 4x12",
+ "size": "4x12",
+ "basedOn": "ENGL 412GS / 412VG 4x12 (Vintage 30)",
+ "source": "Seacow Cabs 2021 Teaser Pack",
+ "voiceLabel": "CAB",
+ "voices": [
+  {
+   "name": "412GS · CN V30",
+   "irA": "Cabs/Deimos/SC-NGL412GS-CNV30-7-Bright.wav",
+   "irB": "Cabs/Deimos/SC-NGL412GS-CNV30-7-Bright.wav"
+  },
+  {
+   "name": "412VG · UK V30",
+   "irA": "Cabs/Deimos/SC-NGL412VG-UKV30-409-Balanced.wav",
+   "irB": "Cabs/Deimos/SC-NGL412VG-UKV30-409-Balanced.wav"
+  }
+ ],
+ "irA": "Cabs/Deimos/SC-NGL412GS-CNV30-7-Bright.wav",
+ "irB": "Cabs/Deimos/SC-NGL412GS-CNV30-7-Bright.wav",
+ "img": "cabs/deimos_cab.webp",
+ "imgW": 580,
+ "imgH": 640
+}

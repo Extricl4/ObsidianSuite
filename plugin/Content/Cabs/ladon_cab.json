@@ -1,0 +1,12 @@
+{
+ "key": "ladon_cab",
+ "name": "Ladon 4x12",
+ "size": "4x12",
+ "basedOn": "Orange PPC412 4x12 (UK Vintage 30)",
+ "source": "Seacow Cabs 2021 Teaser Pack",
+ "irA": "Cabs/Ladon/SC-Citrus412S-UKV30-409-Dark.wav",
+ "irB": "Cabs/Ladon/SC-Citrus412S-UKV30-409-Dark.wav",
+ "img": "cabs/ladon_cab.webp",
+ "imgW": 636,
+ "imgH": 640
+}

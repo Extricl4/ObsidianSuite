@@ -20,6 +20,24 @@ python3 render/render.py -- pedals/seraph.json top off # straight down, transpar
 render/top.sh [keys]                                   # every missing pedal top view -> renders/top/<key>_off|on.webp
 ```
 
+## Real-world IR cabs (2026-11-25)
+`render/cab.py` builds cabs that look like the real boxes the IRs were recorded from (Mesa, Marshall, Bogner, Diezel,
+Orange, Vox, ENGL, Zilla, bass cabs ...), measured in centimetres: slant or straight fronts, tolex (bronco, levant,
+taurus, carpet, duratex, brushed metal), grille cloth (`art/weave_<cloth>.png`: jute, basket, checker = salt & pepper,
+diamond = Vox, wheat = Orange) or perforated metal over a scrim (`art/perf_<holes>.png`), piping, a reveal gap, metal /
+plastic / chrome corners, handles, casters, speakers behind the cloth, the tesseract emblem (a real 4D hypercube projected
+to the front) and the album cab's display, button and light lines. The spec format is at the top of `cab.py`; specs
+have `"builder": "cab"` (head.py's queue skips them).
+```
+python3 render/cab.py -- cabs/atlas_cab.json front        # straight-on, transparent: out/front/atlas_cab.png + _map.json
+python3 render/cab.py -- cabs/atlas_cab.json front prev   # quick preview
+python3 render/cab.py -- cabs/atlas_cab.json angle        # 3/4 check of the shape (not used in the plugin)
+render/cab_queue.sh [keys]                                # every missing front view (PY=<python with bpy>)
+python3 tools/cab_weave.py [cloth] | perf                 # remake the cloth / perforated-metal tiles
+python3 ../plugin/tools/faces/build_cabs.py [keys]        # renders -> the plugin's CAB page pictures
+```
+Each cab's sound (IRs, voice buttons) lives in `plugin/Content/Cabs/<key>.json`; see `plugin/Content/README.md`.
+
 ## Engraved pedals (2026-11-21)
 New pedal art is drawn by `tools/art_<key>.py` (shared helpers in `tools/pedal_art_lib.py`: 3x supersampled plate, tapered strokes, vine scrolls, leaves, thorns).
 Add `"engrave": {rough, metal, depth, strength, distance}` to a pedal spec to cut the art into the surface instead of printing it on top.

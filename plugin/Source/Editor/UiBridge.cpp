@@ -196,6 +196,7 @@ void UiBridge::buildCommands()
     };
     c["loadCaptureFile"] = [this] (const juce::Array<juce::var>& a, Completion d) { proc.rig().loadCapture (argInt (a, 0), juce::File (argStr (a, 1))); d (true); };
     c["setCab"]       = [this] (const juce::Array<juce::var>& a, Completion d) { proc.rig().setCab (argStr (a, 0)); d (proc.rig().toJson()); };
+    c["setCabVoice"]  = [this] (const juce::Array<juce::var>& a, Completion d) { proc.rig().setCabVoice (argInt (a, 0)); proc.presetManager().markDirty(); d (proc.rig().toJson()); };
     c["loadIr"]       = [this] (const juce::Array<juce::var>& a, Completion d)
     {
         const int mic = argInt (a, 0, 2);

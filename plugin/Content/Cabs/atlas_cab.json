@@ -1,0 +1,12 @@
+{
+ "key": "atlas_cab",
+ "name": "Atlas 4x12",
+ "size": "4x12",
+ "basedOn": "Mesa/Boogie Rectifier Standard (oversized) slant 4x12",
+ "source": "Mesa_OS_4x12_IR",
+ "irA": "Cabs/Atlas/Mesa_OS_4x12_57_m160.wav",
+ "irB": "Cabs/Atlas/Mesa_OS_4x12_57_m160.wav",
+ "img": "cabs/atlas_cab.webp",
+ "imgW": 551,
+ "imgH": 640
+}

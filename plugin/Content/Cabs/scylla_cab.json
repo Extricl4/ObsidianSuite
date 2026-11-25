@@ -1,0 +1,12 @@
+{
+ "key": "scylla_cab",
+ "name": "Scylla 4x12",
+ "size": "4x12",
+ "basedOn": "Zilla 412 Oversized Custom (Celestion G12-60 SE)",
+ "source": "Seacow Cabs 2021 Teaser Pack",
+ "irA": "Cabs/Scylla/SC-ZLA412-G1260SE-57-Balanced.wav",
+ "irB": "Cabs/Scylla/SC-ZLA412-G1260SE-57-Balanced.wav",
+ "img": "cabs/scylla_cab.webp",
+ "imgW": 582,
+ "imgH": 640
+}

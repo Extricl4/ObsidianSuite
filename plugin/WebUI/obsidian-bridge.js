@@ -1265,6 +1265,9 @@ function setupAmpCab(st) {
   intercept(b => b.classList.contains('obs-tile') && b.dataset.amp !== undefined, b => {
     const p = b.closest('.pop'), t = p && p._tiles && p._tiles[+b.dataset.tile];
     spawnAmp(b.dataset.amp, t ? t[1] : null); $$('.pop').forEach(x => x.style.display = 'none'); });
+  intercept((b, e) => b === ampUi.cabBig && e.target.closest && e.target.closest('.obs-cabhot'), () => cabVoiceStep(1));
+  intercept(b => b.dataset.cabVoice !== undefined, b => setCabVoice(+b.dataset.cabVoice));
+  intercept(b => b.dataset.cabAlbum !== undefined, b => { const vs = cabEntry().voices || []; const i = vs.findIndex(v => v.album === b.dataset.cabAlbum); if (i >= 0) setCabVoice(i); });
   intercept(b => b === ampUi.cabBig && rig && rig.cab && rig.cab.key && rig.cab.key !== 'none', b => {
     const page = b.closest('.page'); const pop = $$('.pop', page).find(p => txt($('span', p)) === 'CHOOSE CAB');
     $$('.pop').forEach(p => p.style.display = 'none'); if (pop) pop.style.display = 'block';
@@ -1290,7 +1293,11 @@ function setupAmpCab(st) {
   }
   if (CP) {
     const addCab = $$('button', CP).find(x => txt(x).startsWith('ADD CAB'));
-    if (addCab) { ampUi.cabBig = addCab; ampUi.cabBigHtml = addCab.innerHTML; }
+    if (addCab) {
+      ampUi.cabBig = addCab; ampUi.cabBigHtml = addCab.innerHTML;
+      ampUi.cabVoices = document.createElement('div'); ampUi.cabVoices.className = 'obs-cabvoices obs-hidden';
+      addCab.insertAdjacentElement('afterend', ampUi.cabVoices);
+    }
     ampUi.micNote = $$('span', CP).find(s => /MICS APPEAR/.test(txt(s)));
     const mics = $$('div', CP).find(d => d.style.opacity === '0.4' && /MIC A/.test(d.textContent));
     ampUi.mics = mics;
@@ -1416,7 +1423,13 @@ function renderLib(p) {
   } else {
     const cur = rig && rig.cab ? rig.cab.key : '';
     const list = CABS.filter(c => (filter === 'ALL' || (c.size || '').replace('x', '×') === filter) && (!q || (c.name + ' ' + (c.size || '')).toLowerCase().includes(q)));
-    p._grid.innerHTML = list.map(c => '<button class="obs-tile' + (c.key === cur ? ' on' : '') + '" data-cab="' + esc(c.key) + '"><i>' + esc((c.size || '').replace('x', '×') || 'IR') + '</i><b>' + esc(c.name) + '</b><small>' + esc(c.builtIn ? 'Built in' : 'Your cab') + '</small></button>').join('') || '<div class="obs-empty">No cabs match.</div>';
+    p._grid.innerHTML = list.map(c => {
+      const vs = c.voices || [], nv = vs.length && vs[0].album ? new Set(vs.map(v => v.album)).size : vs.length;
+      const vl = nv > 1 ? ' · ' + nv + ' ' + (c.voiceLabel ? c.voiceLabel.toLowerCase() + 's' : 'voices') : '';
+      return '<button class="obs-tile' + (c.key === cur ? ' on' : '') + (c.img ? ' haspic cabpic' : '') + '" data-cab="' + esc(c.key) + '">'
+        + (c.img ? '<span class="obs-tilepic cab" style="background-image:url(\'' + esc(faceImg(c.img)) + '\')"></span>' : '')
+        + '<i>' + esc(((c.size || '').replace('x', '×') || 'IR') + vl) + '</i><b>' + esc(c.name) + '</b><small>'
+        + esc(c.basedOn ? 'Based on ' + c.basedOn : (c.builtIn ? 'Built in' : 'Your cab')) + '</small></button>'; }).join('') || '<div class="obs-empty">No cabs match.</div>';
   }
 }
 const AMP_KNOBS = [['amp.gain', 'GAIN'], ['amp.bass', 'BASS'], ['amp.mid', 'MIDDLE'], ['amp.treble', 'TREBLE'], ['amp.presence', 'PRESENCE'], ['amp.depth', 'DEPTH'], ['amp.master', 'MASTER']];
@@ -1708,12 +1721,66 @@ function renderFace(a, info) {
   $('.obs-faceinfo i', faceUi.box).title = info.description || '';
   drawFace();
 }
+function cabEntry() { const k = rig && rig.cab ? rig.cab.key : ''; return CABS.find(x => x.key === k) || {}; }
+function setCabVoice(i) { call('setCabVoice', i).then(r => r && applyRig(r)); }
+function cabVoiceStep(d) {
+  const vs = cabEntry().voices || [], cur = (rig.cab || {}).voice | 0;
+  if (vs.length < 2) return;
+  if (vs[0].album) {      // grouped voices (albums with songs): the button steps through the albums
+    const albums = [...new Set(vs.map(v => v.album))], a = albums.indexOf((vs[cur] || {}).album);
+    const next = albums[(a + d + albums.length) % albums.length];
+    setCabVoice(vs.findIndex(v => v.album === next));
+  } else setCabVoice((cur + d + vs.length) % vs.length);
+}
+function cabVoiceName(v) { return v ? (v.album ? v.album + (v.song ? ' · ' + v.song : '') : v.name || '') : ''; }
+function renderCabVoices(e, cur) {
+  const box = ampUi.cabVoices; if (!box) return;
+  const vs = e.voices || [];
+  box.classList.toggle('obs-hidden', vs.length < 2);
+  if (vs.length < 2) { box.innerHTML = ''; box._sig = ''; return; }
+  const sig = e.key + '|' + cur; if (box._sig === sig) return; box._sig = sig;
+  const chip = (attr, val, text, on) => '<button class="obs-cabchip' + (on ? ' on' : '') + '" ' + attr + '="' + esc(String(val)) + '">' + esc(text) + '</button>';
+  let h = '<span class="obs-cabvl">' + esc(e.voiceLabel || 'VOICE') + '</span>';
+  if (vs[0].album) {
+    const albums = [...new Set(vs.map(v => v.album))], ca = (vs[cur] || {}).album;
+    h += '<div class="obs-cabrow">' + albums.map(a => chip('data-cab-album', a, (vs.find(v => v.album === a) || {}).short || a, a === ca)).join('') + '</div>';
+    const songs = vs.map((v, i) => [v, i]).filter(([v]) => v.album === ca);
+    if (songs.length > 1) h += '<div class="obs-cabrow songs">' + songs.map(([v, i]) => chip('data-cab-voice', i, v.song || 'ALBUM', i === cur)).join('') + '</div>';
+  } else h += '<div class="obs-cabrow">' + vs.map((v, i) => chip('data-cab-voice', i, v.name, i === cur)).join('') + '</div>';
+  box.innerHTML = h;
+}
 function renderCab() {
   if (!rig) return;
   const c = rig.cab || {}, has = c.key && c.key !== 'none';
-  const label = (c.irAName || c.irBName) ? [c.irAName, c.irBName].filter(Boolean).join(' + ') : (c.name || '');
+  const e = cabEntry(), vs = e.voices || [], cur = c.voice | 0, voice = vs.length > 1 ? vs[cur] : null;
+  const label = voice ? cabVoiceName(voice) : (c.irAName || c.irBName) ? [c.irAName, c.irBName].filter(Boolean).join(' + ') : (c.name || '');
+  if (has && e.img && ampUi.cabBig) {
+    const pct = (r, i) => (100 * r[i] / (i % 2 ? e.imgH : e.imgW)).toFixed(2) + '%';
+    const box = (r, cls, inner) => r && e.imgW ? '<span class="' + cls + '" style="left:' + pct(r, 0) + ';top:' + pct(r, 1) + ';width:' + (100 * (r[2] - r[0]) / e.imgW).toFixed(2) + '%;height:' + (100 * (r[3] - r[1]) / e.imgH).toFixed(2) + '%">' + inner + '</span>' : '';
+    const scr = voice ? '<b>' + esc(voice.album || voice.name || '') + '</b>' + (voice.song ? '<i>' + esc(voice.song) + '</i>' : '') : '<b>' + esc(e.name || '') + '</b>';
+    const sig = e.key + '|' + cur;
+    if (ampUi.cabBig._sig !== sig) {
+      ampUi.cabBig._sig = sig;
+      ampUi.cabBig.innerHTML = '<span class="obs-cabcard"><span class="obs-cabpic"><img src="' + esc(faceImg(e.img)) + '" alt="" draggable="false">'
+        + box(e.screen, 'obs-cabscreen', scr) + (vs.length > 1 ? box(e.button, 'obs-cabhot', '') : '') + '</span>'
+        + '<span class="obs-cabname">' + esc(c.name || e.name || 'Cab') + '</span><span class="obs-cabsub">' + esc(voice ? cabVoiceName(voice) : e.basedOn ? 'Based on ' + e.basedOn : 'Click to change') + '</span></span>';
+      ampUi.cabBig.classList.add('obs-cabbig');
+      // the voice name shrinks until it fits the cab's display
+      const fit = () => $$('.obs-cabscreen > *', ampUi.cabBig).forEach(el => {
+        const w = el.parentElement.clientWidth - 6; if (w <= 0) return;
+        let fs = parseFloat(getComputedStyle(el).fontSize) || 11;
+        while (el.scrollWidth > w && fs > 5) { fs -= 0.5; el.style.fontSize = fs + 'px'; el.style.letterSpacing = (fs > 8 ? .12 : .06) + 'em'; }
+      });
+      const img = $('.obs-cabpic img', ampUi.cabBig);
+      if (img && !img.complete) img.addEventListener('load', fit, { once: true }); else requestAnimationFrame(fit);
+    }
+    renderCabVoices(e, cur);
+  } else {
+    if (ampUi.cabBig) { ampUi.cabBig._sig = ''; ampUi.cabBig.classList.remove('obs-cabbig'); }
+    renderCabVoices(has ? e : {}, cur);
+  }
   const card = (big) => '<span style="display:flex;flex-direction:column;align-items:center;gap:' + (big ? 10 : 6) + 'px"><span style="font-size:' + (big ? 10 : 9) + 'px;letter-spacing:.24em;color:var(--accent)">CAB</span><span style="font-size:' + (big ? 20 : 15) + 'px;font-weight:600;letter-spacing:.14em">' + esc(c.name || 'Cab') + '</span><span style="font-size:11px;color:rgb(var(--cf_8d8d93))">' + esc(label !== c.name ? label : 'Click to change') + '</span></span>';
-  if (ampUi.cabBig) ampUi.cabBig.innerHTML = has ? card(true) : ampUi.cabBigHtml;
+  if (ampUi.cabBig && !(has && e.img)) ampUi.cabBig.innerHTML = has ? card(true) : ampUi.cabBigHtml;
   if (ampUi.micNote) ampUi.micNote.textContent = has ? 'TWO MICS, BLENDED · LOAD IR TO USE YOUR OWN' : 'MICS APPEAR ONCE A CAB IS CHOSEN';
   if (ampUi.mics) ampUi.mics.style.opacity = has ? '1' : '.4';
   if (ampUi.irNote) ampUi.irNote.textContent = (c.irAName || c.irBName) ? 'IR: ' + label : 'Or load your own impulse response';

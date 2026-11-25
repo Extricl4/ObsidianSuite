@@ -1,0 +1,12 @@
+{
+ "key": "charybdis_cab",
+ "name": "Charybdis 6x10",
+ "size": "6x10",
+ "basedOn": "Zilla 6x10 bass cab (Celestion BN102X)",
+ "source": "Seacow Cabs 2021 Teaser Pack",
+ "irA": "Cabs/Charybdis/SC-ZLA610-BN102X-414-C.wav",
+ "irB": "Cabs/Charybdis/SC-ZLA610-BN102X-414-C.wav",
+ "img": "cabs/charybdis_cab.webp",
+ "imgW": 394,
+ "imgH": 640
+}

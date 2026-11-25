@@ -1,0 +1,12 @@
+{
+ "key": "briareus_cab",
+ "name": "Briareus 8x10",
+ "size": "8x10",
+ "basedOn": "Aguilar DB810 bass cab",
+ "source": "Seacow Cabs 2021 Teaser Pack",
+ "irA": "Cabs/Briareus/SC-DB810-JDK10-112-E.wav",
+ "irB": "Cabs/Briareus/SC-DB810-JDK10-112-E.wav",
+ "img": "cabs/briareus_cab.webp",
+ "imgW": 323,
+ "imgH": 640
+}

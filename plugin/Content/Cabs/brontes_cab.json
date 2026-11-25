@@ -1,0 +1,25 @@
+{
+ "key": "brontes_cab",
+ "name": "Brontes 4x12",
+ "size": "4x12",
+ "basedOn": "Marshall 1960AV slant 4x12 (Celestion Vintage 30)",
+ "source": "Marshall_4x12_V30_IR + Seacow Cabs 2021 Teaser Pack",
+ "voiceLabel": "MIC",
+ "voices": [
+  {
+   "name": "EV MIX",
+   "irA": "Cabs/Brontes/EV MIX B.wav",
+   "irB": "Cabs/Brontes/EV MIX D.wav"
+  },
+  {
+   "name": "R121",
+   "irA": "Cabs/Brontes/SC-MrShall60-G12V-121-Balanced.wav",
+   "irB": "Cabs/Brontes/SC-MrShall60-G12V-121-Balanced.wav"
+  }
+ ],
+ "irA": "Cabs/Brontes/EV MIX B.wav",
+ "irB": "Cabs/Brontes/EV MIX D.wav",
+ "img": "cabs/brontes_cab.webp",
+ "imgW": 604,
+ "imgH": 640
+}

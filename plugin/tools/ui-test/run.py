@@ -36,6 +36,8 @@ def build_page(standalone):
     for e in mine[:2]: e['dir'] = 'Drop D'; e['id'] = 'user:Drop D/' + e['name']
     state['presets'] = factory_presets() + mine
     state['presetFolders'] = ['Drop D', 'Live set']
+    # the IR cabs (cab pack), with their pictures
+    state['cabs'] += [json.loads(f.read_text(encoding='utf-8')) for f in sorted((CONTENT / 'Cabs').glob('*.json'))]
     faces = OUT / 'faces'
     if faces.is_symlink() or faces.exists():
         faces.unlink() if faces.is_symlink() else shutil.rmtree(faces)
@@ -908,6 +910,44 @@ async def run(standalone):
         await pg.screenshot(path=str(OUT / 'cab.png'))
         txtpos = await pg.evaluate("document.querySelector('[data-param=\"cab.a.level\"]').parentElement.querySelector('.kn-val').textContent")
         check('dB' in txtpos, f'cab mic level shows dB ({txtpos})')
+        # ---- IR cabs: the picture, the album cab's display and drawn button, voice buttons
+        if any(c.get('key') == 'metallon_cab' for c in state['cabs']):
+            big = "[...document.querySelectorAll('.page[data-page=CAB] button')].find(b=>b.style.width==='400px')"
+            async def pick_cab(key):
+                await pg.evaluate(big + ".click()"); await pg.wait_for_timeout(150)
+                await pg.locator(f'.obs-tile[data-cab="{key}"]:visible').click(); await pg.wait_for_timeout(300)
+            await pg.evaluate(big + ".click()"); await pg.wait_for_timeout(200)
+            tile = await pg.evaluate("(()=>{const t=document.querySelector('.obs-tile[data-cab=metallon_cab]'); return t ? t.querySelector('i').textContent + ' | ' + t.querySelector('small').textContent + ' | ' + !!t.querySelector('.obs-tilepic') : ''})()")
+            check('10 albums' in tile and 'Based on' in tile and tile.endswith('true'), f'CHOOSE CAB: the album cab shows its picture, album count and what it is ({tile})')
+            await pg.locator('.obs-tile[data-cab="metallon_cab"]:visible').click(); await pg.wait_for_timeout(400)
+            pic = await pg.evaluate("(()=>{const i=document.querySelector('.obs-cabpic img'); return i ? [i.getAttribute('src'), i.naturalWidth] : null})()")
+            check(pic and 'cabs/metallon_cab.webp' in pic[0] and pic[1] > 100, f'the CAB page shows the cab picture ({pic})')
+            scr = await pg.evaluate("(document.querySelector('.obs-cabscreen')||{}).textContent")
+            check(scr == "KILL 'EM ALL", f'the album shows on the cab display ({scr})')
+            await pg.evaluate("window.__mock.log.length=0")
+            await pg.locator('.obs-cabhot').click(); await pg.wait_for_timeout(250)
+            scr = await pg.evaluate("(document.querySelector('.obs-cabscreen')||{}).textContent")
+            sent = await pg.evaluate("window.__mock.log.filter(x=>x[0]==='setCabVoice').map(x=>x[1])")
+            check(sent == [1] and scr == 'RIDE THE LIGHTNING', f'the button drawn on the cab steps to the next album ({sent}, {scr})')
+            await pg.locator('.obs-cabchip[data-cab-album="MASTER OF PUPPETS"]').click(); await pg.wait_for_timeout(250)
+            songs = await pg.evaluate("[...document.querySelectorAll('.obs-cabrow.songs .obs-cabchip')].map(b=>b.textContent)")
+            await pg.locator('.obs-cabrow.songs .obs-cabchip', has_text='BATTERY').click(); await pg.wait_for_timeout(250)
+            scr = await pg.evaluate("[...document.querySelectorAll('.obs-cabscreen > *')].map(e=>e.textContent).join(' / ')")
+            check(songs == ['ALBUM', 'BATTERY', 'DISPOSABLE HEROES'] and scr == 'MASTER OF PUPPETS / BATTERY', f'album buttons, then song buttons ({songs}; display {scr})')
+            await pg.screenshot(path=str(OUT / 'cab-metallon.png'))
+            await pick_cab('hypnos_cab')
+            chips = await pg.evaluate("[...document.querySelectorAll('.obs-cabvoices .obs-cabchip')].map(b=>b.textContent)")
+            await pg.evaluate("window.__mock.log.length=0")
+            await pg.locator('.obs-cabchip', has_text='SPKR 2').click(); await pg.wait_for_timeout(250)
+            on = await pg.evaluate("(document.querySelector('.obs-cabchip.on')||{}).textContent")
+            check(chips == ['POS 1', 'POS 2', 'SPKR 1', 'SPKR 2'] and on == 'SPKR 2' and await pg.evaluate("window.__mock.log.some(x=>x[0]==='setCabVoice'&&x[1]===3)"),
+                  f'a cab with two speakers x two mic positions has four mic buttons ({chips}, on: {on})')
+            await pg.screenshot(path=str(OUT / 'cab-hypnos.png'))
+            await pick_cab('atlas_cab')
+            hidden = await pg.evaluate("document.querySelector('.obs-cabvoices').classList.contains('obs-hidden')")
+            check(hidden, 'a cab with one IR set shows no voice buttons')
+            await pick_cab('builtin-4x12')
+            check(await pg.evaluate("!document.querySelector('.obs-cabpic')"), 'a built-in cab goes back to the plain card')
 
         # the level meters sit inside the top bar, both sides the same distance from its edge
         mt = await pg.evaluate("""(()=>{const bar=[...document.querySelectorAll('.kn')].find(k=>!k.closest('.page')&&!k.closest('.ov')).closest('div[style*="height: 100px"]').getBoundingClientRect();

@@ -1,0 +1,35 @@
+{
+ "key": "hypnos_cab",
+ "name": "Hypnos 2x12",
+ "size": "2x12",
+ "basedOn": "Bogner 2x12 (ZETA \"Bogner 1\")",
+ "source": "ZETA IR Pack",
+ "voiceLabel": "MIC",
+ "voices": [
+  {
+   "name": "POS 1",
+   "irA": "Cabs/Hypnos/Bogner 1 2x12 SPKR 1 position 1.wav",
+   "irB": "Cabs/Hypnos/Bogner 1 2x12 SPKR 2 position 1.wav"
+  },
+  {
+   "name": "POS 2",
+   "irA": "Cabs/Hypnos/Bogner 1 2x12 SPKR 1 position 2.wav",
+   "irB": "Cabs/Hypnos/Bogner 1 2x12 SPKR 2 position 2.wav"
+  },
+  {
+   "name": "SPKR 1",
+   "irA": "Cabs/Hypnos/Bogner 1 2x12 SPKR 1 position 1.wav",
+   "irB": "Cabs/Hypnos/Bogner 1 2x12 SPKR 1 position 2.wav"
+  },
+  {
+   "name": "SPKR 2",
+   "irA": "Cabs/Hypnos/Bogner 1 2x12 SPKR 2 position 1.wav",
+   "irB": "Cabs/Hypnos/Bogner 1 2x12 SPKR 2 position 2.wav"
+  }
+ ],
+ "irA": "Cabs/Hypnos/Bogner 1 2x12 SPKR 1 position 1.wav",
+ "irB": "Cabs/Hypnos/Bogner 1 2x12 SPKR 2 position 1.wav",
+ "img": "cabs/hypnos_cab.webp",
+ "imgW": 902,
+ "imgH": 640
+}

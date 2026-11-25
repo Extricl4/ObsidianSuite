@@ -1,0 +1,99 @@
+{
+ "builder": "cab",
+ "name": "Deimos 4x12",
+ "based_on": "ENGL 412GS / 412VG 4x12 (Vintage 30)",
+ "size": [
+  75.0,
+  36.0,
+  77.0
+ ],
+ "slant": {
+  "z": 39.0,
+  "back": 7.0
+ },
+ "border": {
+  "side": 3.5,
+  "bottom": 4.0,
+  "top": 4.0
+ },
+ "recess": 0.8,
+ "edge": 0.8,
+ "tolex": {
+  "kind": "bronco",
+  "color": [
+   0.011,
+   0.011,
+   0.012
+  ],
+  "rough": 0.6,
+  "sheen": 0.06,
+  "grain": 14.0,
+  "bump": 0.7
+ },
+ "grille": {
+  "cloth": "basket",
+  "tile_cm": 9.6,
+  "tint": [
+   1,
+   1,
+   1
+  ],
+  "rough": 0.78,
+  "sheen": 0.45,
+  "bump": 0.8
+ },
+ "piping": {
+  "color": [
+   0.5,
+   0.5,
+   0.52
+  ],
+  "r": 0.16,
+  "metal": 1.0,
+  "rough": 0.24
+ },
+ "corners": {
+  "kind": "metal",
+  "size": 5.6,
+  "out": 0.45,
+  "color": [
+   0.022,
+   0.022,
+   0.024
+  ]
+ },
+ "handles": {
+  "z": 58.0
+ },
+ "casters": {
+  "h": 8.5,
+  "inset": 7.5,
+  "metal": [
+   0.03,
+   0.03,
+   0.032
+  ]
+ },
+ "speakers": [
+  [
+   -16.66,
+   17.8,
+   14.0
+  ],
+  [
+   16.66,
+   17.8,
+   14.0
+  ],
+  [
+   -16.66,
+   52.32,
+   14.0
+  ],
+  [
+   16.66,
+   52.32,
+   14.0
+  ]
+ ]
+}

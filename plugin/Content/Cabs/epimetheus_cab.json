@@ -1,0 +1,25 @@
+{
+ "key": "epimetheus_cab",
+ "name": "Epimetheus 4x12",
+ "size": "4x12",
+ "basedOn": "Mesa/Boogie 4x12 Half Back / Rectifier Traditional",
+ "source": "Seacow Cabs 2021 Teaser Pack",
+ "voiceLabel": "CAB",
+ "voices": [
+  {
+   "name": "HALF BACK · V70",
+   "irA": "Cabs/Epimetheus/SC-MesB412HB-MBV70-421-Balanced.wav",
+   "irB": "Cabs/Epimetheus/SC-MesB412HB-MBV70-421-Balanced.wav"
+  },
+  {
+   "name": "RECTO · V30",
+   "irA": "Cabs/Epimetheus/SC-MesB412Rec-MBV30-57-Balanced.wav",
+   "irB": "Cabs/Epimetheus/SC-MesB412Rec-MBV30-57-Balanced.wav"
+  }
+ ],
+ "irA": "Cabs/Epimetheus/SC-MesB412HB-MBV70-421-Balanced.wav",
+ "irB": "Cabs/Epimetheus/SC-MesB412HB-MBV70-421-Balanced.wav",
+ "img": "cabs/epimetheus_cab.webp",
+ "imgW": 574,
+ "imgH": 640
+}

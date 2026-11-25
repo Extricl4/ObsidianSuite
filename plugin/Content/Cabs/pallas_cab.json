@@ -1,0 +1,12 @@
+{
+ "key": "pallas_cab",
+ "name": "Pallas 4x12",
+ "size": "4x12",
+ "basedOn": "David Laboga 412 Pro 4x12 (UK Vintage 30)",
+ "source": "Seacow Cabs 2021 Teaser Pack",
+ "irA": "Cabs/Pallas/SC-DL412Pro-UKV30-7-Balanced.wav",
+ "irB": "Cabs/Pallas/SC-DL412Pro-UKV30-7-Balanced.wav",
+ "img": "cabs/pallas_cab.webp",
+ "imgW": 586,
+ "imgH": 640
+}

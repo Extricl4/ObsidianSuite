@@ -1,0 +1,35 @@
+{
+ "key": "aetna_cab",
+ "name": "Aetna 4x12",
+ "size": "4x12",
+ "basedOn": "Diezel 4x12 (ZETA \"Diezel 1\")",
+ "source": "ZETA IR Pack",
+ "voiceLabel": "MIC",
+ "voices": [
+  {
+   "name": "POS 1",
+   "irA": "Cabs/Aetna/Diezel 1 4x12 SPKR 1 position 1.wav",
+   "irB": "Cabs/Aetna/Diezel 1 4x12 SPKR 2 position 1.wav"
+  },
+  {
+   "name": "POS 2",
+   "irA": "Cabs/Aetna/Diezel 1 4x12 SPKR 1 position 2.wav",
+   "irB": "Cabs/Aetna/Diezel 1 4x12 SPKR 2 position 2.wav"
+  },
+  {
+   "name": "SPKR 1",
+   "irA": "Cabs/Aetna/Diezel 1 4x12 SPKR 1 position 1.wav",
+   "irB": "Cabs/Aetna/Diezel 1 4x12 SPKR 1 position 2.wav"
+  },
+  {
+   "name": "SPKR 2",
+   "irA": "Cabs/Aetna/Diezel 1 4x12 SPKR 2 position 1.wav",
+   "irB": "Cabs/Aetna/Diezel 1 4x12 SPKR 2 position 2.wav"
+  }
+ ],
+ "irA": "Cabs/Aetna/Diezel 1 4x12 SPKR 1 position 1.wav",
+ "irB": "Cabs/Aetna/Diezel 1 4x12 SPKR 2 position 1.wav",
+ "img": "cabs/aetna_cab.webp",
+ "imgW": 592,
+ "imgH": 640
+}

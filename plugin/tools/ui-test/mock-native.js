@@ -78,7 +78,9 @@
     },
     ampKnob: (j, v) => { if (S.rig.amp.face) S.rig.amp.face.knobs[j] = v; return true; },
     ampSwitch: (i, on) => { if (S.rig.amp.face) S.rig.amp.face.switches[i] = !!on; return S.rig; },
-    setCab: key => { const c = (S.cabs || []).find(x => x.key === key) || {}; S.rig.cab = { key, name: c.name || key, irA: '', irB: '', irAName: '', irBName: '' }; later('obs:rig', S.rig, 10); return S.rig; },
+    setCab: key => { const c = (S.cabs || []).find(x => x.key === key) || {}, v = (c.voices || [])[0] || c; S.rig.cab = { key, name: c.name || key, irA: v.irA || '', irB: v.irB || '', irAName: '', irBName: '', voice: 0 }; later('obs:rig', S.rig, 10); return S.rig; },
+    setCabVoice: i => { const c = (S.cabs || []).find(x => x.key === S.rig.cab.key) || {}, vs = c.voices || []; if (!vs.length) return S.rig; i = Math.max(0, Math.min(vs.length - 1, i | 0));
+      Object.assign(S.rig.cab, { irA: vs[i].irA, irB: vs[i].irB, voice: i }); later('obs:rig', S.rig, 10); return S.rig; },
     presetList: () => S.presets,
     presetLoad: id => { const p = S.presets.find(x => x.id === id); if (!p) return false; S.preset = Object.assign({}, S.preset, { id: p.id, name: p.name, category: p.category, factory: p.factory, dirty: false }); applyPreset(S.presetStates && S.presetStates[id]); later('obs:preset', S.preset, 10); return true; },
     presetNext: d => { const i = S.presets.findIndex(x => x.id === S.preset.id); const p = S.presets[(i + d + S.presets.length) % S.presets.length]; return commands.presetLoad(p.id); },

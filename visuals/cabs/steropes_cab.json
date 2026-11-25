@@ -1,0 +1,94 @@
+{
+ "builder": "cab",
+ "name": "Steropes 4x12",
+ "based_on": "Marshall JCM900 Lead 1960 4x12 (straight)",
+ "size": [
+  77.0,
+  36.5,
+  75.5
+ ],
+ "border": {
+  "side": 3.3,
+  "bottom": 3.8,
+  "top": 3.8
+ },
+ "recess": 0.7,
+ "edge": 0.8,
+ "tolex": {
+  "kind": "levant",
+  "color": [
+   0.011,
+   0.011,
+   0.012
+  ],
+  "rough": 0.5,
+  "sheen": 0.12,
+  "grain": 2.6,
+  "bump": 0.6
+ },
+ "grille": {
+  "cloth": "basket",
+  "tile_cm": 9.6,
+  "tint": [
+   1,
+   1,
+   1
+  ],
+  "rough": 0.78,
+  "sheen": 0.45,
+  "bump": 0.8
+ },
+ "piping": {
+  "color": [
+   0.78,
+   0.77,
+   0.72
+  ],
+  "r": 0.22,
+  "inset": 0.25
+ },
+ "corners": {
+  "kind": "plastic",
+  "size": 5.2,
+  "out": 0.5,
+  "color": [
+   0.016,
+   0.016,
+   0.017
+  ]
+ },
+ "handles": {
+  "z": 56.0
+ },
+ "casters": {
+  "h": 8.5,
+  "inset": 7.5,
+  "metal": [
+   0.42,
+   0.42,
+   0.44
+  ]
+ },
+ "speakers": [
+  [
+   -17.25,
+   16.98,
+   14.0
+  ],
+  [
+   17.25,
+   16.98,
+   14.0
+  ],
+  [
+   -17.25,
+   50.93,
+   14.0
+  ],
+  [
+   17.25,
+   50.93,
+   14.0
+  ]
+ ]
+}

@@ -1,0 +1,94 @@
+{
+ "builder": "cab",
+ "name": "Phantasos 4x12",
+ "based_on": "Bogner 412ST / 412STH / 412STU 4x12",
+ "size": [
+  76.0,
+  36.0,
+  76.0
+ ],
+ "slant": {
+  "z": 38.0,
+  "back": 7.5
+ },
+ "border": {
+  "side": 3.4,
+  "bottom": 4.0,
+  "top": 4.0
+ },
+ "recess": 0.8,
+ "edge": 0.8,
+ "tolex": {
+  "kind": "levant",
+  "color": [
+   0.011,
+   0.011,
+   0.012
+  ],
+  "rough": 0.5,
+  "sheen": 0.12,
+  "grain": 2.6,
+  "bump": 0.6
+ },
+ "grille": {
+  "cloth": "basket",
+  "tile_cm": 9.6,
+  "tint": [
+   1,
+   1,
+   1
+  ],
+  "rough": 0.78,
+  "sheen": 0.45,
+  "bump": 0.8
+ },
+ "piping": {
+  "color": [
+   0.55,
+   0.55,
+   0.57
+  ],
+  "r": 0.2,
+  "metal": 1.0,
+  "rough": 0.25
+ },
+ "corners": {
+  "kind": "chrome",
+  "size": 5.4,
+  "out": 0.45
+ },
+ "handles": {
+  "z": 56.0
+ },
+ "casters": {
+  "h": 8.5,
+  "inset": 7.5,
+  "metal": [
+   0.5,
+   0.5,
+   0.52
+  ]
+ },
+ "speakers": [
+  [
+   -16.95,
+   17.3,
+   14.0
+  ],
+  [
+   16.95,
+   17.3,
+   14.0
+  ],
+  [
+   -16.95,
+   51.37,
+   14.0
+  ],
+  [
+   16.95,
+   51.37,
+   14.0
+  ]
+ ]
+}

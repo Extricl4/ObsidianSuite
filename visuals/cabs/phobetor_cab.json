@@ -1,0 +1,82 @@
+{
+ "builder": "cab",
+ "name": "Phobetor 4x12",
+ "based_on": "Bogner 4x12 (ZETA)",
+ "size": [
+  76.0,
+  36.0,
+  78.0
+ ],
+ "slant": {
+  "z": 39.0,
+  "back": 7.5
+ },
+ "border": {
+  "side": 3.4,
+  "bottom": 4.0,
+  "top": 4.0
+ },
+ "recess": 1.0,
+ "edge": 0.8,
+ "tolex": {
+  "kind": "taurus",
+  "color": [
+   0.011,
+   0.011,
+   0.012
+  ],
+  "rough": 0.55,
+  "sheen": 0.08
+ },
+ "grille": {
+  "cloth": "checker",
+  "tile_cm": 9.0,
+  "tint": [
+   0.8,
+   0.8,
+   0.8
+  ],
+  "rough": 0.8,
+  "sheen": 0.4,
+  "bump": 0.8
+ },
+ "corners": {
+  "kind": "chrome",
+  "size": 5.4,
+  "out": 0.45
+ },
+ "handles": {
+  "z": 58.0
+ },
+ "casters": {
+  "h": 8.5,
+  "inset": 7.5,
+  "metal": [
+   0.5,
+   0.5,
+   0.52
+  ]
+ },
+ "speakers": [
+  [
+   -16.95,
+   17.8,
+   14.0
+  ],
+  [
+   16.95,
+   17.8,
+   14.0
+  ],
+  [
+   -16.95,
+   52.86,
+   14.0
+  ],
+  [
+   16.95,
+   52.86,
+   14.0
+  ]
+ ]
+}

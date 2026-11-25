@@ -1,0 +1,100 @@
+{
+ "builder": "cab",
+ "name": "Gyges 4x12",
+ "based_on": "Marshall Mode Four 4x12 (Vintage 30 MF)",
+ "size": [
+  79.0,
+  38.0,
+  80.0
+ ],
+ "slant": {
+  "z": 40.0,
+  "back": 8.0
+ },
+ "border": {
+  "side": 3.8,
+  "bottom": 4.6,
+  "top": 4.2
+ },
+ "recess": 0.8,
+ "edge": 0.8,
+ "tolex": {
+  "kind": "levant",
+  "color": [
+   0.011,
+   0.011,
+   0.012
+  ],
+  "rough": 0.5,
+  "sheen": 0.12,
+  "grain": 2.6,
+  "bump": 0.6
+ },
+ "grille": {
+  "cloth": "basket",
+  "tile_cm": 9.6,
+  "tint": [
+   0.8,
+   0.8,
+   0.8
+  ],
+  "rough": 0.78,
+  "sheen": 0.45,
+  "bump": 0.8
+ },
+ "piping": {
+  "color": [
+   0.62,
+   0.62,
+   0.64
+  ],
+  "r": 0.34,
+  "metal": 1.0,
+  "rough": 0.2,
+  "inset": 0.35
+ },
+ "corners": {
+  "kind": "metal",
+  "size": 6.2,
+  "out": 0.45,
+  "color": [
+   0.022,
+   0.022,
+   0.024
+  ]
+ },
+ "handles": {
+  "z": 60.0
+ },
+ "casters": {
+  "h": 8.5,
+  "inset": 7.5,
+  "metal": [
+   0.03,
+   0.03,
+   0.032
+  ]
+ },
+ "speakers": [
+  [
+   -17.49,
+   18.0,
+   14.0
+  ],
+  [
+   17.49,
+   18.0,
+   14.0
+  ],
+  [
+   -17.49,
+   53.7,
+   14.0
+  ],
+  [
+   17.49,
+   53.7,
+   14.0
+  ]
+ ]
+}

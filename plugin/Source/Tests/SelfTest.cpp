@@ -1671,6 +1671,45 @@ OBS_NOINLINE static int runSelfTestBody (Report& r, const juce::StringArray& arg
         p.presetManager().loadInit();
     }
 
+    // ---------------------------------------------------------------- 7b2. IR cabs
+    r.head ("IR cabs (the cab pack: every cab and every voice button loads real IRs)");
+    {
+        const auto lib = Rig::cabLibrary();
+        int cabs = 0, sets = 0;
+        auto probe = std::make_unique<dsp::CabSection>(); probe->prepare (SR, BLOCK);   // heap: keep big DSP objects off the self-test's stack
+        for (auto& c : *lib.getArray())
+        {
+            if ((bool) c["builtIn"]) continue;
+            ++cabs;
+            const auto key = c["key"].toString();
+            juce::Array<juce::var> list;
+            if (auto* vs = c["voices"].getArray()) list = *vs; else list.add (c);
+            juce::StringArray problems;
+            for (int i = 0; i < list.size(); ++i)
+                for (auto k : { "irA", "irB" })
+                {
+                    const juce::File f (list[i][k].toString());
+                    const auto err = probe->loadIr (0, f);
+                    if (err.isNotEmpty()) problems.add (list[i]["name"].toString() + " " + k + ": " + err + " (" + f.getFileName() + ")");
+                }
+            sets += list.size();
+            // the voice button switches the rig's IRs
+            bool switches = true;
+            p.rig().setCab (key);
+            for (int i = 0; i < list.size(); ++i)
+            {
+                p.rig().setCabVoice (i);
+                const auto cab = p.rig().toJson()["cab"];
+                switches = switches && (int) cab["voice"] == (list.size() > 1 ? i : 0) && cab["irA"].toString() == list[i]["irA"].toString();
+            }
+            r.check (problems.isEmpty() && switches, key + ": " + juce::String (list.size()) + (list.size() > 1 ? " voices" : " IR set") + ", every IR installed and readable"
+                     + (switches ? juce::String() : ", but the voice button didn't switch the IRs") + (problems.isEmpty() ? juce::String() : " (" + problems.joinIntoString ("; ") + ")"));
+        }
+        if (cabs == 0) r.info ("(no cab pack in Documents/" OBSIDIAN_PRODUCT_NAME "/Cabs: skipped)");
+        else r.info (juce::String (cabs) + " IR cabs, " + juce::String (sets) + " IR sets");
+        p.rig().setCab ("builtin-4x12");
+    }
+
     // ---------------------------------------------------------------- 7c. celestial pedals
     r.head ("Celestial pedals (lush reverbs, shimmers, delays, Lyra, Icarus)");
     {

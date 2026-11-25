@@ -1,0 +1,92 @@
+{
+ "builder": "cab",
+ "name": "Pallas 4x12",
+ "based_on": "David Laboga 412 Pro 4x12 (UK Vintage 30)",
+ "size": [
+  75.0,
+  36.0,
+  76.0
+ ],
+ "border": {
+  "side": 3.6,
+  "bottom": 4.0,
+  "top": 4.0
+ },
+ "recess": 1.0,
+ "edge": 0.8,
+ "tolex": {
+  "kind": "bronco",
+  "color": [
+   0.011,
+   0.011,
+   0.012
+  ],
+  "rough": 0.6,
+  "sheen": 0.06,
+  "grain": 14.0,
+  "bump": 0.7
+ },
+ "grille": {
+  "cloth": "jute",
+  "tile_cm": 8.8,
+  "tint": [
+   0.8,
+   0.8,
+   0.8
+  ],
+  "rough": 0.85,
+  "sheen": 0.35,
+  "bump": 1.0
+ },
+ "piping": {
+  "color": [
+   0.6,
+   0.6,
+   0.62
+  ],
+  "r": 0.16,
+  "metal": 1.0,
+  "rough": 0.22
+ },
+ "corners": {
+  "kind": "metal",
+  "size": 5.6,
+  "out": 0.45,
+  "color": [
+   0.022,
+   0.022,
+   0.024
+  ]
+ },
+ "casters": {
+  "h": 8.5,
+  "inset": 7.5,
+  "metal": [
+   0.03,
+   0.03,
+   0.032
+  ]
+ },
+ "speakers": [
+  [
+   -16.61,
+   17.0,
+   14.0
+  ],
+  [
+   16.61,
+   17.0,
+   14.0
+  ],
+  [
+   -16.61,
+   51.0,
+   14.0
+  ],
+  [
+   16.61,
+   51.0,
+   14.0
+  ]
+ ]
+}

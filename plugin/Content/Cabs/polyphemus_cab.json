@@ -1,0 +1,12 @@
+{
+ "key": "polyphemus_cab",
+ "name": "Polyphemus 4x12",
+ "size": "4x12",
+ "basedOn": "Marshall 1960TV tall slant 4x12 (Celestion G12-35XC)",
+ "source": "Seacow Cabs 2021 Teaser Pack",
+ "irA": "Cabs/Polyphemus/SC-MrShallTV-G1235XC-49-Bright.wav",
+ "irB": "Cabs/Polyphemus/SC-MrShallTV-G1235XC-49-Bright.wav",
+ "img": "cabs/polyphemus_cab.webp",
+ "imgW": 543,
+ "imgH": 640
+}

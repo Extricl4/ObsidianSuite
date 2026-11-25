@@ -1,0 +1,85 @@
+{
+ "builder": "cab",
+ "name": "Prometheus 4x12",
+ "based_on": "Mesa/Boogie Rectifier 4x12 (ZETA)",
+ "size": [
+  74.0,
+  36.2,
+  76.8
+ ],
+ "border": {
+  "side": 3.8,
+  "bottom": 4.4,
+  "top": 4.4
+ },
+ "recess": 1.0,
+ "edge": 0.8,
+ "tolex": {
+  "kind": "bronco",
+  "color": [
+   0.011,
+   0.011,
+   0.012
+  ],
+  "rough": 0.6,
+  "sheen": 0.06,
+  "grain": 14.0,
+  "bump": 0.7
+ },
+ "grille": {
+  "cloth": "jute",
+  "tile_cm": 8.8,
+  "tint": [
+   1,
+   1,
+   1
+  ],
+  "rough": 0.85,
+  "sheen": 0.35,
+  "bump": 1.0
+ },
+ "corners": {
+  "kind": "metal",
+  "size": 5.6,
+  "out": 0.45,
+  "color": [
+   0.022,
+   0.022,
+   0.024
+  ]
+ },
+ "handles": {
+  "z": 56.0
+ },
+ "casters": {
+  "h": 8.5,
+  "inset": 7.5,
+  "metal": [
+   0.03,
+   0.03,
+   0.032
+  ]
+ },
+ "speakers": [
+  [
+   -16.27,
+   17.0,
+   14.0
+  ],
+  [
+   16.27,
+   17.0,
+   14.0
+  ],
+  [
+   -16.27,
+   51.0,
+   14.0
+  ],
+  [
+   16.27,
+   51.0,
+   14.0
+  ]
+ ]
+}

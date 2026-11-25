@@ -1,0 +1,99 @@
+{
+ "builder": "cab",
+ "name": "Charybdis 6x10",
+ "based_on": "Zilla 6x10 bass cab (Celestion BN102X)",
+ "size": [
+  60.0,
+  45.0,
+  96.0
+ ],
+ "border": {
+  "side": 3.6,
+  "bottom": 4.2,
+  "top": 4.2
+ },
+ "recess": 1.2,
+ "edge": 0.8,
+ "tolex": {
+  "kind": "levant",
+  "color": [
+   0.006,
+   0.01,
+   0.028
+  ],
+  "rough": 0.5,
+  "sheen": 0.12,
+  "grain": 2.6,
+  "bump": 0.6
+ },
+ "grille": {
+  "kind": "perf",
+  "holes": "round",
+  "tile_cm": 14.0,
+  "color": [
+   0.04,
+   0.04,
+   0.04
+  ],
+  "metal": 0.85,
+  "rough": 0.4,
+  "scrim": {
+   "cloth": "basket",
+   "tile_cm": 9.6,
+   "tint": [
+    0.35,
+    0.35,
+    0.35
+   ]
+  }
+ },
+ "corners": {
+  "kind": "chrome",
+  "size": 5.4,
+  "out": 0.45
+ },
+ "handles": {
+  "z": 70.0
+ },
+ "casters": {
+  "h": 8.5,
+  "inset": 7.5,
+  "metal": [
+   0.5,
+   0.5,
+   0.52
+  ]
+ },
+ "speakers": [
+  [
+   -12.94,
+   14.6,
+   11.8
+  ],
+  [
+   12.94,
+   14.6,
+   11.8
+  ],
+  [
+   -12.94,
+   43.8,
+   11.8
+  ],
+  [
+   12.94,
+   43.8,
+   11.8
+  ],
+  [
+   -12.94,
+   73.0,
+   11.8
+  ],
+  [
+   12.94,
+   73.0,
+   11.8
+  ]
+ ]
+}

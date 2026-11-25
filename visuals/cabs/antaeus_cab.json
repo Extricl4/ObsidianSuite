@@ -1,0 +1,84 @@
+{
+ "builder": "cab",
+ "name": "Antaeus 4x10",
+ "based_on": "SWR Goliath 4x10 bass cab",
+ "size": [
+  61.0,
+  45.0,
+  61.0
+ ],
+ "border": {
+  "side": 3.4,
+  "bottom": 3.8,
+  "top": 3.8
+ },
+ "recess": 1.2,
+ "edge": 0.8,
+ "tolex": {
+  "kind": "carpet",
+  "color": [
+   0.014,
+   0.014,
+   0.015
+  ],
+  "rough": 0.95,
+  "sheen": 1.0
+ },
+ "grille": {
+  "kind": "perf",
+  "holes": "square",
+  "tile_cm": 14.0,
+  "color": [
+   0.04,
+   0.04,
+   0.04
+  ],
+  "metal": 0.8,
+  "rough": 0.45,
+  "scrim": {
+   "cloth": "basket",
+   "tile_cm": 9.6,
+   "tint": [
+    0.35,
+    0.35,
+    0.35
+   ]
+  }
+ },
+ "corners": {
+  "kind": "metal",
+  "size": 5.0,
+  "out": 0.45,
+  "color": [
+   0.022,
+   0.022,
+   0.024
+  ]
+ },
+ "handles": {
+  "z": 45.0
+ },
+ "feet": 2.4,
+ "speakers": [
+  [
+   -13.28,
+   13.35,
+   11.8
+  ],
+  [
+   13.28,
+   13.35,
+   11.8
+  ],
+  [
+   -13.28,
+   40.05,
+   11.8
+  ],
+  [
+   13.28,
+   40.05,
+   11.8
+  ]
+ ]
+}

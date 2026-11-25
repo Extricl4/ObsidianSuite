@@ -1,0 +1,72 @@
+{
+ "builder": "cab",
+ "name": "Morpheus 2x12",
+ "based_on": "Bogner 2x12 (ZETA \"Bogner 2\")",
+ "size": [
+  76.0,
+  30.0,
+  52.0
+ ],
+ "border": {
+  "side": 3.4,
+  "bottom": 3.6,
+  "top": 3.6
+ },
+ "recess": 0.7,
+ "edge": 0.8,
+ "tolex": {
+  "kind": "levant",
+  "color": [
+   0.011,
+   0.011,
+   0.012
+  ],
+  "rough": 0.5,
+  "sheen": 0.12,
+  "grain": 2.6,
+  "bump": 0.6
+ },
+ "grille": {
+  "cloth": "basket",
+  "tile_cm": 9.6,
+  "tint": [
+   3.4,
+   1.05,
+   0.95
+  ],
+  "rough": 0.78,
+  "sheen": 0.45,
+  "bump": 0.8
+ },
+ "piping": {
+  "color": [
+   0.7,
+   0.62,
+   0.48
+  ],
+  "r": 0.2
+ },
+ "corners": {
+  "kind": "plastic",
+  "size": 5.6,
+  "out": 0.5,
+  "color": [
+   0.016,
+   0.016,
+   0.017
+  ]
+ },
+ "feet": 2.4,
+ "speakers": [
+  [
+   -16.95,
+   22.4,
+   14.0
+  ],
+  [
+   16.95,
+   22.4,
+   14.0
+  ]
+ ]
+}

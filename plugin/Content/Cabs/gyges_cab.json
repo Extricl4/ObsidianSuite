@@ -1,0 +1,12 @@
+{
+ "key": "gyges_cab",
+ "name": "Gyges 4x12",
+ "size": "4x12",
+ "basedOn": "Marshall Mode Four 4x12 (Vintage 30 MF)",
+ "source": "Seacow Cabs 2021 Teaser Pack",
+ "irA": "Cabs/Gyges/SC-MrSMF-VintMF-57-Bright.wav",
+ "irB": "Cabs/Gyges/SC-MrSMF-VintMF-57-Bright.wav",
+ "img": "cabs/gyges_cab.webp",
+ "imgW": 589,
+ "imgH": 640
+}

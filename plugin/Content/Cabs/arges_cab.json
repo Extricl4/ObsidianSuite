@@ -1,0 +1,12 @@
+{
+ "key": "arges_cab",
+ "name": "Arges 4x12",
+ "size": "4x12",
+ "basedOn": "Marshall 1960BX 4x12 (Celestion G12M)",
+ "source": "Seacow Cabs 2021 Teaser Pack",
+ "irA": "Cabs/Arges/SC-MrShallBX-G12M-67-Balanced.wav",
+ "irB": "Cabs/Arges/SC-MrShallBX-G12M-67-Balanced.wav",
+ "img": "cabs/arges_cab.webp",
+ "imgW": 604,
+ "imgH": 640
+}

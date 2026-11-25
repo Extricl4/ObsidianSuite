@@ -361,6 +361,214 @@
    "name": "Vulcan 4x12",
    "spec": "cabs/vulcan_cab.json",
    "size": "4x12"
+  },
+  "aetna_cab": {
+   "name": "Aetna 4x12",
+   "spec": "cabs/aetna_cab.json",
+   "size": "4x12",
+   "based_on": "Diezel 4x12 (ZETA \"Diezel 1\")",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/aetna_cab.json"
+  },
+  "antaeus_cab": {
+   "name": "Antaeus 4x10",
+   "spec": "cabs/antaeus_cab.json",
+   "size": "4x10",
+   "based_on": "SWR Goliath 4x10 bass cab",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/antaeus_cab.json"
+  },
+  "arges_cab": {
+   "name": "Arges 4x12",
+   "spec": "cabs/arges_cab.json",
+   "size": "4x12",
+   "based_on": "Marshall 1960BX 4x12 (Celestion G12M)",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/arges_cab.json"
+  },
+  "asteria_cab": {
+   "name": "Asteria 2x12",
+   "spec": "cabs/asteria_cab.json",
+   "size": "2x12",
+   "based_on": "Vox V212C 2x12 (Celestion Alnico Gold / Blue)",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/asteria_cab.json"
+  },
+  "atlas_cab": {
+   "name": "Atlas 4x12",
+   "spec": "cabs/atlas_cab.json",
+   "size": "4x12",
+   "based_on": "Mesa/Boogie Rectifier Standard (oversized) slant 4x12",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/atlas_cab.json"
+  },
+  "briareus_cab": {
+   "name": "Briareus 8x10",
+   "spec": "cabs/briareus_cab.json",
+   "size": "8x10",
+   "based_on": "Aguilar DB810 bass cab",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/briareus_cab.json"
+  },
+  "brontes_cab": {
+   "name": "Brontes 4x12",
+   "spec": "cabs/brontes_cab.json",
+   "size": "4x12",
+   "based_on": "Marshall 1960AV slant 4x12 (Celestion Vintage 30)",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/brontes_cab.json"
+  },
+  "charybdis_cab": {
+   "name": "Charybdis 6x10",
+   "spec": "cabs/charybdis_cab.json",
+   "size": "6x10",
+   "based_on": "Zilla 6x10 bass cab (Celestion BN102X)",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/charybdis_cab.json"
+  },
+  "daedalus_cab": {
+   "name": "Daedalus 4x12",
+   "spec": "cabs/daedalus_cab.json",
+   "size": "4x12",
+   "based_on": "Bespoke stealth 4x12 (TesseracT IR)",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/daedalus_cab.json"
+  },
+  "deimos_cab": {
+   "name": "Deimos 4x12",
+   "spec": "cabs/deimos_cab.json",
+   "size": "4x12",
+   "based_on": "ENGL 412GS / 412VG 4x12 (Vintage 30)",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/deimos_cab.json"
+  },
+  "epimetheus_cab": {
+   "name": "Epimetheus 4x12",
+   "spec": "cabs/epimetheus_cab.json",
+   "size": "4x12",
+   "based_on": "Mesa/Boogie 4x12 Half Back / Rectifier Traditional",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/epimetheus_cab.json"
+  },
+  "gyges_cab": {
+   "name": "Gyges 4x12",
+   "spec": "cabs/gyges_cab.json",
+   "size": "4x12",
+   "based_on": "Marshall Mode Four 4x12 (Vintage 30 MF)",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/gyges_cab.json"
+  },
+  "hesperia_cab": {
+   "name": "Hesperia 2x12",
+   "spec": "cabs/hesperia_cab.json",
+   "size": "2x12",
+   "based_on": "Orange PPC212 2x12 (ZETA)",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/hesperia_cab.json"
+  },
+  "hypnos_cab": {
+   "name": "Hypnos 2x12",
+   "spec": "cabs/hypnos_cab.json",
+   "size": "2x12",
+   "based_on": "Bogner 2x12 (ZETA \"Bogner 1\")",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/hypnos_cab.json"
+  },
+  "ladon_cab": {
+   "name": "Ladon 4x12",
+   "spec": "cabs/ladon_cab.json",
+   "size": "4x12",
+   "based_on": "Orange PPC412 4x12 (UK Vintage 30)",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/ladon_cab.json"
+  },
+  "lemnos_cab": {
+   "name": "Lemnos 4x12",
+   "spec": "cabs/lemnos_cab.json",
+   "size": "4x12",
+   "based_on": "Diezel 4x12 (ZETA \"Diezel 2\")",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/lemnos_cab.json"
+  },
+  "melas_cab": {
+   "name": "Melas 4x10",
+   "spec": "cabs/melas_cab.json",
+   "size": "4x10",
+   "based_on": "Darkglass DG410 bass cab",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/melas_cab.json"
+  },
+  "metallon_cab": {
+   "name": "Metallon 4x12",
+   "spec": "cabs/metallon_cab.json",
+   "size": "4x12",
+   "based_on": "Digital album-tone cab (Metallica classics IRs)",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/metallon_cab.json"
+  },
+  "morpheus_cab": {
+   "name": "Morpheus 2x12",
+   "spec": "cabs/morpheus_cab.json",
+   "size": "2x12",
+   "based_on": "Bogner 2x12 (ZETA \"Bogner 2\")",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/morpheus_cab.json"
+  },
+  "pallas_cab": {
+   "name": "Pallas 4x12",
+   "spec": "cabs/pallas_cab.json",
+   "size": "4x12",
+   "based_on": "David Laboga 412 Pro 4x12 (UK Vintage 30)",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/pallas_cab.json"
+  },
+  "phantasos_cab": {
+   "name": "Phantasos 4x12",
+   "spec": "cabs/phantasos_cab.json",
+   "size": "4x12",
+   "based_on": "Bogner 412ST / 412STH / 412STU 4x12",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/phantasos_cab.json"
+  },
+  "phobetor_cab": {
+   "name": "Phobetor 4x12",
+   "spec": "cabs/phobetor_cab.json",
+   "size": "4x12",
+   "based_on": "Bogner 4x12 (ZETA)",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/phobetor_cab.json"
+  },
+  "polyphemus_cab": {
+   "name": "Polyphemus 4x12",
+   "spec": "cabs/polyphemus_cab.json",
+   "size": "4x12",
+   "based_on": "Marshall 1960TV tall slant 4x12 (Celestion G12-35XC)",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/polyphemus_cab.json"
+  },
+  "prometheus_cab": {
+   "name": "Prometheus 4x12",
+   "spec": "cabs/prometheus_cab.json",
+   "size": "4x12",
+   "based_on": "Mesa/Boogie Rectifier 4x12 (ZETA)",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/prometheus_cab.json"
+  },
+  "scylla_cab": {
+   "name": "Scylla 4x12",
+   "spec": "cabs/scylla_cab.json",
+   "size": "4x12",
+   "based_on": "Zilla 412 Oversized Custom (Celestion G12-60 SE)",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/scylla_cab.json"
+  },
+  "steropes_cab": {
+   "name": "Steropes 4x12",
+   "spec": "cabs/steropes_cab.json",
+   "size": "4x12",
+   "based_on": "Marshall JCM900 Lead 1960 4x12 (straight)",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/steropes_cab.json"
   }
  },
  "pedals": {
@@ -382,8 +590,8 @@
    },
    "switches": {
     "Voice": {
-     "\u03b1": "Alpha",
-     "\u03a9": "Omega"
+     "α": "Alpha",
+     "Ω": "Omega"
     },
     "Growl": "button",
     "Bite": "button",

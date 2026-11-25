@@ -1,0 +1,171 @@
+{
+ "key": "metallon_cab",
+ "name": "Metallon 4x12",
+ "size": "4x12",
+ "basedOn": "Digital album-tone cab (Metallica classics IRs)",
+ "source": "Metallica classics IRs 2.2",
+ "voiceLabel": "ALBUM",
+ "voices": [
+  {
+   "name": "KILL 'EM ALL",
+   "album": "KILL 'EM ALL",
+   "short": "KILL",
+   "song": "",
+   "irA": "Cabs/Metallon/killem_IR.wav",
+   "irB": "Cabs/Metallon/killem_IR.wav"
+  },
+  {
+   "name": "RIDE THE LIGHTNING",
+   "album": "RIDE THE LIGHTNING",
+   "short": "RIDE",
+   "song": "",
+   "irA": "Cabs/Metallon/Ride_IR.wav",
+   "irB": "Cabs/Metallon/Ride_IR.wav"
+  },
+  {
+   "name": "MASTER OF PUPPETS",
+   "album": "MASTER OF PUPPETS",
+   "short": "PUPPETS",
+   "song": "",
+   "irA": "Cabs/Metallon/Puppet_IR.wav",
+   "irB": "Cabs/Metallon/Puppet_IR.wav"
+  },
+  {
+   "name": "MASTER OF PUPPETS · BATTERY",
+   "album": "MASTER OF PUPPETS",
+   "short": "PUPPETS",
+   "song": "BATTERY",
+   "irA": "Cabs/Metallon/Puppett(Battery)_IR.wav",
+   "irB": "Cabs/Metallon/Puppett(Battery)_IR.wav"
+  },
+  {
+   "name": "MASTER OF PUPPETS · DISPOSABLE HEROES",
+   "album": "MASTER OF PUPPETS",
+   "short": "PUPPETS",
+   "song": "DISPOSABLE HEROES",
+   "irA": "Cabs/Metallon/Puppet(Disposable)_IR.wav",
+   "irB": "Cabs/Metallon/Puppet(Disposable)_IR.wav"
+  },
+  {
+   "name": "...AND JUSTICE FOR ALL",
+   "album": "...AND JUSTICE FOR ALL",
+   "short": "JUSTICE",
+   "song": "",
+   "irA": "Cabs/Metallon/Justice_IR.wav",
+   "irB": "Cabs/Metallon/Justice_IR.wav"
+  },
+  {
+   "name": "...AND JUSTICE FOR ALL · EYE OF THE BEHOLDER",
+   "album": "...AND JUSTICE FOR ALL",
+   "short": "JUSTICE",
+   "song": "EYE OF THE BEHOLDER",
+   "irA": "Cabs/Metallon/Justice (beholder) IR.wav",
+   "irB": "Cabs/Metallon/Justice (beholder) IR.wav"
+  },
+  {
+   "name": "...AND JUSTICE FOR ALL · HARVESTER OF SORROW",
+   "album": "...AND JUSTICE FOR ALL",
+   "short": "JUSTICE",
+   "song": "HARVESTER OF SORROW",
+   "irA": "Cabs/Metallon/Justice(harvester)_IR.wav",
+   "irB": "Cabs/Metallon/Justice(harvester)_IR.wav"
+  },
+  {
+   "name": "...AND JUSTICE FOR ALL · DYERS EVE",
+   "album": "...AND JUSTICE FOR ALL",
+   "short": "JUSTICE",
+   "song": "DYERS EVE",
+   "irA": "Cabs/Metallon/Justice(Dyers)_IR.wav",
+   "irB": "Cabs/Metallon/Justice(Dyers)_IR.wav"
+  },
+  {
+   "name": "BLACK ALBUM",
+   "album": "BLACK ALBUM",
+   "short": "BLACK",
+   "song": "",
+   "irA": "Cabs/Metallon/Black_IR.wav",
+   "irB": "Cabs/Metallon/Black_IR.wav"
+  },
+  {
+   "name": "BLACK ALBUM · SAD BUT TRUE",
+   "album": "BLACK ALBUM",
+   "short": "BLACK",
+   "song": "SAD BUT TRUE",
+   "irA": "Cabs/Metallon/Black(sad_but_true)_IR.wav",
+   "irB": "Cabs/Metallon/Black(sad_but_true)_IR.wav"
+  },
+  {
+   "name": "LOAD / RELOAD",
+   "album": "LOAD / RELOAD",
+   "short": "LOAD",
+   "song": "",
+   "irA": "Cabs/Metallon/load-reload L_IR.wav",
+   "irB": "Cabs/Metallon/load-reload R_IR.wav"
+  },
+  {
+   "name": "GARAGE INC. · AM I EVIL?",
+   "album": "GARAGE INC.",
+   "short": "GARAGE",
+   "song": "AM I EVIL?",
+   "irA": "Cabs/Metallon/Garage (AmIEvil) IR.wav",
+   "irB": "Cabs/Metallon/Garage (AmIEvil) IR.wav"
+  },
+  {
+   "name": "GARAGE INC. · BREADFAN",
+   "album": "GARAGE INC.",
+   "short": "GARAGE",
+   "song": "BREADFAN",
+   "irA": "Cabs/Metallon/Garage (Breadfan) IR.wav",
+   "irB": "Cabs/Metallon/Garage (Breadfan) IR.wav"
+  },
+  {
+   "name": "GARAGE INC. · HELPLESS",
+   "album": "GARAGE INC.",
+   "short": "GARAGE",
+   "song": "HELPLESS",
+   "irA": "Cabs/Metallon/Garage (Helpless) IR.wav",
+   "irB": "Cabs/Metallon/Garage (Helpless) IR.wav"
+  },
+  {
+   "name": "ST. ANGER",
+   "album": "ST. ANGER",
+   "short": "ST. ANGER",
+   "song": "",
+   "irA": "Cabs/Metallon/Hanger_L_IR.wav",
+   "irB": "Cabs/Metallon/Hanger_R_IR.wav"
+  },
+  {
+   "name": "HARDWIRED",
+   "album": "HARDWIRED",
+   "short": "HARDWIRED",
+   "song": "",
+   "irA": "Cabs/Metallon/Hardired_IR.wav",
+   "irB": "Cabs/Metallon/Hardired_IR.wav"
+  },
+  {
+   "name": "JC CLEAN",
+   "album": "JC CLEAN",
+   "short": "JC CLEAN",
+   "song": "",
+   "irA": "Cabs/Metallon/Roland JC_IR.wav",
+   "irB": "Cabs/Metallon/Roland JC_IR.wav"
+  }
+ ],
+ "irA": "Cabs/Metallon/killem_IR.wav",
+ "irB": "Cabs/Metallon/killem_IR.wav",
+ "img": "cabs/metallon_cab.webp",
+ "imgW": 569,
+ "imgH": 640,
+ "screen": [
+  133.9,
+  40.2,
+  379.9,
+  83.9
+ ],
+ "button": [
+  454.9,
+  45.3,
+  487.5,
+  77.8
+ ]
+}

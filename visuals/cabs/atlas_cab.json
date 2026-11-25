@@ -1,0 +1,89 @@
+{
+ "builder": "cab",
+ "name": "Atlas 4x12",
+ "based_on": "Mesa/Boogie Rectifier Standard (oversized) slant 4x12",
+ "size": [
+  76.5,
+  36.2,
+  83.5
+ ],
+ "slant": {
+  "z": 41.0,
+  "back": 8.0
+ },
+ "border": {
+  "side": 3.8,
+  "bottom": 4.4,
+  "top": 4.4
+ },
+ "recess": 1.0,
+ "edge": 0.8,
+ "tolex": {
+  "kind": "bronco",
+  "color": [
+   0.011,
+   0.011,
+   0.012
+  ],
+  "rough": 0.6,
+  "sheen": 0.06,
+  "grain": 14.0,
+  "bump": 0.7
+ },
+ "grille": {
+  "cloth": "jute",
+  "tile_cm": 8.8,
+  "tint": [
+   1,
+   1,
+   1
+  ],
+  "rough": 0.85,
+  "sheen": 0.35,
+  "bump": 1.0
+ },
+ "corners": {
+  "kind": "metal",
+  "size": 5.6,
+  "out": 0.45,
+  "color": [
+   0.022,
+   0.022,
+   0.024
+  ]
+ },
+ "handles": {
+  "z": 60.0
+ },
+ "casters": {
+  "h": 8.5,
+  "inset": 7.5,
+  "metal": [
+   0.03,
+   0.03,
+   0.032
+  ]
+ },
+ "speakers": [
+  [
+   -16.88,
+   18.6,
+   14.0
+  ],
+  [
+   16.88,
+   18.6,
+   14.0
+  ],
+  [
+   -16.88,
+   56.02,
+   14.0
+  ],
+  [
+   16.88,
+   56.02,
+   14.0
+  ]
+ ]
+}

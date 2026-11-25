@@ -1,0 +1,12 @@
+{
+ "key": "daedalus_cab",
+ "name": "Daedalus 4x12",
+ "size": "4x12",
+ "basedOn": "Bespoke stealth 4x12 (TesseracT IR)",
+ "source": "TesseracT_4x12",
+ "irA": "Cabs/Daedalus/TesseracT_4x12.wav",
+ "irB": "Cabs/Daedalus/TesseracT_4x12.wav",
+ "img": "cabs/daedalus_cab.webp",
+ "imgW": 594,
+ "imgH": 640
+}

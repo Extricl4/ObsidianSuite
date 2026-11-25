@@ -53,7 +53,7 @@ Type: files; Name: "{autodesktop}\Obsidian Suite.lnk"
 [Components]
 Name: "vst3"; Description: "VST3 plugin (for your DAW)"; Types: full compact custom; Flags: fixed
 Name: "app"; Description: "Standalone app (play without a DAW, ASIO)"; Types: full custom
-Name: "pack"; Description: "Pedal and amp pack (captures, reverb IRs, the 30 capture amps and their faces)"; Types: full custom
+Name: "pack"; Description: "Pedal, amp and cab pack (captures, reverb IRs, the capture amps and their faces, the IR cabs)"; Types: full custom
 
 [Files]
 Source: "{#SourceDir}\Obsidian Amp Suite.vst3\*"; DestDir: "{commoncf64}\VST3\Obsidian Amp Suite.vst3"; Components: vst3; Flags: recursesubdirs createallsubdirs ignoreversion
@@ -62,6 +62,8 @@ Source: "{#SourceDir}\README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SourceDir}\LICENSES.md"; DestDir: "{app}"; Flags: ignoreversion
 ; the amp pack's amp files and faces are ours: always updated
 Source: "{#SourceDir}\Content\Amps\*"; DestDir: "{userdocs}\Obsidian Amp Suite\Amps"; Components: pack; Flags: ignoreversion uninsneveruninstall
+; the cab pack's cab files (IRs, voices, pictures) are ours too: always updated
+Source: "{#SourceDir}\Content\Cabs\*"; DestDir: "{userdocs}\Obsidian Amp Suite\Cabs"; Components: pack; Flags: ignoreversion uninsneveruninstall
 Source: "{#SourceDir}\Content\Faces\*"; DestDir: "{userdocs}\Obsidian Amp Suite\Faces"; Components: pack; Flags: recursesubdirs createallsubdirs ignoreversion uninsneveruninstall
 #ifndef UpdateOnly
 ; pedal + amp pack -> Documents\Obsidian Amp Suite (Captures\..., IRs\...); never overwrites your files

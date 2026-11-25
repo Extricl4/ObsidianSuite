@@ -1,0 +1,86 @@
+{
+ "builder": "cab",
+ "name": "Melas 4x10",
+ "based_on": "Darkglass DG410 bass cab",
+ "size": [
+  60.0,
+  45.0,
+  63.0
+ ],
+ "border": {
+  "side": 3.0,
+  "bottom": 3.4,
+  "top": 3.4
+ },
+ "recess": 1.1,
+ "edge": 0.6,
+ "tolex": {
+  "kind": "bronco",
+  "color": [
+   0.011,
+   0.011,
+   0.012
+  ],
+  "rough": 0.6,
+  "sheen": 0.06,
+  "grain": 16.0,
+  "bump": 0.7
+ },
+ "grille": {
+  "kind": "perf",
+  "holes": "round",
+  "tile_cm": 11.0,
+  "color": [
+   0.04,
+   0.04,
+   0.04
+  ],
+  "metal": 0.7,
+  "rough": 0.5,
+  "scrim": {
+   "cloth": "basket",
+   "tile_cm": 9.6,
+   "tint": [
+    0.35,
+    0.35,
+    0.35
+   ]
+  }
+ },
+ "corners": {
+  "kind": "plastic",
+  "size": 5.0,
+  "out": 0.5,
+  "color": [
+   0.016,
+   0.016,
+   0.017
+  ]
+ },
+ "handles": {
+  "z": 46.0
+ },
+ "feet": 2.4,
+ "speakers": [
+  [
+   -13.23,
+   14.05,
+   11.8
+  ],
+  [
+   13.23,
+   14.05,
+   11.8
+  ],
+  [
+   -13.23,
+   42.15,
+   11.8
+  ],
+  [
+   13.23,
+   42.15,
+   11.8
+  ]
+ ]
+}

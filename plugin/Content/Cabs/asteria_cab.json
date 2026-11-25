@@ -1,0 +1,30 @@
+{
+ "key": "asteria_cab",
+ "name": "Asteria 2x12",
+ "size": "2x12",
+ "basedOn": "Vox V212C 2x12 (Celestion Alnico Gold / Blue)",
+ "source": "Seacow Cabs 2021 Teaser Pack",
+ "voiceLabel": "SPEAKER",
+ "voices": [
+  {
+   "name": "ALNICO GOLD",
+   "irA": "Cabs/Asteria/SC-BOX30M-Gold-7-Bright.wav",
+   "irB": "Cabs/Asteria/SC-BOX30M-Gold-7-Bright.wav"
+  },
+  {
+   "name": "ALNICO BLUE",
+   "irA": "Cabs/Asteria/SC-BOX30V-Blue-49-Thick.wav",
+   "irB": "Cabs/Asteria/SC-BOX30V-Blue-49-Thick.wav"
+  },
+  {
+   "name": "GOLD + BLUE",
+   "irA": "Cabs/Asteria/SC-BOX30M-Gold-7-Bright.wav",
+   "irB": "Cabs/Asteria/SC-BOX30V-Blue-49-Thick.wav"
+  }
+ ],
+ "irA": "Cabs/Asteria/SC-BOX30M-Gold-7-Bright.wav",
+ "irB": "Cabs/Asteria/SC-BOX30M-Gold-7-Bright.wav",
+ "img": "cabs/asteria_cab.webp",
+ "imgW": 899,
+ "imgH": 640
+}

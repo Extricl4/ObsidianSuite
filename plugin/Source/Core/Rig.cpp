@@ -491,8 +491,26 @@ void Rig::setCab (const juce::String& key)
     auto cab = rig.getChildWithName ("CAB");
     const auto entry = findInLibrary (cabLibrary(), key);
     if (entry.isVoid()) { message ("Unknown cab: " + key, true); return; }
+    // a cab with several IR sets ("voices": album tones, mic positions, speakers) starts on its first one
+    const juce::var voices = entry["voices"];
+    const juce::var src = (voices.isArray() && voices.size() > 0) ? voices[0] : entry;
     cab.setProperty ("key", key, nullptr).setProperty ("name", entry["name"], nullptr)
-       .setProperty ("irA", entry["irA"].toString(), nullptr).setProperty ("irB", entry["irB"].toString(), nullptr);
+       .setProperty ("irA", src["irA"].toString(), nullptr).setProperty ("irB", src["irB"].toString(), nullptr)
+       .setProperty ("voice", 0, nullptr);
+    applyCab(); notifyChanged();
+}
+
+void Rig::setCabVoice (int voice)
+{
+    auto cab = rig.getChildWithName ("CAB");
+    const auto entry = findInLibrary (cabLibrary(), cab["key"].toString());
+    if (entry.isVoid()) return;
+    const juce::var voices = entry["voices"];
+    if (! voices.isArray() || voices.size() == 0) return;
+    voice = juce::jlimit (0, voices.size() - 1, voice);
+    const juce::var v = voices[voice];
+    cab.setProperty ("irA", v["irA"].toString(), nullptr).setProperty ("irB", v["irB"].toString(), nullptr)
+       .setProperty ("voice", voice, nullptr);
     applyCab(); notifyChanged();
 }
 
@@ -897,10 +915,22 @@ juce::var Rig::cabLibrary()
         auto v = readJsonFile (f);
         if (! v.isObject() || v["key"].toString().isEmpty()) continue;
         auto o = v.getDynamicObject();
-        for (auto k : { "irA", "irB" })
+        const auto irs = contentFolder().getChildFile ("IRs");
+        auto resolve = [&irs] (juce::DynamicObject* d)
         {
-            const auto p = v[k].toString();
-            if (p.isNotEmpty() && ! juce::File::isAbsolutePath (p)) o->setProperty (k, contentFolder().getChildFile ("IRs").getChildFile (p).getFullPathName());
+            for (auto k : { "irA", "irB" })
+            {
+                const auto p = d->getProperty (k).toString();
+                if (p.isNotEmpty() && ! juce::File::isAbsolutePath (p)) d->setProperty (k, irs.getChildFile (p).getFullPathName());
+            }
+        };
+        resolve (o);
+        // voices: several IR sets for one cab (album tones, mic positions, speakers), picked with the cab's voice button
+        if (auto* vs = v["voices"].getArray())
+        {
+            for (auto& vv : *vs) if (auto* d = vv.getDynamicObject()) resolve (d);
+            if (! vs->isEmpty() && v["irA"].toString().isEmpty())
+                for (auto k : { "irA", "irB" }) o->setProperty (k, vs->getReference (0)[k]);
         }
         o->setProperty ("builtIn", false);
         list.add (v);
@@ -960,6 +990,7 @@ juce::var Rig::toJson() const
     auto cab = rig.getChildWithName ("CAB");
     auto cb = new juce::DynamicObject();
     for (auto k : { "key", "name", "irA", "irB" }) cb->setProperty (k, cab[k]);
+    cb->setProperty ("voice", (int) cab.getProperty ("voice", 0));
     cb->setProperty ("irAName", cab["irA"].toString().isEmpty() ? juce::String() : juce::File (cab["irA"].toString()).getFileNameWithoutExtension());
     cb->setProperty ("irBName", cab["irB"].toString().isEmpty() ? juce::String() : juce::File (cab["irB"].toString()).getFileNameWithoutExtension());
     o->setProperty ("cab", juce::var (cb));

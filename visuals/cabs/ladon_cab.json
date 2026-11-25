@@ -1,0 +1,83 @@
+{
+ "builder": "cab",
+ "name": "Ladon 4x12",
+ "based_on": "Orange PPC412 4x12 (UK Vintage 30)",
+ "size": [
+  76.0,
+  36.0,
+  76.0
+ ],
+ "border": {
+  "side": 5.0,
+  "bottom": 5.0,
+  "top": 5.0
+ },
+ "recess": 0.8,
+ "edge": 0.8,
+ "tolex": {
+  "kind": "levant",
+  "color": [
+   0.62,
+   0.105,
+   0.008
+  ],
+  "rough": 0.5,
+  "sheen": 0.12,
+  "grain": 2.6,
+  "bump": 0.6
+ },
+ "grille": {
+  "cloth": "wheat",
+  "tile_cm": 9.6,
+  "tint": [
+   1,
+   1,
+   1
+  ],
+  "rough": 0.8,
+  "sheen": 0.4,
+  "bump": 0.8
+ },
+ "piping": {
+  "color": [
+   0.8,
+   0.78,
+   0.72
+  ],
+  "r": 0.24,
+  "inset": 0.3
+ },
+ "corners": {
+  "kind": "plastic",
+  "size": 6.0,
+  "out": 0.5,
+  "color": [
+   0.016,
+   0.016,
+   0.017
+  ]
+ },
+ "feet": 2.6,
+ "speakers": [
+  [
+   -16.17,
+   16.5,
+   14.0
+  ],
+  [
+   16.17,
+   16.5,
+   14.0
+  ],
+  [
+   -16.17,
+   49.5,
+   14.0
+  ],
+  [
+   16.17,
+   49.5,
+   14.0
+  ]
+ ]
+}
