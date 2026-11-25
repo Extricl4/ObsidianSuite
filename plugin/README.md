@@ -24,7 +24,7 @@ If an ASIO driver is installed the app picks it by itself on the first start. In
 |---|---|
 | Signal chain: input → gate → transpose → [KERAUNOS before amp] → pedals → [SIREN before amp] → [HYDRA before amp] → amp → cab → [SIREN after amp] → [HYDRA after amp] → EQ → [KERAUNOS after amp] → FX → special FX → KHAOS → doubler → width → + AETHER → output | `Source/DSP/Engine.cpp` |
 | Amps: 9 in-house amps in the **OBSIDIAN AMPS** folder (modelled circuit by circuit, see below), *NAM Loader* (up to 4 `.nam` captures) | `Source/DSP/AmpModels.h`, `AmpSection.h`, `NamEngine.*` |
-| Cab: two mics (model, position, distance, level, pan, solo/mute/phase), IR loading, built-in cabs | `Source/DSP/CabSection.h` |
+| Cab: two mics (model, position, distance, level, pan, solo/mute/phase), IR loading, built-in cabs; a real IR's mic works relative to its recorded spot | `Source/DSP/CabSection.h` |
 | 29 pedals / effects (drive, fuzz, boost, comp, wah, whammy, octave, sub, delay, reverb, shimmer, swell, freeze, tape stop, looper, glitch, chorus, flanger, phaser, tremolo, vibrato/rotary, ring mod, bitcrusher, filters, limiter) | `Source/DSP/Modules/*.cpp` |
 | 9 pack pedals with their own captures / IRs (Chiron, Emperor, Graven, Maw, XXXIII, Helios, Aeon; Ossuary, Halcyon) plus Crypt's six RV-6 modes | `Source/DSP/Modules/PackModules.cpp`, `IrCore.h` |
 | 10 celestial pedals: lush reverbs (Elysium hall, Empyrean two-voice shimmer, Nimbus cloud, Vesper choir, Halo reverse/bloom), delays (Astral shimmer delay, Mnemosyne three-head tape echo + spring, Gemini dual/reverse), Lyra 12-string, Icarus octave fuzz | `Source/DSP/Modules/CelestialModules.cpp` |
@@ -313,6 +313,18 @@ A cab (`Cabs\v30.json`), paths relative to `IRs\`:
 ```json
 { "key": "v30", "name": "4x12 V30", "size": "4x12", "irA": "v30-sm57.wav", "irB": "v30-r121.wav" }
 ```
+
+The IR cab pack's files (`Content/Cabs`) also have `voices` (the cab's voice buttons), a picture (`img`, `imgW`,
+`imgH`, `screen`, `button`) and the mic layout written by `tools/faces/build_cabs.py`: `speakers` (each speaker's
+centre and radius on the picture) and, for cabs recorded per speaker and position, `spots` (which real IR was
+recorded on which speaker, at what distance from the dust cap). On the CAB page mic A and B are dragged onto the
+speakers: dragging sets the mic's POSITION and speaker (a cab with spots switches the mic to the nearest real IR,
+`Rig::setCabMic`), scrolling on a mic sets its DISTANCE, double-click puts it back where its IR was recorded.
+
+A real IR already has its mic in it, so choosing an IR cab (or loading your own IR) sets that mic to Flat on its
+recorded spot with LOW / HIGH CUT open: it plays exactly as recorded (the self-test checks this against a plain
+convolution). From there POSITION and DISTANCE shade it relative to the recorded spot. Going back to a built-in cab
+brings back its 57 / 121 mics.
 
 ## Changing things later
 

@@ -31,5 +31,17 @@
  "irB": "Cabs/Prometheus/Mesa 4x12 SPKR 2 position 1.wav",
  "img": "cabs/prometheus_cab.webp",
  "imgW": 574,
- "imgH": 640
+ "imgH": 640,
+ "speakers": [
+  [172.4, 170.3, 98.6, 98.6],
+  [401.6, 170.3, 98.6, 98.6],
+  [172.4, 409.8, 98.6, 98.6],
+  [401.6, 409.8, 98.6, 98.6]
+ ],
+ "spots": [
+  {"spk": [0, 2], "pos": 0.2, "ir": "Cabs/Prometheus/Mesa 4x12 SPKR 1 position 2.wav"},
+  {"spk": [0, 2], "pos": 0.55, "ir": "Cabs/Prometheus/Mesa 4x12 SPKR 1 position 1.wav"},
+  {"spk": [1, 3], "pos": 0.2, "ir": "Cabs/Prometheus/Mesa 4x12 SPKR 2 position 2.wav"},
+  {"spk": [1, 3], "pos": 0.55, "ir": "Cabs/Prometheus/Mesa 4x12 SPKR 2 position 1.wav"}
+ ]
 }

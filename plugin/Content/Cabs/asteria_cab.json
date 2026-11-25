@@ -26,5 +26,9 @@
  "irB": "Cabs/Asteria/SC-BOX30M-Gold-7-Bright.wav",
  "img": "cabs/asteria_cab.webp",
  "imgW": 899,
- "imgH": 640
+ "imgH": 640,
+ "speakers": [
+  [262.4, 307.6, 158.1, 158.1],
+  [636.6, 307.6, 158.1, 158.1]
+ ]
 }

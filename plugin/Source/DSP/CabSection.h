@@ -71,6 +71,17 @@ public:
     }
     juce::String irName (int mic) const   { return mics[juce::jlimit (0, 1, mic)].irName; }
 
+    /** Message thread: where a real IR's mic was when it was recorded (0 = dust cap .. 1 = edge, and cm from the grille).
+        A real IR already has its mic and position in it, so there the mic's POSITION and DISTANCE work relative to
+        this spot: at the spot the IR plays exactly as recorded, moving away shades it. pos < 0: the generated
+        (built-in) cabs, where they set the sound outright. */
+    void setRecordedSpot (int mic, float pos, float distCm)
+    {
+        auto& m = mics[juce::jlimit (0, 1, mic)];
+        m.distRef.store (juce::jmax (0.f, distCm)); m.posRef.store (pos);
+    }
+    float recordedPos (int mic) const     { return mics[juce::jlimit (0, 1, mic)].posRef.load(); }
+
     struct MicParams { int model = 0; float pos = 0.4f, distCm = 2.f, levelDb = 0.f, pan = 0.f; bool solo = false, mute = false, phase = false; };
 
     /** in: mono amp signal. out: stereo. */
@@ -94,17 +105,20 @@ public:
             float* chans[1] = { x };
             juce::dsp::AudioBlock<float> blk (chans, 1, (size_t) n);
             m.conv.process (juce::dsp::ProcessContextReplacing<float> (blk));
-            // time-of-flight: 1 cm ~ 29 us
-            const float delaySamples = p.distCm * 0.01f / 343.f * (float) sr;
-            const float distGain = 1.f / (1.f + p.distCm / 25.f);
+            // time-of-flight: 1 cm ~ 29 us. A real IR has its own distance in it: only what's beyond that counts.
+            const bool real = m.posRef.load() >= 0.f;
+            const float dRef = real ? m.distRef.load() : 0.f;
+            const float delaySamples = juce::jmax (0.f, p.distCm - dRef) * 0.01f / 343.f * (float) sr;
+            const float distGain = (1.f + dRef / 25.f) / (1.f + p.distCm / 25.f);
             m.levelSm.set (audible ? dbToGain (p.levelDb) * distGain * (p.phase ? -1.f : 1.f) : 0.f);
             m.panSm.set (clampf (p.pan / 100.f, -1.f, 1.f));
             for (int i = 0; i < n; ++i)
             {
                 m.delay.push (x[i]);
                 float v = m.delay.readLinear (delaySamples);
-                for (auto& f : m.micF) v = f.process (v);
-                v = m.air.process (m.prox.process (m.posF.process (v)));
+                if (m.colour) for (auto& f : m.micF) v = f.process (v);
+                v = m.prox.process (m.posF.process (v));
+                if (m.airOn) v = m.air.process (v);
                 const float g = m.levelSm.next(), pn = m.panSm.next();
                 const float gl = std::cos ((pn + 1.f) * kPi * 0.25f) * 1.41421356f, gr = std::sin ((pn + 1.f) * kPi * 0.25f) * 1.41421356f;
                 outL[i] += v * g * juce::jmin (1.f, gl); outR[i] += v * g * juce::jmin (1.f, gr);
@@ -112,11 +126,14 @@ public:
         }
         if (lcHz != lcCache) { lcCache = lcHz; for (auto& f : lc) f.set (Biquad::HP, sr, lcHz, 0.707f); }
         if (hcHz != hcCache) { hcCache = hcHz; for (auto& f : hc) f.set (Biquad::LP, sr, hcHz, 0.707f); }
-        for (int i = 0; i < n; ++i)
-        {
-            outL[i] = hc[0].process (lc[0].process (outL[i]));
-            outR[i] = hc[1].process (lc[1].process (outR[i]));
-        }
+        // at their end stops the cuts are off (a 20 kHz low-pass still shades the top of a real IR)
+        const bool lcOn = lcHz > 20.5f, hcOn = hcHz < 19990.f;
+        if (lcOn || hcOn)
+            for (int i = 0; i < n; ++i)
+            {
+                if (lcOn) { outL[i] = lc[0].process (outL[i]); outR[i] = lc[1].process (outR[i]); }
+                if (hcOn) { outL[i] = hc[0].process (outL[i]); outR[i] = hc[1].process (outR[i]); }
+            }
     }
 
     static juce::StringArray builtInNames()  { return { "Obsidian 1x12", "Obsidian 2x12", "Obsidian 4x12" }; }
@@ -129,15 +146,20 @@ private:
         Biquad micF[3], posF, prox, air;
         Smoother levelSm, panSm;
         std::vector<float> buf;
-        float cache[3] { -999.f, -999.f, -999.f };
-        bool hasIr = false; juce::String irName;
+        float cache[5] { -999.f, -999.f, -999.f, -999.f, -999.f };
+        bool hasIr = false, colour = true, airOn = true; juce::String irName;
+        std::atomic<float> posRef { -1.f }, distRef { 0.f };      // the recorded spot of a real IR (setRecordedSpot)
     };
 
     void updateMicFilters (Mic& m, const MicParams& p)
     {
+        const float pr = m.posRef.load(), dr = m.distRef.load();
+        const bool real = pr >= 0.f;
+        if (m.cache[3] != pr || m.cache[4] != dr) { m.cache[3] = pr; m.cache[4] = dr; m.cache[1] = m.cache[2] = -999.f; }
         if (m.cache[0] != (float) p.model)
         {
             m.cache[0] = (float) p.model;
+            m.colour = p.model >= 0 && p.model <= 4;           // Flat: no mic colouring at all
             m.cache[2] = -999.f;   // the proximity bass below depends on the mic type too: redo it (it used to keep the last mic's)
             switch (p.model)
             {
@@ -156,15 +178,18 @@ private:
         }
         if (std::abs (m.cache[1] - p.pos) > 1e-3f)
         {
-            m.cache[1] = p.pos;   // centre of cone = bright, edge = dark
-            m.posF.set (Biquad::HighShelf, sr, 2500.f, 0.6f, 3.f - p.pos * 12.f);
+            m.cache[1] = p.pos;   // centre of cone = bright, edge = dark (a real IR: relative to where it was recorded)
+            m.posF.set (Biquad::HighShelf, sr, 2500.f, 0.6f, real ? (pr - p.pos) * 12.f : 3.f - p.pos * 12.f);
         }
         if (std::abs (m.cache[2] - p.distCm) > 1e-3f)
         {
             m.cache[2] = p.distCm;
             const bool directional = p.model != 2;
-            m.prox.set (Biquad::LowShelf, sr, 160.f, 0.7f, directional ? 6.f * (1.f - clampf (p.distCm / 20.f, 0.f, 1.f)) : 0.f);
-            m.air.set (Biquad::LP, sr, 20000.f - clampf (p.distCm / 30.f, 0.f, 1.f) * 9000.f, 0.6f);
+            auto bass = [] (float d) { return 6.f * (1.f - clampf (d / 20.f, 0.f, 1.f)); };
+            m.prox.set (Biquad::LowShelf, sr, 160.f, 0.7f, directional ? bass (p.distCm) - (real ? bass (dr) : 0.f) : 0.f);
+            const float far = real ? p.distCm - dr : p.distCm;
+            m.airOn = ! real || far > 0.05f;                    // a real IR at (or nearer than) its spot: no air loss
+            m.air.set (Biquad::LP, sr, 20000.f - clampf (far / 30.f, 0.f, 1.f) * 9000.f, 0.6f);
         }
     }
 

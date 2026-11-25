@@ -943,6 +943,44 @@ async def run(standalone):
             check(chips == ['POS 1', 'POS 2', 'SPKR 1', 'SPKR 2'] and on == 'SPKR 2' and await pg.evaluate("window.__mock.log.some(x=>x[0]==='setCabVoice'&&x[1]===3)"),
                   f'a cab with two speakers x two mic positions has four mic buttons ({chips}, on: {on})')
             await pg.screenshot(path=str(OUT / 'cab-hypnos.png'))
+            # ---- draggable mics: A / B on the speakers; drag = POSITION (and speaker), wheel = DISTANCE, double-click = as recorded
+            geo = "(()=>{const c=b=>{const r=b.getBoundingClientRect(); return [r.left+r.width/2, r.top+r.height/2, r.width/2]};" \
+                  "const sp=[...document.querySelectorAll('.obs-spk')].map(c); return {mics:[...document.querySelectorAll('.obs-mic')].map(c).map(x=>x.slice(0,2))," \
+                  "spk:sp.map(x=>x.slice(0,2)), rad:sp.map(x=>x[2]), n:document.querySelectorAll('.obs-mic').length}})()"
+            g = await pg.evaluate(geo)
+            on_spk = all(min(((m[0] - c[0]) ** 2 + (m[1] - c[1]) ** 2) ** .5 / r for c, r in zip(g['spk'], g['rad'])) <= 1.01 for m in g['mics'])
+            check(g['n'] == 2 and on_spk, f"the IR cab shows mic A and B on its speakers ({g['n']} mics)")
+            await pg.evaluate("window.__mock.log.length=0")
+            sx, sy = g['spk'][0]; r0 = g['rad'][0]
+            await pg.mouse.move(*g['mics'][0]); await pg.mouse.down()
+            for t in range(1, 9):
+                await pg.mouse.move(g['mics'][0][0] + (sx + r0 * .08 - g['mics'][0][0]) * t / 8, g['mics'][0][1] + (sy - g['mics'][0][1]) * t / 8); await pg.wait_for_timeout(20)
+            tip = await pg.evaluate("document.querySelector('.obs-mictip').textContent")
+            await pg.screenshot(path=str(OUT / 'cab-mics-drag.png'))
+            await pg.mouse.up(); await pg.wait_for_timeout(450)
+            log = await pg.evaluate("window.__mock.log.filter(x=>x[0]==='setCabMic'||(x[0]==='setParam'&&x[1]==='cab.a.pos'))")
+            last_mic = [x for x in log if x[0] == 'setCabMic'][-1:] or [[None, None, None]]
+            last_pos = [x for x in log if x[0] == 'setParam'][-1:] or [[None, None, -1]]
+            ira = await pg.evaluate("window.__mock.state.rig.cab.irA || ''")
+            chooser = await pg.evaluate("[...document.querySelectorAll('.pop')].some(p=>p.style.display==='block')")
+            knob = await pg.evaluate("document.querySelector('[data-param=\"cab.a.pos\"]').parentElement.querySelector('.kn-val').textContent")
+            check(last_mic[0][1] == 0 and last_mic[0][2] == 0 and 0 <= last_pos[0][2] < .15 and 'SPKR 1 position 2' in ira and not chooser and knob.startswith('0.0'),
+                  f'dragging mic A onto the left speaker near the cap moves it there, picks that real IR and sets POSITION ({last_mic[0][1:3]}, {last_pos[0][2]}, {ira.split("/")[-1]}, knob {knob}, tip {tip!r})')
+            await pg.evaluate("window.__mock.log.length=0")
+            g = await pg.evaluate(geo)
+            await pg.mouse.move(*g['mics'][1])
+            for _ in range(3): await pg.mouse.wheel(0, -100); await pg.wait_for_timeout(40)
+            dist = await pg.evaluate("window.__mock.log.filter(x=>x[0]==='setParam'&&x[1]==='cab.b.dist').map(x=>x[2]).pop()")
+            check(dist is not None and abs(dist - (5.5 / 30) ** .5) < .02, f'scrolling on mic B moves it back (DISTANCE {dist})')
+            await pg.mouse.dblclick(*g['mics'][1]); await pg.wait_for_timeout(300)
+            rec = await pg.evaluate("document.querySelector('.obs-mic[data-mic=\"1\"]').classList.contains('rec')")
+            chooser = await pg.evaluate("[...document.querySelectorAll('.pop')].some(p=>p.style.display==='block')")
+            check(rec and not chooser, 'double-clicking mic B puts it back on its recorded spot (plays as recorded)')
+            await pg.evaluate("window.__mock.emit('obs:params', {'cab.a.pos': 0.9})"); await pg.wait_for_timeout(200)
+            g2 = await pg.evaluate(geo)
+            moved = ((g2['mics'][0][0] - g['spk'][0][0]) ** 2 + (g2['mics'][0][1] - g['spk'][0][1]) ** 2) ** .5 / g['rad'][0]
+            check(abs(moved - .9) < .05, f'turning mic A\'s POSITION knob moves its marker out to the edge ({moved:.2f} of the radius)')
+            await pg.screenshot(path=str(OUT / 'cab-mics.png'))
             await pick_cab('atlas_cab')
             hidden = await pg.evaluate("document.querySelector('.obs-cabvoices').classList.contains('obs-hidden')")
             check(hidden, 'a cab with one IR set shows no voice buttons')

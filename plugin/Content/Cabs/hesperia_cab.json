@@ -31,5 +31,15 @@
  "irB": "Cabs/Hesperia/Orange 2x12 SPKR 2 position 1.wav",
  "img": "cabs/hesperia_cab.webp",
  "imgW": 843,
- "imgH": 640
+ "imgH": 640,
+ "speakers": [
+  [255.2, 307.7, 144.0, 144.0],
+  [587.8, 307.7, 144.0, 144.0]
+ ],
+ "spots": [
+  {"spk": [0], "pos": 0.2, "ir": "Cabs/Hesperia/Orange 2x12 SPKR 1 position 2.wav"},
+  {"spk": [0], "pos": 0.55, "ir": "Cabs/Hesperia/Orange 2x12 SPKR 1 position 1.wav"},
+  {"spk": [1], "pos": 0.2, "ir": "Cabs/Hesperia/Orange 2x12 SPKR 2 position 2.wav"},
+  {"spk": [1], "pos": 0.55, "ir": "Cabs/Hesperia/Orange 2x12 SPKR 2 position 1.wav"}
+ ]
 }

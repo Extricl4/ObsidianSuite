@@ -8,5 +8,11 @@
  "irB": "Cabs/Pallas/SC-DL412Pro-UKV30-7-Balanced.wav",
  "img": "cabs/pallas_cab.webp",
  "imgW": 586,
- "imgH": 640
+ "imgH": 640,
+ "speakers": [
+  [174.9, 168.9, 99.5, 99.6],
+  [411.1, 168.9, 99.5, 99.6],
+  [174.9, 410.7, 99.5, 99.6],
+  [411.1, 410.7, 99.5, 99.6]
+ ]
 }

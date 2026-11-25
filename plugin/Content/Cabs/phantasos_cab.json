@@ -26,5 +26,11 @@
  "irB": "Cabs/Phantasos/SC-Bog412ST-CNV30-421-Balanced.wav",
  "img": "cabs/phantasos_cab.webp",
  "imgW": 593,
- "imgH": 640
+ "imgH": 640,
+ "speakers": [
+  [177.8, 170.8, 98.0, 94.4],
+  [415.2, 170.8, 98.0, 94.4],
+  [175.9, 408.6, 99.6, 99.7],
+  [417.1, 408.6, 99.6, 99.7]
+ ]
 }

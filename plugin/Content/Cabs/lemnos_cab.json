@@ -31,5 +31,17 @@
  "irB": "Cabs/Lemnos/Diezel 2 4x12 SPKR 2 position 1.wav",
  "img": "cabs/lemnos_cab.webp",
  "imgW": 592,
- "imgH": 640
+ "imgH": 640,
+ "speakers": [
+  [176.1, 161.8, 96.1, 96.1],
+  [415.9, 161.8, 96.1, 96.1],
+  [176.1, 396.5, 96.1, 96.1],
+  [415.9, 396.5, 96.1, 96.1]
+ ],
+ "spots": [
+  {"spk": [0, 2], "pos": 0.2, "ir": "Cabs/Lemnos/Diezel 2 4x12 SPKR 1 position 2.wav"},
+  {"spk": [0, 2], "pos": 0.55, "ir": "Cabs/Lemnos/Diezel 2 4x12 SPKR 1 position 1.wav"},
+  {"spk": [1, 3], "pos": 0.2, "ir": "Cabs/Lemnos/Diezel 2 4x12 SPKR 2 position 1.wav"},
+  {"spk": [1, 3], "pos": 0.55, "ir": "Cabs/Lemnos/Diezel 2 4x12 SPKR 2 position 2.wav"}
+ ]
 }

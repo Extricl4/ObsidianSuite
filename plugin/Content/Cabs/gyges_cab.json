@@ -8,5 +8,11 @@
  "irB": "Cabs/Gyges/SC-MrSMF-VintMF-57-Bright.wav",
  "img": "cabs/gyges_cab.webp",
  "imgW": 589,
- "imgH": 640
+ "imgH": 640,
+ "speakers": [
+  [177.5, 171.5, 93.7, 90.0],
+  [411.5, 171.5, 93.7, 90.0],
+  [175.6, 409.4, 95.2, 95.2],
+  [413.4, 409.4, 95.2, 95.2]
+ ]
 }

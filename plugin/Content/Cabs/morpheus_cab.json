@@ -31,5 +31,15 @@
  "irB": "Cabs/Morpheus/Bogner 2 2x12 SPKR 2 position 1.wav",
  "img": "cabs/morpheus_cab.webp",
  "imgW": 902,
- "imgH": 640
+ "imgH": 640,
+ "speakers": [
+  [263.8, 306.7, 154.6, 154.6],
+  [638.2, 306.7, 154.6, 154.6]
+ ],
+ "spots": [
+  {"spk": [0], "pos": 0.2, "ir": "Cabs/Morpheus/Bogner 2 2x12 SPKR 1 position 2.wav"},
+  {"spk": [0], "pos": 0.55, "ir": "Cabs/Morpheus/Bogner 2 2x12 SPKR 1 position 1.wav"},
+  {"spk": [1], "pos": 0.2, "ir": "Cabs/Morpheus/Bogner 2 2x12 SPKR 2 position 1.wav"},
+  {"spk": [1], "pos": 0.55, "ir": "Cabs/Morpheus/Bogner 2 2x12 SPKR 2 position 2.wav"}
+ ]
 }

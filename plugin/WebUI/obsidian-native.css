@@ -306,6 +306,25 @@ button.obs-cabbig:hover .obs-cabpic { transform: translateY(-2px); }
 .obs-cabscreen i { font-style: normal; font-size: 8px; letter-spacing: .2em; opacity: .8; white-space: nowrap; }
 .obs-cabhot { position: absolute; border-radius: 50%; cursor: pointer; }
 .obs-cabhot:hover { box-shadow: 0 0 0 1.5px rgba(140,210,255,.8), 0 0 12px rgba(110,200,255,.6); }
+/* draggable mics: A / B on the cab's speakers (the halo is the mic's distance) */
+.obs-micl { position: absolute; inset: 0; pointer-events: none; line-height: 1; }
+.obs-spk { position: absolute; border-radius: 50%; box-sizing: border-box; border: 1px solid transparent; transition: border-color .15s, background .15s; }
+.obs-micl.dragging .obs-spk { border-color: rgba(255,255,255,.16); }
+.obs-micl.dragging .obs-spk.on { border-color: rgba(124,196,255,.55); background: radial-gradient(closest-side, rgba(255,255,255,.05), transparent); }
+.obs-recring i { position: absolute; border-radius: 50%; box-sizing: border-box; border: 1px dashed rgba(255,214,120,.7); }
+.obs-mic { position: absolute; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%; pointer-events: auto; cursor: grab; touch-action: none;
+  background: radial-gradient(circle at 35% 30%, #5b5d63, #1b1c1f 70%); box-shadow: 0 2px 5px rgba(0,0,0,.7), inset 0 0 0 1.5px var(--mc), 0 0 8px rgba(0,0,0,.5);
+  display: flex; align-items: center; justify-content: center; --mc: #7cc4ff; z-index: 2; transition: box-shadow .15s; }
+.obs-mic.mb { --mc: #ffb35c; }
+.obs-mic b { font: 700 10px/1 'JetBrains Mono', ui-monospace, monospace; color: var(--mc); letter-spacing: 0; pointer-events: none; }
+.obs-mic i { position: absolute; left: 50%; top: 50%; width: var(--halo, 26px); height: var(--halo, 26px); transform: translate(-50%, -50%); border-radius: 50%;
+  border: 1px solid var(--mc); opacity: .35; pointer-events: none; box-sizing: border-box; }
+.obs-mic:hover, .obs-micl.dragging .obs-mic:active { box-shadow: 0 2px 6px rgba(0,0,0,.7), inset 0 0 0 1.5px var(--mc), 0 0 12px var(--mc); }
+.obs-micl.dragging .obs-mic { cursor: grabbing; }
+.obs-mic.rec::after { content: ''; position: absolute; right: -2px; top: -2px; width: 6px; height: 6px; border-radius: 50%; background: #ffd678; box-shadow: 0 0 4px #ffd678; }
+.obs-mictip { position: absolute; transform: translateX(-50%); white-space: nowrap; font: 600 9px/1 'JetBrains Mono', ui-monospace, monospace; letter-spacing: .08em;
+  color: #e8e8ea; background: rgba(10,10,12,.82); border: 1px solid rgba(255,255,255,.12); border-radius: 5px; padding: 4px 6px; pointer-events: none; z-index: 3; }
+.obs-mictip:empty { display: none; }
 .obs-cabvoices { display: flex; flex-direction: column; align-items: center; gap: 6px; max-width: 460px; }
 .obs-cabvl { font-size: 9px; letter-spacing: .24em; color: var(--accent); }
 .obs-cabrow { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; }

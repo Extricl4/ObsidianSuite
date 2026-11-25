@@ -21,5 +21,11 @@
  "irB": "Cabs/Steropes/Marshall JCM900 LEAD-1960 SEHNNEISER e609.wav",
  "img": "cabs/steropes_cab.webp",
  "imgW": 604,
- "imgH": 640
+ "imgH": 640,
+ "speakers": [
+  [178.5, 167.9, 100.3, 100.3],
+  [425.5, 167.9, 100.3, 100.3],
+  [178.5, 411.1, 100.3, 100.3],
+  [425.5, 411.1, 100.3, 100.3]
+ ]
 }

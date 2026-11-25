@@ -1710,6 +1710,110 @@ OBS_NOINLINE static int runSelfTestBody (Report& r, const juce::StringArray& arg
         p.rig().setCab ("builtin-4x12");
     }
 
+    r.head ("IR cab mics (drawn speakers, dragging the mics, playing the IRs as recorded)");
+    {
+        auto real = [&p] (const juce::String& id) {
+            auto* rp = dynamic_cast<juce::RangedAudioParameter*> (p.state().getParameter (id)); return rp != nullptr ? rp->convertFrom0to1 (rp->getValue()) : -1.f; };
+        const auto lib = Rig::cabLibrary();
+        juce::StringArray badLayout; int withSpots = 0, irCabs = 0;
+        for (auto& c : *lib.getArray())
+        {
+            if ((bool) c["builtIn"]) continue;
+            ++irCabs;
+            // the CAB page draws every speaker on the cab's picture: one per speaker in the size ("4x12": 4), inside it
+            const auto size = c["size"].toString();
+            const int want = size.upToFirstOccurrenceOf ("x", false, false).getIntValue();
+            auto* spk = c["speakers"].getArray();
+            const float w = (float) (double) c["imgW"], h = (float) (double) c["imgH"];
+            bool ok = spk != nullptr && (want <= 0 || spk->size() == want);
+            if (ok) for (auto& s : *spk)
+                ok = ok && (float) (double) s[0] - (float) (double) s[2] > 0 && (float) (double) s[0] + (float) (double) s[2] < w
+                        && (float) (double) s[1] - (float) (double) s[3] > 0 && (float) (double) s[1] + (float) (double) s[3] < h && (double) s[2] > 10.0;
+            if (auto* sp = c["spots"].getArray())
+            {
+                ++withSpots;
+                for (auto& s : *sp) ok = ok && juce::File (s["ir"].toString()).existsAsFile() && s["spk"].isArray();
+            }
+            if (! ok) badLayout.add (c["key"].toString());
+        }
+        if (irCabs > 0)
+            r.check (badLayout.isEmpty(), juce::String (irCabs) + " IR cabs have their speakers placed on the picture (" + juce::String (withSpots)
+                     + " also say where each of their real IRs was recorded)" + (badLayout.isEmpty() ? juce::String() : ": not " + badLayout.joinIntoString (", ")));
+
+        // choosing an IR cab: no mic colouring, mics on their recorded spots, cuts open; a generated cab gets its own back
+        const auto spotKey = Rig::findInLibrary (lib, "hypnos_cab").isVoid() ? juce::String() : juce::String ("hypnos_cab");
+        if (spotKey.isNotEmpty())
+        {
+            p.rig().setCab ("builtin-4x12");
+            p.rig().setCab (spotKey);
+            const bool asRec = real ("cab.a.mic") == 5.f && real ("cab.b.mic") == 5.f && real ("cab.lc") <= 20.5f && real ("cab.hc") >= 19990.f
+                               && std::abs (real ("cab.a.pos") - (float) (double) p.rig().toJson()["cab"]["mics"][0]["recPos"]) < 0.01f;
+            p.rig().setCab ("builtin-4x12");
+            const bool back = real ("cab.a.mic") == 0.f && real ("cab.b.mic") == 1.f && std::abs (real ("cab.lc") - 80.f) < 0.5f && std::abs (real ("cab.hc") - 9500.f) < 5.f;
+            r.check (asRec && back, "choosing an IR cab sets its mics to Flat on their recorded spots with the cuts open, and a generated cab gets its 57 / 121 back");
+
+            // dragging mic A round a cab recorded per speaker and position switches it to the nearest real IR
+            p.rig().setCab (spotKey);
+            auto irA = [&p] { return juce::File (p.rig().toJson()["cab"]["irA"].toString()).getFileName(); };
+            p.rig().setCabMic (0, 1, 0.5, 0.15); const auto a1 = irA();
+            p.rig().setCabMic (0, 1, 0.5, 0.70); const auto a2 = irA();
+            p.rig().setCabMic (0, 0, 0.5, 0.70); const auto a3 = irA();
+            const auto cab = p.rig().toJson()["cab"];
+            const bool stored = (int) cab["mics"][0]["spk"] == 0 && std::abs ((double) cab["mics"][0]["ang"] - 0.5) < 1e-6;
+            // SPKR 1 position 1 + SPKR 2 position 1 is the cab's POS 1 voice
+            const bool voice = (int) cab["voice"] == 0;
+            r.check (a1.contains ("SPKR 2") && a2.contains ("SPKR 2") && a1 != a2 && a3.contains ("SPKR 1") && stored && voice,
+                     "dragging mic A on " + spotKey + " picks the real IR for that speaker and spot (" + a1 + " / " + a2 + " / " + a3 + ")"
+                     + (stored ? juce::String() : ", but didn't keep where it was put") + (voice ? juce::String() : ", but didn't light the matching voice"));
+            p.rig().setCab ("builtin-4x12");
+        }
+
+        // a real IR at its recorded spot plays exactly as recorded: the same as convolving with the IR file alone
+        const auto irFile = Rig::contentFolder().getChildFile ("IRs").getChildFile ("Cabs/Atlas/Mesa_OS_4x12_57_m160.wav");
+        if (irFile.existsAsFile())
+        {
+            auto cab = std::make_unique<dsp::CabSection>(); cab->prepare (SR, BLOCK);
+            auto ref = std::make_unique<juce::dsp::Convolution> (juce::dsp::Convolution::NonUniform { 512 });
+            ref->prepare ({ SR, (juce::uint32) BLOCK, 1 });
+            cab->loadIr (0, irFile); cab->setRecordedSpot (0, 0.3f, 2.5f);
+            ref->loadImpulseResponse (irFile, juce::dsp::Convolution::Stereo::no, juce::dsp::Convolution::Trim::yes, 0, juce::dsp::Convolution::Normalise::yes);
+            dsp::CabSection::MicParams a, b; a.model = 5; a.pos = 0.3f; a.distCm = 2.5f; b.mute = true;
+            std::vector<float> in ((size_t) BLOCK), l ((size_t) BLOCK), rr ((size_t) BLOCK), x ((size_t) BLOCK);
+            auto measure = [&] (dsp::CabSection::MicParams pa, bool compare) {
+                juce::Random rng (3); double sig = 0, diff = 0, hi = 0; dsp::Biquad hp; hp.set (dsp::Biquad::HP, SR, 4000.f, 0.707f);
+                cab->reset(); ref->reset();
+                for (int blk = 0; blk < 300; ++blk)
+                {
+                    for (auto& v : in) v = rng.nextFloat() * 0.4f - 0.2f;
+                    cab->process (in.data(), l.data(), rr.data(), BLOCK, pa, b, 20.f, 20000.f, true);
+                    std::copy (in.begin(), in.end(), x.begin());
+                    float* ch[1] = { x.data() }; juce::dsp::AudioBlock<float> blk1 (ch, 1, (size_t) BLOCK);
+                    ref->process (juce::dsp::ProcessContextReplacing<float> (blk1));
+                    if (blk >= 100) for (int i = 0; i < BLOCK; ++i)
+                    {
+                        sig += (double) x[(size_t) i] * x[(size_t) i]; diff += (double) (l[(size_t) i] - x[(size_t) i]) * (l[(size_t) i] - x[(size_t) i]);
+                        const float hv = hp.process (l[(size_t) i]); hi += (double) hv * hv;
+                    }
+                }
+                return compare ? 10.0 * std::log10 (diff / juce::jmax (1e-12, sig)) : 10.0 * std::log10 (juce::jmax (1e-12, hi));
+            };
+            // both convolutions load their IR on a background thread: let them arrive first
+            for (int i = 0; i < 40; ++i)
+            {
+                std::fill (in.begin(), in.end(), 0.f);
+                cab->process (in.data(), l.data(), rr.data(), BLOCK, a, b, 20.f, 20000.f, true);
+                std::copy (in.begin(), in.end(), x.begin()); float* ch[1] = { x.data() }; juce::dsp::AudioBlock<float> blk0 (ch, 1, (size_t) BLOCK);
+                ref->process (juce::dsp::ProcessContextReplacing<float> (blk0));
+                juce::Thread::sleep (25);
+            }
+            const double err = measure (a, true);
+            auto edge = a; edge.pos = 0.9f;
+            const double topSpot = measure (a, false), topEdge = measure (edge, false);
+            r.check (err < -60.0, "a real IR with its mic on the recorded spot plays exactly as recorded (difference " + juce::String (err, 1) + " dB)");
+            r.check (topEdge < topSpot - 3.0, "dragging that mic out towards the speaker's edge darkens it (top end " + juce::String (topEdge - topSpot, 1) + " dB)");
+        }
+    }
+
     // ---------------------------------------------------------------- 7c. celestial pedals
     r.head ("Celestial pedals (lush reverbs, shimmers, delays, Lyra, Icarus)");
     {

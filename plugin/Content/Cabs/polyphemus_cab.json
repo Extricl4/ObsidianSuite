@@ -8,5 +8,11 @@
  "irB": "Cabs/Polyphemus/SC-MrShallTV-G1235XC-49-Bright.wav",
  "img": "cabs/polyphemus_cab.webp",
  "imgW": 543,
- "imgH": 640
+ "imgH": 640,
+ "speakers": [
+  [162.7, 172.5, 88.3, 85.6],
+  [380.3, 172.5, 88.3, 85.6],
+  [161.1, 418.0, 89.6, 89.7],
+  [381.9, 418.0, 89.6, 89.7]
+ ]
 }

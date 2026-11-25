@@ -67,6 +67,10 @@ public:
     /** A cab whose file lists "voices" (album tones, mic positions, speakers): switch to voice n (its irA / irB). */
     void setCabVoice (int voice);
     void loadIr (int mic, const juce::File& file);   // mic: 0 = A, 1 = B, 2 = both
+    /** Mic A/B dragged on the CAB page: onto speaker spk (index in the cab file's "speakers"), at angle ang round it.
+        pos is the mic's POSITION (0 = dust cap .. 1 = edge): a cab recorded per speaker and position switches the mic
+        to the real IR nearest to that spot. */
+    void setCabMic (int mic, int spk, double ang, float pos);
     // ---- racks -----------------------------------------------------------------------
     void setModule (int rack, int slot, const juce::String& key, bool applyDefaults = true);
     void moveModule (int rack, int from, int to);
@@ -111,6 +115,9 @@ private:
     void message (const juce::String& t, bool err);
     void applyAmp();
     void applyCab();
+    void applyCabMic (int mic, const juce::var& libraryEntry);
+    void placeCabMics (const juce::var& libraryEntry, bool wasRealIrCab);
+    juce::var cabMics() const;
     void applySlot (int rack, int slot);
     void startCaptureLoad (int channel, const juce::File& f, bool notifyOk);
     void startCaptureAmpLoad (const juce::String& key);

@@ -34,6 +34,18 @@
   const setUpd = o => { Object.assign(S.update, o); later('obs:update', Object.assign({}, S.update), 0); };
   const listChanged = () => { S.presetFolders.sort((a, b) => a.localeCompare(b)); later('obs:presets', { list: S.presets, folders: S.presetFolders.slice() }, 5); };
 
+  function cabMics(place) {     // like Rig::cabMics
+    const cab = S.rig.cab, c = (S.cabs || []).find(x => x.key === cab.key) || {}, n = (c.speakers || []).length;
+    cab.mics = ['A', 'B'].map((k, m) => { const ir = cab['ir' + k], sp = (c.spots || []).find(s => s.ir === ir);
+      let spk = cab['spk' + k]; if (spk === undefined || spk >= n) spk = sp ? sp.spk[0] : Math.min(m, Math.max(0, n - 1));
+      const real = !!ir && !/^builtin/.test(cab.key);
+      return { spk, ang: cab['ang' + k] !== undefined ? cab['ang' + k] : (m ? -2.356 : -0.785), recPos: real ? (sp ? sp.pos : 0.3) : -1, recDist: real ? 2.5 : 0 }; });
+    // like Rig::placeCabMics: an IR cab's mics start Flat, on their recorded spots
+    if (place && cab.mics[0].recPos >= 0) {
+      const v = {}; cab.mics.forEach((mm, m) => { const k = m ? 'b' : 'a'; v['cab.' + k + '.pos'] = mm.recPos; v['cab.' + k + '.dist'] = Math.sqrt(2.5 / 30); v['cab.' + k + '.mic'] = 1; }); v['cab.lc'] = 0; v['cab.hc'] = 1;
+      Object.assign(params, v); later('obs:params', v, 15);
+    }
+  }
   function moduleType(key) { return (S.modules || []).find(m => m.key === key); }
   const RK = ['pre', 'post', 'sfx'];
   function setModule(r, s, key) {
@@ -78,9 +90,16 @@
     },
     ampKnob: (j, v) => { if (S.rig.amp.face) S.rig.amp.face.knobs[j] = v; return true; },
     ampSwitch: (i, on) => { if (S.rig.amp.face) S.rig.amp.face.switches[i] = !!on; return S.rig; },
-    setCab: key => { const c = (S.cabs || []).find(x => x.key === key) || {}, v = (c.voices || [])[0] || c; S.rig.cab = { key, name: c.name || key, irA: v.irA || '', irB: v.irB || '', irAName: '', irBName: '', voice: 0 }; later('obs:rig', S.rig, 10); return S.rig; },
+    setCab: key => { const c = (S.cabs || []).find(x => x.key === key) || {}, v = (c.voices || [])[0] || c; S.rig.cab = { key, name: c.name || key, irA: v.irA || '', irB: v.irB || '', irAName: '', irBName: '', voice: 0 }; cabMics(true); later('obs:rig', S.rig, 10); return S.rig; },
     setCabVoice: i => { const c = (S.cabs || []).find(x => x.key === S.rig.cab.key) || {}, vs = c.voices || []; if (!vs.length) return S.rig; i = Math.max(0, Math.min(vs.length - 1, i | 0));
-      Object.assign(S.rig.cab, { irA: vs[i].irA, irB: vs[i].irB, voice: i }); later('obs:rig', S.rig, 10); return S.rig; },
+      Object.assign(S.rig.cab, { irA: vs[i].irA, irB: vs[i].irB, voice: i }); delete S.rig.cab.spkA; delete S.rig.cab.spkB; cabMics(c.spots); later('obs:rig', S.rig, 10); return S.rig; },
+    // like Rig::setCabMic: remember the speaker / angle; a cab recorded per spot switches the mic to the nearest real IR
+    setCabMic: (mic, spk, ang, pos) => { const c = (S.cabs || []).find(x => x.key === S.rig.cab.key) || {}, k = mic ? 'B' : 'A';
+      S.rig.cab['spk' + k] = spk | 0; S.rig.cab['ang' + k] = +ang;
+      if (c.spots) { let on = c.spots.filter(s => s.spk.includes(spk | 0)); if (!on.length) on = c.spots;
+        const b = on.reduce((a, s) => Math.abs(s.pos - pos) < Math.abs(a.pos - pos) ? s : a); S.rig.cab['ir' + k] = b.ir;
+        S.rig.cab.voice = (c.voices || []).findIndex(v => v.irA === S.rig.cab.irA && v.irB === S.rig.cab.irB); }
+      cabMics(); return S.rig; },
     presetList: () => S.presets,
     presetLoad: id => { const p = S.presets.find(x => x.id === id); if (!p) return false; S.preset = Object.assign({}, S.preset, { id: p.id, name: p.name, category: p.category, factory: p.factory, dirty: false }); applyPreset(S.presetStates && S.presetStates[id]); later('obs:preset', S.preset, 10); return true; },
     presetNext: d => { const i = S.presets.findIndex(x => x.id === S.preset.id); const p = S.presets[(i + d + S.presets.length) % S.presets.length]; return commands.presetLoad(p.id); },

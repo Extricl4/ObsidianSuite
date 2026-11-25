@@ -149,6 +149,7 @@ function scan() {
         last[id] = v; vals[id] = v;
         if (dragging && !gesture.has(id)) { gesture.add(id); call('beginGesture', id); }
         call('setParam', id, v);
+        if (id.startsWith('cab.')) { queueCabMics(); if (/^cab\.[ab]\.pos$/.test(id)) cabSpotSync(id[4] === 'a' ? 0 : 1); }
         if (learnArmed && !learnTarget) armLearn(id);
       }
     }
@@ -192,6 +193,7 @@ function afterApply() {
     afterApplyQueued = false;
     safe('eq bubble', () => { const svg = $('.page[data-page="EQ"] svg[width="1000"]'); if (svg && !dragging) svg.parentElement.lastElementChild.style.display = 'none'; });
     safe('slots', refreshSlotStates);
+    safe('cab mics', drawCabMics);
   });
 }
 
@@ -1265,6 +1267,7 @@ function setupAmpCab(st) {
   intercept(b => b.classList.contains('obs-tile') && b.dataset.amp !== undefined, b => {
     const p = b.closest('.pop'), t = p && p._tiles && p._tiles[+b.dataset.tile];
     spawnAmp(b.dataset.amp, t ? t[1] : null); $$('.pop').forEach(x => x.style.display = 'none'); });
+  intercept((b, e) => b === ampUi.cabBig && ((e.target.closest && e.target.closest('.obs-mic')) || performance.now() - cabMicSwallow < 350), () => {});
   intercept((b, e) => b === ampUi.cabBig && e.target.closest && e.target.closest('.obs-cabhot'), () => cabVoiceStep(1));
   intercept(b => b.dataset.cabVoice !== undefined, b => setCabVoice(+b.dataset.cabVoice));
   intercept(b => b.dataset.cabAlbum !== undefined, b => { const vs = cabEntry().voices || []; const i = vs.findIndex(v => v.album === b.dataset.cabAlbum); if (i >= 0) setCabVoice(i); });
@@ -1295,6 +1298,7 @@ function setupAmpCab(st) {
     const addCab = $$('button', CP).find(x => txt(x).startsWith('ADD CAB'));
     if (addCab) {
       ampUi.cabBig = addCab; ampUi.cabBigHtml = addCab.innerHTML;
+      setupCabMics(addCab);
       ampUi.cabVoices = document.createElement('div'); ampUi.cabVoices.className = 'obs-cabvoices obs-hidden';
       addCab.insertAdjacentElement('afterend', ampUi.cabVoices);
     }
@@ -1762,7 +1766,7 @@ function renderCab() {
     if (ampUi.cabBig._sig !== sig) {
       ampUi.cabBig._sig = sig;
       ampUi.cabBig.innerHTML = '<span class="obs-cabcard"><span class="obs-cabpic"><img src="' + esc(faceImg(e.img)) + '" alt="" draggable="false">'
-        + box(e.screen, 'obs-cabscreen', scr) + (vs.length > 1 ? box(e.button, 'obs-cabhot', '') : '') + '</span>'
+        + box(e.screen, 'obs-cabscreen', scr) + (vs.length > 1 ? box(e.button, 'obs-cabhot', '') : '') + cabMicLayer(e) + '</span>'
         + '<span class="obs-cabname">' + esc(c.name || e.name || 'Cab') + '</span><span class="obs-cabsub">' + esc(voice ? cabVoiceName(voice) : e.basedOn ? 'Based on ' + e.basedOn : 'Click to change') + '</span></span>';
       ampUi.cabBig.classList.add('obs-cabbig');
       // the voice name shrinks until it fits the cab's display
@@ -1775,15 +1779,163 @@ function renderCab() {
       if (img && !img.complete) img.addEventListener('load', fit, { once: true }); else requestAnimationFrame(fit);
     }
     renderCabVoices(e, cur);
+    drawCabMics();
   } else {
     if (ampUi.cabBig) { ampUi.cabBig._sig = ''; ampUi.cabBig.classList.remove('obs-cabbig'); }
     renderCabVoices(has ? e : {}, cur);
   }
   const card = (big) => '<span style="display:flex;flex-direction:column;align-items:center;gap:' + (big ? 10 : 6) + 'px"><span style="font-size:' + (big ? 10 : 9) + 'px;letter-spacing:.24em;color:var(--accent)">CAB</span><span style="font-size:' + (big ? 20 : 15) + 'px;font-weight:600;letter-spacing:.14em">' + esc(c.name || 'Cab') + '</span><span style="font-size:11px;color:rgb(var(--cf_8d8d93))">' + esc(label !== c.name ? label : 'Click to change') + '</span></span>';
   if (ampUi.cabBig && !(has && e.img)) ampUi.cabBig.innerHTML = has ? card(true) : ampUi.cabBigHtml;
-  if (ampUi.micNote) ampUi.micNote.textContent = has ? 'TWO MICS, BLENDED · LOAD IR TO USE YOUR OWN' : 'MICS APPEAR ONCE A CAB IS CHOSEN';
+  if (ampUi.micNote) ampUi.micNote.textContent = !has ? 'MICS APPEAR ONCE A CAB IS CHOSEN'
+    : (e.img && (e.speakers || []).length) ? 'DRAG THE MICS · SCROLL = DISTANCE · DOUBLE-CLICK = AS RECORDED'
+    : 'TWO MICS, BLENDED · LOAD IR TO USE YOUR OWN';
   if (ampUi.mics) ampUi.mics.style.opacity = has ? '1' : '.4';
   if (ampUi.irNote) ampUi.irNote.textContent = (c.irAName || c.irBName) ? 'IR: ' + label : 'Or load your own impulse response';
+}
+
+/* ---- draggable mics on an IR cab's picture ----
+   The cab file lists its speakers in picture pixels ([cx, cy, rx, ry]). Mic A / B sit on a speaker: how far out from
+   the dust cap is the mic's POSITION (0 = cap .. 1 = edge), the angle is only where it's drawn, the halo is its
+   DISTANCE. Dragging sets POSITION (and the speaker); the scroll wheel sets DISTANCE; a double-click puts it back on the
+   spot its IR was recorded at (where it plays exactly as recorded). Cabs recorded per speaker and position ("spots")
+   switch the mic to the nearest real IR, in the plugin (setCabMic). */
+const CAB_MIC = ['a', 'b'];
+let cabMicDrag = null, cabMicSwallow = 0, cabMicSent = ['', ''], cabSpotTimer = [0, 0];
+function cabMicLayer(e) {
+  const sp = e.speakers || []; if (!sp.length || !e.imgW) return '';
+  const pc = (v, w) => (100 * v / w).toFixed(2) + '%';
+  const ring = (s, i) => '<span class="obs-spk" data-spk="' + i + '" style="left:' + pc(s[0] - s[2], e.imgW) + ';top:' + pc(s[1] - s[3], e.imgH)
+    + ';width:' + pc(2 * s[2], e.imgW) + ';height:' + pc(2 * s[3], e.imgH) + '"></span>';
+  return '<span class="obs-micl">' + sp.map(ring).join('') + '<span class="obs-recring"></span>'
+    + CAB_MIC.map((m, i) => '<span class="obs-mic m' + m + '" data-mic="' + i + '" title=""><i></i><b>' + m.toUpperCase() + '</b></span>').join('')
+    + '<span class="obs-mictip"></span></span>';
+}
+function cabMicState(i) {
+  const m = ((rig && rig.cab && rig.cab.mics) || [])[i] || {}, k = 'cab.' + CAB_MIC[i] + '.';
+  const real = id => toReal(id, vals[id] !== undefined ? vals[id] : toNorm(id, (META[id] || {}).def || 0));
+  const st = { spk: m.spk | 0, ang: m.ang !== undefined ? +m.ang : (i ? -2.356 : -0.785), pos: real(k + 'pos'), dist: real(k + 'dist'),
+               recPos: m.recPos !== undefined ? +m.recPos : -1, recDist: +m.recDist || 0 };
+  if (cabMicDrag && cabMicDrag.i === i) Object.assign(st, cabMicDrag.st);
+  return st;
+}
+const sameIr = (a, b) => !!a && !!b && (a === b || a.replace(/\\/g, '/').endsWith('/' + b.replace(/\\/g, '/')) || b.replace(/\\/g, '/').endsWith('/' + a.replace(/\\/g, '/')));
+function cabSpots(e, spk) { const all = e.spots || [], on = all.filter(s => (s.spk || []).includes(spk)); return on.length ? on : all; }
+function nearestSpot(e, spk, pos) { let best = null; cabSpots(e, spk).forEach(s => { if (!best || Math.abs(s.pos - pos) < Math.abs(best.pos - pos)) best = s; }); return best; }
+// the radii on this speaker where a real IR plays as recorded
+function recRadii(e, i, st) { return e.spots ? cabSpots(e, st.spk).map(s => s.pos) : st.recPos >= 0 ? [st.recPos] : []; }
+function drawCabMics() {
+  const cb = ampUi.cabBig, L = cb && $('.obs-micl', cb); if (!L) return;
+  const e = cabEntry(), sp = e.speakers || []; if (!sp.length) return;
+  const pc = (v, w) => (100 * v / w).toFixed(3) + '%';
+  const imgPx = (() => { const im = $('.obs-cabpic img', cb); return im && im.clientWidth ? im.clientWidth / e.imgW : 370 / e.imgW; })();
+  CAB_MIC.forEach((m, i) => {
+    const el = $('.obs-mic[data-mic="' + i + '"]', L); if (!el) return;
+    const st = cabMicState(i), s = sp[clamp(st.spk, 0, sp.length - 1)];
+    const x = s[0] + Math.cos(st.ang) * st.pos * s[2], y = s[1] + Math.sin(st.ang) * st.pos * s[3];
+    el.style.left = pc(x, e.imgW); el.style.top = pc(y, e.imgH);
+    const halo = 22 + st.dist * 2.2;                   // further back: a wider pick-up
+    el.style.setProperty('--halo', halo.toFixed(1) + 'px');
+    el.classList.toggle('rec', recRadii(e, i, st).some(r => Math.abs(r - st.pos) < .006) && st.dist - st.recDist < .05);
+    el.title = 'MIC ' + m.toUpperCase() + ' · speaker ' + (st.spk + 1) + ' · ' + st.pos.toFixed(2) + ' · ' + (Math.round(st.dist * 10) / 10) + ' cm';
+  });
+  const d = cabMicDrag;
+  $$('.obs-spk', L).forEach(r => r.classList.toggle('on', !!d && +r.dataset.spk === d.st.spk));
+  L.classList.toggle('dragging', !!d);
+  const rr = $('.obs-recring', L), tip = $('.obs-mictip', L);
+  if (d) {
+    const st = cabMicState(d.i), s = sp[st.spk], radii = recRadii(e, d.i, st);
+    rr.innerHTML = radii.map(r => '<i style="left:' + pc(s[0] - r * s[2], e.imgW) + ';top:' + pc(s[1] - r * s[3], e.imgH) + ';width:' + pc(2 * r * s[2], e.imgW)
+      + ';height:' + pc(2 * r * s[3], e.imgH) + '"></i>').join('');
+    const at = radii.some(r => Math.abs(r - st.pos) < .006);
+    tip.textContent = 'MIC ' + CAB_MIC[d.i].toUpperCase() + ' · SPEAKER ' + (st.spk + 1) + ' · ' + st.pos.toFixed(2) + ' · ' + (Math.round(st.dist * 10) / 10) + ' CM' + (at ? ' · AS RECORDED' : '');
+    const x = s[0] + Math.cos(st.ang) * st.pos * s[2], y = s[1] + Math.sin(st.ang) * st.pos * s[3];
+    tip.style.left = pc(x, e.imgW); tip.style.top = pc(y + 22 / imgPx, e.imgH);
+  } else { rr.innerHTML = ''; tip.textContent = ''; }
+}
+let cabMicsQueued = false;
+function queueCabMics() { if (!cabMicsQueued) { cabMicsQueued = true; requestAnimationFrame(() => { cabMicsQueued = false; safe('cab mics', drawCabMics); }); } }
+// a mic's knob or marker changed from the UI: show it on the knob, tell the plugin (inside the drag's gesture)
+function setCabParam(id, real) {
+  const n = toNorm(id, real); vals[id] = n; last[id] = n;
+  const b = groupOf.get(id);
+  if (b) { applying++; try { b.write({ [id]: n }); const r = b.read(); for (const k in r) last[k] = r[k]; } catch (_) {} finally { applying--; } }
+  if (dragging && !gesture.has(id)) { gesture.add(id); call('beginGesture', id); }
+  call('setParam', id, n);
+}
+function sendCabMic(i, force) {
+  const st = cabMicState(i), e = cabEntry();
+  const sp = e.spots ? nearestSpot(e, st.spk, st.pos) : null;
+  const sig = st.spk + '|' + (sp ? sp.ir : '') + '|' + st.ang.toFixed(3);
+  if (!force && sig === cabMicSent[i]) return;
+  cabMicSent[i] = sig;
+  return call('setCabMic', i, st.spk, st.ang, st.pos).then(r => { if (r) applyRig(r); });
+}
+// POSITION knob on a cab recorded per spot: once it's nearer another real IR, switch to it
+function cabSpotSync(i) {
+  const e = cabEntry(); if (!e.spots || !rig || !rig.cab) return;
+  clearTimeout(cabSpotTimer[i]);
+  cabSpotTimer[i] = setTimeout(() => safe('cab spot', () => {
+    const st = cabMicState(i), sp = nearestSpot(e, st.spk, st.pos);
+    if (sp && !sameIr(sp.ir, rig.cab[i ? 'irB' : 'irA'])) sendCabMic(i, true);
+  }), 90);
+}
+function setupCabMics(cb) {
+  const pick = (ev, d) => {         // pointer -> speaker, angle, position (in the picture's pixels)
+    const e = cabEntry(), sp = e.speakers || [], im = $('.obs-cabpic img', cb); if (!sp.length || !im) return null;
+    const r = im.getBoundingClientRect(), x = (ev.clientX - r.left) / r.width * e.imgW, y = (ev.clientY - r.top) / r.height * e.imgH;
+    const nd = s => Math.hypot((x - s[0]) / s[2], (y - s[1]) / s[3]);
+    let k = clamp(d.st.spk, 0, sp.length - 1);
+    if (nd(sp[k]) > 1) sp.forEach((s, j) => { if (nd(s) < nd(sp[k])) k = j; });   // stays on its speaker until it's over another one
+    const s = sp[k], dx = (x - s[0]) / s[2], dy = (y - s[1]) / s[3];
+    let pos = Math.min(1, Math.hypot(dx, dy));
+    const st = Object.assign({}, d.st, { spk: k, pos });
+    const snap = recRadii(e, d.i, st).find(rr => Math.abs(rr - pos) < .035);     // near the recorded spot: right on it
+    if (snap !== undefined) st.pos = snap;
+    if (Math.hypot(dx, dy) > .04) st.ang = Math.atan2(dy, dx);
+    return st;
+  };
+  cb.addEventListener('pointerdown', ev => {
+    const m = ev.target.closest && ev.target.closest('.obs-mic'); if (!m || ev.button !== 0) return;
+    ev.preventDefault(); ev.stopPropagation();
+    const i = +m.dataset.mic, st = cabMicState(i);
+    cabMicDrag = { i, id: ev.pointerId, st: { spk: st.spk, ang: st.ang, pos: st.pos, dist: st.dist } };
+    try { m.setPointerCapture(ev.pointerId); } catch (_) {}
+    drawCabMics();
+  });
+  cb.addEventListener('pointermove', ev => {
+    const d = cabMicDrag; if (!d || ev.pointerId !== d.id) return;
+    ev.preventDefault();
+    const st = pick(ev, d); if (!st) return;
+    const moved = st.spk !== d.st.spk || Math.abs(st.pos - d.st.pos) > 1e-4;
+    d.st = st; d.moved = d.moved || moved;
+    if (moved) { setCabParam('cab.' + CAB_MIC[d.i] + '.pos', st.pos); sendCabMic(d.i); }
+    drawCabMics();
+  });
+  const end = ev => {
+    const d = cabMicDrag; if (!d || ev.pointerId !== d.id) return;
+    cabMicDrag = null; cabMicSwallow = performance.now();
+    if (d.moved) { setCabParam('cab.' + CAB_MIC[d.i] + '.pos', d.st.pos); sendCabMic(d.i, true); }
+    // keep showing where it was put until the plugin's answer arrives
+    if (rig && rig.cab && rig.cab.mics && rig.cab.mics[d.i]) Object.assign(rig.cab.mics[d.i], { spk: d.st.spk, ang: d.st.ang });
+    drawCabMics();
+  };
+  cb.addEventListener('pointerup', end); cb.addEventListener('pointercancel', end);
+  cb.addEventListener('wheel', ev => {
+    const m = ev.target.closest && ev.target.closest('.obs-mic'); if (!m) return;
+    ev.preventDefault(); ev.stopPropagation();
+    const i = +m.dataset.mic, id = 'cab.' + CAB_MIC[i] + '.dist', st = cabMicState(i);
+    setCabParam(id, clamp(Math.round((st.dist + (ev.deltaY < 0 ? 1 : -1)) * 2) / 2, 0, 30));
+    drawCabMics();
+  }, { passive: false });
+  cb.addEventListener('dblclick', ev => {
+    const m = ev.target.closest && ev.target.closest('.obs-mic'); if (!m) return;
+    ev.preventDefault(); ev.stopPropagation();
+    const i = +m.dataset.mic, st = cabMicState(i), e = cabEntry(), k = 'cab.' + CAB_MIC[i] + '.';
+    const radii = recRadii(e, i, st);
+    const pos = radii.length ? radii.reduce((a, b) => Math.abs(b - st.pos) < Math.abs(a - st.pos) ? b : a) : (META[k + 'pos'] || {}).def;
+    setCabParam(k + 'pos', pos); setCabParam(k + 'dist', st.recPos >= 0 ? st.recDist : (META[k + 'dist'] || {}).def);
+    cabMicSwallow = performance.now(); sendCabMic(i, true); drawCabMics();
+  });
 }
 
 /* ============================================================== settings */

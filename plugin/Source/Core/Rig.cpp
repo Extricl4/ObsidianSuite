@@ -10,6 +10,26 @@ using namespace dsp;
 namespace
 {
 const char* builtInCabKeys[] = { "builtin-1x12", "builtin-2x12", "builtin-4x12" };
+bool isBuiltInCab (const juce::String& key) { for (auto k : builtInCabKeys) if (key == k) return true; return false; }
+
+// Where the mic of a real IR was when it was recorded. The per-speaker IR packs list theirs ("spots"); for the rest
+// a typical close-mic spot (a third of the way out from the dust cap, a couple of cm off the grille) stands in.
+constexpr float kRecPos = 0.3f, kRecDist = 2.5f;
+struct CabSpot { float pos = kRecPos, dist = kRecDist; int spk = -1; };
+CabSpot spotFor (const juce::var& entry, const juce::String& ir)
+{
+    CabSpot sp;
+    if (auto* spots = entry["spots"].getArray())
+        for (auto& s : *spots)
+            if (s["ir"].toString() == ir)
+            {
+                sp.pos = (float) (double) s["pos"]; sp.dist = s.hasProperty ("dist") ? (float) (double) s["dist"] : kRecDist;
+                if (auto* k = s["spk"].getArray(); k != nullptr && ! k->isEmpty()) sp.spk = (int) k->getReference (0);
+                break;
+            }
+    return sp;
+}
+int speakerCount (const juce::var& entry) { auto* a = entry["speakers"].getArray(); return a != nullptr ? a->size() : 0; }
 
 juce::ValueTree makeDefaultRig()
 {
@@ -468,22 +488,124 @@ void Rig::startCaptureAmpLoad (const juce::String& key)
 // ---------------------------------------------------------------------------------- cab
 void Rig::applyCab()
 {
+    const auto entry = findInLibrary (cabLibrary(), rig.getChildWithName ("CAB")["key"].toString());
+    for (int m = 0; m < 2; ++m) applyCabMic (m, entry);
+}
+
+void Rig::applyCabMic (int m, const juce::var& entry)
+{
     auto cab = rig.getChildWithName ("CAB");
     const auto key = cab["key"].toString();
     int builtIn = 2;
     for (int i = 0; i < 3; ++i) if (key == builtInCabKeys[i]) builtIn = i;
-    const juce::String irs[2] = { cab["irA"].toString(), cab["irB"].toString() };
+    const auto ir = cab[m == 0 ? "irA" : "irB"].toString();
+    if (ir.isNotEmpty())
+    {
+        const juce::File f (ir);
+        const auto err = engine.cab().loadIr (m, f);
+        if (err.isEmpty())
+        {
+            // a real IR: the mic's position and distance work relative to where it was recorded
+            const auto sp = spotFor (entry, ir);
+            engine.cab().setRecordedSpot (m, sp.pos, sp.dist);
+            return;
+        }
+        message (err + " (" + f.getFileName() + ")", true);
+    }
+    engine.cab().loadBuiltIn (m, builtIn);
+    engine.cab().setRecordedSpot (m, -1.f, 0.f);
+}
+
+void Rig::placeCabMics (const juce::var& entry, bool wasReal)
+{
+    // choosing a cab sets its mics up: an IR cab plays as recorded (no mic colouring, both mics on their recorded
+    // spots, low / high cut open); going back to a generated cab brings back its own mic setup
+    auto cab = rig.getChildWithName ("CAB");
+    const bool real = ! isBuiltInCab (cab["key"].toString());
+    auto set = [this] (const juce::String& id, float value)
+    {
+        if (auto* p = dynamic_cast<juce::RangedAudioParameter*> (state.getParameter (id)))
+            p->setValueNotifyingHost (p->convertTo0to1 (value));
+    };
     for (int m = 0; m < 2; ++m)
     {
-        if (irs[m].isNotEmpty())
+        const juce::String k = m == 0 ? "a" : "b";
+        if (real)
         {
-            const juce::File f (irs[m]);
-            const auto err = engine.cab().loadIr (m, f);
-            if (err.isEmpty()) continue;
-            message (err + " (" + f.getFileName() + ")", true);
+            const auto sp = spotFor (entry, cab[m == 0 ? "irA" : "irB"].toString());
+            set ("cab." + k + ".mic", 5.f); set ("cab." + k + ".pos", sp.pos); set ("cab." + k + ".dist", sp.dist);
         }
-        engine.cab().loadBuiltIn (m, builtIn);
+        else if (wasReal)
+        {
+            set ("cab." + k + ".mic", (float) m); set ("cab." + k + ".pos", m == 0 ? 0.38f : 0.62f); set ("cab." + k + ".dist", m == 0 ? 2.f : 6.f);
+        }
     }
+    if (real && ! wasReal) { set ("cab.lc", 20.f); set ("cab.hc", 20000.f); }
+    if (! real && wasReal) { set ("cab.lc", 80.f); set ("cab.hc", 9500.f); }
+}
+
+juce::var Rig::cabMics() const
+{
+    // where the CAB page draws mic A and B: on which speaker, at what angle round it (the drag's direction; the
+    // distance from the dust cap is the mic's POSITION), and where the mic's IR was recorded
+    auto cab = rig.getChildWithName ("CAB");
+    const auto entry = findInLibrary (cabLibrary(), cab["key"].toString());
+    const int n = speakerCount (entry);
+    juce::Array<juce::var> out;
+    for (int m = 0; m < 2; ++m)
+    {
+        const juce::String s = m == 0 ? "A" : "B";
+        const auto ir = cab[m == 0 ? "irA" : "irB"].toString();
+        const auto sp = spotFor (entry, ir);
+        int spk = cab.getProperty ("spk" + s, -1);
+        if (spk < 0 || spk >= n) spk = sp.spk >= 0 ? sp.spk : juce::jmin (m, juce::jmax (0, n - 1));
+        auto o = new juce::DynamicObject();
+        o->setProperty ("spk", spk);
+        o->setProperty ("ang", (double) cab.getProperty ("ang" + s, m == 0 ? -0.785 : -2.356));
+        const bool real = ir.isNotEmpty() && ! isBuiltInCab (cab["key"].toString());
+        o->setProperty ("recPos", real ? sp.pos : -1.f);
+        o->setProperty ("recDist", real ? sp.dist : 0.f);
+        out.add (juce::var (o));
+    }
+    return out;
+}
+
+void Rig::setCabMic (int mic, int spk, double ang, float pos)
+{
+    // a mic dragged on the CAB page: remember where it sits; a cab recorded per speaker and position also switches
+    // that mic to the real IR nearest to where it was put
+    auto cab = rig.getChildWithName ("CAB");
+    mic = juce::jlimit (0, 1, mic);
+    const juce::String s = mic == 0 ? "A" : "B", irKey = mic == 0 ? "irA" : "irB";
+    const auto entry = findInLibrary (cabLibrary(), cab["key"].toString());
+    const int n = speakerCount (entry);
+    if (n > 0) spk = juce::jlimit (0, n - 1, spk);
+    cab.setProperty ("spk" + s, spk, nullptr).setProperty ("ang" + s, ang, nullptr);
+    if (auto* spots = entry["spots"].getArray(); spots != nullptr && ! spots->isEmpty())
+    {
+        juce::var best; float bestD = 1.0e9f;
+        for (int pass = 0; pass < 2 && best.isVoid(); ++pass)      // spots on that speaker first, any spot if it has none
+            for (auto& sp : *spots)
+            {
+                bool on = pass == 1;
+                if (auto* k = sp["spk"].getArray()) for (auto& i : *k) on = on || (int) i == spk;
+                const float d = std::abs ((float) (double) sp["pos"] - pos);
+                if (on && d < bestD) { bestD = d; best = sp; }
+            }
+        const auto ir = best["ir"].toString();
+        if (ir.isNotEmpty() && ir != cab[irKey].toString())
+        {
+            cab.setProperty (irKey, ir, nullptr);
+            // the voice whose IRs these are (POS 1, SPKR 2, ...), or none
+            int voice = -1;
+            if (auto* vs = entry["voices"].getArray())
+                for (int i = 0; i < vs->size() && voice < 0; ++i)
+                    if ((*vs)[i]["irA"].toString() == cab["irA"].toString() && (*vs)[i]["irB"].toString() == cab["irB"].toString()) voice = i;
+            cab.setProperty ("voice", voice, nullptr);
+            applyCabMic (mic, entry);
+        }
+    }
+    notifyChanged();
 }
 
 void Rig::setCab (const juce::String& key)
@@ -494,9 +616,12 @@ void Rig::setCab (const juce::String& key)
     // a cab with several IR sets ("voices": album tones, mic positions, speakers) starts on its first one
     const juce::var voices = entry["voices"];
     const juce::var src = (voices.isArray() && voices.size() > 0) ? voices[0] : entry;
+    const bool wasReal = ! isBuiltInCab (cab["key"].toString());
     cab.setProperty ("key", key, nullptr).setProperty ("name", entry["name"], nullptr)
        .setProperty ("irA", src["irA"].toString(), nullptr).setProperty ("irB", src["irB"].toString(), nullptr)
        .setProperty ("voice", 0, nullptr);
+    for (auto p : { "spkA", "spkB", "angA", "angB" }) cab.removeProperty (p, nullptr);    // the mics start where the cab puts them
+    placeCabMics (entry, wasReal);
     applyCab(); notifyChanged();
 }
 
@@ -511,6 +636,12 @@ void Rig::setCabVoice (int voice)
     const juce::var v = voices[voice];
     cab.setProperty ("irA", v["irA"].toString(), nullptr).setProperty ("irB", v["irB"].toString(), nullptr)
        .setProperty ("voice", voice, nullptr);
+    if (entry["spots"].isArray())
+    {
+        // a mic-position voice (POS 2, SPKR 1, ...) moves the mics to where those IRs were recorded
+        for (auto p : { "spkA", "spkB" }) cab.removeProperty (p, nullptr);
+        placeCabMics (entry, true);
+    }
     applyCab(); notifyChanged();
 }
 
@@ -523,6 +654,11 @@ void Rig::loadIr (int mic, const juce::File& file)
         const auto err = engine.cab().loadIr (m, file);
         if (err.isNotEmpty()) { message (err, true); return; }
         cab.setProperty (m == 0 ? "irA" : "irB", file.getFullPathName(), nullptr);
+        engine.cab().setRecordedSpot (m, kRecPos, kRecDist);
+        // your own IR has its mic in it already: play it as recorded (no mic colouring, the mic on its spot)
+        const juce::String k = m == 0 ? "cab.a." : "cab.b.";
+        for (auto [id, value] : { std::pair<juce::String, float> { k + "mic", 5.f }, { k + "pos", kRecPos }, { k + "dist", kRecDist } })
+            if (auto* p = dynamic_cast<juce::RangedAudioParameter*> (state.getParameter (id))) p->setValueNotifyingHost (p->convertTo0to1 (value));
     }
     if (! cab["key"].toString().startsWith ("custom")) cab.setProperty ("key", "custom", nullptr).setProperty ("name", file.getFileNameWithoutExtension(), nullptr);
     message ("Loaded IR " + file.getFileNameWithoutExtension(), false);
@@ -926,6 +1062,10 @@ juce::var Rig::cabLibrary()
         };
         resolve (o);
         // voices: several IR sets for one cab (album tones, mic positions, speakers), picked with the cab's voice button
+        if (auto* sp = v["spots"].getArray())
+            for (auto& ss : *sp)
+                if (auto* d = ss.getDynamicObject(); d != nullptr && d->getProperty ("ir").toString().isNotEmpty())
+                    d->setProperty ("ir", irs.getChildFile (d->getProperty ("ir").toString()).getFullPathName());
         if (auto* vs = v["voices"].getArray())
         {
             for (auto& vv : *vs) if (auto* d = vv.getDynamicObject()) resolve (d);
@@ -991,6 +1131,7 @@ juce::var Rig::toJson() const
     auto cb = new juce::DynamicObject();
     for (auto k : { "key", "name", "irA", "irB" }) cb->setProperty (k, cab[k]);
     cb->setProperty ("voice", (int) cab.getProperty ("voice", 0));
+    cb->setProperty ("mics", cabMics());
     cb->setProperty ("irAName", cab["irA"].toString().isEmpty() ? juce::String() : juce::File (cab["irA"].toString()).getFileNameWithoutExtension());
     cb->setProperty ("irBName", cab["irB"].toString().isEmpty() ? juce::String() : juce::File (cab["irB"].toString()).getFileNameWithoutExtension());
     o->setProperty ("cab", juce::var (cb));
