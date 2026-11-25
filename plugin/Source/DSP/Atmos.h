@@ -76,7 +76,10 @@ public:
         for (auto* o : { &lpL, &lpR, &hpL, &hpR, &texLp, &roarLp, &roarLp2, &vinHp }) o->reset();
         for (auto& d : drops) d.on = false;
         for (auto& e : ev) e.kind = -1;
-        for (auto& v : voice) { v.ph = rng.uni(); v.ph2 = rng.uni(); }
+        // the drone's voices start in step: with random phases, unison voices on one pitch (DETUNE at 0) met at
+        // random and the same scene came out up to 10 dB louder or softer each time it started (and Abyss's
+        // two oscillators changed timbre)
+        for (auto& v : voice) { v.ph = 0.f; v.ph2 = 0.f; rng.uni(); rng.uni(); }   // (still draws its two numbers: every other random thing stays as it was)
         for (auto& sh : shep) for (auto& ph : sh.ph) ph = rng.uni();
         shepPos = 0.5f;
         for (auto& l : line) l.clear();
