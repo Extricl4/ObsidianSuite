@@ -541,7 +541,7 @@ function pill(id, label, o = {}) {
   b.addEventListener('pointermove', e => { if (!drag) return; const dy = drag.y - e.clientY; if (Math.abs(dy) > 2) moved = true; if (moved) set(id, toV(id, drag.t + dy / (e.shiftKey ? 900 : 160)), 'ui'); });
   b.addEventListener('pointerup', e => { if (drag && !moved && p.opts) { const n = p.opts.length; set(id, (Math.round(S[id]) + (e.shiftKey ? n - 1 : 1)) % n, 'ui'); } drag = null; });
   b.addEventListener('pointercancel', () => { drag = null; });
-  b.addEventListener('dblclick', () => { if (!p.opts) set(id, p.def, 'ui'); });
+  b.addEventListener('dblclick', () => set(id, p.def, 'ui'));     // back to the default (a cycling pill used to step two on)
   b.addEventListener('wheel', e => { e.preventDefault(); const st = p.type === 'int' || p.type === 'choice' ? 1 / Math.max(1, p.max - p.min) : .02; set(id, toV(id, toN(id) + (e.deltaY < 0 ? st : -st)), 'ui'); }, { passive: false });
   return b;
 }
@@ -605,6 +605,8 @@ function sel(id, label, names, o = {}) {
   dial.addEventListener('pointermove', e => { if (!drag) return; set(id, clamp(drag.v + Math.round((drag.y - e.clientY) / 22), 0, n - 1), 'ui'); });
   dial.addEventListener('pointerup', e => { if (drag && Math.abs(drag.y - e.clientY) < 3) set(id, (Math.round(S[id]) + 1) % n, 'ui'); drag = null; });
   dial.addEventListener('wheel', e => { e.preventDefault(); set(id, clamp(Math.round(S[id]) + (e.deltaY < 0 ? 1 : -1), 0, n - 1), 'ui'); }, { passive: false });
+  // double-click goes back to the default, like the knobs (it used to step two positions on)
+  dial.addEventListener('dblclick', () => { if (P[id] && P[id].def !== undefined) set(id, P[id].def, 'ui'); });
   w.appendChild(s); return w;
 }
 /* round latching push button with a lit ring (POWER, HOLD) */

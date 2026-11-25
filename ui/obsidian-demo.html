@@ -1237,7 +1237,7 @@ function pill(id, label, o = {}) {
   b.addEventListener('pointermove', e => { if (!drag) return; const dy = drag.y - e.clientY; if (Math.abs(dy) > 2) moved = true; if (moved) set(id, toV(id, drag.t + dy / (e.shiftKey ? 900 : 160)), 'ui'); });
   b.addEventListener('pointerup', e => { if (drag && !moved && p.opts) { const n = p.opts.length; set(id, (Math.round(S[id]) + (e.shiftKey ? n - 1 : 1)) % n, 'ui'); } drag = null; });
   b.addEventListener('pointercancel', () => { drag = null; });
-  b.addEventListener('dblclick', () => { if (!p.opts) set(id, p.def, 'ui'); });
+  b.addEventListener('dblclick', () => set(id, p.def, 'ui'));     // back to the default (a cycling pill used to step two on)
   b.addEventListener('wheel', e => { e.preventDefault(); const st = p.type === 'int' || p.type === 'choice' ? 1 / Math.max(1, p.max - p.min) : .02; set(id, toV(id, toN(id) + (e.deltaY < 0 ? st : -st)), 'ui'); }, { passive: false });
   return b;
 }
@@ -1301,6 +1301,8 @@ function sel(id, label, names, o = {}) {
   dial.addEventListener('pointermove', e => { if (!drag) return; set(id, clamp(drag.v + Math.round((drag.y - e.clientY) / 22), 0, n - 1), 'ui'); });
   dial.addEventListener('pointerup', e => { if (drag && Math.abs(drag.y - e.clientY) < 3) set(id, (Math.round(S[id]) + 1) % n, 'ui'); drag = null; });
   dial.addEventListener('wheel', e => { e.preventDefault(); set(id, clamp(Math.round(S[id]) + (e.deltaY < 0 ? 1 : -1), 0, n - 1), 'ui'); }, { passive: false });
+  // double-click goes back to the default, like the knobs (it used to step two positions on)
+  dial.addEventListener('dblclick', () => { if (P[id] && P[id].def !== undefined) set(id, P[id].def, 'ui'); });
   w.appendChild(s); return w;
 }
 /* round latching push button with a lit ring (POWER, HOLD) */
@@ -3622,20 +3624,20 @@ bot.append(prWrap, badge, diceWrap);
 const A = n => ALGOS.indexOf(n);
 const Q = str => str.trim().split(/\s+/).map(c => c === '-' ? 0 : TCODE.indexOf(c.toUpperCase()) + 1);
 const PRESETS = [
-  { name: 'Laser Riff', cat: 'LASER', note: 'Every pick zaps a laser up', k: { algo: A('Laser'), mode: 3, shape: 0, speed: 70, sens: 55, color: 62 } },
-  { name: 'Pew Pew', cat: 'LASER', note: 'Short laser shots falling down', k: { algo: A('Laser'), mode: 3, shape: 1, speed: 86, sens: 60, color: 82 } },
-  { name: 'Zap Storm', cat: 'LASER', note: 'Random zaps with stutters and crushes', k: { algo: A('Zap Comb'), mode: 2, shape: 3, speed: 74, color: 70 },
+  { name: 'Laser Riff', cat: 'LASER', note: 'Every pick zaps a laser up', k: { level: 6.5, algo: A('Laser'), mode: 3, shape: 0, speed: 70, sens: 55, color: 62 } },
+  { name: 'Pew Pew', cat: 'LASER', note: 'Short laser shots falling down', k: { level: 6.5, algo: A('Laser'), mode: 3, shape: 1, speed: 86, sens: 60, color: 82 } },
+  { name: 'Zap Storm', cat: 'LASER', note: 'Random zaps with stutters and crushes', k: { level: 11, algo: A('Zap Comb'), mode: 2, shape: 3, speed: 74, color: 70 },
     g: { grid: 3, chance: 24, len: 0, chaos: 50 }, t: ['stutter', 'crush', 'chop'] },
   { name: 'Shifted Space', cat: 'LASER', note: 'A slow frequency shifter, out of this world', k: { algo: A('Freq Shift'), mode: 2, shape: 2, speed: 22, color: 50, mix: 70 } },
   { name: 'Whammy Solo', cat: 'PITCH', note: 'The classic: rock the pedal for an octave', k: { algo: A('Whammy Up'), mode: 0, pos: 0, color: 60 } },
-  { name: 'Dive Bomb', cat: 'PITCH', note: 'Each pick dives two octaves', k: { algo: A('Dive Bomb'), mode: 3, shape: 0, speed: 34, sens: 50, color: 55 } },
-  { name: 'Octave Scream', cat: 'PITCH', note: 'Pick hard and it screams up', k: { algo: A('Squeal'), mode: 1, speed: 50, sens: 62, color: 58 } },
-  { name: 'Harmony Rise', cat: 'PITCH', note: 'An octave with a fifth breathing in', k: { algo: A('Oct + 5th'), mode: 2, shape: 2, speed: 26, color: 50, mix: 62 } },
-  { name: 'Detuned Doom', cat: 'PITCH', note: 'A heavy, slightly flat double', k: { algo: A('Detune Drop'), mode: 0, pos: 100, color: 30 } },
+  { name: 'Dive Bomb', cat: 'PITCH', note: 'Each pick dives two octaves', k: { level: 4.5, algo: A('Dive Bomb'), mode: 3, shape: 0, speed: 34, sens: 50, color: 55 } },
+  { name: 'Octave Scream', cat: 'PITCH', note: 'Pick hard and it screams up', k: { level: 7.5, algo: A('Squeal'), mode: 1, speed: 50, sens: 62, color: 58 } },
+  { name: 'Harmony Rise', cat: 'PITCH', note: 'An octave with a fifth breathing in', k: { level: 4.5, algo: A('Oct + 5th'), mode: 2, shape: 2, speed: 26, color: 50, mix: 62 } },
+  { name: 'Detuned Doom', cat: 'PITCH', note: 'A heavy, slightly flat double', k: { level: 7.5, algo: A('Detune Drop'), mode: 0, pos: 100, color: 30 } },
   { name: 'Robot Voice', cat: 'ROBOT', note: 'A ring that follows your notes', k: { algo: A('Ring Tracking'), mode: 0, pos: 34, color: 50 } },
   { name: 'Ring Bell', cat: 'ROBOT', note: 'Picking rings it like a bell', k: { algo: A('Ring Mod'), mode: 1, speed: 58, sens: 70, color: 50, mix: 80 } },
   { name: 'Talk Box Funk', cat: 'ROBOT', note: 'Your picking says "wow"', k: { algo: A('Talk Box'), mode: 1, speed: 55, sens: 66, color: 50 } },
-  { name: 'Auto Wah', cat: 'FILTER', note: 'A wah that follows your picking', k: { algo: A('Wah'), mode: 1, speed: 60, sens: 60, color: 40 } },
+  { name: 'Auto Wah', cat: 'FILTER', note: 'A wah that follows your picking', k: { level: -8.5, algo: A('Wah'), mode: 1, speed: 60, sens: 60, color: 40 } },
   { name: 'Sweep Filter', cat: 'FILTER', note: 'A resonant filter rising and falling', k: { algo: A('Filter'), mode: 2, shape: 2, speed: 34, color: 70 } },
   { name: '8-Bit Grind', cat: 'FILTER', note: 'Crushed bits with digital hiccups', k: { algo: A('Bit Crush'), mode: 0, pos: 66, color: 70 },
     g: { grid: 3, chance: 20, len: 0, chaos: 40 }, t: ['crush', 'data', 'chop'] },
@@ -3650,9 +3652,9 @@ const PRESETS = [
   { name: 'Vinyl Ghost', cat: 'TEXTURE', note: 'An old record with echoes', g: { grid: 0, chance: 40, len: 2, chaos: 30, filter: -40 }, t: ['vinyl', 'echo', 'grains', 'freeze'] },
   { name: 'Freeze Frame', cat: 'TEXTURE', note: 'Moments that hang in the air', g: { grid: 1, chance: 25, len: 3, chaos: 20 }, t: ['freeze', 'grains', 'echo'] },
   { name: 'Echo Throws', cat: 'TEXTURE', note: 'Echoes thrown at the end of each half bar', g: { mode: 1, grid: 1, chaos: 10 }, q: Q('- - - echo - - - echo - - - echo - - - echo') },
-  { name: 'Laser Stutter', cat: 'COMBO', note: 'Lasers on every pick, stutters in time', k: { algo: A('Laser'), mode: 3, shape: 0, speed: 76, sens: 55, color: 70 },
+  { name: 'Laser Stutter', cat: 'COMBO', note: 'Lasers on every pick, stutters in time', k: { level: 6, algo: A('Laser'), mode: 3, shape: 0, speed: 76, sens: 55, color: 70 },
     g: { mode: 1, grid: 3, chaos: 30 }, q: Q('- - - - stut - - - - - - - stut stut roll roll') },
-  { name: 'Glitch Shred', cat: 'COMBO', note: 'Random whammy jumps and chopped runs', k: { algo: A('Whammy Up'), mode: 2, shape: 3, speed: 78, color: 60 },
+  { name: 'Glitch Shred', cat: 'COMBO', note: 'Random whammy jumps and chopped runs', k: { level: 5, algo: A('Whammy Up'), mode: 2, shape: 3, speed: 78, color: 60 },
     g: { grid: 3, chance: 30, len: 0, chaos: 50 }, t: ['stutter', 'pitch', 'chop'] },
   { name: 'Total Khaos', cat: 'COMBO', note: 'Everything at once. Good luck.', k: { algo: A('Ring Mod'), mode: 2, shape: 3, speed: 82, color: 70, mix: 80 },
     g: { grid: 4, chance: 60, len: 1, chaos: 100 }, t: TKEY.slice() },
