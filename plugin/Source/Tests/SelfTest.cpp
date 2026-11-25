@@ -994,6 +994,43 @@ OBS_NOINLINE static int runSelfTestBody (Report& r, const juce::StringArray& arg
         setNorm (p, "synth.on", 1); render (p, SR, BLOCK, 1.0, [&] (int) { return 0.f; });
         r.check (e.synthActivity() < 0.01f, "a key let go while the synth was off doesn't hang when it's switched back on (" + juce::String (e.synthActivity(), 3) + ")");
 
+        // the same sound comes out the same whatever played before it: Djent Sub's core (a sine an octave down plus
+        // the sub on the same pitch) used to come out up to 10 dB louder or softer, from where the last sound left
+        // the oscillators. A note out of silence now starts them in step.
+        {
+            auto djent = [&] {
+                setReal (p, "syn.a.on", 1); setReal (p, "syn.a.wave", 3); setReal (p, "syn.a.pitch", -12); setReal (p, "syn.a.voices", 0);
+                setReal (p, "syn.b.on", 0); setReal (p, "syn.sub.level", 45); setReal (p, "syn.sub.wave", 0); setReal (p, "syn.sub.oct", 0);
+                setReal (p, "syn.flt.on", 0); setReal (p, "syn.char", 0); setReal (p, "syn.space", 0); setReal (p, "syn.glide", 0);
+                setReal (p, "syn.lfo.depth", 0); setReal (p, "syn.mix", 100); setReal (p, "syn.trim", 0);
+            };
+            auto other = [&] (int k) {      // something else first, to move the oscillators on
+                setReal (p, "syn.a.wave", (float) (k % 5)); setReal (p, "syn.a.pitch", (float) (k * 5 % 13)); setReal (p, "syn.sub.level", 30.f + 10.f * k);
+                e.addSynthNote (0, 40 + 7 * k, 0.9f); render (p, SR, BLOCK, 0.37 + 0.11 * k, [&] (int) { return 0.f; });
+                e.addSynthNote (0, 40 + 7 * k, 0.f); render (p, SR, BLOCK, 1.2, [&] (int) { return 0.f; });
+            };
+            float lo = 1e9f, hi = -1e9f;
+            for (int k = 0; k < 4; ++k)
+            {
+                other (k); djent();
+                e.addSynthNote (0, 52, 0.9f);
+                const auto st = render (p, SR, BLOCK, 0.5, [&] (int) { return 0.f; });
+                e.addSynthNote (0, 52, 0.f); render (p, SR, BLOCK, 1.0, [&] (int) { return 0.f; });
+                const float db = juce::Decibels::gainToDecibels (st.rms, -120.f); lo = juce::jmin (lo, db); hi = juce::jmax (hi, db);
+            }
+            r.check (hi - lo < 0.5f, "a sine an octave down with the sub on it plays at the same level whatever came before ("
+                     + juce::String (lo, 1) + " .. " + juce::String (hi, 1) + " dB)");
+            // a preset's trim moves the whole synth by that much
+            setReal (p, "syn.trim", 6.f);
+            e.addSynthNote (0, 52, 0.9f);
+            const auto up = render (p, SR, BLOCK, 0.5, [&] (int) { return 0.f; });
+            e.addSynthNote (0, 52, 0.f); render (p, SR, BLOCK, 1.0, [&] (int) { return 0.f; });
+            const float gain = juce::Decibels::gainToDecibels (up.rms, -120.f) - hi;
+            r.check (std::abs (gain - 6.f) < 0.3f, "a SIREN preset's level trim (+6 dB) lifts it by " + juce::String (gain, 2) + " dB");
+            setReal (p, "syn.trim", 0); setReal (p, "syn.a.wave", 0); setReal (p, "syn.a.pitch", 0); setReal (p, "syn.a.voices", 1);
+            setReal (p, "syn.sub.level", 20); setReal (p, "syn.flt.on", 1); setReal (p, "syn.char", 1); setReal (p, "syn.space", 20); setReal (p, "syn.mix", 80);
+        }
+
         // chords follow the key: E minor, A played -> A C E (minor), G played -> G B D (major)
         float ch[4];
         int n3 = dsp::GuitarSynth::chordNotes (45, 3, 4, 1, ch);

@@ -12,7 +12,59 @@
 (function () {
 const solo = { 'b.on': 0, 'sub.level': 0 };                       // start from osc A alone
 const mono = { 'a.voices': '1' };
-const P = (cat, name, note, v, steps) => ({ cat, name, note, v: Object.assign({}, solo, v), steps });
+/* level-matched: each preset's own trim in dB (its "syn.trim"), so they all play about as loud. Measured and written
+   by plugin/tools/presets/siren_levels.py --write; HORROR presets are balanced against their AETHER part by ear. */
+const TRIM = {
+  "Waka Chomp": -4,
+  "Ghost Siren": -4.5,
+  "Frightened Ghosts": -6,
+  "Coin Bling": 4,
+  "Level Up": -6,
+  "Chip Hero": -4.5,
+  "Chip Chord Arp": -6,
+  "Invader March": 3,
+  "Game Over": -2.5,
+  "Pew Pew": -2,
+  "Pineapple Slide": -4.5,
+  "Lagoon Ukulele": -5,
+  "Bubble Pop": 8,
+  "Slide Whistle": -4.5,
+  "Kazoo Party": -4.5,
+  "Cartoon Tuba": -2,
+  "Captain's Accordion": -11.5,
+  "Jelly Bounce": 7,
+  "Toon Xylophone": 3.5,
+  "Cosmic Lead": 6.5,
+  "Cosmic Swell": -4.5,
+  "G Stab": 9,
+  "(O)rdinary Funk": 2,
+  "Screaming Sync": -2.5,
+  "Theremin": -4.5,
+  "Rooftop Brass": 6.5,
+  "Arena Brass": 4,
+  "Synthwave Lead": -11,
+  "Auto-Wah Lead": -15,
+  "Acid Squelch": 5.5,
+  "Djent Sub": -8,
+  "Outrun Bass": 3.5,
+  "Haunted Organ": -11.5,
+  "Glass Pad": -9.5,
+  "VHS Memories": -7.5,
+  "Choir of the Damned": 6,
+  "String Section": -2.5,
+  "Upside Arp": 5,
+  "Bouncing Octaves": 2.5,
+  "Ratchet Rain": 6,
+  "UFO Landing": -11.5,
+  "Air Raid": -10,
+  "Cat Lead": 2.5,
+  "Beep Boop": -2.5,
+  "Glitch Gremlin": 14.5,
+  "Doom Drone": 3,
+  "Underwater": -3,
+  "Haunted Whistle": 7.5
+};
+const P = (cat, name, note, v, steps) => ({ cat, name, note, v: Object.assign({}, solo, v, TRIM[name] ? { trim: TRIM[name] } : {}), steps });
 const all = 'xxxxxxxxxxxxxxxx';
 const H = (name, note, v, a) => Object.assign(P('HORROR', name, note, v), { a });
 

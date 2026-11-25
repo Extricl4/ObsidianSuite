@@ -95,7 +95,7 @@ public:
         glideCoef = p.get (sd::glide) < 1.f ? 0.f : std::exp (-(float) kCtl / (p.get (sd::glide) * 0.001f * (float) sr * 0.33f));
         ampEnv.set (sr, p.get (sd::aAtt), p.get (sd::aDec), p.get (sd::aSus) * 0.01f, p.get (sd::aRel));
         fltEnv.set (sr, p.get (sd::fAtt), p.get (sd::fDec), p.get (sd::fSus) * 0.01f, p.get (sd::fRel));
-        const float outGain = dbToGain (p.get (sd::level));
+        const float outGain = dbToGain (p.get (sd::level) + p.get (sd::trim));   // OUTPUT + the preset's level trim
         character = p.choice (sd::character);
         const int lfoTarget_ = p.choice (sd::lTarget);
         const float lfoDepth = p.get (sd::lDepth) * 0.01f;
@@ -429,6 +429,10 @@ private:
     }
     void retrigger (float v, float accent = 0.f)
     {
+        // a note out of silence starts the oscillators in step: osc A, osc B and the sub all at the start of their
+        // cycle. Free-running, two oscillators on the same pitch (Djent Sub: a sine an octave down plus the sub) met at
+        // whatever phase the last sound left them, so the same preset came out up to 10 dB louder or softer.
+        if (! ampEnv.active()) { for (auto& o : osc) for (auto& slot : o) slot[0].phase = 0.f; for (auto& sp : sub) sp = 0.f; }
         ampEnv.gate (true, juce::jmin (1.f, 0.75f + 0.25f * v + accent * 0.2f)); fltEnv.gate (true, 1.f + accent * 0.35f);
         if (prm->get (sd::lFade) >= 1.f) lfoFade = 0;
     }

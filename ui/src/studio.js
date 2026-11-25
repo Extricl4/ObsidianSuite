@@ -211,10 +211,13 @@ const S=ov.querySelector('#studio'), $s=q=>S.querySelector(q);
 const hlist=$s('#st-hlist'), lanes=$s('#st-lanes'), ruler=$s('#st-ruler'), canvas=$s('#st-canvas'), scroller=$s('#st-scroll'), ph=$s('#st-ph'), ovw=$s('#st-ovw'), lshade=$s('#st-lshade');
 
 /* ---------- footer button next to SETTINGS ---------- */
+/* both footers get it: the normal one and the one with the live tuner (it used to vanish while the live tuner was on) */
 let sb=$('#studio-btn');
-if(!sb){ const setBtn=$$('button').find(b=>b.textContent.trim()==='SETTINGS'&&!b.closest('.ov'));
-  if(setBtn){ const sep=setBtn.previousElementSibling.cloneNode(true); sb=setBtn.cloneNode(true); sb.innerHTML=I.studio+'STUDIO'; sb.id='studio-btn'; setBtn.after(sep,sb); } }
-if(sb) sb.addEventListener('click',()=>{ openOv('studio'); render(); });
+if(!sb){ $$('button').filter(b=>b.textContent.trim()==='SETTINGS'&&!b.closest('.ov')).forEach((setBtn,i)=>{
+  const sep=setBtn.previousElementSibling.cloneNode(true), btn=setBtn.cloneNode(true); btn.innerHTML=I.studio+'STUDIO';
+  if(i===0){ btn.id='studio-btn'; sb=btn; } else btn.classList.add('studio-btn2');
+  setBtn.after(sep,btn); btn.addEventListener('click',()=>{ openOv('studio'); render(); }); }); }
+else sb.addEventListener('click',()=>{ openOv('studio'); render(); });
 try{ TTIP.STUDIO='Tiny recorder: record takes, move them around, loop and play back'; }catch(_){}
 
 /* ---------- state ---------- */

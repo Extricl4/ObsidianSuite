@@ -514,7 +514,7 @@ async def run(standalone):
         await pg.evaluate("window.__mock.log.length=0")
         await pg.locator('.fl-dev .sy-pb[data-param="ker.on"]').click(); await pg.wait_for_timeout(150)
         await pg.locator('.fl-alg button[data-i="7"]').click(); await pg.wait_for_timeout(150)
-        check(await pg.evaluate("window.__mock.sent('ker.on')") == 1 and abs((await pg.evaluate("window.__mock.sent('ker.algo')") or 0) - 7 / 15) < 1e-6 and await pg.evaluate("document.querySelector('.fl-led .kn').textContent") == 'LASER',
+        check(await pg.evaluate("window.__mock.sent('ker.on')") == 1 and abs((await pg.evaluate("window.__mock.sent('ker.algo')") or 0) - 7 / 15) < 1e-6 and await pg.evaluate("document.querySelector('.fl-led .knm').textContent") == 'LASER',
               'KERAUNOS: POWER and the LASER button reach the engine, the display says LASER')
         # the treadle: grabbing it switches to PEDAL and moves the pedal
         await pg.evaluate("window.__mock.emit('obs:params', {'ker.mode': 2/3})"); await pg.wait_for_timeout(900)
@@ -986,6 +986,71 @@ async def run(standalone):
             check(hidden, 'a cab with one IR set shows no voice buttons')
             await pick_cab('builtin-4x12')
             check(await pg.evaluate("!document.querySelector('.obs-cabpic')"), 'a built-in cab goes back to the plain card')
+
+        # ---- control sweep fixes (2026-11-25): defaults on double-click, live values on the cut knobs, EQ faders, footer, SIREN
+        async def kn_center(sel):
+            return await pg.evaluate("s=>{const e=eval(s); const r=e.getBoundingClientRect(); return [r.left+r.width/2, r.top+r.height/2]}", sel)
+        out_k = "[...document.querySelectorAll('[data-param=\"out.gain\"]')][0]"
+        await pg.evaluate("setTab('AMP')"); await pg.wait_for_timeout(100)
+        x, y = await kn_center(out_k)
+        await pg.mouse.move(x, y); await pg.mouse.down(); await pg.mouse.move(x, y - 40, steps=5); await pg.mouse.up(); await pg.wait_for_timeout(100)
+        await pg.evaluate("window.__mock.log.length=0"); await pg.mouse.dblclick(x, y); await pg.wait_for_timeout(200)
+        v = await pg.evaluate("window.__mock.sent('out.gain')")
+        check(v is not None and abs(v - 0.5) < 1e-3, f'double-clicking OUTPUT puts it back on the plugin\'s 0 dB (it went to the demo\'s +4.7 dB) ({v})')
+        await pg.evaluate("setTab('CAB')"); await pg.wait_for_timeout(150)
+        lc = "[...document.querySelectorAll('.page[data-page=CAB] .kn')].find(k=>k.dataset.param==='cab.lc')"
+        x, y = await kn_center(lc)
+        before = await pg.evaluate(lc + ".nextElementSibling.innerText")
+        await pg.mouse.move(x, y); await pg.mouse.down(); await pg.mouse.move(x, y - 40, steps=5); await pg.mouse.up(); await pg.wait_for_timeout(100)
+        after = await pg.evaluate(lc + ".nextElementSibling.innerText")
+        await pg.evaluate("window.__mock.log.length=0"); await pg.mouse.dblclick(x, y); await pg.wait_for_timeout(200)
+        back = await pg.evaluate(lc + ".nextElementSibling.innerText")
+        check(before != after and 'Hz' in after and back.endswith('80 Hz'), f'CAB LOW CUT shows its value as you turn it, double-click goes back to 80 Hz ({before!r} -> {after!r} -> {back!r})'.replace('\\n', ' '))
+        await pg.evaluate("setTab('EQ')"); await pg.wait_for_timeout(150)
+        eqlc = "[...document.querySelectorAll('.page[data-page=EQ] .kn')].find(k=>k.dataset.param==='eq.lc')"
+        x, y = await kn_center(eqlc)
+        errors.clear()
+        rect0 = await pg.evaluate("eqSvg().querySelectorAll('rect')[0].getAttribute('x')")
+        await pg.mouse.move(x, y); await pg.mouse.down(); await pg.mouse.move(x, y - 50, steps=6); await pg.mouse.up(); await pg.wait_for_timeout(150)
+        lab = await pg.evaluate(eqlc + ".parentElement.querySelector('.kn-val').textContent")
+        rect1 = await pg.evaluate("eqSvg().querySelectorAll('rect')[0].getAttribute('x')")
+        check(lab.endswith('Hz') and rect0 != rect1 and not errors, f'EQ LOW CUT shows Hz while you turn it and the curve follows ({lab}, handle {rect0} -> {rect1}){" " + errors[0] if errors else ""}')
+        fd = "document.querySelectorAll('.fd')[3]"
+        x, y = await kn_center(fd)
+        await pg.evaluate("window.__mock.log.length=0"); await pg.mouse.move(x, y); await pg.mouse.wheel(0, -100); await pg.wait_for_timeout(150)
+        g1 = await pg.evaluate(fd + ".dataset.g"); s1 = await pg.evaluate("window.__mock.sent('eq.b4')")
+        await pg.mouse.dblclick(x, y); await pg.wait_for_timeout(150)
+        g2 = await pg.evaluate(fd + ".dataset.g")
+        check(g1 == '0.5' and s1 is not None and g2 == '0', f'EQ fader: scroll nudges it half a dB, double-click puts it back to 0 dB ({g1}, {g2})')
+        await pg.mouse.dblclick(x, y); await pg.wait_for_timeout(100)
+        # the live tuner footer keeps STUDIO
+        await pg.evaluate("openOv('tuner')"); await pg.wait_for_timeout(200)
+        await pg.evaluate("[...document.querySelectorAll('.ov button')].find(b=>/Live tuner/.test(b.getAttribute('aria-label')||b.title||b.textContent)).click()"); await pg.evaluate("closeOv()"); await pg.wait_for_timeout(200)
+        studio = await pg.evaluate("[...document.querySelectorAll('#f0 button, #f1 button')].filter(b=>b.offsetParent && b.textContent.trim()==='STUDIO').length")
+        live_on = await pg.evaluate("!!document.querySelector('#livemini').offsetParent")
+        await pg.evaluate("openOv('tuner')"); await pg.evaluate("[...document.querySelectorAll('.ov button')].find(b=>/Live tuner/.test(b.getAttribute('aria-label')||b.title||b.textContent)).click()"); await pg.evaluate("closeOv()")
+        check(live_on and studio == 1, f'with the live tuner in the footer, STUDIO is still there ({studio})')
+        # GLITCH's display text isn't taken for a knob (scrolling over it used to move nothing and block the page)
+        check(await pg.evaluate("!document.querySelector('.fl-led .kn')"), 'GLITCH display: the effect name is not a knob')
+        # SIREN: the filter pad (press = same mapping as dragging; scroll = cutoff; double-click = defaults), preset trims
+        await pg.evaluate("setTab('SYNTH'); obsSynth.showPage('siren')"); await pg.wait_for_timeout(200)
+        pad = "document.querySelector('.sy-vis[data-param=\"syn.flt.cutoff\"]')"
+        x, y = await kn_center(pad)
+        await pg.evaluate("window.__mock.log.length=0"); await pg.mouse.move(x, y); await pg.mouse.down(); await pg.wait_for_timeout(50)
+        r_down = await pg.evaluate("obsSynth.read()['syn.flt.res']")
+        await pg.mouse.move(x + 1, y); await pg.wait_for_timeout(50); r_move = await pg.evaluate("obsSynth.read()['syn.flt.res']"); await pg.mouse.up()
+        await pg.evaluate("window.__mock.log.length=0"); await pg.mouse.wheel(0, -100); await pg.wait_for_timeout(100)
+        c_w = await pg.evaluate("window.__mock.sent('syn.flt.cutoff')")
+        await pg.mouse.dblclick(x, y); await pg.wait_for_timeout(100)
+        check(r_down is not None and abs(r_down - r_move) < .02 and c_w is not None, f'SIREN filter pad: pressing doesn\'t jump the resonance when you start to drag ({r_down} / {r_move}); scrolling moves the cutoff')
+        await pg.evaluate("window.__mock.log.length=0")
+        idx = await pg.evaluate("obsSynth.presets.findIndex(p=>p.name==='Auto-Wah Lead')")
+        await pg.evaluate(f"obsSynth.loadPreset({idx})"); await pg.wait_for_timeout(900)
+        trim = await pg.evaluate("window.__mock.sent('syn.trim')")
+        await pg.evaluate("obsSynth.dice()"); await pg.wait_for_timeout(900)
+        trim2 = await pg.evaluate("window.__mock.sent('syn.trim')")
+        check(trim is not None and trim < 0.3 and trim2 is not None and abs(trim2 - 0.5) < 1e-3, f'SIREN presets are level-matched: Auto-Wah Lead brings its own trim, a dice roll none ({trim}, {trim2})')
+        await pg.evaluate("obsSynth.reset()"); await pg.evaluate("setTab('AMP')"); await pg.wait_for_timeout(100)
 
         # the level meters sit inside the top bar, both sides the same distance from its edge
         mt = await pg.evaluate("""(()=>{const bar=[...document.querySelectorAll('.kn')].find(k=>!k.closest('.page')&&!k.closest('.ov')).closest('div[style*="height: 100px"]').getBoundingClientRect();

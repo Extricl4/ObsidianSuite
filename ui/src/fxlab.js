@@ -333,7 +333,7 @@ const filtK = mknob('glt.filter', 'FILTER', { fmt, tip: 'A DJ filter on the glit
 const gltPow = powerBtn('glt.on', 'KHAOS', STAR, 'KHAOS on / off: the glitch engine');
 /* the display */
 const led = el('div', 'fl-led');
-led.innerHTML = '<div class="k"><div class="ln"><span class="u">' + BOLT + 'KERAUNOS</span><span class="u km"></span></div><div class="big"><span class="nm kn"></span><span class="vv kv"></span></div><div class="bar"><i class="kb"></i></div></div>'
+led.innerHTML = '<div class="k"><div class="ln"><span class="u">' + BOLT + 'KERAUNOS</span><span class="u km"></span></div><div class="big"><span class="nm knm"></span><span class="vv kv"></span></div><div class="bar"><i class="kb"></i></div></div>'
   + '<div class="sep"></div><div class="g"><div class="ln"><span class="u">' + STAR + 'KHAOS</span><span class="u gm"></span></div><div class="big"><span class="nm gn"></span><span class="vv gv"></span></div><div class="dots">' + '<i></i>'.repeat(16) + '</div></div>';
 const ledW = el('div', 'sy-hw'); ledW.appendChild(led);
 K.stripGroups(top, [kerPow, modeSel, speedK, sensK, trigBtn], ledW, [holdBtn, chanceK, chaosK, filtK, gltPow]);
@@ -663,7 +663,7 @@ function frame() {
 
 /* ------------------------------------------------------------ drawings */
 const lk = led.querySelector('.k'), lg = led.querySelector('.g');
-const ledK = { m: led.querySelector('.km'), n: led.querySelector('.kn'), v: led.querySelector('.kv'), b: led.querySelector('.kb') };
+const ledK = { m: led.querySelector('.km'), n: led.querySelector('.knm'), v: led.querySelector('.kv'), b: led.querySelector('.kb') };
 const ledG = { m: led.querySelector('.gm'), n: led.querySelector('.gn'), v: led.querySelector('.gv'), dots: [...led.querySelectorAll('.dots i')] };
 let ledType = -2;
 function drawLed() {

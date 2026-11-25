@@ -46,6 +46,7 @@ const DEFS = [
   ['syn.arp.len', 'int', 1, 16, 16, 'steps'], ['syn.arp.oct', 'choice', 0, 3, 1, '1|2|3|4'], ['syn.arp.gate', 'f', 5, 100, 60, '%', 1], ['syn.arp.swing', 'f', 0, 75, 0, '%', 1],
   ['syn.mix', 'f', 0, 100, 50, '%', 1], ['syn.level', 'f', -24, 12, 0, 'dB', 1], ['syn.space', 'f', 0, 100, 20, '%', 1],
   ['syn.char', 'choice', 0, 3, 1, 'Clean|Analog|8-bit|VHS'], ['syn.post', 'bool', 0, 1, 1],
+  ['syn.trim', 'f', -24, 24, 0, 'dB', 1],         /* the preset's level trim (presets are level-matched; no knob) */
   /* AETHER (noise, ambience, atmospheres): same as AtmosDefs.h */
   ['atm.on', 'bool', 0, 1, 0], ['atm.level', 'f', -36, 6, -6, 'dB', 1], ['atm.follow', 'f', -100, 100, 0, '%', 1], ['atm.evolve', 'f', 0, 100, 35, '%', 1],
   ['atm.grit', 'f', 0, 100, 0, '%', 1], ['atm.tone', 'f', -100, 100, 0, '%', 1], ['atm.width', 'f', 0, 100, 80, '%', 1], ['atm.space', 'f', 0, 100, 45, '%', 1],
@@ -99,7 +100,7 @@ function fmt(id, v = S[id]) {
     case 'syn.lfo.fade': return v < 1 ? 'Off' : ms(v);
     case 'syn.gate': return Math.round(v) + ' dB';
     case 'syn.tune': return v.toFixed(0) + ' Hz';
-    case 'syn.level': return sg(v, 1) + ' dB';
+    case 'syn.level': case 'syn.trim': return sg(v, 1) + ' dB';
     case 'syn.flt.env': return sg(Math.round(v)) + '%';
     case 'syn.noise.color': return v < 34 ? 'Dark' : v < 67 ? 'Pink' : 'Bright';
     case 'syn.lfo.rate': return v < 1 ? v.toFixed(2) + ' Hz' : v.toFixed(1) + ' Hz';
@@ -799,9 +800,14 @@ cFlt._b.append(fType, gapV(8), fScr, gapV(8),
   (() => { const k = el('div', 'sy-knobs'); k.append(knob('syn.flt.drive', { label: 'DRIVE', size: 32 }), knob('syn.flt.env', { label: 'ENV AMOUNT', size: 32, tip: 'How far the filter envelope opens (or closes) the filter' }), knob('syn.flt.key', { label: 'KEY TRACK', size: 32, tip: 'Higher notes open the filter more' })); return k; })());
 { let d = null;
   const at = e => { const r = fScr.getBoundingClientRect(); return [clamp((e.clientX - r.left) / r.width, 0, 1), clamp(1 - (e.clientY - r.top) / r.height, 0, 1)]; };
-  fScr.addEventListener('pointerdown', e => { if (e.button !== 0) return; e.preventDefault(); fScr.setPointerCapture(e.pointerId); d = 1; const [x, y] = at(e); set('syn.flt.cutoff', toV('syn.flt.cutoff', x), 'ui'); set('syn.flt.res', y * 100, 'ui'); });
-  fScr.addEventListener('pointermove', e => { if (!d) return; const [x, y] = at(e); set('syn.flt.cutoff', toV('syn.flt.cutoff', x), 'ui'); set('syn.flt.res', clamp((y - .1) / .8, 0, 1) * 100, 'ui'); });
-  fScr.addEventListener('pointerup', () => { d = null; }); }
+  // the same mapping on press and on move (the press used to set a different resonance, so it jumped on the first move)
+  const put = e => { const [x, y] = at(e); set('syn.flt.cutoff', toV('syn.flt.cutoff', x), 'ui'); set('syn.flt.res', clamp((y - .1) / .8, 0, 1) * 100, 'ui'); };
+  fScr.addEventListener('pointerdown', e => { if (e.button !== 0) return; e.preventDefault(); fScr.setPointerCapture(e.pointerId); d = 1; put(e); });
+  fScr.addEventListener('pointermove', e => { if (d) put(e); });
+  fScr.addEventListener('pointerup', () => { d = null; }); fScr.addEventListener('pointercancel', () => { d = null; });
+  // scroll = cutoff, double-click = cutoff and resonance back to their defaults
+  fScr.addEventListener('wheel', e => { e.preventDefault(); set('syn.flt.cutoff', toV('syn.flt.cutoff', toN('syn.flt.cutoff') + (e.deltaY < 0 ? 1 : -1) * (e.shiftKey ? .005 : .02)), 'ui'); }, { passive: false });
+  fScr.addEventListener('dblclick', () => { set('syn.flt.cutoff', P['syn.flt.cutoff'].def, 'ui'); set('syn.flt.res', P['syn.flt.res'].def, 'ui'); }); }
 
 /* ENVELOPE: one graph, AMP or FILTER */
 const cEnv = section('ENVELOPE', 240, 'var(--h-env)');
@@ -1054,6 +1060,7 @@ function redrawAll() { drawScopes(); drawFilter(); drawEnv(); if (mtab) drawLfo(
   const shown = SP.style.display !== 'none' && SP.offsetWidth > 0;
   if (shown && !lastShown) redrawAll();
   if (shown && mtab) drawLfo();
+  if (shown && liveReady) animateLive();       // (its state is declared further down)
   lastShown = shown;
   requestAnimationFrame(loop);
 })();
@@ -1063,12 +1070,59 @@ new MutationObserver(() => { if (lastShown) setTimeout(redrawAll, 30); }).observ
 const noteN = noteScr.querySelector('.n'), noteS = noteScr.querySelector('.s'), noteBar = noteScr.querySelector('.bar i');
 let shownNote = null;
 function showNote(m, src, level) {
-  if (m == null || m < 0) { if (shownNote !== null) { noteN.textContent = '–'; noteS.textContent = on('syn.hold') ? 'HOLD IS ON' : 'PLAY A NOTE'; shownNote = null; } noteBar.style.width = '0'; return; }
+  if (m == null || m < 0) { if (shownNote !== null) { noteN.textContent = '–'; noteS.textContent = on('syn.hold') ? 'HOLD IS ON' : 'PLAY A NOTE'; shownNote = null; } noteBar.style.width = '0'; noteLife(null, 0); return; }
   const r = Math.round(m);
+  noteLife(r, level == null ? .6 : level);
   if (r !== shownNote) { noteN.innerHTML = NOTE_NAMES[((r % 12) + 12) % 12] + '<small>' + (Math.floor(r / 12) - 1) + '</small>'; shownNote = r; }
   noteS.textContent = (src || 'GUITAR').toUpperCase();
   noteBar.style.width = Math.round(clamp(level == null ? .6 : level, 0, 1) * 100) + '%';
 }
+/* alive while it plays: the waves beside the badge run with the sound, and a dot rides the envelope graph
+   (attack, decay, sustain while the note is held, then the release) */
+let lvlNow = 0, lvlTarget = 0, wavePh = 0, waveAmp = 1, liveT = performance.now(), envLife = null;
+const wavePaths = [wl, wr].map(w => w.querySelector('path'));
+const waveD = (ph, amp) => Array.from({ length: 77 }, (_, i) => (i ? 'L' : 'M') + (i * 5) + ' ' + (12 + Math.sin(i * .42 + ph) * 9 * amp * Math.pow(i / 76, 1.6)).toFixed(1)).join(' ');
+function noteLife(m, level) {
+  const now = performance.now();
+  lvlTarget = m == null ? 0 : clamp(level, 0, 1);
+  if (m != null) {
+    if (!envLife || envLife.r0 != null || (m !== envLife.note && !on('syn.legato'))) envLife = { t0: now, r0: null, note: m };
+  } else if (envLife && envLife.r0 == null) envLife.r0 = now;
+}
+const bez = (t, a, b, c, d) => { const u = 1 - t; return u * u * u * a + 3 * u * u * t * b + 3 * u * t * t * c + t * t * t * d; };
+function envDot(now) {
+  const G = envGeo(), att = Math.max(1, S[G.ids[0]]), dec = Math.max(1, S[G.ids[1]]), rel = Math.max(1, S[G.ids[3]]);
+  let x, y;
+  if (envLife.r0 == null) {
+    const t = now - envLife.t0;
+    if (t < att) { const f = t / att; x = bez(f, G.pad, G.pad + (G.ax - G.pad) * .4, G.ax, G.ax); y = bez(f, G.base, G.top, G.top, G.top); }
+    else if (t < att + dec) { const f = (t - att) / dec; x = bez(f, G.ax, G.ax + (G.dx - G.ax) * .22, G.dx, G.dx); y = bez(f, G.top, G.sy, G.sy, G.sy); }
+    else { x = G.dx + (G.sx - G.dx) * (1 - Math.exp(-(t - att - dec) / 900)); y = G.sy; }
+  } else {
+    const f = (now - envLife.r0) / rel;
+    if (f >= 1) { envLife = null; drawEnv(); return; }
+    x = bez(f, G.sx, G.sx + (G.rx - G.sx) * .22, G.rx, G.rx); y = bez(f, G.sy, G.base, G.base, G.base);
+  }
+  drawEnv();
+  const g = eCv.getContext('2d'); if (!g) return;
+  g.save(); g.shadowColor = hue('env'); g.shadowBlur = 12; g.fillStyle = '#ffffff';
+  g.beginPath(); g.arc(x, y, 4.2, 0, 7); g.fill();
+  g.globalAlpha = .35; g.strokeStyle = hue('env'); g.setLineDash([]); g.lineWidth = 1; g.beginPath(); g.moveTo(x + .5, G.top); g.lineTo(x + .5, G.base); g.stroke(); g.restore();
+}
+function animateLive() {
+  const now = performance.now(), dt = Math.min(.1, (now - liveT) / 1000); liveT = now;
+  if (!powered) lvlTarget = 0;
+  lvlNow += (lvlTarget - lvlNow) * Math.min(1, dt * 8);
+  const playing = lvlNow > .02;
+  if (playing || waveAmp !== 1) {
+    wavePh -= dt * (1.5 + 7 * lvlNow);
+    waveAmp += ((playing ? .55 + .75 * lvlNow : 1) - waveAmp) * Math.min(1, dt * 4);
+    if (!playing && Math.abs(waveAmp - 1) < .01) waveAmp = 1;
+    const d = waveD(wavePh, waveAmp); wavePaths.forEach(p => p && p.setAttribute('d', d));
+  }
+  if (envLife) { if (powered) envDot(now); else { envLife = null; drawEnv(); } }
+}
+var liveReady = true;
 let playStep = -1;
 function showStep(i) { if (i === playStep) return; playStep = i; [...lane.children].forEach((s, k) => s.classList.toggle('play', k === i)); }
 
@@ -1108,6 +1162,7 @@ function roll() {
   v['syn.legato'] = type === 0 && Math.random() < .5 ? 1 : 0;
   if (v['syn.arp.on']) steps = steps.map((_, i) => ({ on: i % 4 === 0 || Math.random() < .55 ? 1 : 0, acc: i % 4 === 0 ? 1 : (Math.random() < .15 ? 1 : 0), tie: Math.random() < .08 ? 1 : 0,
     oct: Math.random() < .18 ? pick([1, 1, -1, 2]) : 0, ratchet: Math.random() < .1 ? pick([2, 3]) : 1, chance: Math.random() < .15 ? pick([50, 75]) : 100, note: pick([0, 0, 2, 4, 4, 7, 9, 11]) }));
+  v['syn.trim'] = 0;                     // a rolled sound has no preset trim
   for (const id in v) if (!KEEP.includes(id)) set(id, v[id], 'dice');
   drawLane(); stepsChanged('dice');
   showPreset('Dice roll', -1);

@@ -107,11 +107,22 @@ function single(id, read, write) { return addBinding({ ids: [id], read: () => ({
 const _knobHook = window.knobHook;
 window.knobHook = function (k, v) {
   if (_knobHook) _knobHook(k, v);
-  if (k._fmt) { const t = k._fmt(v); const val = k._val || k.parentElement.querySelector(':scope > .kn-val'); if (val && t != null) val.textContent = t; }
+  if (k._fmt) { const t = k._fmt(v), val = knobValEl(k); if (val && t != null) val.textContent = t; }
+  if (k._after) safe('knob', () => k._after(v));
 };
+// where a knob shows its value: under it (.kn-val), or the last line of the text beside it (CAB / EQ cuts)
+function knobValEl(k) {
+  if (k._val) return k._val;
+  const v = k.querySelector('.kn-val') || k.parentElement.querySelector(':scope > .kn-val');
+  if (v) return (k._val = v);
+  const side = k.nextElementSibling, sp = side ? [...side.querySelectorAll('span')].filter(s => !s.children.length) : [];
+  return (k._val = sp.length > 1 ? sp[sp.length - 1] : null);
+}
+// double-click puts a knob back on the plugin's default (the page's own default is the demo's design value)
+function knobDefault(id, k) { const m = META[id]; if (m && m.def !== undefined) k.dataset.def = toNorm(id, m.def); }
 function knob(id, k, format) {
   if (!k) return null;
-  k.dataset.param = id;
+  k.dataset.param = id; knobDefault(id, k);
   if (vals[id] !== undefined) setKnob(k, clamp(vals[id], 0, 1));
   if (format) { k._fmt = v => format(toReal(id, v)); window.knobHook(k, +k.dataset.v); }
   return single(id, () => +k.dataset.v, n => setKnob(k, clamp(n, 0, 1)));
@@ -280,8 +291,8 @@ function setupBindings() {
         const mic = (counts[l] = (counts[l] || 0) + 1) === 1 ? 'a' : 'b', id = 'cab.' + mic + '.' + KEY[l];
         const f = { pos: x => x.toFixed(2), dist: x => Math.round(x) + ' cm', level: x => fmt.dB(x), pan: fmt.pan }[KEY[l]];
         knob(id, k, f);
-      } else if (l === 'LOW CUT') knob('cab.lc', k, fmt.hz);
-      else if (l === 'HIGH CUT') knob('cab.hc', k, fmt.hz);
+      } else if (l === 'LOW CUT') knob('cab.lc', k, f => f <= 20.5 ? 'OFF' : fmt.hz(f));
+      else if (l === 'HIGH CUT') knob('cab.hc', k, f => f >= 19990 ? 'OFF' : fmt.hz(f));
     });
     ['SOLO', 'MUTE', 'PHASE Ø'].forEach((t, i) => {
       const bs = $$('button', CP).filter(b => txt(b) === t);
@@ -308,6 +319,8 @@ function setupBindings() {
     const id = 'eq.b' + (i + 1);
     fd.dataset.param = id;
     single(id, () => (+fd.dataset.g + 12) / 24, n => setFader(fd, toReal(id, n)));
+    fd.addEventListener('wheel', e => { e.preventDefault(); setFader(fd, +fd.dataset.g + (e.deltaY < 0 ? .5 : -.5)); queueScan(); }, { passive: false });
+    fd.addEventListener('dblclick', () => { setFader(fd, 0); queueScan(); });
   });
   const EP = $('.page[data-page="EQ"]');
   if (EP) {
@@ -315,7 +328,10 @@ function setupBindings() {
     const redrawEq = () => { if (typeof eqRedraw === 'function') eqRedraw(); };
     [['LOW CUT', 'eq.lc', 'LC', 'eq.lc.on'], ['HIGH CUT', 'eq.hc', 'HC', 'eq.hc.on']].forEach(([label, id, which, onId]) => {
       const k = $$('.kn', EP).find(x => knobLabel(x) === label); if (!k) return;
-      k.dataset.param = id;
+      k.dataset.param = id; knobDefault(id, k);
+      k._fmt = n => { const f = toReal(id, n); return f <= 20.5 || f >= 19990 ? 'OFF' : fmt.hz(f); };
+      let inCut = false;          // setCut moves this knob too: don't go round in circles
+      k._after = n => { if (applying || inCut) return; inCut = true; try { setCut(which, ex(toReal(id, n))); redrawEq(); } finally { inCut = false; } };
       single(id, () => +k.dataset.v, n => { const f = toReal(id, n); setCut(which, ex(f)); cutKnob(label, f); });
       // the cut's own on / off switch, under its knob
       const tpl = $('.tog[aria-label="Gate on"]'); if (!tpl || !META[onId]) return;
