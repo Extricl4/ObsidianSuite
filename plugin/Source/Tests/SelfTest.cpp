@@ -1774,12 +1774,12 @@ OBS_NOINLINE static int runSelfTestBody (Report& r, const juce::StringArray& arg
         if (! loader.isVoid() && ownIr.existsAsFile())
         {
             p.rig().setCab ("builtin-4x12");
-            p.rig().loadIr (1, ownIr);
+            p.rig().loadIr (2, ownIr);       // the loader has one IR slot: your IR plays on both mics
             const auto loaded = p.rig().toJson()["cab"];
             p.rig().setCab ("custom");
             const auto kept = p.rig().toJson()["cab"];
             r.check ((bool) loader["loader"] && loaded["key"].toString() == "custom" && kept["key"].toString() == "custom"
-                     && juce::File (kept["irB"].toString()) == ownIr,
+                     && juce::File (kept["irA"].toString()) == ownIr && juce::File (kept["irB"].toString()) == ownIr,
                      "your own IR shows the IR loader cab (" + loader["name"].toString() + "), and choosing it keeps the IR you loaded");
             p.rig().setCab ("builtin-4x12");
         }

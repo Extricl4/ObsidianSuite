@@ -1039,13 +1039,13 @@ async def run(standalone):
                 asked = await pg.evaluate("window.__mock.log.filter(x=>x[0]==='loadIr').map(x=>x[1])")
                 scr = await pg.evaluate("[...document.querySelectorAll('.obs-cabscreen.ld')].map(s=>s.textContent)")
                 name = await pg.evaluate("(document.querySelector('.obs-cabname')||{}).textContent")
-                check(first.startswith('custom') and 'Proteus' in first and asked == [2] and name == 'Proteus 4x12' and scr == ['MIC ATest IR AB', 'MIC BTest IR AB'],
-                      f'the IR loader cab is first in CHOOSE CAB, asks for an IR, and shows it on both mic screens ({first[:40]}; {asked}; {name}; {scr})')
-                await pg.locator('.obs-cabload[data-load="1"]').click(); await pg.wait_for_timeout(400)
+                check(first.startswith('custom') and 'Proteus' in first and asked == [2] and name == 'Proteus 4x12' and scr == ['YOUR IRTest IR AB'],
+                      f'the IR loader cab is first in CHOOSE CAB, asks for an IR, and shows it on its one screen ({first[:40]}; {asked}; {name}; {scr})')
+                await pg.locator('.obs-cabload').click(); await pg.wait_for_timeout(400)
                 asked = await pg.evaluate("window.__mock.log.filter(x=>x[0]==='loadIr').map(x=>x[1])")
-                scr = await pg.evaluate("[...document.querySelectorAll('.obs-cabscreen.ld b')].map(s=>s.textContent)")
+                n = await pg.evaluate("document.querySelectorAll('.obs-cabload').length")
                 fits = await pg.evaluate("[...document.querySelectorAll('.obs-cabscreen.ld b')].every(b=>b.scrollWidth<=b.parentElement.clientWidth)")
-                check(asked == [2, 1] and scr == ['Test IR AB', 'Test IR B'] and fits, f"the LOAD button drawn beside mic B's screen loads mic B only ({asked}; {scr}; fits {fits})")
+                check(asked == [2, 2] and n == 1 and fits, f"its one LOAD button loads your IR onto both mics ({asked}; {n} button; fits {fits})")
                 await pg.screenshot(path=str(OUT / 'cab-proteus.png'))
                 await pick_cab('builtin-4x12')
 

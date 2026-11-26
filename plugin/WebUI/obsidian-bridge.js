@@ -1794,13 +1794,12 @@ function renderCab() {
     const pct = (r, i) => (100 * r[i] / (i % 2 ? e.imgH : e.imgW)).toFixed(2) + '%';
     const box = (r, cls, inner, attr) => r && e.imgW ? '<span class="' + cls + '"' + (attr || '') + ' style="left:' + pct(r, 0) + ';top:' + pct(r, 1) + ';width:' + (100 * (r[2] - r[0]) / e.imgW).toFixed(2) + '%;height:' + (100 * (r[3] - r[1]) / e.imgH).toFixed(2) + '%">' + inner + '</span>' : '';
     const scr = voice ? '<b>' + esc(voice.album || voice.name || '') + '</b>' + (voice.song ? '<i>' + esc(voice.song) + '</i>' : '') : '<b>' + esc(e.name || '') + '</b>';
-    // the IR loader (Proteus): a screen per mic with its IR's name, a LOAD button beside each
-    const loader = !!e.loader, irn = [c.irAName || '', c.irBName || ''];
-    const lscr = i => '<i>MIC ' + 'AB'[i] + '</i><b>' + esc(irn[i] || 'NO IR') + '</b>' + (irn[i] ? '' : '<i>PRESS LOAD</i>');
-    const screens = loader ? box(e.screenA, 'obs-cabscreen ld', lscr(0)) + box(e.screenB, 'obs-cabscreen ld', lscr(1))
-        + box(e.buttonA, 'obs-cabhot obs-cabload', '', ' data-load="0" title="Load an IR for mic A"') + box(e.buttonB, 'obs-cabhot obs-cabload', '', ' data-load="1" title="Load an IR for mic B"')
+    // the IR loader (Proteus): one IR slot. Its screen shows your IR (it plays on both mics), LOAD beside it
+    const loader = !!e.loader, irn = [c.irAName || '', c.irBName || ''], own = irn[0] || irn[1];
+    const lscr = '<i>YOUR IR</i><b>' + esc(own || 'NO IR') + '</b>' + (!own ? '<i>PRESS LOAD</i>' : irn[0] && irn[1] && irn[0] !== irn[1] ? '<i>+ ' + esc(irn[1]) + '</i>' : '');
+    const screens = loader ? box(e.screen, 'obs-cabscreen ld', lscr) + box(e.button, 'obs-cabhot obs-cabload', '', ' data-load="2" title="Load your IR"')
       : box(e.screen, 'obs-cabscreen', scr) + (vs.length > 1 ? box(e.button, 'obs-cabhot', '') : '');
-    const sub = loader ? 'IR loader · ' + (irn.some(Boolean) ? [...new Set(irn.filter(Boolean))].join(' + ') : 'press LOAD to bring in your own IRs')
+    const sub = loader ? 'IR loader · ' + (own ? [...new Set(irn.filter(Boolean))].join(' + ') : 'press LOAD to bring in your own IR')
       : voice ? cabVoiceName(voice) : e.basedOn ? 'Based on ' + e.basedOn : 'Click to change';
     const sig = e.key + '|' + cur + (loader ? '|' + irn.join('|') : '');
     if (ampUi.cabBig._sig !== sig) {

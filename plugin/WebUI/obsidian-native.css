@@ -335,7 +335,7 @@ button.obs-cabbig:hover .obs-cabpic { transform: translateY(-2px); }
 .obs-cabchip.on { color: rgb(var(--cf_e9e6df)); border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
 .obs-cabrow.songs .obs-cabchip { font-size: 8.5px; padding: 3px 7px; }
 
-/* the IR loader cab (Proteus): a screen per mic and a LOAD button beside each */
+/* the IR loader cab (Proteus): one screen with your IR, a LOAD button beside it */
 .obs-cabscreen.ld { justify-content: center; gap: 1px; }
 .obs-cabscreen.ld i { font-size: 7px; letter-spacing: .2em; opacity: .75; }
 .obs-cabscreen.ld b { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }

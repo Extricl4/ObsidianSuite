@@ -8,7 +8,7 @@ scales them to plugin/Content/Faces/img/cabs/<key>.webp and writes the picture f
   imgW, imgH     its size in pixels
   screen, button where the cab's display and voice button are, in those pixels (from visuals/out/front/<key>_map.json):
                  the CAB page writes the voice name on the display, and the drawn button steps through the voices.
-  screenA/B, buttonA/B   the IR loader cab (Proteus): one screen per mic showing its IR, and a LOAD button beside each.
+  (the IR loader cab, Proteus, uses screen + button too: its screen shows your IR, the button loads it.)
 
 The mic layout is written for every cab with a spec in visuals/cabs (it needs no render, only the spec, read-only):
   speakers       [[cx, cy, rx, ry], ...]  every speaker's centre and radius in picture pixels, in reading order

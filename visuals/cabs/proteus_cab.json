@@ -1,7 +1,7 @@
 {
  "builder": "cab",
  "name": "Proteus 4x12",
- "based_on": "IR loader: your own impulse responses, one per mic",
+ "based_on": "IR loader: your own impulse response",
  "size": [
   76.0,
   36.0,
@@ -60,66 +60,6 @@
    0.022
   ]
  },
- "displays": [
-  {
-   "id": "displayA",
-   "w": 25.0,
-   "h": 11.5,
-   "x": -21.1,
-   "z": 74.5,
-   "glow": [
-    0.04,
-    0.07,
-    0.1
-   ],
-   "glow_strength": 0.45,
-   "bezel": 1.6
-  },
-  {
-   "id": "displayB",
-   "w": 25.0,
-   "h": 11.5,
-   "x": 14.5,
-   "z": 74.5,
-   "glow": [
-    0.04,
-    0.07,
-    0.1
-   ],
-   "glow_strength": 0.45,
-   "bezel": 1.6
-  }
- ],
- "buttons": [
-  {
-   "id": "buttonA",
-   "shape": "rect",
-   "w": 5.0,
-   "h": 2.4,
-   "x": -4.600000000000001,
-   "z": 76.1,
-   "led": [
-    0.43,
-    0.8,
-    1.0
-   ],
-   "strength": 6
-  },
-  {
-   "id": "buttonB",
-   "shape": "rect",
-   "w": 5.0,
-   "h": 2.4,
-   "x": 31.0,
-   "z": 76.1,
-   "led": [
-    0.43,
-    0.8,
-    1.0
-   ],
-   "strength": 6
-  }
- ],
  "leds": [
   {
    "z": 65.9,
@@ -175,5 +115,31 @@
   "z1": 81.5,
   "standoff": 2.2,
   "r": 0.5
+ },
+ "display": {
+  "w": 52.0,
+  "h": 11.5,
+  "x": -6.0,
+  "z": 74.5,
+  "glow": [
+   0.04,
+   0.07,
+   0.1
+  ],
+  "glow_strength": 0.45,
+  "bezel": 1.7
+ },
+ "button": {
+  "shape": "rect",
+  "w": 6.4,
+  "h": 2.8,
+  "x": 27.0,
+  "z": 75.9,
+  "led": [
+   0.43,
+   0.8,
+   1.0
+  ],
+  "strength": 6
  }
 }
