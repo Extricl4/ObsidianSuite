@@ -56,7 +56,7 @@ void Engine::prepare (double sampleRate, int block)
     atmL.assign ((size_t) maxBlock, 0.f); atmR.assign ((size_t) maxBlock, 0.f); atmG.assign ((size_t) maxBlock, 0.f);
     fxDryL.assign ((size_t) maxBlock, 0.f); fxDryR.assign ((size_t) maxBlock, 0.f);
     cabFade.reset (sr, p.cabOn == nullptr || p.cabOn->load() > 0.5f); eqFade.reset (sr, p.eqOn == nullptr || p.eqOn->load() > 0.5f);
-    synthFade.reset (sr, p.synthOn != nullptr && p.synthOn->load() > 0.5f);
+    synthFade.reset (sr, p.synthOn != nullptr && p.synthOn->load() > 0.5f && p.syn[obs::synthdefs::power]->load() > 0.5f);
     atmosFade.reset (sr, p.atm[obs::atmosdefs::on] != nullptr && p.atm[obs::atmosdefs::on]->load() > 0.5f && p.synthOn != nullptr && p.synthOn->load() > 0.5f); atmosWasActive = atmosFade.active();
     kerFade.reset (sr, false); gltFade.reset (sr, false); kerWasActive = gltWasActive = false;
     cabWasActive = cabFade.active(); eqWasActive = eqFade.active();
@@ -213,7 +213,7 @@ void Engine::process (juce::AudioBuffer<float>& buffer, int numIn, const HostInf
         transposer.process (x, n, (int) std::round (v (p.transpose)), v (p.transposeHq) > 0.5f);
 
         // ---- synth ------------------------------------------------------------------------
-        synthFade.set (v (p.synthOn) > 0.5f);
+        synthFade.set (v (p.synthOn) > 0.5f && v (p.syn[obs::synthdefs::power]) > 0.5f);   // SIREN: the tab and its own POWER
         const bool synthOn = synthFade.active();             // on, or fading in / out (no click)
         const bool synthPost = v (p.syn[obs::synthdefs::post]) > 0.5f;
         float synthMix = 0.f;

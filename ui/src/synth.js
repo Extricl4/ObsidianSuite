@@ -47,6 +47,7 @@ const DEFS = [
   ['syn.mix', 'f', 0, 100, 50, '%', 1], ['syn.level', 'f', -24, 12, 0, 'dB', 1], ['syn.space', 'f', 0, 100, 20, '%', 1],
   ['syn.char', 'choice', 0, 3, 1, 'Clean|Analog|8-bit|VHS'], ['syn.post', 'bool', 0, 1, 1],
   ['syn.trim', 'f', -24, 24, 0, 'dB', 1],         /* the preset's level trim (presets are level-matched; no knob) */
+  ['syn.power', 'bool', 0, 1, 1],                 /* SIREN's own POWER (the SYNTH tab bypasses SIREN and AETHER together) */
   /* AETHER (noise, ambience, atmospheres): same as AtmosDefs.h */
   ['atm.on', 'bool', 0, 1, 0], ['atm.level', 'f', -36, 6, -6, 'dB', 1], ['atm.follow', 'f', -100, 100, 0, '%', 1], ['atm.evolve', 'f', 0, 100, 35, '%', 1],
   ['atm.grit', 'f', 0, 100, 0, '%', 1], ['atm.tone', 'f', -100, 100, 0, '%', 1], ['atm.width', 'f', 0, 100, 80, '%', 1], ['atm.space', 'f', 0, 100, 45, '%', 1],
@@ -683,15 +684,31 @@ dev.insertAdjacentHTML('beforeend', '<svg width="0" height="0" style="position:a
 
 /* ---- top strip: what you reach for while playing ---- */
 const topStrip = el('div', 'sy-top sy-siren'); dev.appendChild(topStrip);
-let powered = true;
+let powered = true;                                    // the SYNTH tab (synth.on): SIREN and AETHER both need it
+const sirenOn = () => powered && on('syn.power');      // SIREN itself: the tab and its own POWER
 const PWR_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/></svg>';
 const HOLD_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 7c-3.3 0-5 2.2-5 5s1.7 5 5 5c4 0 6-10 10-10 2.6 0 4 2.2 4 5s-1.4 5-4 5c-4 0-6-10-10-10z" transform="translate(-1 0)"/></svg>';
-const powerW = pushBtn(() => powered, v => { setPowerUi(v); if (window.obsSynth && window.obsSynth.powerOut) window.obsSynth.powerOut(v); }, 'POWER', PWR_IC, 'ON', 'OFF', 'Synth on / off (also: double-click the SYNTH tab)');
-function setPowerUi(v) { const was = powered; powered = !!v; dev.classList.toggle('off', !powered); powerW._draw(); if (pageDots) pageDots();
-  if (was && !powered) {                                     // bypassed (POWER, or a double-click on the SYNTH tab): everything stops
+const powerW = pushBtn(sirenOn, v => sirenPower (v), 'POWER', PWR_IC, 'ON', 'OFF', 'SIREN on / off (AETHER keeps playing; double-click the SYNTH tab to bypass both)');
+/** The SYNTH tab on (a bypassed tab woken by one part's POWER): the other part stays as it looked, off. */
+const sendNow = id => { if (window.obsSynth && window.obsSynth.sendNow) window.obsSynth.sendNow(id); };
+function tabOn(keepOff) {
+  if (powered) return;
+  set(keepOff, 0, 'ui'); sendNow(keepOff);
+  if (window.obsSynth && window.obsSynth.powerOut) window.obsSynth.powerOut(true); else setPowerUi(true);
+}
+/** SIREN's POWER: off leaves AETHER alone; on also wakes a bypassed SYNTH tab. */
+function sirenPower(v) { set('syn.power', v ? 1 : 0, 'ui'); sendNow('syn.power'); if (v) tabOn('atm.on'); sirenUpdate(); }
+let sirenWas = true;
+function sirenUpdate() {
+  const s = sirenOn(); dev.classList.toggle('off', !s); powerW._draw(); if (pageDots) pageDots();
+  if (sirenWas && !s) {                                      // SIREN off (its POWER, or the tab bypassed): its notes stop
     if (typeof allOff === 'function') { allOff(); setBend(0); }
     if (!inPlugin() && ac) { stopArp(); noteOff(); held = null; live.note = null; } }
+  sirenWas = s;
+}
+function setPowerUi(v) { const was = powered; powered = !!v; sirenUpdate();
   if (was !== powered && kit.powerChanged) kit.powerChanged(powered); }
+onChange(id => { if (id === 'syn.power' || id === 'atm.on') sirenUpdate(); });
 let pageDots = null;
 const led = el('div', 'sy-led', '<span class="k"></span><span class="tn"></span><div class="n">–</div><div class="s">PLAY A NOTE</div><div class="bar"><i></i></div>');
 led.title = 'Click for key, scale, tuning and playing settings';
@@ -1117,7 +1134,7 @@ function envDot(now) {
 }
 function animateLive() {
   const now = performance.now(), dt = Math.min(.1, (now - liveT) / 1000); liveT = now;
-  if (!powered) lvlTarget = 0;
+  if (!sirenOn()) lvlTarget = 0;
   lvlNow += (lvlTarget - lvlNow) * Math.min(1, dt * 8);
   const playing = lvlNow > .02;
   if (playing || waveAmp !== 1) {
@@ -1126,7 +1143,7 @@ function animateLive() {
     if (!playing && Math.abs(waveAmp - 1) < .01) waveAmp = 1;
     const d = waveD(wavePh, waveAmp); wavePaths.forEach(p => p && p.setAttribute('d', d));
   }
-  if (envLife) { if (powered) envDot(now); else { envLife = null; drawEnv(); } }
+  if (envLife) { if (sirenOn()) envDot(now); else { envLife = null; drawEnv(); } }
 }
 var liveReady = true;
 let playStep = -1;
@@ -1137,7 +1154,7 @@ const kit = {};                 // shared with aether.js, the AETHER page (fille
 let undoState = null;
 const rr = (a, b) => a + Math.random() * (b - a), ri = (a, b) => Math.floor(rr(a, b + 1)), pick = a => a[Math.floor(Math.random() * a.length)];
 const wpick = ws => { let t = Math.random() * ws.reduce((x, y) => x + y, 0); for (let i = 0; i < ws.length; i++) { t -= ws[i]; if (t <= 0) return i; } return ws.length - 1; };
-const KEEP = ['syn.sens', 'syn.gate', 'syn.dyn', 'syn.key', 'syn.scale', 'syn.tune', 'syn.mix', 'syn.level', 'syn.post'];
+const KEEP = ['syn.sens', 'syn.gate', 'syn.dyn', 'syn.key', 'syn.scale', 'syn.tune', 'syn.mix', 'syn.level', 'syn.post', 'syn.power'];
 function keepUndo(withAether) { undoState = { S: { ...S }, steps: steps.map(s => ({ ...s })), name: prName, atm: !!withAether, aether: withAether && kit.aetherState ? kit.aetherState() : null }; undo.disabled = false; }
 const isSyn = id => id.startsWith('syn.'), isAtm = id => id.startsWith('atm.');
 function flash() { screen.classList.remove('sy-flash'); void screen.offsetWidth; screen.classList.add('sy-flash'); }
@@ -1184,7 +1201,7 @@ undo.addEventListener('click', () => { if (!undoState) return; const u = undoSta
    the arpeggiator steps; your mix, output, key, tuning and playing settings (like DICE) stay. */
 const PRESETS = window.OBS_SYNTH_PRESETS || [];
 const PKEEP = KEEP.concat(['syn.hold']);
-const RESET_KEEP = ['syn.key', 'syn.scale', 'syn.tune'];
+const RESET_KEEP = ['syn.key', 'syn.scale', 'syn.tune', 'syn.power'];
 let prName = 'Init', prIdx = -1;
 const prNameEl = prBtn.querySelector('.sy-prname');
 function drawPrName() {
@@ -1648,7 +1665,7 @@ function stopArp() { if (!arp) return; clearTimeout(arp.timer); arp = null; live
 const stackSet = new Set();
 const stackList = () => [...stackSet].sort((a, b) => a - b);
 function press(m, src, vel = .9, slide = false, stack = false) {
-  if (!powered && !inPlugin()) return;
+  if (!sirenOn()) { if (!inPlugin()) return; sirenPower(true); }      // a key played on a SIREN that's off switches it on
   if (stack) stackSet.add(m);
   if (inPlugin()) { held = stack ? stackList()[0] : m; if (window.obsSynth.noteOut) window.obsSynth.noteOut(m, true, vel, stack); return; }
   srcName = src || 'KEYS'; held = stack ? stackList()[0] : m;
@@ -1704,6 +1721,7 @@ window.obsSynth = {
   noteOut: null,              // set by the bridge: (midi, isOn) -> engine
   powerOut: null,             // set by the bridge: turns the synth section on
   setPower(isOn) { if (!!isOn !== powered) setPowerUi(isOn); },
+  sirenIsOn: () => sirenOn(), sirenSwitchOn: () => sirenPower(true),
   /* AETHER's meters from the engine: { act: [bed, drone, texture] 0..1, ev: texture event count } */
   atmLive(m) { if (kit.aetherLive) kit.aetherLive(m); },
   dice: roll,
@@ -1714,7 +1732,7 @@ window.obsSynth = {
 
 /* ------------------------------------------------------------ AETHER: the second page (aether.js builds it on this device) */
 Object.assign(kit, { el, P, S, set, onChange, on, fmt, toN, toV, clamp, sg, knob, toggle, chip, seg, pill, mknob, sel, pushBtn, pairBtn, segBool, stepper, row, spacer, section, IC, hidpi, tc, accent, FONT, dev, SP, root,
-  PWR_IC, stripGroups, presetValue, NOTE_NAMES, catCol, horCls, isPowered: () => powered, audio: () => audio(), ctx: () => ac, out: () => comp, inPlugin });
+  PWR_IC, stripGroups, presetValue, NOTE_NAMES, catCol, horCls, isPowered: () => powered, tabOn, sirenOn, sirenPower, audio: () => audio(), ctx: () => ac, out: () => comp, inPlugin });
 const pageSw = el('div', 'sy-page', '<button data-p="siren" title="SIREN: the synth your guitar plays"><i></i>SIREN</button><button data-p="aether" title="AETHER: noise, ambience and atmospheres around your playing"><i></i>AETHER</button>');
 dev.appendChild(pageSw);
 let page = 'siren';
@@ -1729,7 +1747,7 @@ function showPage(p) {
   if (page === 'siren') setTimeout(redrawAll, 20);
 }
 pageSw.addEventListener('click', e => { const b = e.target.closest('button'); if (b) showPage(b.dataset.p); });
-pageDots = () => { pageSw.children[0].firstChild.classList.toggle('lit', powered); pageSw.children[1].firstChild.classList.toggle('lit', on('atm.on')); };
+pageDots = () => { pageSw.children[0].firstChild.classList.toggle('lit', sirenOn()); pageSw.children[1].firstChild.classList.toggle('lit', powered && on('atm.on')); };
 onChange(id => { if (id === 'atm.on') pageDots(); });
 kit.showPage = showPage; kit.page = () => page;
 window.obsSynth.showPage = showPage;

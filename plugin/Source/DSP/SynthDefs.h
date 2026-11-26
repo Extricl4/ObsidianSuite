@@ -41,6 +41,8 @@ enum P
     mix, level, space, character, post,
     // the loaded SIREN preset's own level trim (level-matched presets; set by presets, not a knob)
     trim,
+    // SIREN's own POWER (the SYNTH tab's switch, synth.on, bypasses SIREN and AETHER together)
+    power,
     count
 };
 
@@ -124,6 +126,7 @@ inline const Def* table()
         { "syn.char",        "Synth Character",       CHOICE, 0,     3,    1,   "Clean|Analog|8-bit|VHS", 1 },
         { "syn.post",        "Synth Post-Amp",        BOOL,   0,     1,    1,   "",   1 },
         { "syn.trim",        "Synth Preset Trim",     F,    -24,    24,    0,   "dB", 1 },
+        { "syn.power",       "SIREN On",              BOOL,   0,     1,    1,   "",   1 },
     };
     return d;
 }

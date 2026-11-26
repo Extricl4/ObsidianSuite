@@ -250,9 +250,12 @@ function setupBindings() {
     // AUDITION / computer keys play the real engine; the synth tab must be on to hear it
     const power = on => { vals['synth.on'] = on ? 1 : 0; last['synth.on'] = vals['synth.on']; call('setParam', 'synth.on', on ? 1 : 0);
       if (on) bypassed.delete('SYNTH'); else bypassed.add('SYNTH'); if (typeof styleTabs === 'function') styleTabs(); if (S.setPower) S.setPower(on); };
-    S.powerOut = on => power(on);
+    S.powerOut = on => power(on);                  // the SYNTH tab (SIREN and AETHER both need it)
+    // a setting the page just changed, sent now (a POWER flipped by a key press can't wait for the next scan)
+    S.sendNow = id => { const r = S.read(); if (!(id in r)) return; vals[id] = r[id]; last[id] = r[id]; call('setParam', id, r[id]); };
     S.noteOut = (note, isOn, vel, stack) => {      // stack: a latched key - latched keys ring together (a chord)
-      if (isOn && (vals['synth.on'] || 0) < .5) { power(true); say('Synth switched on'); }
+      if (isOn && S.sirenIsOn && ! S.sirenIsOn()) { S.sirenSwitchOn(); say('SIREN switched on'); }
+      else if (isOn && (vals['synth.on'] || 0) < .5) { power(true); say('Synth switched on'); }
       call('synthNote', note, !!isOn, vel == null ? .85 : +vel, !!stack);
     };
     // the KEYS' wheels: pitch bend (semitones) and mod wheel (vibrato 0..1)

@@ -1196,6 +1196,25 @@ OBS_NOINLINE static int runSelfTestBody (Report& r, const juce::StringArray& arg
         render (p, SR, BLOCK, 1.0, silence);
         auto def = render (p, SR, BLOCK, 2.0, silence);
         r.check (def.finite && db (def.rms) > -48.f && db (def.rms) < -24.f, "on, as it starts (wind and a strings fifth): " + juce::String (db (def.rms), 1) + " dB, well under the guitar");
+        // SIREN's own POWER off (the tab on) leaves AETHER playing; the tab's switch stops both (2026-11-26)
+        {
+            Guitar gs (SR);
+            setReal (p, "syn.mix", 100); setNorm (p, "syn.power", 0);
+            render (p, SR, BLOCK, 0.5, silence);
+            float act = 0;
+            render (p, SR, BLOCK, 1.5, [&] (int i) { if (i % (int) (SR * 0.3) == 0) gs.pluck (220.f, 0.5f); act = juce::jmax (act, e.synthActivity()); return gs.next(); });   // played: SIREN stays silent
+            render (p, SR, BLOCK, 1.0, silence);
+            const auto st = render (p, SR, BLOCK, 1.0, silence);                       // and AETHER still sounds on its own
+            setNorm (p, "syn.power", 1);
+            float act2 = 0;
+            render (p, SR, BLOCK, 1.0, [&] (int i) { if (i % (int) (SR * 0.3) == 0) gs.pluck (220.f, 0.5f); act2 = juce::jmax (act2, e.synthActivity()); return gs.next(); });
+            setNorm (p, "synth.on", 0); render (p, SR, BLOCK, 3.0, silence);
+            const auto byp = render (p, SR, BLOCK, 0.5, silence);
+            r.check (act < 1e-4f && db (st.rms) > -48.f && act2 > 0.01f && byp.peak < 1.0e-6f,
+                     juce::String::formatted ("SIREN's POWER off: SIREN silent (%.4f), AETHER plays on (%.1f dB); SIREN on again plays (%.3f); the tab off stops both (peak %.1f dB)",
+                                              act, db (st.rms), act2, db (byp.peak)));
+            quietRig(); setNorm (p, "atm.on", 1); render (p, SR, BLOCK, 1.0, silence);
+        }
 
         // every bed, voice and texture alone: finite, there, and not too loud
         auto layer = [&] (const char* onId, const char* typeId, int n, float minDb, juce::StringArray names, const juce::String& what) {

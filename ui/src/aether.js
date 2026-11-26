@@ -151,7 +151,8 @@ const ICA = {
 /* ============================================================ the page */
 /* ---- top strip ---- */
 const strip = el('div', 'sy-top sy-aether'); dev.appendChild(strip);
-const powerW = pushBtn(() => on('atm.on'), v => set('atm.on', v ? 1 : 0, 'ui'), 'POWER', K.PWR_IC, 'ON', 'OFF', 'AETHER on / off (it plays by itself, with or without SIREN)');
+const powerW = pushBtn(() => on('atm.on') && K.isPowered(), v => { set('atm.on', v ? 1 : 0, 'ui'); if (window.obsSynth && window.obsSynth.sendNow) window.obsSynth.sendNow('atm.on'); if (v && K.tabOn) K.tabOn('syn.power'); },
+  'POWER', K.PWR_IC, 'ON', 'OFF', 'AETHER on / off (SIREN keeps playing; double-click the SYNTH tab to bypass both)');
 const freezeW = pushBtn(() => on('atm.freeze'), v => set('atm.freeze', v ? 1 : 0, 'ui'), 'FREEZE', ICA.freeze, 'HELD', 'OFF', 'Holds what is in the space, forever, and lets nothing new in');
 const disp = el('div', 'sy-led ae-disp', '<span class="k"></span><span class="tn"></span><div class="rows">' +
   ['NOISE', 'DRONE', 'EVENT'].map((l, i) => '<div class="r" style="--lc:' + ['var(--a-bed)', 'var(--a-drn)', 'var(--a-tex)'][i] + '"><b>' + l + '</b><u></u><i><em></em></i></div>').join('') + '</div>');
@@ -631,7 +632,7 @@ Object.assign(K, {
     if (typeof m.ev === 'number') { const n = m.ev - lastEv; if (lastEv && n > 0 && n < 50) for (let i = 0; i < Math.min(n, 6); i++) newEvent(); lastEv = m.ev; }
     if (typeof m.root === 'number' && m.root >= 0) { const r = Math.round(m.root); if (r !== liveRoot) { liveRoot = r; if (on('atm.drn.follow')) { drawDroneInfo(); } } }
   },
-  powerChanged() { drawPower(); if (inPlugin()) return; if (alive()) pvRebuild(['all']); else if (PV.on) pvGlobal(); },
+  powerChanged() { drawPower(); powerW._draw(); if (inPlugin()) return; if (alive()) pvRebuild(['all']); else if (PV.on) pvGlobal(); },
   pageShown(p) { if (p === 'aether') { scOpen(false); setTimeout(() => { drawDroneVis(); drawDisplay(); }, 20); } else scOpen(false); },
 });
 Object.assign(window.obsSynth, { aetherSummon: summonWorld, aetherMutate: mutateWorld, aetherReset: resetAether, aetherScenes: SCENES, aetherLoadScene: loadScene,
