@@ -102,6 +102,18 @@ public:
         for (auto& b : buf) b = (rng.nextFloat() * 2.f - 1.f) * amp;
         pos = 0;
     }
+    /** A pick's natural softness: the noise burst rounded off (a real string's waveform is smooth, not white). */
+    void pluckSoft (float hz, float amp = 0.5f)
+    {
+        pluck (hz, amp);
+        for (int pass = 0; pass < 3; ++pass)
+        {
+            const auto b0 = buf; const size_t n = buf.size();
+            for (size_t i = 0; i < n; ++i) buf[i] = 0.25f * b0[(i + n - 1) % n] + 0.5f * b0[i] + 0.25f * b0[(i + 1) % n];
+        }
+        float mx = 1e-9f; for (float v : buf) mx = juce::jmax (mx, std::abs (v));
+        for (auto& v : buf) v *= amp / mx;
+    }
     float next()
     {
         if (buf.empty()) return 0.f;
@@ -115,7 +127,7 @@ private:
     double sr; std::vector<float> buf; int pos = 0; juce::Random rng { 1234 };
 };
 
-struct RunStats { float peak = 0, rms = 0; bool finite = true; double maxBlockLoad = 0, avgLoad = 0; };
+struct RunStats { float peak = 0, rms = 0; bool finite = true; double maxBlockLoad = 0, avgLoad = 0, p99Load = 0, p999Load = 0; int overBudget = 0, blocks = 0; juce::String slowAt; };
 
 RunStats render (ObsidianProcessor& p, double sr, int block, double seconds, std::function<float (int)> input, int numInCh = 2,
                  std::vector<float>* capture = nullptr)
@@ -124,7 +136,7 @@ RunStats render (ObsidianProcessor& p, double sr, int block, double seconds, std
     juce::AudioBuffer<float> buf (2, block);
     juce::MidiBuffer midi;
     const int total = (int) (sr * seconds);
-    double sumSq = 0; long count = 0; double loadSum = 0; int blocks = 0;
+    double sumSq = 0; long count = 0; double loadSum = 0; int blocks = 0; std::vector<double> loads;
     for (int done = 0; done < total; done += block)
     {
         const int n = juce::jmin (block, total - done);
@@ -139,7 +151,8 @@ RunStats render (ObsidianProcessor& p, double sr, int block, double seconds, std
         p.processBlock (buf, midi);
         const double secs = juce::Time::highResolutionTicksToSeconds (juce::Time::getHighResolutionTicks() - t0);
         const double load = secs / (n / sr);
-        st.maxBlockLoad = juce::jmax (st.maxBlockLoad, load); loadSum += load; ++blocks;
+        st.maxBlockLoad = juce::jmax (st.maxBlockLoad, load); loadSum += load; ++blocks; loads.push_back (load); if (load > 1.0) ++st.overBudget;
+        if (load > 0.6 && st.slowAt.length() < 120) st.slowAt << juce::String ((double) done / sr, 3) << " s (" << juce::roundToInt (load * 100) << "%) ";
         if (capture != nullptr)
             for (int i = 0; i < n; ++i) capture->push_back (0.5f * (buf.getSample (0, i) + buf.getSample (1, i)));
         for (int c = 0; c < 2; ++c)
@@ -153,6 +166,12 @@ RunStats render (ObsidianProcessor& p, double sr, int block, double seconds, std
     }
     st.rms = (float) std::sqrt (sumSq / juce::jmax (1L, count));
     st.avgLoad = loadSum / juce::jmax (1, blocks);
+    st.blocks = blocks;
+    if (! loads.empty())
+    {
+        std::sort (loads.begin(), loads.end());
+        st.p99Load = loads[(size_t) ((double) (loads.size() - 1) * 0.99)]; st.p999Load = loads[(size_t) ((double) (loads.size() - 1) * 0.999)];
+    }
     return st;
 }
 
@@ -958,6 +977,37 @@ OBS_NOINLINE static int runSelfTestBody (Report& r, const juce::StringArray& arg
         float act = 0, seen = -1;
         render (p, SR, BLOCK, 1.0, [&] (int i) { if (i % (int) (SR * 0.5) == 0) g.pluck (110.f, 0.5f); act = juce::jmax (act, e.synthActivity()); if (e.synthNote() > 0) seen = e.synthNote(); return g.next(); });
         r.check (act > 0.01f && std::abs (seen - 45.f) < 0.6f, "follows a plucked A2 (activity " + juce::String (act, 3) + ", note " + juce::String (seen, 2) + ")");
+        // how soon a picked note reaches the synth (the tracker reports a pick's note once a window holds only
+        // the new note: ~2 periods; 2026-11-26, was ~60 ms) and no wrong note on the way
+        {
+            const float line[] = { 220.f, 261.63f, 329.63f, 392.f, 440.f, 329.63f, 293.66f, 246.94f };
+            std::vector<double> lat; int idx = -1, wrongBlips = 0; double startAt = 0; bool got = false, wasWrong = false; juce::String firstWrong;
+            const int len = (int) (SR * 0.25);
+            Guitar gl (SR);
+            render (p, SR, BLOCK, 2.0, [&] (int) { return 0.f; });          // the A2 above dies away first (its release too)
+            render (p, SR, BLOCK, 8 * 0.25 + 0.05, [&] (int i) {
+                if (i % len == 0 && i / len < 8) { idx = i / len; gl.pluckSoft (line[idx], 0.5f); startAt = i; got = false; }
+                const int k = juce::jmax (0, idx);
+                const float want = 69.f + 12.f * std::log2 (line[k] / 440.f), prev = k > 0 ? 69.f + 12.f * std::log2 (line[k - 1] / 440.f) : want;
+                const float nn = e.synthNote();
+                // a wrong note: the synth moves onto a note that is neither this one nor the one before
+                const bool wrong = idx >= 0 && nn > 0 && e.synthActivity() > 0.02f && std::abs (nn - want) > 0.5f && std::abs (nn - prev) > 0.5f;
+                if (wrong && ! wasWrong) { ++wrongBlips; if (firstWrong.isEmpty()) firstWrong = " (first: note " + juce::String (idx + 1) + " at " + juce::String ((i - startAt) / SR * 1000.0, 0) + " ms played " + juce::String (nn, 1) + ")"; }
+                wasWrong = wrong;
+                if (idx >= 0 && ! got && std::abs (nn - want) < 0.5f) { got = true; lat.push_back ((i - startAt) / SR * 1000.0); }
+                return gl.next(); });
+            std::sort (lat.begin(), lat.end());
+            const double med = lat.empty() ? 999.0 : lat[lat.size() / 2], worst = lat.empty() ? 999.0 : lat.back();
+            r.check (lat.size() == 8 && med <= 25.0 && worst <= 45.0 && wrongBlips == 0,
+                     juce::String::formatted ("a picked line reaches the synth fast: %d of 8 notes, %.0f ms typical, %.0f ms at most, %d wrong notes on the way", (int) lat.size(), med, worst, wrongBlips) + firstWrong);
+        }
+        // the shared tracker hears down to an 8-string's low E (41 Hz)
+        {
+            render (p, SR, BLOCK, 0.6, [&] (int i) { if (i == 0) g.pluck (41.2f, 0.6f); return g.next(); });
+            const float f = e.tracker().frequency();
+            r.check (f > 0 && std::abs (1200.f * std::log2 (f / 41.2f)) < 30.f, "the tracker hears an 8-string's low E (" + juce::String (f, 1) + " Hz)");
+            render (p, SR, BLOCK, 0.5, [&] (int) { return 0.f; });
+        }
         // HOLD keeps it droning after the string dies away
         setNorm (p, "syn.hold", 1);
         render (p, SR, BLOCK, 0.3, [&] (int i) { if (i == 0) g.pluck (110.f, 0.5f); return g.next(); });
@@ -1485,6 +1535,47 @@ OBS_NOINLINE static int runSelfTestBody (Report& r, const juce::StringArray& arg
             Guitar g3 (SR);
             const auto st = render (p, SR, BLOCK, 3.0, [&] (int i) { if (i % (int) (SR * 0.2) == 0) g3.pluck (110.f * (1 + (i / (int) (SR * 0.2)) % 3), 0.5f); return g3.next(); });
             r.check (st.finite && st.peak < 1.99f, "KERAUNOS + KHAOS (every type, 1/32, chaos 100) on the full rig: clean, " + juce::String (st.avgLoad * 100, 1) + "% of one core");
+        }
+        // 2026-11-26: the whammy family runs on HYDRA's pitch-synchronous voices. At rest (the treadle back) it
+        // plays the guitar at once: it used to be ~22 ms behind (the old shifter's window)
+        {
+            Guitar gw (SR); std::vector<float> in;
+            clean(); setNorm (p, "ker.on", 1); setReal (p, "ker.algo", 0); setReal (p, "ker.mode", 0); setReal (p, "ker.pos", 0); setReal (p, "ker.mix", 100);
+            render (p, SR, BLOCK, 0.2, [] (int) { return 0.f; });
+            std::vector<float> cap;
+            render (p, SR, BLOCK, 1.2, [&] (int i) { if (i % (int) (SR * 0.3) == 0) gw.pluck (110.f, 0.5f); const float x = gw.next(); in.push_back (x); return x; }, 2, &cap);
+            double best = -1e9; int bl = 0;
+            for (int L = 0; L < (int) (0.04 * SR); ++L)
+            { double c = 0; for (int i = (int) (0.4 * SR); i < (int) (1.1 * SR); ++i) c += (double) cap[(size_t) i] * in[(size_t) (i - L)]; if (c > best) { best = c; bl = L; } }
+            const double ms = bl / SR * 1000.0;
+            r.check (ms <= 5.0, juce::String::formatted ("the whammy at rest plays the guitar at once (%.1f ms behind; it was 22 ms)", ms));
+        }
+        // KHAOS: a stutter, roll, skip, pitch or echo throw never clicks (each repeat of a loop crossfades)
+        {
+            juce::String res; bool allClean = true;
+            struct T { const char* name; int type; };
+            for (auto t : { T { "Stutter", 1 }, T { "Roll", 2 }, T { "Skip", 5 }, T { "Pitch", 7 }, T { "Chop", 13 }, T { "Echo", 21 } })
+            {
+                clean(); setNorm (p, "glt.on", 1); setReal (p, "glt.mode", 1); setReal (p, "glt.grid", 3); setReal (p, "glt.len", 0); setReal (p, "glt.mix", 100);
+                for (int i = 0; i < 16; ++i) setReal (p, obs::fxdefs::glt::table()[obs::fxdefs::glt::s0 + i].id, (float) (i % 2 == 0 ? t.type : 0));
+                std::vector<float> cap;
+                // a steady tone: nothing in it above 1.1 kHz, so anything up there is a click
+                render (p, SR, BLOCK, 2.5, [] (int i) { const double tt = i / 48000.0; double v = 0;
+                    for (int h = 1; h <= 5; ++h) v += std::sin (juce::MathConstants<double>::twoPi * 220.0 * h * tt) / h; return (float) (0.2 * v); }, 2, &cap);
+                dsp::Biquad h1, h2, h3, h4;
+                for (auto* h : { &h1, &h2, &h3, &h4 }) h->set (dsp::Biquad::HP, SR, 6000.f, 0.707f);
+                double worst = 0, acc = 0; int cnt = 0; size_t at = 0;
+                for (size_t i = 0; i < cap.size(); ++i)
+                {
+                    const float y = h4.process (h3.process (h2.process (h1.process (cap[i]))));
+                    acc += (double) y * y;
+                    if (++cnt == 48) { const double v = std::sqrt (acc / 48.0); if (i > (size_t) (0.3 * SR) && v > worst) { worst = v; at = i; } acc = 0; cnt = 0; }
+                }
+                const float db = juce::Decibels::gainToDecibels ((float) worst, -150.f);
+                if (db > -60.f) allClean = false;
+                res << t.name << " " << juce::String (juce::roundToInt (db)) << (db > -60.f ? " at " + juce::String ((double) at / SR, 3) + " s" : juce::String()) << ", ";
+            }
+            r.check (allClean, "KHAOS loops and glitches don't click on a held note (loudest click, dBFS: " + res.dropLastCharacters (2) + ")");
         }
         p.presetManager().loadInit();
     }
@@ -2194,8 +2285,14 @@ OBS_NOINLINE static int runSelfTestBody (Report& r, const juce::StringArray& arg
         setNorm (p, "synth.on", 1); setNorm (p, "doubler.on", 1); setReal (p, "transpose", -2);
         auto st = render (p, SR, 128, 5.0, riff);
         r.check (st.finite && st.peak <= 2.f, "full rig runs cleanly");
-        r.info ("average " + juce::String (st.avgLoad * 100, 2) + "% of one core, worst 128-sample block " + juce::String (st.maxBlockLoad * 100, 1) + "%");
+        r.info ("average " + juce::String (st.avgLoad * 100, 2) + "% of one core; 99.9% of the 128-sample blocks under "
+                + juce::String (st.p999Load * 100, 1) + "%, the worst " + juce::String (st.maxBlockLoad * 100, 1) + "% ("
+                + juce::String (st.overBudget) + " of " + juce::String (st.blocks) + " over 100%: a single one is the machine, not the plugin)"
+                + (st.slowAt.isNotEmpty() ? juce::String (". Slow blocks at: ") + st.slowAt : juce::String()));
         r.check (st.avgLoad < 0.5, "average load under 50% of one core on this machine");
+        // a pause of the whole machine (a VM, the OS) makes a few blocks late at random moments; slow work in the
+        // plugin would show in many: 99% of the blocks must finish in half their time
+        r.check (st.p99Load < 0.5, "no slow blocks: 99% of them use under 50% of their time (" + juce::String (st.p99Load * 100, 1) + "%)");
         p.presetManager().loadInit();
     }
 
@@ -2581,7 +2678,8 @@ namespace obs
 //  Sound renderer, for sound design (AETHER scenes, synth presets). Run:
 //      "Obsidian Amp Suite" --render-sounds <out folder> <spec.json>
 //  spec: [ { "name": "x", "seconds": 12, "params": { "atm.on": 1, "atm.bed.type": "Rain", ... },
-//            "notes": [ [midi, start s, length s, velocity], ... ], "guitar": false, "steps": [16 numbers] } ]
+//            "notes": [ [midi, start s, length s, velocity], ... ], "guitar": false, "steps": [16 numbers],
+//            "input": "a 48 kHz WAV (a guitar DI) to play in place of the test riff" } ]
 //  Every sound starts from the init preset with the amp, cab and effects off (unless "rig": true).
 //  Choices can be given by name. Writes <out>/<name>.wav and prints the level of each.
 // =============================================================================
@@ -2630,7 +2728,23 @@ int renderSounds (const juce::File& dir, const juce::File& specFile)
         std::vector<N> notes;
         if (auto* ns = e["notes"].getArray())
             for (auto& n : *ns) notes.push_back ({ (int) n[0], (double) n[1], (double) n[2], n.size() > 3 ? (int) n[3] : 110 });
-        const bool guitar = (bool) e.getProperty ("guitar", false);
+        bool guitar = (bool) e.getProperty ("guitar", false);
+        std::vector<float> own;      // "input": a 48 kHz WAV (a real guitar DI) plays as the guitar in place of the test riff
+        if (const auto in = e["input"].toString(); in.isNotEmpty())
+        {
+            juce::WavAudioFormat wf;
+            if (auto rd = std::unique_ptr<juce::AudioFormatReader> (wf.createReaderFor (juce::File (in).createInputStream().release(), true)))
+            {
+                juce::AudioBuffer<float> b ((int) rd->numChannels, (int) rd->lengthInSamples);
+                rd->read (&b, 0, (int) rd->lengthInSamples, 0, true, true);
+                own.assign (b.getReadPointer (0), b.getReadPointer (0) + b.getNumSamples());
+                guitar = ! own.empty();
+                if (std::abs (rd->sampleRate - sr) > 1) std::cout << "  " << in << " is not 48 kHz" << std::endl;
+            }
+            else std::cout << "  can't read " << in << std::endl;
+        }
+        const auto& src = own.empty() ? riff : own;
+        const float inGain = own.empty() ? 0.9f : 1.f;
         const double total = (double) e.getProperty ("seconds", 10.0);
         juce::AudioBuffer<float> out (2, (int) (total * sr)); out.clear();
         juce::AudioBuffer<float> buf (2, block); juce::MidiBuffer midi;
@@ -2638,7 +2752,7 @@ int renderSounds (const juce::File& dir, const juce::File& specFile)
         for (int pos = 0; pos + block <= out.getNumSamples(); pos += block)
         {
             buf.clear(); midi.clear();
-            if (guitar) for (int i = 0; i < block; ++i) { const float x = riff[(size_t) (pos + i) % riff.size()] * 0.9f; buf.setSample (0, i, x); buf.setSample (1, i, x); }
+            if (guitar) for (int i = 0; i < block; ++i) { const float x = src[(size_t) (pos + i) % src.size()] * inGain; buf.setSample (0, i, x); buf.setSample (1, i, x); }
             for (auto& n : notes)
             {
                 const int on = (int) (n.start * sr), off = (int) ((n.start + n.len) * sr);

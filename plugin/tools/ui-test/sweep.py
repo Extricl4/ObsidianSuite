@@ -131,8 +131,10 @@ async def sweep_modules(pg, tab, report, errors):
         # its switches and choice buttons
         btns = await pg.evaluate(f"""(()=>{{ const ed=[...document.querySelectorAll('{page} .obs-editor')].find(e=>__sw.vis(e)); if(!ed) return [];
             const bs=[...ed.querySelectorAll('button')].filter(b=>__sw.vis(b) && !/RESET|LOAD/i.test(b.textContent)); window.__swBtns=bs;
-            return bs.map((b,i)=>{{const r=b.getBoundingClientRect(); return {{i, t:b.textContent.trim(), x:r.left+r.width/2, y:r.top+r.height/2}};}}); }})()""")
+            return bs.map((b,i)=>{{const r=b.getBoundingClientRect(); return {{i, t:b.textContent.trim(), x:r.left+r.width/2, y:r.top+r.height/2,
+              on: /(^|\\s)(on|sel|active|lit)(\\s|$)/.test(String(b.className)) || b.getAttribute('aria-pressed')==='true'}};}}); }})()""")
         for bt in btns:
+            if bt.get('on'): continue          # the choice already made: clicking it again rightly changes nothing
             await pg.evaluate("window.__mock.log.length=0"); errors.clear()
             await pg.mouse.click(bt['x'], bt['y']); await pg.wait_for_timeout(120)
             got = await pg.evaluate("__sw.sent('')")
@@ -203,7 +205,7 @@ async def sweep(standalone, only=None):
                         await pg.mouse.move(c['x'], c['y'] + dy, steps=6); await pg.mouse.up(); await pg.wait_for_timeout(120)
                         sig1 = await pg.evaluate(f"__sw.sig({el})"); txt1 = await pg.evaluate(f"__sw.text({el})")
                         sent = await pg.evaluate(f"__sw.sent({json.dumps(c['id'])})")
-                        if sig1 != sig0: break
+                        if sig1 != sig0 and sent: break      # a knob at its end only lights up on the way out: try the other way
                     if sig1 == sig0: r['problems'].append('drag: nothing moves')
                     elif txt1 == txt0 and not any(x in c['cls'] for x in ('sy-sel', 'dial')): r['problems'].append('drag: value text unchanged')
                     if not sent: r['problems'].append('drag: nothing sent to the engine')

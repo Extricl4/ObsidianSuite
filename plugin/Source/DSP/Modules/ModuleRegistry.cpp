@@ -20,7 +20,7 @@ const std::vector<ModuleType>& moduleTypes()
         registerModModules (t);
         registerPackModules (t);
         registerCelestialModules (t);
-        for (auto& m : t) jassert (m.params.size() <= (size_t) kSlotParams);   // a module may have at most 8 knobs
+        for (auto& m : t) { juce::ignoreUnused (m); jassert (m.params.size() <= (size_t) kSlotParams); }   // a module may have at most 8 knobs
         return t;
     }();
     return types;

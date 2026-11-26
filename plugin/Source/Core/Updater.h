@@ -81,7 +81,14 @@ private:
     void set (State s, const juce::String& err = {});
     const Release::Asset& chosen() const;     // the small installer unless the pack changed
 
+    /** Opens a GitHub request this updater can cancel from another thread (closing the app never has to kill
+        the thread mid-request, even on a slow network). Null if it couldn't connect. */
+    std::unique_ptr<juce::WebInputStream> open (const juce::String& url, const juce::String& headers, int timeoutMs, int redirects, int& status);
+    void forget (juce::WebInputStream* s)    { const juce::ScopedLock sl (netLock); if (net == s) net = nullptr; }
+
     mutable juce::CriticalSection lock;
+    juce::CriticalSection netLock;
+    juce::WebInputStream* net = nullptr;       // the request in flight (cancel() it to stop at once)
     State st = State::idle;
     juce::String error;
     Release latest;

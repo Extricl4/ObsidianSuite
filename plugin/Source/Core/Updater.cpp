@@ -30,7 +30,19 @@ Updater::Updater() : juce::Thread ("Obsidian updater") {}
 Updater::~Updater()
 {
     stopDownload = true;
+    signalThreadShouldExit();
+    { const juce::ScopedLock sl (netLock); if (net != nullptr) net->cancel(); }   // a request in flight stops now
     stopThread (6000);
+}
+
+std::unique_ptr<juce::WebInputStream> Updater::open (const juce::String& url, const juce::String& headers, int timeoutMs, int redirects, int& status)
+{
+    auto s = std::make_unique<juce::WebInputStream> (juce::URL (url), false);
+    s->withExtraHeaders (headers).withConnectionTimeout (timeoutMs).withNumRedirectsToFollow (redirects);
+    { const juce::ScopedLock sl (netLock); net = s.get(); }
+    if (threadShouldExit() || ! s->connect (nullptr) || threadShouldExit()) { forget (s.get()); status = s->getStatusCode(); return nullptr; }
+    status = s->getStatusCode();
+    return s;
 }
 
 bool Updater::canInstall()
@@ -149,11 +161,11 @@ void Updater::doCheck()
 {
     set (State::checking);
     int status = 0;
-    auto in = juce::URL (apiUrl()).createInputStream (juce::URL::InputStreamOptions (juce::URL::ParameterHandling::inAddress)
-                                                          .withExtraHeaders ("User-Agent: ObsidianAmpSuite\r\nAccept: application/vnd.github+json")
-                                                          .withConnectionTimeoutMs (12000).withNumRedirectsToFollow (5).withStatusCode (&status));
+    auto in = open (apiUrl(), "User-Agent: ObsidianAmpSuite\r\nAccept: application/vnd.github+json", 12000, 5, status);
     checkedAt = juce::Time::getMillisecondCounterHiRes();
+    if (threadShouldExit()) return;
     if (in == nullptr) { set (State::failed, "Couldn't reach GitHub. Are you online?"); return; }
+    const struct Forget { Updater& u; juce::WebInputStream* s; ~Forget() { u.forget (s); } } fg { *this, in.get() };
     if (status == 404) { set (State::failed, "No builds are published yet."); return; }
     if (status == 403 || status == 429) { set (State::failed, "GitHub says to wait a little (too many checks). Try again later."); return; }
     if (status != 0 && status != 200) { set (State::failed, "GitHub answered " + juce::String (status) + "."); return; }
@@ -183,10 +195,10 @@ void Updater::doDownload()
 
     progress = 0.f; set (State::downloading);
     int status = 0;
-    auto in = juce::URL (a.url).createInputStream (juce::URL::InputStreamOptions (juce::URL::ParameterHandling::inAddress)
-                                                       .withExtraHeaders ("User-Agent: ObsidianAmpSuite\r\nAccept: application/octet-stream")
-                                                       .withConnectionTimeoutMs (15000).withNumRedirectsToFollow (8).withStatusCode (&status));
+    auto in = open (a.url, "User-Agent: ObsidianAmpSuite\r\nAccept: application/octet-stream", 15000, 8, status);
+    if (threadShouldExit() || stopDownload) { progress = 0.f; set (State::available, "Download stopped."); return; }
     if (in == nullptr || (status != 0 && status != 200)) { set (State::failed, "The download didn't start (GitHub " + juce::String (status) + ")."); return; }
+    const struct Forget { Updater& u; juce::WebInputStream* s; ~Forget() { u.forget (s); } } fg { *this, in.get() };
 
     const auto part = target.withFileExtension ("part");
     part.deleteFile();
