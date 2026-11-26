@@ -613,6 +613,14 @@ void Rig::setCab (const juce::String& key)
     auto cab = rig.getChildWithName ("CAB");
     const auto entry = findInLibrary (cabLibrary(), key);
     if (entry.isVoid()) { message ("Unknown cab: " + key, true); return; }
+    if ((bool) entry["loader"])
+    {
+        // the IR loader cab (key "custom") holds whatever IRs you load with Load IR / its LOAD buttons:
+        // choosing it never drops them, and it has no IRs of its own to switch to
+        if (! cab["key"].toString().startsWith ("custom"))
+            message (entry["name"].toString() + " plays your own IRs: press its LOAD buttons or Load IR…", false);
+        return;
+    }
     // a cab with several IR sets ("voices": album tones, mic positions, speakers) starts on its first one
     const juce::var voices = entry["voices"];
     const juce::var src = (voices.isArray() && voices.size() > 0) ? voices[0] : entry;

@@ -1742,7 +1742,7 @@ OBS_NOINLINE static int runSelfTestBody (Report& r, const juce::StringArray& arg
         auto probe = std::make_unique<dsp::CabSection>(); probe->prepare (SR, BLOCK);   // heap: keep big DSP objects off the self-test's stack
         for (auto& c : *lib.getArray())
         {
-            if ((bool) c["builtIn"]) continue;
+            if ((bool) c["builtIn"] || (bool) c["loader"]) continue;      // the IR loader has no IRs of its own (checked below)
             ++cabs;
             const auto key = c["key"].toString();
             juce::Array<juce::var> list;
@@ -1767,6 +1767,21 @@ OBS_NOINLINE static int runSelfTestBody (Report& r, const juce::StringArray& arg
             }
             r.check (problems.isEmpty() && switches, key + ": " + juce::String (list.size()) + (list.size() > 1 ? " voices" : " IR set") + ", every IR installed and readable"
                      + (switches ? juce::String() : ", but the voice button didn't switch the IRs") + (problems.isEmpty() ? juce::String() : " (" + problems.joinIntoString ("; ") + ")"));
+        }
+        // the IR loader cab (key "custom"): loading your own IR shows it, and choosing it keeps the IRs you loaded
+        const auto loader = Rig::findInLibrary (lib, "custom");
+        const auto ownIr = Rig::contentFolder().getChildFile ("IRs").getChildFile ("Cabs/Atlas/Mesa_OS_4x12_57_m160.wav");
+        if (! loader.isVoid() && ownIr.existsAsFile())
+        {
+            p.rig().setCab ("builtin-4x12");
+            p.rig().loadIr (1, ownIr);
+            const auto loaded = p.rig().toJson()["cab"];
+            p.rig().setCab ("custom");
+            const auto kept = p.rig().toJson()["cab"];
+            r.check ((bool) loader["loader"] && loaded["key"].toString() == "custom" && kept["key"].toString() == "custom"
+                     && juce::File (kept["irB"].toString()) == ownIr,
+                     "your own IR shows the IR loader cab (" + loader["name"].toString() + "), and choosing it keeps the IR you loaded");
+            p.rig().setCab ("builtin-4x12");
         }
         if (cabs == 0) r.info ("(no cab pack in Documents/" OBSIDIAN_PRODUCT_NAME "/Cabs: skipped)");
         else r.info (juce::String (cabs) + " IR cabs, " + juce::String (sets) + " IR sets");

@@ -569,6 +569,14 @@
    "based_on": "Marshall JCM900 Lead 1960 4x12 (straight)",
    "builder": "cab",
    "plugin": "plugin/Content/Cabs/steropes_cab.json"
+  },
+  "proteus_cab": {
+   "name": "Proteus 4x12",
+   "spec": "cabs/proteus_cab.json",
+   "size": "4x12",
+   "based_on": "IR loader: your own impulse responses, one per mic",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/proteus_cab.json"
   }
  },
  "pedals": {

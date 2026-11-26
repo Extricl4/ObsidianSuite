@@ -1,0 +1,21 @@
+{
+ "key": "custom",
+ "name": "Proteus 4x12",
+ "size": "4x12",
+ "basedOn": "IR loader: your own impulse responses, one per mic",
+ "loader": true,
+ "source": "the Obsidian Amp Suite (no IRs of its own)",
+ "img": "cabs/proteus_cab.webp",
+ "imgW": 545,
+ "imgH": 640,
+ "screenA": [53.0, 42.2, 216.4, 117.3],
+ "screenB": [285.7, 42.2, 449.2, 117.3],
+ "buttonA": [222.2, 55.7, 262.8, 85.8],
+ "buttonB": [455.4, 55.7, 496.0, 85.8],
+ "speakers": [
+  [161.9, 238.9, 90.8, 90.9],
+  [383.1, 238.9, 90.8, 90.9],
+  [161.9, 438.1, 90.8, 90.9],
+  [383.1, 438.1, 90.8, 90.9]
+ ]
+}

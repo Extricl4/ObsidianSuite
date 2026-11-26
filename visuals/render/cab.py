@@ -24,7 +24,9 @@ Spec (cabs/<key>.json, "builder": "cab"):
   speakers  [[x, along, r], ...]  x, and distance along the grille from its bottom edge, radius of the hole
   emblem    {"kind": "tesseract", "x", "along", "size", "bar", "mat": [r,g,b], "metal", "rough", "rot": [a,b,c,d]}
   display   {"w", "h", "x", "z"}  dark glass screen on the front frame;  button {"x", "z", "r", "led": [r,g,b]}
-  leds      [{"z", "w", "color", "strength"}]   thin light lines on the frame
+  displays  [{"id", "w", "h", "x", "z"}]  several screens; buttons [{"id", "x", "z", "r"} or {"id", "shape": "rect", "w", "h", ...}]
+            (the map file lists every screen and button by id: display* -> the plugin's screen*, button* -> button*)
+  leds      [{"z", "w", "color", "strength"}]   thin light lines on the frame;  screws {"inset", "r"}  rack screws
 """
 import bpy, bmesh, math, sys, json, os, itertools
 from mathutils import Vector, Matrix
@@ -474,25 +476,59 @@ if EM:
     for q in P3:
         s_ = add(bpy.ops.mesh.primitive_uv_sphere_add, radius=bar * 0.75, segments=24, ring_count=12, location=world(q)); setmat(s_, EMM); smooth(s_, 80)
 
-# display, voice button and light lines on the front frame (the digital cab)
+# displays, buttons, light lines and rack screws on the front frame (the digital cabs)
 MAP = {}
-DP = S.get('display')
-if DP:
-    dw, dh, dx, dz = DP['w'], DP['h'], DP.get('x', 0.0), DP['z']
-    rbox((dx, -0.05, dz), (dw + 1.6, 0.5, dh + 1.6), mat('bezel', (0.008, 0.008, 0.009), 0.6, 0.22, coat=0.6), 0.25, 3)
-    rbox((dx, -0.32, dz), (dw, 0.05, dh), mat('screen', (0.0, 0.0, 0.0), 0, 0.06, coat=1.0,
-         emit=DP.get('glow', [0.05, 0.09, 0.12]), estr=DP.get('glow_strength', 0.6)), 0.05, 2)
-    MAP['display'] = (dx, -0.36, dz, dw, dh)
-BT_ = S.get('button')
-if BT_:
-    bx, bz, br = BT_['x'], BT_['z'], BT_.get('r', 1.6)
+BEZ = mat('bezel', (0.008, 0.008, 0.009), 0.6, 0.22, coat=0.6)
+def display(did, dp):
+    dw, dh, dx, dz = dp['w'], dp['h'], dp.get('x', 0.0), dp['z']
+    rbox((dx, -0.05, dz), (dw + dp.get('bezel', 1.6), 0.5, dh + dp.get('bezel', 1.6)), BEZ, 0.25, 3)
+    rbox((dx, -0.32, dz), (dw, 0.05, dh), mat('screen_' + did, (0.0, 0.0, 0.0), 0, 0.05, coat=1.0,
+         emit=dp.get('glow', [0.05, 0.09, 0.12]), estr=dp.get('glow_strength', 0.6)), 0.05, 2)
+    MAP[did] = (dx, -0.36, dz, dw, dh)
+for dp in ([dict(S['display'], id='display')] if S.get('display') else []) + S.get('displays', []):
+    display(dp.get('id', 'display'), dp)
+def button(bid, b):
+    bx, bz = b['x'], b['z']; led = b.get('led', [0.4, 0.75, 1.0])
+    if b.get('shape') == 'rect':      # a rack-style push button: brushed cap in a dark well, a light line under it
+        bw, bh = b.get('w', 5.0), b.get('h', 2.2)
+        rbox((bx, -0.04, bz), (bw + 0.8, 0.3, bh + 0.8), BEZ, 0.2, 3)
+        rbox((bx, -0.42, bz), (bw, 0.7, bh), mat('bcap_' + bid, (0.5, 0.5, 0.52), 1.0, 0.26, aniso=0.7), 0.22, 3)
+        rbox((bx, -0.08, bz - bh / 2 - 0.95), (bw, 0.1, 0.16), mat('bled_' + bid, (0.02, 0.02, 0.02), 0, 0.3, emit=led, estr=b.get('strength', 6)), 0.03, 2)
+        MAP[bid] = (bx, -0.8, bz - 0.3, bw + 1.2, bh + 2.2)
+        return
+    br = b.get('r', 1.6)
     ring = add(bpy.ops.mesh.primitive_torus_add, major_radius=br * 1.18, minor_radius=0.18, major_segments=96, minor_segments=12, location=(bx, -0.12, bz))
-    ring.rotation_euler = (math.pi / 2, 0, 0); setmat(ring, mat('bring', (0.02, 0.02, 0.02), 0, 0.3, emit=BT_.get('led', [0.4, 0.75, 1.0]), estr=BT_.get('strength', 6)))
+    ring.rotation_euler = (math.pi / 2, 0, 0); setmat(ring, mat('bring_' + bid, (0.02, 0.02, 0.02), 0, 0.3, emit=led, estr=b.get('strength', 6)))
     cap = add(bpy.ops.mesh.primitive_cylinder_add, vertices=96, radius=br, depth=0.9, location=(bx, -0.35, bz)); cap.rotation_euler = (math.pi / 2, 0, 0)
-    bevel(cap, 0.22, 4, 30, 'NONE'); setmat(cap, mat('bcap', (0.5, 0.5, 0.52), 1.0, 0.28, aniso=0.7))
-    MAP['button'] = (bx, -0.8, bz, br * 2.5, br * 2.5)
+    bevel(cap, 0.22, 4, 30, 'NONE'); setmat(cap, mat('bcap_' + bid, (0.5, 0.5, 0.52), 1.0, 0.28, aniso=0.7))
+    MAP[bid] = (bx, -0.8, bz, br * 2.5, br * 2.5)
+for b in ([dict(S['button'], id='button')] if S.get('button') else []) + S.get('buttons', []):
+    button(b.get('id', 'button'), b)
 for ld in S.get('leds', []):
     rbox((ld.get('x', 0.0), -0.04, ld['z']), (ld['w'], 0.12, ld.get('h', 0.22)), mat('led', (0.02, 0.02, 0.02), 0, 0.3, emit=ld['color'], estr=ld.get('strength', 8)), 0.04, 2)
+RH = S.get('rack_handles')
+if RH:   # rack-style front handles on the frame's sides (like Eidolon's): a bar on two standoffs
+    RHM = mat('rhandle', RH.get('color', [0.55, 0.55, 0.57]), 1.0, RH.get('rough', 0.2), aniso=0.5)
+    z0, z1, so, rr_ = RH['z0'], RH['z1'], RH.get('standoff', 2.2), RH.get('r', 0.5)
+    for sx in (-1, 1):
+        x = sx * RH.get('x', W / 2 - BS / 2)
+        bar = add(bpy.ops.mesh.primitive_cylinder_add, vertices=32, radius=rr_, depth=z1 - z0, location=(x, -so, (z0 + z1) / 2)); setmat(bar, RHM); smooth(bar, 60)
+        for z in (z0, z1):
+            st = add(bpy.ops.mesh.primitive_cylinder_add, vertices=32, radius=rr_ * 0.95, depth=so, location=(x, -so / 2, z))
+            st.rotation_euler = (math.pi / 2, 0, 0); setmat(st, RHM); smooth(st, 60)
+            el = add(bpy.ops.mesh.primitive_uv_sphere_add, radius=rr_ * 1.02, segments=24, ring_count=12, location=(x, -so, z)); setmat(el, RHM); smooth(el, 80)
+            ft = add(bpy.ops.mesh.primitive_cylinder_add, vertices=32, radius=rr_ * 1.7, depth=0.3, location=(x, -0.15, z))
+            ft.rotation_euler = (math.pi / 2, 0, 0); setmat(ft, RHM); bevel(ft, 0.1, 2)
+SC = S.get('screws')
+if SC:   # rack screws in the frame's corners: a domed head with a hex socket
+    SCM = mat('screw', (0.09, 0.09, 0.095), 1.0, 0.25); HEX = mat('hex', (0.004, 0.004, 0.004), 0.5, 0.5)
+    ins = SC.get('inset', 1.8); r_ = SC.get('r', 0.5)
+    for sx in (-1, 1):
+        for z in (ins, H - ins):
+            hd = add(bpy.ops.mesh.primitive_uv_sphere_add, radius=r_, segments=32, ring_count=16, location=(sx * (W / 2 - ins), 0.0, z))
+            hd.scale = (1, 0.38, 1); setmat(hd, SCM); smooth(hd, 80)
+            hx = add(bpy.ops.mesh.primitive_cylinder_add, vertices=6, radius=r_ * 0.42, depth=0.2, location=(sx * (W / 2 - ins), -r_ * 0.36, z))
+            hx.rotation_euler = (math.pi / 2, 0, 0); setmat(hx, HEX)
 
 # lift the cab onto its casters / feet
 root = link(bpy.data.objects.new('cab', None))

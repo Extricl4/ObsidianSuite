@@ -8,6 +8,7 @@ scales them to plugin/Content/Faces/img/cabs/<key>.webp and writes the picture f
   imgW, imgH     its size in pixels
   screen, button where the cab's display and voice button are, in those pixels (from visuals/out/front/<key>_map.json):
                  the CAB page writes the voice name on the display, and the drawn button steps through the voices.
+  screenA/B, buttonA/B   the IR loader cab (Proteus): one screen per mic showing its IR, and a LOAD button beside each.
 
 The mic layout is written for every cab with a spec in visuals/cabs (it needs no render, only the spec, read-only):
   speakers       [[cx, cy, rx, ry], ...]  every speaker's centre and radius in picture pixels, in reading order
@@ -131,12 +132,14 @@ for k in keys:
         s = H / h0; im = im.resize((round(w0 * s), H), Image.LANCZOS)
         im.save(os.path.join(IMG, k + '.webp'), 'WEBP', quality=90, method=6)
         o.update(img='cabs/' + k + '.webp', imgW=im.size[0], imgH=im.size[1])
-        for f in ('screen', 'button'): o.pop(f, None)
+        for f in [f for f in o if f.startswith(('screen', 'button'))]: o.pop(f, None)
         mp = os.path.join(OUT, k + '_map.json')
         if os.path.exists(mp):
+            # every screen and button by id: display -> screen, displayA -> screenA, button / buttonA -> the same
             m = json.load(open(mp))
-            for f in ('display', 'button'):
-                if f in m: o['screen' if f == 'display' else f] = [round(v * s, 1) for v in m[f]]
+            for f, box in m.items():
+                if f.startswith(('display', 'button')):
+                    o[('screen' + f[7:]) if f.startswith('display') else f] = [round(v * s, 1) for v in box]
         print(k, im.size, os.path.getsize(os.path.join(IMG, k + '.webp')) // 1024, 'KB')
     elif not o.get('imgW'):
         print('skip', k, '(no render yet)'); continue

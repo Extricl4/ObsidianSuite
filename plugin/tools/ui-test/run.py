@@ -1030,6 +1030,24 @@ async def run(standalone):
                   f'mic A snaps onto its recorded spot, the dust cap and the edge (rec {v_rec}/{rec_on}/glow {snapped}, cap {v_cap}, edge {v_edge})')
             await pick_cab('builtin-4x12')
             check(await pg.evaluate("!document.querySelector('.obs-cabpic')"), 'a built-in cab goes back to the plain card')
+            # ---- the IR loader cab (Proteus): first in CHOOSE CAB; choosing it asks for your IR; your IRs show on its screens
+            if any(c.get('loader') for c in state['cabs']):
+                await pg.evaluate("window.__mock.log.length=0")
+                await pg.evaluate(big + ".click()"); await pg.wait_for_timeout(200)
+                first = await pg.evaluate("(()=>{const t=[...document.querySelectorAll('.obs-tile[data-cab]')].find(t=>t.offsetParent); return t ? t.dataset.cab + ' | ' + t.textContent : ''})()")
+                await pg.locator('.obs-tile[data-cab="custom"]:visible').click(); await pg.wait_for_timeout(400)
+                asked = await pg.evaluate("window.__mock.log.filter(x=>x[0]==='loadIr').map(x=>x[1])")
+                scr = await pg.evaluate("[...document.querySelectorAll('.obs-cabscreen.ld')].map(s=>s.textContent)")
+                name = await pg.evaluate("(document.querySelector('.obs-cabname')||{}).textContent")
+                check(first.startswith('custom') and 'Proteus' in first and asked == [2] and name == 'Proteus 4x12' and scr == ['MIC ATest IR AB', 'MIC BTest IR AB'],
+                      f'the IR loader cab is first in CHOOSE CAB, asks for an IR, and shows it on both mic screens ({first[:40]}; {asked}; {name}; {scr})')
+                await pg.locator('.obs-cabload[data-load="1"]').click(); await pg.wait_for_timeout(400)
+                asked = await pg.evaluate("window.__mock.log.filter(x=>x[0]==='loadIr').map(x=>x[1])")
+                scr = await pg.evaluate("[...document.querySelectorAll('.obs-cabscreen.ld b')].map(s=>s.textContent)")
+                fits = await pg.evaluate("[...document.querySelectorAll('.obs-cabscreen.ld b')].every(b=>b.scrollWidth<=b.parentElement.clientWidth)")
+                check(asked == [2, 1] and scr == ['Test IR AB', 'Test IR B'] and fits, f"the LOAD button drawn beside mic B's screen loads mic B only ({asked}; {scr}; fits {fits})")
+                await pg.screenshot(path=str(OUT / 'cab-proteus.png'))
+                await pick_cab('builtin-4x12')
 
         # ---- control sweep fixes (2026-11-25): defaults on double-click, live values on the cut knobs, EQ faders, footer, SIREN
         async def kn_center(sel):
