@@ -28,6 +28,8 @@ TARGET_DB = -26.0
 
 # ------------------------------------------------------------------ what the plugin has
 def plugin_state(binary):
+    if '--state' in sys.argv:                       # a state dumped before (--dump-ui-state), e.g. while the plugin is busy
+        return json.loads(Path(sys.argv[sys.argv.index('--state') + 1]).read_text(encoding='utf-8'))
     f = Path(tempfile.gettempdir()) / 'obsidian-ui-state.json'
     subprocess.run([str(binary), '--dump-ui-state', str(f)], check=True, capture_output=True, timeout=180)
     return json.loads(f.read_text(encoding='utf-8'))
@@ -38,6 +40,7 @@ class Gear:
         self.params = {p['id']: p for p in state['params']}
         self.amps = {a['key']: a for a in state['amps']}
         self.cabs = {c['key'] for c in state['cabs']}
+        self.cabfiles = {f.stem: json.loads(f.read_text(encoding='utf-8')) for f in (CONTENT / 'Cabs').glob('*.json')}
         self.capture = {}
         for f in (CONTENT / 'Amps').glob('*.json'):
             amp = json.loads(f.read_text(encoding='utf-8').replace('"":', '"_":'))
@@ -197,6 +200,71 @@ def cab(size='4x12', mic='Dynamic 57', pos=None, dist=None, mic2='Ribbon 121', l
     if hc is not None: p['cab.hc'] = hc
     return 'builtin-' + size, p
 
+class IrCab:
+    def __init__(self, key, voice=None, a=None, b=None, params=None):
+        self.key, self.voice, self.a, self.b, self.params = key, voice, a, b, params or {}
+
+def ir(key, voice=None, a=None, b=None, **params):
+    """A cab from the IR cab pack, its mics on the spots the IRs were recorded at (cabs.py says which cab each preset
+    gets; this is for a preset that wants its own). voice: one of its voice buttons by name. a / b: mic A / B moved:
+    (speaker, position 0..1, angle in radians). params: cab settings by name, b_level=-6 -> cab.b.level."""
+    return IrCab(key, voice, a, b, {'cab.' + k.replace('_', '.'): v for k, v in params.items()})
+
+def amp_is_rig(key, chosen, knobs=None):
+    """A full-rig capture (its cab and mic are in the capture): the plugin's cab stays out of the way."""
+    if key not in G.capture: return False
+    amp = G.capture[key][0]
+    sel = (amp.get('map') or {}).get('selector')               # a selector knob's own captures (Eos: the Comfortably Numb solos)
+    if sel and sel.get('rig'):
+        v = (knobs or {}).get(sel.get('label', ''))
+        if v not in (None, 0, 0.0, 'OFF', 'Off', 'off'): return True
+    kind = (amp.get('kind') or '').lower()
+    st = (amp.get('map') or {}).get('settings') or {}
+    s = st.get('|'.join(str(c) for c in chosen) if chosen else '_')
+    if s is None and st: s = next(iter(st.values()))
+    return bool(s.get('rig', kind.startswith('full rig'))) if isinstance(s, dict) else kind.startswith('full rig')
+
+def cab_for(p, chosen):
+    """-> (cab key or None, {settings}, {extra spec fields}). See cabs.py."""
+    import cabs as C
+    key, name = p['amp'].key, p['name']
+    if key == 'orpheus': return None, {'cab.on': 0}, {}                 # the acoustic sim is made to be heard with no cab
+    if amp_is_rig(key, chosen, p['amp'].knobs): return None, {}, {}
+    c = p['cab']
+    hint = ''
+    if not isinstance(c, IrCab):
+        old = (c[1] if c else {}) or {}                                  # what the built-in cab's mics said: darker, brighter
+        if old.get('cab.a.mic') == 1 or old.get('cab.a.pos', 0) >= 0.5: hint = 'dark'
+        artist = p['folder'][8:] if p['folder'].startswith('Artists/') else ''
+        art = C.ARTIST.get(artist, {})
+        pick = C.PRESET.get(name) or art.get(key) or art.get('*') or C.AMP.get(key)
+        if pick is None: raise SystemExit(f'{name}: no cab for amp {key} (cabs.py)')
+        explicit = name in C.PRESET
+        c = IrCab(pick[0], pick[1])
+        if hint == 'dark' and not explicit:
+            names = [v['name'] for v in (G.cabfiles[c.key].get('voices') or [])]
+            if c.voice == 'POS 1' and 'POS 2' in names: c.voice = 'POS 2'
+            elif c.key == 'brontes_cab': c.voice = 'R121'
+            elif c.key == 'asteria_cab': c.voice = 'ALNICO GOLD'
+            else: c.params = {'cab.a.pos': 0.45, 'cab.b.pos': 0.45, **c.params}
+    f = G.cabfiles.get(c.key)
+    if f is None: raise SystemExit(f'{name}: no IR cab {c.key}')
+    extra = {}
+    if c.voice is not None:
+        names = [v['name'] for v in (f.get('voices') or [])]
+        if c.voice not in names: raise SystemExit(f'{name}: {c.key} has no voice "{c.voice}" ({names})')
+        extra['cabVoice'] = names.index(c.voice)
+    params = {'cab.on': 1, **c.params}
+    mics = []
+    for m, spot in ((0, c.a), (1, c.b)):
+        if spot is None: mics.append(None); continue
+        spk, pos = spot[0], spot[1]
+        ang = spot[2] if len(spot) > 2 else (-0.785 if m == 0 else -2.356)
+        params['cab.' + 'ab'[m] + '.pos'] = pos
+        mics.append([spk, ang])
+    if any(mics): extra['cabMics'] = [x or [0 if i == 0 else min(1, len(f.get('speakers') or [0]) - 1), -0.785 if i == 0 else -2.356] for i, x in enumerate(mics)]
+    return c.key, params, extra
+
 # EQ: 63, 125, 250, 500, 1k, 2k, 4k, 8k, 16k Hz
 EQ = {
     'flat':    [0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -237,9 +305,7 @@ def build_spec():
         names.add(name)
         amp, chosen = amp_spec(p['amp'], name)
         params = {}
-        cabkey = None
-        if p['cab']:
-            cabkey, cp = p['cab']; params.update(cp)
+        cabkey, cp, cabx = cab_for(p, chosen); params.update(cp)
         if p['gate'] is None: params['gate.on'] = 0
         else: params['gate.on'] = 1; params['gate.thresh'] = p['gate']
         if p['doubler'] is None: params['doubler.on'] = 0
@@ -248,6 +314,8 @@ def build_spec():
         if p['in_gain'] is not None: params['in.gain'] = p['in_gain']
         if p['transpose']: params['transpose'] = p['transpose']; params['transpose.hq'] = 1
         eq = EQ[p['eq']] if isinstance(p['eq'], str) else p['eq']
+        album_ir = cabkey == 'metallon_cab' and G.cabfiles[cabkey]['voices'][cabx.get('cabVoice', 0)].get('album') not in (None, 'JC CLEAN')
+        if album_ir: eq = EQ['flat']                 # an album IR carries the record's own EQ; the preset's curve would scoop twice
         fix = TONEFIX.get(name)                      # tonecheck.py --fix: measured on a real DI, laid on top
         if fix: eq = [max(-12.0, min(12.0, round(a + b, 1))) for a, b in zip(eq, fix)]
         for i, g in enumerate(eq): params[f'eq.b{i + 1}'] = g
@@ -264,9 +332,9 @@ def build_spec():
         cat = p['folder'] if artist else p['type']
         file = ('Artists/' + slug(p['folder'][8:]) + '/' + slug(p['folder'][8:]) + '-' + slug(name) if artist else 'Factory/factory-' + slug(name)) + '.json'
         e = {'name': name, 'category': cat, 'type': p['type'], 'note': p['note'], 'file': file,
-             'amp': amp, 'cab': cabkey, 'racks': racks, 'params': params, 'levelOffset': p['level']}
+             'amp': amp, 'cab': cabkey, 'racks': racks, 'params': params, 'levelOffset': p['level'], **cabx}
         if not p['measure']: e['level'] = False
-        if isinstance(p['eq'], str) and p['eq'] != 'flat' and not TONEFIX.get(name): e['eqName'] = p['eq'].capitalize()
+        if isinstance(p['eq'], str) and p['eq'] != 'flat' and not TONEFIX.get(name) and not album_ir: e['eqName'] = p['eq'].capitalize()
         if steps: e['synSteps'] = steps
         if p['amp'].key in G.capture:
             fb = p['amp'].fallback

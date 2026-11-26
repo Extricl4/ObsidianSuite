@@ -42,10 +42,10 @@ def make(m):
 
     # =====================================================================================
     a = artist('Metallica')
-    a("Hit the Lights", 'Rhythm', "Kill 'Em All (1983) · a boosted Marshall: raw, mid-heavy, fast", A('tyche', Gain=8, Treble=6.5, Middle=7, Bass=5, Presence=6.5, Volume=7, Master=6),
+    a("Hit the Lights", 'Rhythm', "Kill 'Em All (1983) · a boosted Marshall through the Kill 'Em All IR: raw, mid-heavy, fast", A('chrysaor', Gain=8, Bass=5, Middle=7, Treble=6.5, Presence=6.5, Master=5.5),
       FOURx12, pre=[boost(10, 140, 0, 2)], eq='thrash', gate=-56, doubler=6)
-    a("Fade to Black (Clean)", 'Clean', "Ride the Lightning (1984) · the clean arpeggios, a little chorus", A('melinoe', mic='SM57 + 414', Volume=4, Treble=6, Bass=5, Middle=5, Reverb=1.5, Speed=0, Intensity=0),
-      pre=[comp(-28, 3, 6)], post=[chorus(0.6, 35, 30), dly(460, 20, 12), hall(2.8, 18)])
+    a("Fade to Black (Clean)", 'Clean', "Ride the Lightning (1984) · the clean arpeggios: a Roland JC with its own chorus, through a real JC IR", A('persephone', channel='Ch II', voice='Clean', Volume=4.5, Treble=6, Middle=5, Bass=5, Reverb=0, switches=['chorus'], Speed=2.5, Depth=4),
+      pre=[comp(-28, 3, 6)], post=[dly(460, 20, 12), hall(2.8, 18)])
     a("Fade to Black (Solo)", 'Lead', "Ride the Lightning (1984) · the long, mournful outro lead", A('chrysaor', Gain=8, Bass=4.5, Middle=7, Treble=6.5, Presence=6, Master=5),
       FOURx12, pre=[sd1('D I', -6, 5)], eq='lead', gate=-60, post=[dly(480, 30, 20), plate(2.4, 16)])
     a("Ride the Lightning", 'Rhythm', "Ride the Lightning (1984) · boosted JCM800, tighter and darker than Kill 'Em All", A('chrysaor', Gain=8.5, Bass=6, Middle=5, Treble=6.5, Presence=6.5, Master=5),
@@ -56,8 +56,8 @@ def make(m):
       FOURx12, eq='thrash', gate=-52, doubler=6, width=120)
     a("Blackened", 'Rhythm', "...And Justice for All (1988) · the famously dry, scooped, bass-less wall", A('citadel', lead='Lead', Volume=8, Treble=7.5, Bass=2.5, Middle=3, Presence=7, Lead_drive=7.5, Master=5),
       FOURx12, pre=[ts('II', -2, 3)], eq=SCOOP_JUSTICE, gate=-50, doubler=5, width=125)
-    a("One (Clean Intro)", 'Clean', "...And Justice for All (1988) · the clean intro, chorus and a soft room", A('melinoe', mic='SM57 + 414', Volume=4, Treble=6, Bass=4.5, Middle=5, Reverb=1),
-      pre=[comp(-28, 3, 6)], post=[chorus(0.5, 45, 40), hall(2.5, 20)], width=120)
+    a("One (Clean Intro)", 'Clean', "...And Justice for All (1988) · the clean intro: a Roland JC's chorus through a real JC IR, a soft hall", A('persephone', channel='Ch II', voice='Clean', Volume=4.5, Treble=6, Middle=5, Bass=4.5, Reverb=0, switches=['chorus'], Speed=2, Depth=5),
+      pre=[comp(-28, 3, 6)], post=[hall(2.5, 20)], width=120)
     a("One (Machine Gun)", 'Rhythm', "...And Justice for All (1988) · the double-kick machine-gun section", A('citadel', lead='Lead', Volume=8, Treble=7, Bass=3, Middle=3.5, Presence=6.5, Lead_drive=7.5, Master=5),
       FOURx12, eq=SCOOP_JUSTICE, gate=-48, doubler=5)
     a("Enter Sandman", 'Rhythm', "Metallica / Black Album (1991) · Mark IV with the graphic EQ: huge, polished, heavy", A('achlys', channel='Lead', voice='Lead midgain + EQ', Gain=6.5, Treble=6.5, Bass=5, Middle=5, Presence=6, Lead_drive=6.5, Master=5),
@@ -167,7 +167,7 @@ def make(m):
     a("Angels", 'Clean', "The Stage (2016) · the clean ballad: chorus, echo and a long reverb", A('strix', channel='Clean', voice='Clean UK', Gain=4, Bass=5, Middle=5, Treble=6, Presence=5.5, Resonance=5, Master=5),
       pre=[comp(-26, 3, 5)], post=[chorus(0.45, 30, 28), dly(480, 28, 16), hall(3.6, 24)], width=125)
     a("Exist", 'Ambient', "The Stage (2016) · the 15-minute epic's spacey lead with a shimmer", A('strix', channel='Lead', voice='Lead 2', Gain=5.5, Bass=4.5, Middle=6, Treble=6, Presence=5.5, Resonance=5, Master=5),
-      eq='lead', gate=-60, post=[dly(560, 40, 24), hall(4.5, 26)], sfx=[shimmer(7, 30, 22)], width=130)
+      eq='lead', gate=-60, post=[dly(560, 40, 24), fx('elysium', Decay=7, Size=90, Pre_delay=50, Tone=6000, Low_Cut=170, Mod=5, Mix=28)], sfx=[shimmer(7, 30, 22)], width=130)
     # ---- Life Is But a Dream... (2023)
     a("Life Is But a Dream (Album Rhythm)", 'Rhythm', "Life Is But a Dream... (2023) · thick, modern and a little unhinged", A('vulcan', channel='Ch 3 · mega', voice='Potty Time', Gain=6, Low=6, Mid=5, High=5.5, Presence=5.5, Depth=6, Master=5),
       FOURx12, eq='tight', gate=-50, doubler=7, width=120)
@@ -202,7 +202,7 @@ def make(m):
     a("Comfortably Numb (Rhythm)", 'Clean', "The Wall (1979) · the clean chord stabs in the chorus", A('eos', channel='Brilliant', Volume=5, Bass=5, Treble=6.5, Middle=5, Presence=5.5, Master=6),
       pre=[comp(-26, 4, 6)], post=[chorus(0.6, 30, 25), hall(2.6, 18)])
     a("Time (Solo)", 'Lead', "The Dark Side of the Moon (1973) · a fuzzy, biting Hiwatt solo", A('eos', channel='Linked', Volume=6, Bass=5, Treble=6.5, Middle=6, Presence=6, Master=6),
-      pre=[fuzz(6, 6.5, -4)], gate=-62, post=[dly(380, 22, 16, 'Tape'), hall(2.8, 16)])
+      pre=[fuzz(6, 6.5, -4)], gate=-62, post=[fx('mnemosyne', Time=380, Intensity=30, Heads='3', Wow=15, Age=30, Spring=0, Echo=26, Tone=5000), hall(2.8, 16)])
     a("Money", 'Crunch', "The Dark Side of the Moon (1973) · gritty 7/4 riff and solo", A('eos', channel='Linked', boost='Klon drive', Volume=6, Bass=5, Treble=6.5, Middle=6, Presence=6, Master=6),
       post=[tape(300, 18, 14), room(10)])
     a("Shine On You Crazy Diamond", 'Lead', "Wish You Were Here (1975) · the slow, glassy four-note theme", A('eos', channel='Brilliant', boost='Klon pushed', Volume=5.5, Bass=4.5, Treble=6.5, Middle=5, Presence=5.5, Master=6),
@@ -212,7 +212,7 @@ def make(m):
     a("Another Brick in the Wall", 'Clean', "The Wall (1979) · the funky, compressed clean riff with eighth-note echo", A('eos', channel='Brilliant', Volume=4.5, Bass=4.5, Treble=7, Middle=5, Presence=6, Master=6),
       pre=[comp(-30, 6, 9, 85)], post=[sdly('1/8', 20, 16, 'Digital'), room(8)])
     a("Echoes", 'Ambient', "Meddle (1971) · the ping and the long, spacey delays", A('eos', channel='Normal', Volume=5, Bass=5, Treble=6, Middle=5, Presence=5, Master=6),
-      post=[dly(620, 45, 25, 'Tape'), flanger(0.12, 35, 30, 2.5, 25), hall(5, 28)], width=140)
+      post=[fx('mnemosyne', Time=620, Intensity=50, Heads='1+2+3', Wow=20, Age=30, Spring=0, Echo=34, Tone=5000), flanger(0.12, 35, 30, 2.5, 25), hall(5, 28)], width=140)
     a("Dogs", 'Lead', "Animals (1977) · bright, chorused lead with long echoes", A('eos', channel='Linked', boost='Klon drive', Volume=6, Bass=4.5, Treble=6.5, Middle=5.5, Presence=6, Master=6),
       post=[chorus(0.5, 30, 25), dly(500, 35, 22, 'Ping-Pong'), hall(3.5, 20)])
     a("Run Like Hell", 'Clean', "The Wall (1979) · the galloping repeats on a clean guitar", A('eos', channel='Brilliant', Volume=5, Bass=4.5, Treble=6.5, Middle=5, Presence=5.5, Master=6),
@@ -475,7 +475,7 @@ def make(m):
     a("Stairway to Heaven (Solo)", 'Lead', "Led Zeppelin IV (1971) · the solo, warm and biting", A('tyche', Gain=7.5, Treble=6, Middle=7, Bass=5, Presence=6, Volume=7, Master=6),
       FOURx12, eq='lead', gate=-62, post=[tape(380, 20, 14), plate(2, 14)])
     a("Stairway to Heaven (Intro)", 'Acoustic', "Led Zeppelin IV (1971) · the fingerpicked intro, 12-string shimmer", A('orpheus', take='Take 2', Gain=3.5, Bass=5, Middle=5, Treble=6, Body=6.5, Reverb=2, Volume=5),
-      eq='acoustic', pre=[octave(35, 0, 0, 100, 7)], post=[chorus(0.6, 20, 20), hall(2.6, 18)])
+      eq='acoustic', pre=[fx('lyra', Octave=45, Detune=6, Spread=8, Chime=15, Width=55, Mix=100)], post=[hall(2.6, 18)])
     a("Kashmir", 'Crunch', "Physical Graffiti (1975) · the hypnotic riff with a slow phaser", A('tyche', Gain=6.5, Treble=6, Middle=6.5, Bass=5.5, Presence=5.5, Volume=7, Master=6),
       FOURx12, pre=[phaser(0.25, 45, 25, '4', 35)], gate=-64, post=[hall(2.6, 18)])
     a("Immigrant Song", 'Crunch', "Led Zeppelin III (1970) · galloping, tight crunch", A('tyche', Gain=6.5, Treble=6.5, Middle=7, Bass=5, Presence=6, Volume=7, Master=6),
@@ -484,7 +484,7 @@ def make(m):
     # =====================================================================================
     a = artist('Jimi Hendrix')
     a("Purple Haze", 'Crunch', "Are You Experienced (1967) · fuzz into a Marshall, octave-up on the solo. E flat tuning", A('tyche', Gain=6, Treble=6.5, Middle=6.5, Bass=5, Presence=6, Volume=7, Master=6),
-      FOURx12, pre=[octave(45, 0, 0, 90, 6), fuzz(7, 6, -3)], eq='fuzz', post=[room(12)])
+      FOURx12, pre=[fx('icarus', Fuzz=70, Octave=55, Tone=3000, Level=-4, Mix=100)], eq='fuzz', post=[room(12)])
     a("Little Wing", 'Clean', "Axis: Bold as Love (1967) · the clean, chordal intro through a rotary speaker", A('melinoe', mic='SM57 + 414', Volume=5, Treble=6, Bass=5, Middle=5.5, Reverb=2),
       pre=[vibe(1.2, 60, 'Rotary')], post=[spring(16)])
     a("Voodoo Child (Slight Return)", 'Lead', "Electric Ladyland (1968) · wah and fuzz, wide open", A('tyche', Gain=6.5, Treble=6.5, Middle=6.5, Bass=5, Presence=6, Volume=7, Master=6),
@@ -519,13 +519,13 @@ def make(m):
     # =====================================================================================
     a = artist('U2')
     a("Where the Streets Have No Name", 'Clean', "The Joshua Tree (1987) · dotted-eighth echoes on a chiming AC30", A('astraea', channel='Top Boost', Volume=5, Treble=7, Bass=4.5, Tone_Cut=3, Reverb=0, Master=6),
-      cab('2x12'), post=[sdly('1/8.', 30, 40, 'Digital', 6000), hall(2.4, 16)], width=130)
+      cab('2x12'), post=[fx('gemini', Time=476, Pattern='DOTTED', Feedback=32, Cross=40, Tone=6000, Mod=10, Mix=38), hall(2.4, 16)], width=130)
     a("With or Without You", 'Ambient', "The Joshua Tree (1987) · the endless, swelling 'infinite guitar'", A('astraea', channel='Top Boost', Volume=5, Treble=6.5, Bass=4.5, Tone_Cut=3.5, Reverb=0, Master=6),
       cab('2x12'), post=[swell(600, 50), sdly('1/8.', 40, 26)], sfx=[shimmer(10, 30, 30)], width=140)
     a("Sunday Bloody Sunday", 'Crunch', "War (1983) · biting, jangly crunch", A('astraea', channel='Top Boost', boost='Treble booster', Volume=6.5, Treble=7, Bass=4.5, Tone_Cut=3, Reverb=0, Master=6),
       cab('2x12'), post=[sdly('1/8', 20, 16), room(10)])
     a("Pride (In the Name of Love)", 'Clean', "The Unforgettable Fire (1984) · bright arpeggios with dotted-eighth echo", A('astraea', channel='Top Boost', Volume=5.5, Treble=7, Bass=4.5, Tone_Cut=3, Reverb=0, Master=6),
-      cab('2x12'), post=[sdly('1/8.', 30, 35, 'Digital', 6000), hall(2.6, 16)], width=130)
+      cab('2x12'), post=[fx('gemini', Time=566, Pattern='DOTTED', Feedback=30, Cross=40, Tone=6000, Mod=10, Mix=34), hall(2.6, 16)], width=130)
 
     # =====================================================================================
     a = artist('Nirvana')
@@ -662,7 +662,7 @@ def make(m):
     a("Selenium Forest", 'Clean', "Handmade Cities (2016) · glassy, chorused clean", A('persephone', channel='Ch I', voice='Bright', Volume=4.5, Treble=6.5, Middle=5, Bass=5, switches=['chorus'], Speed=3, Depth=5),
       pre=[comp(-28, 4, 7)], post=[sdly('1/8.', 30, 20), hall(3, 20)])
     a("Every Piece Matters", 'Ambient', "Impulse Voices (2020) · dreamy clean with shimmer", A('dionysus', channel='Green · clean', voice='Bright', Gain=4, Bass=5, Middle=5, Treble=6, Presence=5.5, Master=5),
-      post=[chorus(0.4, 30, 25), sdly('1/4', 40, 24)], sfx=[shimmer(8, 35, 30)], width=140)
+      post=[chorus(0.4, 30, 25), fx('astral', Time=500, Feedback=50, Shimmer=40, Interval='+OCT', Diffuse=45, Mod=25, Tone=6000, Mix=30)], sfx=[fx('nimbus', Decay=14, Cloud=70, Drift=40, Swell=300, Tone=5500, Mix=30)], width=140)
 
     # =====================================================================================
     a = artist('Deftones')
@@ -834,7 +834,7 @@ def make(m):
     a("The Summoning", 'Rhythm', "Take Me Back to Eden (2023) · djent riffs with a choir pad behind", A('umbra', channel='Channel 3', mode='Extreme', Gain=5.5, Treble=6.5, Middle=5, Bass=5, Presence=6, Master=5, Output=5),
       eq='djent', gate=-44, synth=S('Choir of the Damned', mix=25), doubler=6, width=125)
     a("Alkaline", 'Clean', "Sundowning (2019) · soft clean with a glassy pad", A('persephone', channel='Ch I', voice='Warm', Volume=4, Treble=6, Middle=5, Bass=5),
-      synth=S('Glass Pad', mix=30), post=[sdly('1/8.', 30, 18), hall(3.6, 24)], width=130)
+      synth=S('Glass Pad', mix=30), post=[sdly('1/8.', 30, 18), fx('elysium', Decay=6, Size=85, Pre_delay=40, Tone=6000, Low_Cut=160, Mod=5, Mix=26)], width=130)
     a("Granite", 'Rhythm', "Take Me Back to Eden (2023) · heavy, low, modern", A('nihil', amp='Blend of both', Master=5, Presence=6, Bass=5.5, Middle=5, Treble=6, Drive=6, Gain=6),
       eq='djent', gate=-44, doubler=6)
     a("Vore", 'Rhythm', "Take Me Back to Eden (2023) · the blackgaze-heavy one", A('typhon', channel='Red', Gain=6.5, Volume=5, Low=6, Mid=5, High=6, Presence=6, Resonance=6),
@@ -845,7 +845,7 @@ def make(m):
     a("Holy Roller", 'Rhythm', "Eternal Blue (2021) · extremely low and tight, with whammy dives", A('moros', boost='Blower Box', Gain=6, Bass=6, Mid=5, Treble=6, Level=5, Master=5, Tight=7, Air=5),
       FOURx12, pre=[whammy(-12, 30)], eq='djent', gate=-42, doubler=6)
     a("Circle with Me", 'Ambient', "Eternal Blue (2021) · airy clean with shimmer", A('dionysus', channel='Green · clean', voice='Bright', Gain=4, Bass=5, Middle=5, Treble=6, Presence=5.5, Master=5),
-      post=[chorus(0.4, 30, 25), sdly('1/8.', 35, 22)], sfx=[shimmer(8, 35, 28)], width=140)
+      post=[chorus(0.4, 30, 25), sdly('1/8.', 35, 22)], sfx=[fx('empyrean', Decay=10, Size=90, Shimmer=45, Voice_II=25, Interval='5TH', Tone=6000, Mod=6, Mix=30)], width=140)
     a("Constance", 'Clean', "Eternal Blue (2021) · gentle, sad clean", A('melinoe', mic='SM57 + 414', Volume=4, Treble=5.5, Bass=5, Middle=5, Reverb=2),
       post=[dly(520, 30, 18, 'Tape'), hall(3.6, 24)])
 

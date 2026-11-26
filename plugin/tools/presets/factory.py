@@ -25,7 +25,7 @@ def make(m):
     P('Country Snap', F, 'Clean', 'Chicken-picking twang: squashed, bright, slapback echo', M('glass65', gain=3.5, bass=4, mid=5.5, treble=7.5, presence=6.5),
       cab('2x12', mic='Dynamic 57', pos=0.25), eq='bright',
       pre=[fx('compressor', Threshold=-30, Ratio=8, Attack=3, Release=90, Makeup=10, Blend=80)],
-      post=[fx('lethe', Time=110, Feedback=8, Mix=22, Mode='Tape', Tone=4500)])
+      post=[fx('mnemosyne', Time=110, Intensity=8, Heads='1', Wow=15, Age=25, Spring=12, Echo=30, Tone=4500)])
     P('Jazz Box', F, 'Clean', 'Dark, round neck-pickup jazz tone', A('hyperion', channel='Clean', voice='Warm', Volume=4.5, Treble=3.8, Middle=6, Bass=6, Presence=3.5, Master=5),
       cab('1x12', mic='Ribbon 121', pos=0.55), eq='warm', post=[fx('crypt', Decay=1.2, Size=35, Mix=12, Voice='ROOM')])
     P('Surf Tremolo', F, 'Clean', 'Drippy spring reverb and a choppy tremolo', A('melinoe', mic='SM57', Volume=4.5, Treble=7, Bass=4, Middle=5, Reverb=7, Speed=5.5, Intensity=6),
@@ -123,7 +123,8 @@ def make(m):
 
     # ------------------------------------------------------------------ AMBIENT
     P('Cathedral Swell', F, 'Ambient', 'No pick attack: notes rise into a shimmering cathedral', M('glass65', gain=2.5, bass=5, mid=4.5, treble=6, presence=5.5, master=5),
-      post=[fx('aurora', Attack=500, Sensitivity=6, Reverb=45, Decay=6, Mix=100)], sfx=[fx('seraph', Decay=8, Size=90, Shimmer=55, Mix=40)])
+      post=[fx('aurora', Attack=500, Sensitivity=6, Reverb=35, Decay=6, Mix=100), fx('elysium', Decay=9, Size=95, Pre_delay=60, Tone=6000, Low_Cut=180, Mod=6, Mix=40)],
+      sfx=[fx('seraph', Decay=8, Size=90, Shimmer=45, Mix=25)])
     P('Night Drive', F, 'Ambient', 'Chorus, dotted-eighth echoes and a long hall', A('persephone', channel='Ch I', voice='Warm', Volume=4, Treble=6, Middle=5, Bass=5, Reverb=0),
       post=[fx('tide', Rate=0.35, Depth=55, Mix=40), fx('lethe', Sync=1, Division='1/8.', Feedback=45, Mix=30, Mode='Ping-Pong'), fx('crypt', Decay=5, Size=80, Mix=35, Voice='HALL')], width=140, doubler=12)
     P('Frozen Pad', F, 'Ambient', 'Hold a chord, FREEZE it, play over the top (SFX: Stasis)', M('glass65', gain=2.5, treble=6),
@@ -136,7 +137,7 @@ def make(m):
     P('Ambient Slap', F, 'Ambient', 'Slap echo into a percussive shoegaze wash', A('dionysus', channel='Green · clean', voice='Bright', Gain=4, Bass=5, Middle=5, Treble=6, Presence=5.5, Master=5),
       post=[fx('tide', Rate=0.6, Depth=35, Mix=30), fx('halcyon', Mode='SLAP', Mix=40, Decay=2), fx('crypt', Decay=6, Size=85, Mix=30)], width=140)
     P('Octave Heaven', F, 'Ambient', 'Shimmer an octave up with slow chorus, made for single notes', M('glass65', gain=2.5, treble=6.2),
-      post=[fx('tide', Rate=0.3, Depth=50, Mix=35), fx('lethe', Time=700, Feedback=45, Mix=25, Mode='Tape')], sfx=[fx('seraph', Decay=10, Size=95, Shimmer=70, Interval=0, Mix=45)])
+      post=[fx('tide', Rate=0.3, Depth=50, Mix=35), fx('lethe', Time=700, Feedback=45, Mix=25, Mode='Tape')], sfx=[fx('empyrean', Decay=12, Size=95, Shimmer=70, Voice_II=30, Interval='5TH', Tone=6000, Mod=6, Mix=45)])
     P('Tremolo Dream', F, 'Ambient', 'Stereo tremolo in time with the song, drenched in reverb', A('persephone', channel='Ch I', voice='Clean', Volume=4, Treble=6, Middle=5, Bass=5),
       post=[fx('pulse', Sync=1, Division='1/8', Depth=60, Shape='Sine', Stereo=1), fx('crypt', Decay=4.5, Size=80, Mix=35, Voice='HALL')], width=140)
 
@@ -168,7 +169,7 @@ def make(m):
     P('Ring Mod Robot', F, 'FX', 'Metallic ring-modulated clangs', A('chrysaor', Gain=6, Bass=5, Middle=6, Treble=6, Presence=6, Master=5),
       gate=-58, sfx=[fx('tesla', Frequency=440, Mix=55, LFO_Rate=0.4, LFO_Depth=35, Mode=0)])
     P('Octave Fuzz', F, 'FX', 'Ripping fuzz with an octave up, Hendrix-style', A('tyche', Gain=5, Treble=6, Middle=6, Bass=5, Presence=5, Volume=6, Master=6),
-      cab('4x12'), pre=[fx('abyss', Dry=80, Oct_1=0, Oct_2=0, Oct_up=60, Tone=6), fx('ember', Fuzz=8, Tone=6, Level=-3, Gate=2)], eq='fuzz')
+      cab('4x12'), pre=[fx('icarus', Fuzz=75, Octave=70, Tone=3200, Level=-4, Mix=100)], eq='fuzz')
     P('Tape Stop Breakdown', F, 'FX', 'Heavy riffs with a tape stop on the SFX rack: hit STOP', A('hecate', Gain=6.5, Volume=5, Low=6, Mid=5, High=6.5, Presence=6, Resonance=6),
       eq='tight', gate=-48, sfx=[fx('gravity', Stop=0, Stop_Time=900, Start_Time=300, Mix=100)], doubler=7)
     P('Sub Octave Riff', F, 'FX', 'Bass and guitar in one: two sub octaves under a crunch', A('chrysaor', Gain=6.5, Bass=5, Middle=6, Treble=6, Presence=6, Master=5),
@@ -186,4 +187,4 @@ def make(m):
     P('Fingerstyle Room', F, 'Acoustic', 'Warmer acoustic for fingerpicking', A('orpheus', take='Take 2', Gain=3.5, Bass=5.5, Middle=5, Treble=5.5, Body=7, Reverb=3, Volume=5),
       eq='acoustic', post=[fx('crypt', Decay=2, Size=55, Mix=20, Voice='HALL')])
     P('Twelve String', F, 'Acoustic', 'A 12-string feel: an octave up with a light chorus', A('orpheus', take='Take 1', Gain=4, Bass=4.5, Middle=4.5, Treble=6.5, Body=6, Reverb=2, Volume=5),
-      eq='acoustic', pre=[fx('abyss', Dry=100, Oct_1=0, Oct_2=0, Oct_up=45, Tone=7)], post=[fx('tide', Rate=0.8, Depth=25, Mix=30), fx('crypt', Decay=1.8, Mix=16)])
+      eq='acoustic', pre=[fx('lyra', Octave=50, Detune=7, Spread=9, Chime=15, Width=60, Mix=100)], post=[fx('crypt', Decay=1.8, Mix=16)])

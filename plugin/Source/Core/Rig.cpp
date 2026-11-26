@@ -129,7 +129,31 @@ void Rig::restore (const juce::ValueTree& saved)
     if (saved.isValid() && saved.hasType ("RIG")) rig.copyPropertiesAndChildrenFrom (saved, nullptr);
     else rig.copyPropertiesAndChildrenFrom (makeDefaultRig(), nullptr);
     repairRig (rig);
+    relinkCabIrs();
     applyAll();
+}
+
+/** A preset saved on another computer names its cab's IRs by that computer's paths (the factory presets: the
+    machine that made them). A cab from the IR pack finds them again here, by file name, in this computer's IR folder.
+    IRs you loaded yourself stay as they are. */
+void Rig::relinkCabIrs()
+{
+    auto cab = rig.getChildWithName ("CAB");
+    const auto entry = findInLibrary (cabLibrary(), cab["key"].toString());
+    if (entry.isVoid()) return;
+    juce::StringArray known;
+    auto add = [&known] (const juce::var& v) { for (auto k : { "irA", "irB" }) if (v[k].toString().isNotEmpty()) known.addIfNotAlreadyThere (v[k].toString()); };
+    add (entry);
+    if (auto* vs = entry["voices"].getArray()) for (auto& v : *vs) add (v);
+    if (auto* sp = entry["spots"].getArray()) for (auto& v : *sp) if (v["ir"].toString().isNotEmpty()) known.addIfNotAlreadyThere (v["ir"].toString());
+    const auto nameOf = [] (const juce::String& p) { return p.replaceCharacter ('\\', '/').fromLastOccurrenceOf ("/", false, false); };
+    for (auto k : { "irA", "irB" })
+    {
+        const auto p = cab[k].toString();
+        if (p.isEmpty() || known.contains (p) || (juce::File::isAbsolutePath (p) && juce::File (p).existsAsFile())) continue;
+        for (auto& q : known)
+            if (nameOf (q).equalsIgnoreCase (nameOf (p))) { cab.setProperty (k, q, nullptr); break; }
+    }
 }
 
 void Rig::resetToDefault()

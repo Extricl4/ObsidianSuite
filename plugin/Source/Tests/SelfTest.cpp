@@ -1162,9 +1162,9 @@ OBS_NOINLINE static int runSelfTestBody (Report& r, const juce::StringArray& arg
             }
             r.check (ok, "every " + what + " alone plays, clean (" + juce::String (lo, 1) + " .. " + juce::String (hi, 1) + " dB)" + bad);
         };
-        layer ("atm.bed.on", "atm.bed.type", obs::atmosdefs::kBedTypes, -50.f, juce::StringArray::fromTokens ("Hiss Wind Rain Surf Rumble Static Breath", false), "bed");
-        layer ("atm.drn.on", "atm.drn.voice", obs::atmosdefs::kVoices, -50.f, juce::StringArray::fromTokens ("Organ Strings Choir Glass Abyss Descent Ascent", false), "drone voice");
-        layer ("atm.tex.on", "atm.tex.type", obs::atmosdefs::kTextures, -75.f, juce::StringArray::fromTokens ("Vinyl Fire Drips Metal Shimmer Whispers Heartbeat Knocks Moans Flesh", false), "texture");
+        layer ("atm.bed.on", "atm.bed.type", obs::atmosdefs::kBedTypes, -50.f, juce::StringArray::fromTokens ("Hiss Wind Rain Surf Rumble Static Breath Brook Night Forest SoftRain Underwater Air", false), "bed");
+        layer ("atm.drn.on", "atm.drn.voice", obs::atmosdefs::kVoices, -50.f, juce::StringArray::fromTokens ("Organ Strings Choir Glass Abyss Descent Ascent PipeOrgan Pad Angels Tanpura Bowls Harmonium Flute", false), "drone voice");
+        layer ("atm.tex.on", "atm.tex.type", obs::atmosdefs::kTextures, -75.f, juce::StringArray::fromTokens ("Vinyl Fire Drips Metal Shimmer Whispers Heartbeat Knocks Moans Flesh Chimes Birds MusicBox Bells Harp Stars Kalimba Leaves", false), "texture");
 
         // anything SUMMON or a hand could set: 24 random settings, extremes included
         {
@@ -1881,6 +1881,20 @@ OBS_NOINLINE static int runSelfTestBody (Report& r, const juce::StringArray& arg
 
     r.head ("IR cab mics (drawn speakers, dragging the mics, playing the IRs as recorded)");
     {
+        // a preset saved on another computer (the factory presets: the machine that made them) still finds its pack cab's IRs
+        {
+            p.rig().setCab ("metallon_cab"); p.rig().setCabVoice (2);
+            auto saved = p.rig().tree().createCopy();
+            saved.getChildWithName ("CAB").setProperty ("irA", "C:\\Users\\someone\\Documents\\Obsidian Amp Suite\\IRs\\Cabs\\Metallon\\Puppet_IR.wav", nullptr)
+                                         .setProperty ("irB", "/root/Documents/Obsidian Amp Suite/IRs/Cabs/Metallon/Puppet_IR.wav", nullptr);
+            p.rig().setCab ("atlas_cab");
+            p.rig().restore (saved);
+            const auto c = p.rig().tree().getChildWithName ("CAB");
+            const juce::File fa (c["irA"].toString()), fb (c["irB"].toString());
+            r.check (fa.existsAsFile() && fb.existsAsFile() && fa.getFileName() == "Puppet_IR.wav" && fb == fa,
+                     "a preset made on another computer finds its cab's IRs here (" + c["irA"].toString() + ")");
+            p.rig().setCab ("builtin-4x12");
+        }
         auto real = [&p] (const juce::String& id) {
             auto* rp = dynamic_cast<juce::RangedAudioParameter*> (p.state().getParameter (id)); return rp != nullptr ? rp->convertFrom0to1 (rp->getValue()) : -1.f; };
         const auto lib = Rig::cabLibrary();
@@ -2285,6 +2299,7 @@ int writeFactoryPresets (const juce::File& dir, const juce::File& specFile, floa
             for (auto& x : *sw) p.rig().setAmpSwitch ((int) x, true);
 
         if (e["cab"].toString().isNotEmpty()) p.rig().setCab (e["cab"].toString());
+        if (e.hasProperty ("cabVoice")) p.rig().setCabVoice ((int) e["cabVoice"]);              // an IR cab's voice button
 
         // pedals and effects: racks[0] = before the amp, [1] = after it, [2] = special FX
         if (auto* racks = e["racks"].getArray())
@@ -2317,6 +2332,11 @@ int writeFactoryPresets (const juce::File& dir, const juce::File& specFile, floa
                 setReal (p, kv.name.toString(), (float) (double) kv.value);
             }
         if (e["synSteps"].isArray()) p.rig().setSynthSteps (e["synSteps"]);
+        // an IR cab's mics moved off their recorded spots: [speaker, angle] each (POSITION is a setting above)
+        if (auto* mics = e["cabMics"].getArray())
+            for (int m = 0; m < juce::jmin (2, mics->size()); ++m)
+                if (auto* a = (*mics)[m].getArray(); a != nullptr && a->size() >= 2)
+                    p.rig().setCabMic (m, (int) (*a)[0], (double) (*a)[1], (float) p.state().getParameter (m == 0 ? "cab.a.pos" : "cab.b.pos")->getValue());
         if (e["eqName"].toString().isNotEmpty()) p.rig().setMisc ("eqPreset", e["eqName"].toString());
 
         // play it: every file loaded, a riff through it, the output level set to the target
@@ -2324,6 +2344,21 @@ int writeFactoryPresets (const juce::File& dir, const juce::File& specFile, floa
         for (int i = 0; i < 4; ++i) render (p, SR, BLOCK, 0.25, [] (int) { return 0.f; });   // let smoothing and loads settle
         auto st = render (p, SR, BLOCK, 3.0, input);
         float level = juce::Decibels::gainToDecibels (st.rms, -120.f), peak = juce::Decibels::gainToDecibels (st.peak, -120.f);
+        // more than OUTPUT's 12 dB too loud (an IR cab or no cab is much hotter than the old built-in cab): the rest comes
+        // off the cab mics' levels (after the amp, so the sound stays the same), or off INPUT with the cab off
+        if (st.finite && st.rms >= 1.0e-4f && (! e.hasProperty ("level") || (bool) e["level"]))
+        {
+            const float excess = targetDb + (float) (double) e.getProperty ("levelOffset", 0.0) - level + 12.f;
+            if (excess < -0.5f)
+            {
+                auto real = [&p] (const juce::String& id) { auto* rp = dynamic_cast<juce::RangedAudioParameter*> (p.state().getParameter (id)); return rp->convertFrom0to1 (rp->getValue()); };
+                if (real ("cab.on") >= 0.5f) for (auto id : { "cab.a.level", "cab.b.level" }) setReal (p, id, juce::jmax (-36.f, real (id) + excess));
+                else setReal (p, "in.gain", juce::jmax (-12.f, real ("in.gain") + excess));
+                for (int i = 0; i < 4; ++i) render (p, SR, BLOCK, 0.25, [] (int) { return 0.f; });
+                st = render (p, SR, BLOCK, 3.0, input);
+                level = juce::Decibels::gainToDecibels (st.rms, -120.f); peak = juce::Decibels::gainToDecibels (st.peak, -120.f);
+            }
+        }
         float outGain = 0.f;
         if (! st.finite || st.rms < 1.0e-4f) problems.add ("no sound");
         else if (! e.hasProperty ("level") || (bool) e["level"])

@@ -121,6 +121,7 @@ private:
     void message (const juce::String& t, bool err);
     void applyAmp();
     void applyCab();
+    void relinkCabIrs();
     void applyCabMic (int mic, const juce::var& libraryEntry);
     void placeCabMics (const juce::var& libraryEntry, bool wasRealIrCab);
     juce::var cabMics() const;
