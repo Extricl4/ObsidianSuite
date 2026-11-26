@@ -5,7 +5,7 @@
 //
 //  UI -> plugin:  window.obsidian.call("command", ...args)  -> handle()
 //  plugin -> UI:  events "obs:params", "obs:meters", "obs:rig", "obs:preset",
-//                 "obs:presets", "obs:toast", "obs:audio", "obs:settings"
+//                 "obs:presets", "obs:toast", "obs:audio", "obs:settings", "obs:cabs" (the cab list, after INSTALL PACK)
 //
 //  ADDING A COMMAND: add one entry in UiBridge::buildCommands() (UiBridge.cpp)
 //  and call it from WebUI/obsidian-bridge.js. Nothing else to touch.

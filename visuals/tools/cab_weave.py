@@ -32,6 +32,18 @@ CLOTHS = {
     # Marshall-style black grille cloth: fine 2x2 basket weave, tight, a little sheen
     'basket': dict(n=64, px=12, weave='basket', cover=0.80, jitter=0.04, wobble=0.04, fuzz=0.25, twist=0.35,
                    base=(0.012, 0.012, 0.013), hi=(0.055, 0.055, 0.058), streak=0.35, seed=7),
+    # blackface-style silver cloth: light silver threads with a dark teal-black pinstripe every 4th thread
+    'silver': dict(n=64, px=12, weave='plain', cover=0.80, jitter=0.03, wobble=0.03, fuzz=0.25, twist=0.3, shade=0.04,
+                   base=(0.11, 0.115, 0.115), hi=(0.42, 0.43, 0.42), base2=(0.025, 0.038, 0.042), hi2=(0.09, 0.12, 0.13),
+                   pattern='pin', period=4, streak=0.25, seed=19),
+    # tweed-era grille cloth: brown with gold stripes running down
+    'stripe': dict(n=72, px=12, weave='plain', cover=0.84, jitter=0.04, wobble=0.04, fuzz=0.3, twist=0.3, shade=0.05,
+                   base=(0.026, 0.014, 0.007), hi=(0.10, 0.058, 0.03), base2=(0.10, 0.07, 0.032), hi2=(0.40, 0.29, 0.13),
+                   pattern='stripe', period=6, width=2, streak=0.3, seed=23),
+    # lacquered tweed covering (2/2 twill linen): light warp, darker weft, so the twill shows as diagonal lines
+    'tweed': dict(n=48, px=10, weave='twill', cover=0.97, jitter=0.05, wobble=0.03, fuzz=0.2, twist=0.4, shade=0.07,
+                  base=(0.10, 0.062, 0.026), hi=(0.36, 0.25, 0.12), base2=(0.05, 0.028, 0.012), hi2=(0.17, 0.10, 0.045),
+                  pattern='warpweft', streak=0.4, seed=29),
 }
 
 
@@ -81,6 +93,8 @@ def make(name, c):
     cx = np.floor(xx / P).astype(int) % n; cy = np.floor(yy / P).astype(int) % n
     if c['weave'] == 'basket':
         warp_top = ((cx // 2 + cy // 2) % 2) == 0
+    elif c['weave'] == 'twill':          # 2/2 twill: each thread goes over two, under two, shifted one per row
+        warp_top = ((cx - cy) % 4) < 2
     else:
         warp_top = ((cx + cy) % 2) == 0
     # smooth undulation: a thread rises where it's on top and dips where it's under
@@ -116,9 +130,15 @@ def make(name, c):
     col = base[None, None, :] + (hi - base)[None, None, :] * t[..., None]
     pat = c.get('pattern')
     if pat:
+        wi = np.clip(warp_i, 0, n - 1); fi = np.clip(weft_i, 0, n - 1)
         if pat == 'checker':     # thread colour by thread index, in pairs: crossings make the checkerboard
-            wi = np.clip(warp_i, 0, n - 1); fi = np.clip(weft_i, 0, n - 1)
             light = np.where(on_warp, (wi // 2) % 2 == 0, (fi // 2) % 2 == 0).astype(float)
+        elif pat == 'pin':       # every `period`-th thread both ways is the second colour (a fine pinstripe grid)
+            light = np.where(on_warp, wi % c['period'] == 0, fi % c['period'] == 0).astype(float)
+        elif pat == 'stripe':    # `width` warp threads in every `period` are the second colour: stripes running down
+            light = (on_warp & (wi % c['period'] < c['width'])).astype(float)
+        elif pat == 'warpweft':  # warp in the first colour, weft in the second
+            light = (~on_warp).astype(float)
         else:                    # diamond lattice laid over the weave
             L = c['diamond'] * P; u = (xx + yy) / L; v = (xx - yy) / L
             du = np.abs((u % 1.0) - 0.5); dv = np.abs((v % 1.0) - 0.5)

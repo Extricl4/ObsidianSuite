@@ -1,0 +1,109 @@
+{
+ "key": "thalia_cab",
+ "name": "Thalia 2x12",
+ "size": "2x12",
+ "basedOn": "Vox AC30 2x12 (Celestion Alnico Blue / Silver)",
+ "source": "Origin Effects IR Cab Library (free from Origin Effects; not included, installed with INSTALL PACK)",
+ "pack": {
+  "id": "origin-effects",
+  "name": "Origin Effects IR Cab Library",
+  "maker": "Origin Effects",
+  "url": "https://origineffects.com/product/ir-cab-library/"
+ },
+ "voiceLabel": "TONE",
+ "voices": [
+  {
+   "name": "BRIGHT MIX",
+   "album": "BRIGHT",
+   "song": "MIX",
+   "irA": "Packs/origin-effects/British Alnico 2x12/British Alnico 2x12 - Bright - Mix.wav",
+   "irB": "Packs/origin-effects/British Alnico 2x12/British Alnico 2x12 - Bright - Mix.wav"
+  },
+  {
+   "name": "BRIGHT MD421",
+   "album": "BRIGHT",
+   "song": "MD421",
+   "irA": "Packs/origin-effects/British Alnico 2x12/British Alnico 2x12 Mics/British Alnico 2x12 - Bright - 421.wav",
+   "irB": "Packs/origin-effects/British Alnico 2x12/British Alnico 2x12 Mics/British Alnico 2x12 - Bright - 421.wav"
+  },
+  {
+   "name": "BRIGHT M160",
+   "album": "BRIGHT",
+   "song": "M160",
+   "irA": "Packs/origin-effects/British Alnico 2x12/British Alnico 2x12 Mics/British Alnico 2x12 - Bright - 160.wav",
+   "irB": "Packs/origin-effects/British Alnico 2x12/British Alnico 2x12 Mics/British Alnico 2x12 - Bright - 160.wav"
+  },
+  {
+   "name": "BRIGHT U87",
+   "album": "BRIGHT",
+   "song": "U87",
+   "irA": "Packs/origin-effects/British Alnico 2x12/British Alnico 2x12 Mics/British Alnico 2x12 - Bright - 87.wav",
+   "irB": "Packs/origin-effects/British Alnico 2x12/British Alnico 2x12 Mics/British Alnico 2x12 - Bright - 87.wav"
+  },
+  {
+   "name": "MEDIUM MIX",
+   "album": "MEDIUM",
+   "song": "MIX",
+   "irA": "Packs/origin-effects/British Alnico 2x12/British Alnico 2x12 - Medium - Mix.wav",
+   "irB": "Packs/origin-effects/British Alnico 2x12/British Alnico 2x12 - Medium - Mix.wav"
+  },
+  {
+   "name": "MEDIUM MD421",
+   "album": "MEDIUM",
+   "song": "MD421",
+   "irA": "Packs/origin-effects/British Alnico 2x12/British Alnico 2x12 Mics/British Alnico 2x12 - Medium - 421.wav",
+   "irB": "Packs/origin-effects/British Alnico 2x12/British Alnico 2x12 Mics/British Alnico 2x12 - Medium - 421.wav"
+  },
+  {
+   "name": "MEDIUM M160",
+   "album": "MEDIUM",
+   "song": "M160",
+   "irA": "Packs/origin-effects/British Alnico 2x12/British Alnico 2x12 Mics/British Alnico 2x12 - Medium - 160.wav",
+   "irB": "Packs/origin-effects/British Alnico 2x12/British Alnico 2x12 Mics/British Alnico 2x12 - Medium - 160.wav"
+  },
+  {
+   "name": "MEDIUM U87",
+   "album": "MEDIUM",
+   "song": "U87",
+   "irA": "Packs/origin-effects/British Alnico 2x12/British Alnico 2x12 Mics/British Alnico 2x12 - Medium - 87.wav",
+   "irB": "Packs/origin-effects/British Alnico 2x12/British Alnico 2x12 Mics/British Alnico 2x12 - Medium - 87.wav"
+  },
+  {
+   "name": "DARK MIX",
+   "album": "DARK",
+   "song": "MIX",
+   "irA": "Packs/origin-effects/British Alnico 2x12/British Alnico 2x12 - Dark - Mix.wav",
+   "irB": "Packs/origin-effects/British Alnico 2x12/British Alnico 2x12 - Dark - Mix.wav"
+  },
+  {
+   "name": "DARK MD421",
+   "album": "DARK",
+   "song": "MD421",
+   "irA": "Packs/origin-effects/British Alnico 2x12/British Alnico 2x12 Mics/British Alnico 2x12 - Dark - 421.wav",
+   "irB": "Packs/origin-effects/British Alnico 2x12/British Alnico 2x12 Mics/British Alnico 2x12 - Dark - 421.wav"
+  },
+  {
+   "name": "DARK M160",
+   "album": "DARK",
+   "song": "M160",
+   "irA": "Packs/origin-effects/British Alnico 2x12/British Alnico 2x12 Mics/British Alnico 2x12 - Dark - 160.wav",
+   "irB": "Packs/origin-effects/British Alnico 2x12/British Alnico 2x12 Mics/British Alnico 2x12 - Dark - 160.wav"
+  },
+  {
+   "name": "DARK U87",
+   "album": "DARK",
+   "song": "U87",
+   "irA": "Packs/origin-effects/British Alnico 2x12/British Alnico 2x12 Mics/British Alnico 2x12 - Dark - 87.wav",
+   "irB": "Packs/origin-effects/British Alnico 2x12/British Alnico 2x12 Mics/British Alnico 2x12 - Dark - 87.wav"
+  }
+ ],
+ "irA": "Packs/origin-effects/British Alnico 2x12/British Alnico 2x12 - Bright - Mix.wav",
+ "irB": "Packs/origin-effects/British Alnico 2x12/British Alnico 2x12 - Bright - Mix.wav",
+ "img": "cabs/thalia_cab.webp",
+ "imgW": 727,
+ "imgH": 640,
+ "speakers": [
+  [214.4, 356.3, 133.8, 133.8],
+  [512.6, 356.3, 133.8, 133.8]
+ ]
+}

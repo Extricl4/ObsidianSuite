@@ -1739,10 +1739,21 @@ OBS_NOINLINE static int runSelfTestBody (Report& r, const juce::StringArray& arg
     {
         const auto lib = Rig::cabLibrary();
         int cabs = 0, sets = 0;
+        juce::StringArray notInstalled;
         auto probe = std::make_unique<dsp::CabSection>(); probe->prepare (SR, BLOCK);   // heap: keep big DSP objects off the self-test's stack
         for (auto& c : *lib.getArray())
         {
             if ((bool) c["builtIn"] || (bool) c["loader"]) continue;      // the IR loader has no IRs of its own (checked below)
+            if (c["pack"].isObject() && ! (bool) c["packReady"])
+            {
+                // a maker's pack we may not ship, not installed here: choosing the cab keeps what's playing
+                notInstalled.addIfNotAlreadyThere (c["pack"]["name"].toString());
+                p.rig().setCab ("builtin-4x12");
+                p.rig().setCab (c["key"].toString());
+                if (p.rig().toJson()["cab"]["key"].toString() != "builtin-4x12")
+                    r.check (false, c["key"].toString() + ": its IR pack isn't installed, yet choosing it changed the cab");
+                continue;
+            }
             ++cabs;
             const auto key = c["key"].toString();
             juce::Array<juce::var> list;
@@ -1785,7 +1796,87 @@ OBS_NOINLINE static int runSelfTestBody (Report& r, const juce::StringArray& arg
         }
         if (cabs == 0) r.info ("(no cab pack in Documents/" OBSIDIAN_PRODUCT_NAME "/Cabs: skipped)");
         else r.info (juce::String (cabs) + " IR cabs, " + juce::String (sets) + " IR sets");
+        if (! notInstalled.isEmpty()) r.info ("(not installed here, their cabs skipped: " + notInstalled.joinIntoString (", ") + ")");
         p.rig().setCab ("builtin-4x12");
+
+        // IR packs we may not ship: INSTALL PACK takes the maker's zip and keeps its 48 kHz folder as IRs/Packs/<id>.
+        // A made-up zip shaped like the real one (a root folder, the pack once per sample rate, a manual) for every
+        // pack the cab files name; OBS_IRPACK=<zip> also installs a real pack (into a temp folder too)
+        juce::StringArray packIds;
+        for (auto& c : *lib.getArray()) if (c["pack"].isObject()) packIds.addIfNotAlreadyThere (c["pack"]["id"].toString());
+        const auto tmp = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("obsidian-selftest-irpack");
+        auto writeImp = [] (const juce::File& f, double rate)
+        {
+            f.deleteFile(); juce::WavAudioFormat wav;
+            std::unique_ptr<juce::FileOutputStream> os (f.createOutputStream());
+            if (os == nullptr) return false;
+            if (auto* w = wav.createWriterFor (os.get(), rate, 1, 24, {}, 0))
+            {
+                os.release(); std::unique_ptr<juce::AudioFormatWriter> ww (w);
+                juce::AudioBuffer<float> b (1, 64); b.clear(); b.setSample (0, 0, 0.9f);
+                return ww->writeFromAudioSampleBuffer (b, 0, 64);
+            }
+            return false;
+        };
+        for (const auto& id : packIds)
+        {
+            tmp.deleteRecursively(); tmp.createDirectory();
+            const auto packRoot = Rig::contentFolder().getChildFile ("IRs").getChildFile ("Packs").getChildFile (id);
+            juce::StringArray rels; juce::String name; int packCabs = 0;
+            for (auto& c : *lib.getArray())
+            {
+                if (c["pack"]["id"].toString() != id) continue;
+                name = c["pack"]["name"].toString(); ++packCabs;
+                if (auto* vs = c["voices"].getArray())
+                    for (auto& v : *vs) for (auto k : { "irA", "irB" })
+                        rels.addIfNotAlreadyThere (juce::File (v[k].toString()).getRelativePathFrom (packRoot).replaceCharacter ('\\', '/'));
+            }
+            const auto i44 = tmp.getChildFile ("i44.wav"), i48 = tmp.getChildFile ("i48.wav"), doc = tmp.getChildFile ("manual.pdf");
+            bool built = writeImp (i44, 44100.0) && writeImp (i48, 48000.0) && doc.replaceWithText ("not an IR");
+            const auto zipF = tmp.getChildFile ("pack.zip");
+            {
+                juce::ZipFile::Builder zb;
+                for (const auto& rel : rels)
+                {
+                    zb.addFile (i44, 0, "Test Pack V9/44.1kHz Test Pack/" + rel);
+                    zb.addFile (i48, 0, "Test Pack V9/48kHz Test Pack/" + rel);
+                }
+                zb.addFile (doc, 0, "Test Pack V9/Test Pack - Manual.pdf");
+                juce::FileOutputStream os (zipF);
+                built = built && os.openedOk() && zb.writeToStream (os, nullptr);
+            }
+            const auto irs = tmp.getChildFile ("IRs");
+            const auto res = Rig::installIrPack (zipF, irs);
+            const auto dest = irs.getChildFile ("Packs").getChildFile (id);
+            int found = 0; double rate = 0;
+            for (const auto& rel : rels) if (dest.getChildFile (rel).existsAsFile()) ++found;
+            juce::WavAudioFormat wav;
+            if (! rels.isEmpty())
+                if (auto rd = std::unique_ptr<juce::AudioFormatReader> (wav.createReaderFor (dest.getChildFile (rels[0]).createInputStream().release(), true)))
+                    rate = rd->sampleRate;
+            const bool onlyIrs = dest.findChildFiles (juce::File::findFiles, true, "*.pdf").isEmpty() && ! dest.getSiblingFile (id + ".installing").exists();
+            r.check (built && ! res.startsWith ("!") && found == rels.size() && rate == 48000.0 && onlyIrs && res.contains (juce::String (packCabs) + " cabs"),
+                     "INSTALL PACK takes the " + name + " zip: all " + juce::String (rels.size()) + " IRs its " + juce::String (packCabs)
+                     + " cabs use land in IRs/Packs/" + id + ", from the 48 kHz folder, and nothing else (" + res + ")");
+            // a zip that isn't one of the packs is turned down, and leaves nothing behind
+            const auto other = tmp.getChildFile ("other.zip");
+            {
+                juce::ZipFile::Builder zb; zb.addFile (i48, 0, "Some Other IRs/cab 57.wav");
+                juce::FileOutputStream os (other); zb.writeToStream (os, nullptr);
+            }
+            const auto res2 = Rig::installIrPack (other, tmp.getChildFile ("IRs2"));
+            r.check (res2.startsWith ("!") && ! tmp.getChildFile ("IRs2").getChildFile ("Packs").exists(), "a zip that isn't an IR pack the cabs use is turned down (" + res2.substring (1) + ")");
+            const auto real = juce::File (juce::SystemStats::getEnvironmentVariable ("OBS_IRPACK", {}));
+            if (real.existsAsFile())
+            {
+                const auto res3 = Rig::installIrPack (real, tmp.getChildFile ("IRs3"));
+                const auto d3 = tmp.getChildFile ("IRs3").getChildFile ("Packs").getChildFile (id);
+                int f3 = 0; for (const auto& rel : rels) if (d3.getChildFile (rel).existsAsFile()) ++f3;
+                r.check (! res3.startsWith ("!") && f3 == rels.size() && ! res3.contains ("missing"),
+                         "the real " + real.getFileName() + " installs every IR the cabs use (" + juce::String (f3) + " of " + juce::String (rels.size()) + "): " + res3);
+            }
+            tmp.deleteRecursively();
+        }
     }
 
     r.head ("IR cab mics (drawn speakers, dragging the mics, playing the IRs as recorded)");

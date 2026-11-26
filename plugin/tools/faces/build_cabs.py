@@ -65,14 +65,16 @@ def layout(S, imgW, imgH):
             acc += L
 
     HT = Hc + CH; m = S.get('margin', 0.03)
-    fw, fh = W + 2.0 + 2 * m * HT, HT * (1 + 2 * m)
+    TH = S.get('top_handle')            # a strap handle on top: the frame is taller by its height (as in cab.py)
+    FT = HT + ((TH.get('h', 4.5) + TH.get('t', 1.1) + 0.8) if TH else 0.0)
+    fw, fh = W + 2.0 + 2 * m * FT, FT * (1 + 2 * m)
     ry = int(S.get('px', 1000)); rx = int(round(ry * fw / fh))
     dist = (fh / 2) / (18 / 85)
     kx, ky = imgW / rx, imgH / ry
 
     def px(x, y, z):
         d = y + dist; t = 2 * d * 18 / 85
-        return (0.5 + x / (t * rx / ry)) * rx * kx, (0.5 - (z + CH - HT / 2) / t) * ry * ky
+        return (0.5 + x / (t * rx / ry)) * rx * kx, (0.5 - (z + CH - FT / 2) / t) * ry * ky
 
     out = []
     for (sx, along, r) in S.get('speakers', []):

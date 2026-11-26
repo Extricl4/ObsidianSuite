@@ -24,7 +24,7 @@ render/top.sh [keys]                                   # every missing pedal top
 `render/cab.py` builds cabs that look like the real boxes the IRs were recorded from (Mesa, Marshall, Bogner, Diezel,
 Orange, Vox, ENGL, Zilla, bass cabs ...), measured in centimetres: slant or straight fronts, tolex (bronco, levant,
 taurus, carpet, duratex, brushed metal), grille cloth (`art/weave_<cloth>.png`: jute, basket, checker = salt & pepper,
-diamond = Vox, wheat = Orange) or perforated metal over a scrim (`art/perf_<holes>.png`), piping, a reveal gap, metal /
+diamond = Vox, wheat = Orange, silver = blackface Fender, stripe = tweed era) or perforated metal over a scrim (`art/perf_<holes>.png`), piping, a reveal gap, metal /
 plastic / chrome corners, handles, casters, speakers behind the cloth, the tesseract emblem (a real 4D hypercube projected
 to the front) and the album cab's display, button and light lines. The spec format is at the top of `cab.py`; specs
 have `"builder": "cab"` (head.py's queue skips them).
@@ -37,6 +37,8 @@ python3 tools/cab_weave.py [cloth] | perf                 # remake the cloth / p
 python3 ../plugin/tools/faces/build_cabs.py [keys]        # renders -> the plugin's CAB page pictures
 ```
 Each cab's sound (IRs, voice buttons) lives in `plugin/Content/Cabs/<key>.json`; see `plugin/Content/README.md`.
+Fender-style and tweed cabs (2026-11-26): `top_handle` is a strap over the top, tolex `tweed` lacquered tweed
+(`art/weave_tweed.png`, a 2/2 twill), cloths `silver` (blackface) and `stripe` (tweed era). Plain fronts: no knobs.
 
 ## Engraved pedals (2026-11-21)
 New pedal art is drawn by `tools/art_<key>.py` (shared helpers in `tools/pedal_art_lib.py`: 3x supersampled plate, tapered strokes, vine scrolls, leaves, thorns).

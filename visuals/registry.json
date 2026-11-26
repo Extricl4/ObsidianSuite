@@ -574,9 +574,97 @@
    "name": "Proteus 4x12",
    "spec": "cabs/proteus_cab.json",
    "size": "4x12",
-   "based_on": "IR loader: your own impulse responses, one per mic",
+   "based_on": "IR loader: your own impulse response",
    "builder": "cab",
    "plugin": "plugin/Content/Cabs/proteus_cab.json"
+  },
+  "castor_cab": {
+   "name": "Castor 2x12",
+   "spec": "cabs/castor_cab.json",
+   "size": "2x12",
+   "based_on": "Fender Twin Reverb 2x12 (JBL D120F)",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/castor_cab.json"
+  },
+  "pollux_cab": {
+   "name": "Pollux 2x12",
+   "spec": "cabs/pollux_cab.json",
+   "size": "2x12",
+   "based_on": "Fender Pro Reverb 2x12",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/pollux_cab.json"
+  },
+  "zephyrus_cab": {
+   "name": "Zephyrus 2x10",
+   "spec": "cabs/zephyrus_cab.json",
+   "size": "2x10",
+   "based_on": "Fender Vibrolux Reverb 2x10",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/zephyrus_cab.json"
+  },
+  "demeter_cab": {
+   "name": "Demeter 1x12",
+   "spec": "cabs/demeter_cab.json",
+   "size": "1x12",
+   "based_on": "Fender Brown Deluxe 1x12 (6G3)",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/demeter_cab.json"
+  },
+  "thamyris_cab": {
+   "name": "Thamyris 1x12",
+   "spec": "cabs/thamyris_cab.json",
+   "size": "1x12",
+   "based_on": "Magnatone 213 Troubadour 1x12",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/thamyris_cab.json"
+  },
+  "hestia_cab": {
+   "name": "Hestia 1x12",
+   "spec": "cabs/hestia_cab.json",
+   "size": "1x12",
+   "based_on": "Fender 5E3 Tweed Deluxe 1x12",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/hestia_cab.json"
+  },
+  "pan_cab": {
+   "name": "Pan 1x8",
+   "spec": "cabs/pan_cab.json",
+   "size": "1x8",
+   "based_on": "Fender 5F2 Tweed Princeton 1x8",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/pan_cab.json"
+  },
+  "iapetus_cab": {
+   "name": "Iapetus 4x12",
+   "spec": "cabs/iapetus_cab.json",
+   "size": "4x12",
+   "based_on": "Marshall 1960A slant 4x12, checkerboard cloth",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/iapetus_cab.json"
+  },
+  "kottos_cab": {
+   "name": "Kottos 4x12",
+   "spec": "cabs/kottos_cab.json",
+   "size": "4x12",
+   "based_on": "Marshall 1960B straight 4x12 (1970, Celestion G12H 55 Hz)",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/kottos_cab.json"
+  },
+  "hyperion_cab": {
+   "name": "Hyperion 4x12",
+   "spec": "cabs/hyperion_cab.json",
+   "size": "4x12",
+   "based_on": "Bogner 412ST straight 4x12 (Celestion Vintage 30)",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/hyperion_cab.json"
+  },
+  "thalia_cab": {
+   "name": "Thalia 2x12",
+   "spec": "cabs/thalia_cab.json",
+   "size": "2x12",
+   "based_on": "Vox AC30 2x12 (Celestion Alnico Blue / Silver)",
+   "builder": "cab",
+   "plugin": "plugin/Content/Cabs/thalia_cab.json"
   }
  },
  "pedals": {

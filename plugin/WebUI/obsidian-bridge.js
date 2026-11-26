@@ -433,6 +433,13 @@ async function start() {
   on('obs:midi', renderMappings);
   on('obs:settings', s => { INIT.settings = s; safe('settings', () => renderSettings(s)); });
   on('obs:update', u => safe('update', () => renderUpdate(u)));
+  // INSTALL PACK finished: the cab list again (cabs from that pack are ready now)
+  on('obs:cabs', list => safe('cabs', () => {
+    if (Array.isArray(list)) CABS = list;
+    $$('.pop').forEach(p => { if (p._kind === 'cab' && p._open) renderLib(p); });
+    if (ampUi.cabBig) ampUi.cabBig._sig = '';
+    renderCab();
+  }));
   showPreset(st.preset);
 }
 
@@ -1302,9 +1309,17 @@ function setupAmpCab(st) {
   });
   intercept(b => b.classList.contains('obs-tile') && b.dataset.cab !== undefined, b => {
     const en = CABS.find(x => x.key === b.dataset.cab) || {};
+    if (needsPack(en)) {     // its IRs aren't installed yet: point at the pack's bar (GET IT / INSTALL PACK) and stay open
+      say(en.name + ' needs the free ' + en.pack.name + ': GET IT, then INSTALL PACK');
+      const bar = $('.obs-packbar[data-pack="' + en.pack.id + '"]', b.closest('.pop') || document);
+      if (bar) { bar.scrollIntoView({ block: 'nearest' }); bar.classList.remove('flash'); void bar.offsetWidth; bar.classList.add('flash'); }
+      return;
+    }
     if (en.loader) { if (!String((rig && rig.cab && rig.cab.key) || '').startsWith('custom')) call('loadIr', 2); }   // the IR loader: pick your IR
     else call('setCab', b.dataset.cab).then(r => r && applyRig(r));
     $$('.pop').forEach(p => p.style.display = 'none'); });
+  intercept(b => b.dataset.packGet !== undefined, b => call('openUrl', b.dataset.packGet));
+  intercept(b => b.dataset.packInstall !== undefined, () => call('installIrPack'));
 
   // amp panel lives where ADD AMP was
   if (AP) {
@@ -1457,14 +1472,21 @@ function renderLib(p) {
       + (tiles.length || (!folder && !flat && head) ? '' : '<div class="obs-empty">No amps match.</div>');
   } else {
     const cur = rig && rig.cab ? rig.cab.key : '';
-    const list = CABS.filter(c => (filter === 'ALL' || (c.size || '').replace('x', '×') === filter) && (!q || (c.name + ' ' + (c.size || '')).toLowerCase().includes(q)))
+    const list = CABS.filter(c => (filter === 'ALL' || (c.size || '').replace('x', '×') === filter) && (!q || (c.name + ' ' + (c.size || '') + ' ' + (c.basedOn || '')).toLowerCase().includes(q)))
       .sort((a, b) => (b.loader ? 1 : 0) - (a.loader ? 1 : 0));
-    p._grid.innerHTML = list.map(c => {
+    // packs we may not ship (the maker's licence): a bar per pack that isn't installed yet, its cabs dimmed until it is
+    const packs = new Map();
+    CABS.filter(needsPack).forEach(c => { const k = c.pack.id; if (!packs.has(k)) packs.set(k, Object.assign({ n: 0 }, c.pack)); packs.get(k).n++; });
+    const bars = [...packs.values()].map(pk => '<div class="obs-packbar" data-pack="' + esc(pk.id) + '"><span><b>' + esc(pk.name) + '</b><small>' + pk.n + ' cabs · free from '
+      + esc(pk.maker || 'its maker') + ', who don\'t let us include the IRs: download the zip, then install it here</small></span>'
+      + (pk.url ? '<button class="obs-btn" data-pack-get="' + esc(pk.url) + '">GET IT</button>' : '') + '<button class="obs-btn" data-pack-install="' + esc(pk.id) + '">INSTALL PACK…</button></div>').join('');
+    p._grid.innerHTML = bars + list.map(c => {
       const vs = c.voices || [], nv = vs.length && vs[0].album ? new Set(vs.map(v => v.album)).size : vs.length;
       const vl = nv > 1 ? ' · ' + nv + ' ' + (c.voiceLabel ? c.voiceLabel.toLowerCase() + 's' : 'voices') : '';
-      return '<button class="obs-tile' + (c.key === cur ? ' on' : '') + (c.img ? ' haspic cabpic' : '') + '" data-cab="' + esc(c.key) + '">'
+      const need = needsPack(c);
+      return '<button class="obs-tile' + (c.key === cur ? ' on' : '') + (c.img ? ' haspic cabpic' : '') + (need ? ' needpack' : '') + '" data-cab="' + esc(c.key) + '">'
         + (c.img ? '<span class="obs-tilepic cab" style="background-image:url(\'' + esc(faceImg(c.img)) + '\')"></span>' : '')
-        + '<i>' + esc(((c.size || '').replace('x', '×') || 'IR') + vl) + '</i><b>' + esc(c.name) + '</b><small>'
+        + '<i>' + esc(need ? 'GET IRS · ' + c.pack.name : ((c.size || '').replace('x', '×') || 'IR') + vl) + '</i><b>' + esc(c.name) + '</b><small>'
         + esc(c.basedOn ? 'Based on ' + c.basedOn : (c.builtIn ? 'Built in' : 'Your cab')) + '</small></button>'; }).join('') || '<div class="obs-empty">No cabs match.</div>';
   }
 }
@@ -1758,6 +1780,8 @@ function renderFace(a, info) {
   drawFace();
 }
 function cabEntry() { const k = rig && rig.cab ? rig.cab.key || '' : ''; return CABS.find(x => x.key === k) || (k.startsWith('custom') && CABS.find(x => x.loader)) || {}; }
+// a cab whose IRs come from a maker's pack that isn't installed yet
+function needsPack(c) { return !!(c && c.pack && c.pack.id && c.packReady === false); }
 function setCabVoice(i) { call('setCabVoice', i).then(r => r && applyRig(r)); }
 function cabVoiceStep(d) {
   const vs = cabEntry().voices || [], cur = (rig.cab || {}).voice | 0;

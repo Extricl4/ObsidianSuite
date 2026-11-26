@@ -1,0 +1,108 @@
+{
+ "key": "thamyris_cab",
+ "name": "Thamyris 1x12",
+ "size": "1x12",
+ "basedOn": "Magnatone 213 Troubadour 1x12",
+ "source": "Origin Effects IR Cab Library (free from Origin Effects; not included, installed with INSTALL PACK)",
+ "pack": {
+  "id": "origin-effects",
+  "name": "Origin Effects IR Cab Library",
+  "maker": "Origin Effects",
+  "url": "https://origineffects.com/product/ir-cab-library/"
+ },
+ "voiceLabel": "TONE",
+ "voices": [
+  {
+   "name": "BRIGHT MIX",
+   "album": "BRIGHT",
+   "song": "MIX",
+   "irA": "Packs/origin-effects/Magma Vintage 1x12/Magma Vintage 1x12 - Bright - Mix.wav",
+   "irB": "Packs/origin-effects/Magma Vintage 1x12/Magma Vintage 1x12 - Bright - Mix.wav"
+  },
+  {
+   "name": "BRIGHT MD421",
+   "album": "BRIGHT",
+   "song": "MD421",
+   "irA": "Packs/origin-effects/Magma Vintage 1x12/Magma Vintage 1x12 Mics/Magma Vintage 1x12 - Bright - 421.wav",
+   "irB": "Packs/origin-effects/Magma Vintage 1x12/Magma Vintage 1x12 Mics/Magma Vintage 1x12 - Bright - 421.wav"
+  },
+  {
+   "name": "BRIGHT M160",
+   "album": "BRIGHT",
+   "song": "M160",
+   "irA": "Packs/origin-effects/Magma Vintage 1x12/Magma Vintage 1x12 Mics/Magma Vintage 1x12 - Bright - 160.wav",
+   "irB": "Packs/origin-effects/Magma Vintage 1x12/Magma Vintage 1x12 Mics/Magma Vintage 1x12 - Bright - 160.wav"
+  },
+  {
+   "name": "BRIGHT U87",
+   "album": "BRIGHT",
+   "song": "U87",
+   "irA": "Packs/origin-effects/Magma Vintage 1x12/Magma Vintage 1x12 Mics/Magma Vintage 1x12 - Bright - 87.wav",
+   "irB": "Packs/origin-effects/Magma Vintage 1x12/Magma Vintage 1x12 Mics/Magma Vintage 1x12 - Bright - 87.wav"
+  },
+  {
+   "name": "MEDIUM MIX",
+   "album": "MEDIUM",
+   "song": "MIX",
+   "irA": "Packs/origin-effects/Magma Vintage 1x12/Magma Vintage 1x12 - Medium - Mix.wav",
+   "irB": "Packs/origin-effects/Magma Vintage 1x12/Magma Vintage 1x12 - Medium - Mix.wav"
+  },
+  {
+   "name": "MEDIUM MD421",
+   "album": "MEDIUM",
+   "song": "MD421",
+   "irA": "Packs/origin-effects/Magma Vintage 1x12/Magma Vintage 1x12 Mics/Magma Vintage 1x12 - Medium - 421.wav",
+   "irB": "Packs/origin-effects/Magma Vintage 1x12/Magma Vintage 1x12 Mics/Magma Vintage 1x12 - Medium - 421.wav"
+  },
+  {
+   "name": "MEDIUM M160",
+   "album": "MEDIUM",
+   "song": "M160",
+   "irA": "Packs/origin-effects/Magma Vintage 1x12/Magma Vintage 1x12 Mics/Magma Vintage 1x12 - Medium - 160.wav",
+   "irB": "Packs/origin-effects/Magma Vintage 1x12/Magma Vintage 1x12 Mics/Magma Vintage 1x12 - Medium - 160.wav"
+  },
+  {
+   "name": "MEDIUM U87",
+   "album": "MEDIUM",
+   "song": "U87",
+   "irA": "Packs/origin-effects/Magma Vintage 1x12/Magma Vintage 1x12 Mics/Magma Vintage 1x12 - Medium - 87.wav",
+   "irB": "Packs/origin-effects/Magma Vintage 1x12/Magma Vintage 1x12 Mics/Magma Vintage 1x12 - Medium - 87.wav"
+  },
+  {
+   "name": "DARK MIX",
+   "album": "DARK",
+   "song": "MIX",
+   "irA": "Packs/origin-effects/Magma Vintage 1x12/Magma Vintage 1x12 - Dark - Mix.wav",
+   "irB": "Packs/origin-effects/Magma Vintage 1x12/Magma Vintage 1x12 - Dark - Mix.wav"
+  },
+  {
+   "name": "DARK MD421",
+   "album": "DARK",
+   "song": "MD421",
+   "irA": "Packs/origin-effects/Magma Vintage 1x12/Magma Vintage 1x12 Mics/Magma Vintage 1x12 - Dark - 421.wav",
+   "irB": "Packs/origin-effects/Magma Vintage 1x12/Magma Vintage 1x12 Mics/Magma Vintage 1x12 - Dark - 421.wav"
+  },
+  {
+   "name": "DARK M160",
+   "album": "DARK",
+   "song": "M160",
+   "irA": "Packs/origin-effects/Magma Vintage 1x12/Magma Vintage 1x12 Mics/Magma Vintage 1x12 - Dark - 160.wav",
+   "irB": "Packs/origin-effects/Magma Vintage 1x12/Magma Vintage 1x12 Mics/Magma Vintage 1x12 - Dark - 160.wav"
+  },
+  {
+   "name": "DARK U87",
+   "album": "DARK",
+   "song": "U87",
+   "irA": "Packs/origin-effects/Magma Vintage 1x12/Magma Vintage 1x12 Mics/Magma Vintage 1x12 - Dark - 87.wav",
+   "irB": "Packs/origin-effects/Magma Vintage 1x12/Magma Vintage 1x12 Mics/Magma Vintage 1x12 - Dark - 87.wav"
+  }
+ ],
+ "irA": "Packs/origin-effects/Magma Vintage 1x12/Magma Vintage 1x12 - Bright - Mix.wav",
+ "irB": "Packs/origin-effects/Magma Vintage 1x12/Magma Vintage 1x12 - Bright - Mix.wav",
+ "img": "cabs/thamyris_cab.webp",
+ "imgW": 728,
+ "imgH": 640,
+ "speakers": [
+  [364.0, 349.6, 165.8, 165.9]
+ ]
+}

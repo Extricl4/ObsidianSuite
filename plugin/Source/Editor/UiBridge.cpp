@@ -204,6 +204,17 @@ void UiBridge::buildCommands()
         chooseFile ("Load an impulse response", "*.wav;*.aif;*.aiff;*.flac", false, [this, mic] (juce::File f) { proc.rig().loadIr (mic, f); });
         d (true);
     };
+    // an IR pack zip the user downloaded from its maker (the cabs that need it light up): the cab list comes back
+    c["installIrPack"] = [this] (const juce::Array<juce::var>&, Completion d)
+    {
+        chooseFile ("Install an IR pack (the zip you downloaded)", "*.zip", false, [this] (juce::File f)
+        {
+            const auto r = Rig::installIrPack (f);
+            toast (r.trimCharactersAtStart ("!"), r.startsWith ("!"));
+            emit ("obs:cabs", Rig::cabLibrary());
+        });
+        d (true);
+    };
     c["setModule"]    = [this] (const juce::Array<juce::var>& a, Completion d) { proc.rig().setModule (argInt (a, 0), argInt (a, 1), argStr (a, 2)); d (proc.rig().toJson()); };
     c["moveModule"]   = [this] (const juce::Array<juce::var>& a, Completion d) { proc.rig().moveModule (argInt (a, 0), argInt (a, 1), argInt (a, 2)); d (proc.rig().toJson()); };
     c["loadModuleFile"] = [this] (const juce::Array<juce::var>& a, Completion d)

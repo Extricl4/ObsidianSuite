@@ -1,0 +1,83 @@
+{
+ "builder": "cab",
+ "name": "Pollux 2x12",
+ "based_on": "Fender Pro Reverb 2x12",
+ "size": [
+  62.2,
+  24.0,
+  50.8
+ ],
+ "border": {
+  "side": 3.0,
+  "bottom": 3.3,
+  "top": 3.6
+ },
+ "recess": 0.9,
+ "edge": 0.9,
+ "tolex": {
+  "kind": "taurus",
+  "color": [
+   0.011,
+   0.011,
+   0.012
+  ],
+  "rough": 0.5,
+  "sheen": 0.14,
+  "grain": 22.0,
+  "bump": 0.4
+ },
+ "grille": {
+  "cloth": "silver",
+  "tile_cm": 7.0,
+  "tint": [
+   1,
+   1,
+   1
+  ],
+  "rough": 0.78,
+  "sheen": 0.4,
+  "bump": 0.8
+ },
+ "corners": {
+  "kind": "none"
+ },
+ "feet": 1.2,
+ "top_handle": {
+  "w": 17.0,
+  "h": 4.2,
+  "b": 3.4,
+  "color": [
+   0.012,
+   0.011,
+   0.011
+  ],
+  "ends": [
+   0.6,
+   0.6,
+   0.62
+  ]
+ },
+ "speakers": [
+  [
+   -14.4,
+   21.95,
+   14.0
+  ],
+  [
+   14.4,
+   21.95,
+   14.0
+  ]
+ ],
+ "piping": {
+  "color": [
+   0.62,
+   0.63,
+   0.65
+  ],
+  "r": 0.32,
+  "inset": 0.2,
+  "metal": 1.0,
+  "rough": 0.22
+ }
+}

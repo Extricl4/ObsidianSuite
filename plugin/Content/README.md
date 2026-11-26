@@ -114,6 +114,17 @@ mic A and B at one position, SPKR 1 / SPKR 2 put one speaker's two positions on 
 The looks are built by `visuals/render/cab.py` from `visuals/cabs/<key>.json` (see `visuals/README.md`).
 The self-test (`--packs` not needed) checks every cab's IRs load and that every voice button switches them.
 
+### Cabs whose IRs aren't included (a maker's free pack)
+Some cabs play a free IR pack whose licence doesn't let us pass the files on. Their cab file has
+`pack: { id, name, maker, url }` and IR paths under `IRs\Packs\<id>\...`; the plugin reports `packReady: false`
+until those files are there. CHOOSE CAB shows a bar per missing pack: GET IT opens the maker's page, INSTALL PACK…
+takes the zip you downloaded and keeps its IRs (the 48 kHz folder, when the pack has several sample rates) as
+`IRs\Packs\<id>`. Until then those cabs are dimmed and choosing one keeps the cab you have.
+
+| Cabs | Pack | Get it |
+|---|---|---|
+| Kottos, Iapetus, Hyperion 4x12 · Castor, Pollux, Thalia 2x12 · Zephyrus 2x10 · Demeter, Thamyris, Hestia 1x12 · Pan 1x8 | Origin Effects IR Cab Library (V4: Marshall 1960B / 1960A, Bogner 412ST, Fender Twin / Pro Reverb, Vox AC30, Fender Vibrolux, Brown Deluxe, Magnatone 213, 5E3 Tweed Deluxe, Tweed Princeton) | free from origineffects.com/product/ir-cab-library. Each cab: BRIGHT / MEDIUM / DARK, each the mix or one of its mics |
+
 ## Cab credits
 
 These files were made by other people and downloaded by Emil for his own rig. All rights stay with their creators.

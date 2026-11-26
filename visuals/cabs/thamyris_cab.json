@@ -1,0 +1,78 @@
+{
+ "builder": "cab",
+ "name": "Thamyris 1x12",
+ "based_on": "Magnatone 213 Troubadour 1x12",
+ "size": [
+  56.0,
+  23.0,
+  43.5
+ ],
+ "border": {
+  "side": 3.0,
+  "bottom": 3.3,
+  "top": 3.6
+ },
+ "recess": 0.9,
+ "edge": 0.9,
+ "tolex": {
+  "kind": "levant",
+  "color": [
+   0.024,
+   0.024,
+   0.026
+  ],
+  "rough": 0.45,
+  "sheen": 0.16,
+  "grain": 3.4,
+  "bump": 0.5
+ },
+ "grille": {
+  "cloth": "wheat",
+  "tile_cm": 9.6,
+  "tint": [
+   1.35,
+   1.25,
+   1.05
+  ],
+  "rough": 0.78,
+  "sheen": 0.4,
+  "bump": 0.8
+ },
+ "corners": {
+  "kind": "none"
+ },
+ "feet": 1.2,
+ "top_handle": {
+  "w": 15.0,
+  "h": 4.0,
+  "b": 3.2,
+  "color": [
+   0.014,
+   0.013,
+   0.013
+  ],
+  "ends": [
+   0.45,
+   0.38,
+   0.22
+  ]
+ },
+ "speakers": [
+  [
+   0,
+   18.3,
+   14.0
+  ]
+ ],
+ "piping": {
+  "color": [
+   0.42,
+   0.33,
+   0.16
+  ],
+  "r": 0.26,
+  "inset": 0.2,
+  "metal": 1.0,
+  "rough": 0.25
+ }
+}

@@ -1,0 +1,76 @@
+{
+ "builder": "cab",
+ "name": "Hestia 1x12",
+ "based_on": "Fender 5E3 Tweed Deluxe 1x12",
+ "size": [
+  51.0,
+  24.0,
+  42.0
+ ],
+ "border": {
+  "side": 2.2,
+  "bottom": 4.6,
+  "top": 6.6
+ },
+ "recess": 0.8,
+ "edge": 1.6,
+ "tolex": {
+  "kind": "tweed",
+  "tile_cm": 4.8,
+  "rough": 0.42,
+  "coat": 0.5,
+  "bump": 0.5,
+  "tint": [
+   1.9,
+   1.75,
+   1.45
+  ],
+  "varnish": [
+   1.0,
+   0.93,
+   0.78
+  ]
+ },
+ "grille": {
+  "cloth": "stripe",
+  "tile_cm": 8.0,
+  "tint": [
+   1.55,
+   1.5,
+   1.4
+  ],
+  "rough": 0.8,
+  "sheen": 0.35,
+  "bump": 0.8
+ },
+ "reveal": {
+  "w": 0.2,
+  "d": 0.35
+ },
+ "corners": {
+  "kind": "none"
+ },
+ "feet": 0.9,
+ "top_handle": {
+  "w": 14.0,
+  "h": 3.8,
+  "b": 3.0,
+  "color": [
+   0.07,
+   0.036,
+   0.016
+  ],
+  "ends": [
+   0.6,
+   0.6,
+   0.62
+  ]
+ },
+ "speakers": [
+  [
+   0,
+   15.4,
+   14.0
+  ]
+ ]
+}

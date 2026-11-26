@@ -1,0 +1,87 @@
+{
+ "key": "pan_cab",
+ "name": "Pan 1x8",
+ "size": "1x8",
+ "basedOn": "Fender 5F2 Tweed Princeton 1x8",
+ "source": "Origin Effects IR Cab Library (free from Origin Effects; not included, installed with INSTALL PACK)",
+ "pack": {
+  "id": "origin-effects",
+  "name": "Origin Effects IR Cab Library",
+  "maker": "Origin Effects",
+  "url": "https://origineffects.com/product/ir-cab-library/"
+ },
+ "voiceLabel": "TONE",
+ "voices": [
+  {
+   "name": "BRIGHT MIX",
+   "album": "BRIGHT",
+   "song": "MIX",
+   "irA": "Packs/origin-effects/Tweed Prince 1x8/Tweed Prince 1x8 Bright Mix.wav",
+   "irB": "Packs/origin-effects/Tweed Prince 1x8/Tweed Prince 1x8 Bright Mix.wav"
+  },
+  {
+   "name": "BRIGHT SM57",
+   "album": "BRIGHT",
+   "song": "SM57",
+   "irA": "Packs/origin-effects/Tweed Prince 1x8/Tweed Prince 1x8 Mics/Tweed Prince 1x8 Bright 57.wav",
+   "irB": "Packs/origin-effects/Tweed Prince 1x8/Tweed Prince 1x8 Mics/Tweed Prince 1x8 Bright 57.wav"
+  },
+  {
+   "name": "BRIGHT U87",
+   "album": "BRIGHT",
+   "song": "U87",
+   "irA": "Packs/origin-effects/Tweed Prince 1x8/Tweed Prince 1x8 Mics/Tweed Prince 1x8 Bright 87.wav",
+   "irB": "Packs/origin-effects/Tweed Prince 1x8/Tweed Prince 1x8 Mics/Tweed Prince 1x8 Bright 87.wav"
+  },
+  {
+   "name": "MEDIUM MIX",
+   "album": "MEDIUM",
+   "song": "MIX",
+   "irA": "Packs/origin-effects/Tweed Prince 1x8/Tweed Prince 1x8 Medium Mix.wav",
+   "irB": "Packs/origin-effects/Tweed Prince 1x8/Tweed Prince 1x8 Medium Mix.wav"
+  },
+  {
+   "name": "MEDIUM SM57",
+   "album": "MEDIUM",
+   "song": "SM57",
+   "irA": "Packs/origin-effects/Tweed Prince 1x8/Tweed Prince 1x8 Mics/Tweed Prince 1x8 Medium 57.wav",
+   "irB": "Packs/origin-effects/Tweed Prince 1x8/Tweed Prince 1x8 Mics/Tweed Prince 1x8 Medium 57.wav"
+  },
+  {
+   "name": "MEDIUM U87",
+   "album": "MEDIUM",
+   "song": "U87",
+   "irA": "Packs/origin-effects/Tweed Prince 1x8/Tweed Prince 1x8 Mics/Tweed Prince 1x8 Medium 87.wav",
+   "irB": "Packs/origin-effects/Tweed Prince 1x8/Tweed Prince 1x8 Mics/Tweed Prince 1x8 Medium 87.wav"
+  },
+  {
+   "name": "DARK MIX",
+   "album": "DARK",
+   "song": "MIX",
+   "irA": "Packs/origin-effects/Tweed Prince 1x8/Tweed Prince 1x8 Dark Mix.wav",
+   "irB": "Packs/origin-effects/Tweed Prince 1x8/Tweed Prince 1x8 Dark Mix.wav"
+  },
+  {
+   "name": "DARK M160",
+   "album": "DARK",
+   "song": "M160",
+   "irA": "Packs/origin-effects/Tweed Prince 1x8/Tweed Prince 1x8 Mics/Tweed Prince 1x8 Dark 160.wav",
+   "irB": "Packs/origin-effects/Tweed Prince 1x8/Tweed Prince 1x8 Mics/Tweed Prince 1x8 Dark 160.wav"
+  },
+  {
+   "name": "DARK U87",
+   "album": "DARK",
+   "song": "U87",
+   "irA": "Packs/origin-effects/Tweed Prince 1x8/Tweed Prince 1x8 Mics/Tweed Prince 1x8 Dark 87.wav",
+   "irB": "Packs/origin-effects/Tweed Prince 1x8/Tweed Prince 1x8 Mics/Tweed Prince 1x8 Dark 87.wav"
+  }
+ ],
+ "irA": "Packs/origin-effects/Tweed Prince 1x8/Tweed Prince 1x8 Bright Mix.wav",
+ "irB": "Packs/origin-effects/Tweed Prince 1x8/Tweed Prince 1x8 Bright Mix.wav",
+ "img": "cabs/pan_cab.webp",
+ "imgW": 675,
+ "imgH": 640,
+ "speakers": [
+  [337.5, 366.1, 135.5, 135.4]
+ ]
+}

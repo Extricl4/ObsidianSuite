@@ -1,0 +1,90 @@
+{
+ "key": "iapetus_cab",
+ "name": "Iapetus 4x12",
+ "size": "4x12",
+ "basedOn": "Marshall 1960A slant 4x12, checkerboard cloth",
+ "source": "Origin Effects IR Cab Library (free from Origin Effects; not included, installed with INSTALL PACK)",
+ "pack": {
+  "id": "origin-effects",
+  "name": "Origin Effects IR Cab Library",
+  "maker": "Origin Effects",
+  "url": "https://origineffects.com/product/ir-cab-library/"
+ },
+ "voiceLabel": "TONE",
+ "voices": [
+  {
+   "name": "BRIGHT MIX",
+   "album": "BRIGHT",
+   "song": "MIX",
+   "irA": "Packs/origin-effects/British Checkerboard 4x12/British Checkerboard 4x12 Bright Mix.wav",
+   "irB": "Packs/origin-effects/British Checkerboard 4x12/British Checkerboard 4x12 Bright Mix.wav"
+  },
+  {
+   "name": "BRIGHT MD421",
+   "album": "BRIGHT",
+   "song": "MD421",
+   "irA": "Packs/origin-effects/British Checkerboard 4x12/British Checkerboard 4x12 Mics/British Checkerboard 4x12 Bright 421.wav",
+   "irB": "Packs/origin-effects/British Checkerboard 4x12/British Checkerboard 4x12 Mics/British Checkerboard 4x12 Bright 421.wav"
+  },
+  {
+   "name": "BRIGHT M160",
+   "album": "BRIGHT",
+   "song": "M160",
+   "irA": "Packs/origin-effects/British Checkerboard 4x12/British Checkerboard 4x12 Mics/British Checkerboard 4x12 Bright 160.wav",
+   "irB": "Packs/origin-effects/British Checkerboard 4x12/British Checkerboard 4x12 Mics/British Checkerboard 4x12 Bright 160.wav"
+  },
+  {
+   "name": "MEDIUM MIX",
+   "album": "MEDIUM",
+   "song": "MIX",
+   "irA": "Packs/origin-effects/British Checkerboard 4x12/British Checkerboard 4x12 Medium Mix.wav",
+   "irB": "Packs/origin-effects/British Checkerboard 4x12/British Checkerboard 4x12 Medium Mix.wav"
+  },
+  {
+   "name": "MEDIUM MD421",
+   "album": "MEDIUM",
+   "song": "MD421",
+   "irA": "Packs/origin-effects/British Checkerboard 4x12/British Checkerboard 4x12 Mics/British Checkerboard 4x12 Medium 421.wav",
+   "irB": "Packs/origin-effects/British Checkerboard 4x12/British Checkerboard 4x12 Mics/British Checkerboard 4x12 Medium 421.wav"
+  },
+  {
+   "name": "MEDIUM M160",
+   "album": "MEDIUM",
+   "song": "M160",
+   "irA": "Packs/origin-effects/British Checkerboard 4x12/British Checkerboard 4x12 Mics/British Checkerboard 4x12 Medium 160.wav",
+   "irB": "Packs/origin-effects/British Checkerboard 4x12/British Checkerboard 4x12 Mics/British Checkerboard 4x12 Medium 160.wav"
+  },
+  {
+   "name": "DARK MIX",
+   "album": "DARK",
+   "song": "MIX",
+   "irA": "Packs/origin-effects/British Checkerboard 4x12/British Checkerboard 4x12 Dark Mix.wav",
+   "irB": "Packs/origin-effects/British Checkerboard 4x12/British Checkerboard 4x12 Dark Mix.wav"
+  },
+  {
+   "name": "DARK MD421",
+   "album": "DARK",
+   "song": "MD421",
+   "irA": "Packs/origin-effects/British Checkerboard 4x12/British Checkerboard 4x12 Mics/British Checkerboard 4x12 Dark 421.wav",
+   "irB": "Packs/origin-effects/British Checkerboard 4x12/British Checkerboard 4x12 Mics/British Checkerboard 4x12 Dark 421.wav"
+  },
+  {
+   "name": "DARK M160",
+   "album": "DARK",
+   "song": "M160",
+   "irA": "Packs/origin-effects/British Checkerboard 4x12/British Checkerboard 4x12 Mics/British Checkerboard 4x12 Dark 160.wav",
+   "irB": "Packs/origin-effects/British Checkerboard 4x12/British Checkerboard 4x12 Mics/British Checkerboard 4x12 Dark 160.wav"
+  }
+ ],
+ "irA": "Packs/origin-effects/British Checkerboard 4x12/British Checkerboard 4x12 Bright Mix.wav",
+ "irB": "Packs/origin-effects/British Checkerboard 4x12/British Checkerboard 4x12 Bright Mix.wav",
+ "img": "cabs/iapetus_cab.webp",
+ "imgW": 604,
+ "imgH": 640,
+ "speakers": [
+  [180.4, 172.7, 98.7, 95.2],
+  [423.6, 172.7, 98.7, 95.2],
+  [178.5, 411.7, 100.3, 100.3],
+  [425.5, 411.7, 100.3, 100.3]
+ ]
+}

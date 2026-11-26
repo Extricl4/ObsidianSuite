@@ -1,0 +1,88 @@
+{
+ "key": "castor_cab",
+ "name": "Castor 2x12",
+ "size": "2x12",
+ "basedOn": "Fender Twin Reverb 2x12 (JBL D120F)",
+ "source": "Origin Effects IR Cab Library (free from Origin Effects; not included, installed with INSTALL PACK)",
+ "pack": {
+  "id": "origin-effects",
+  "name": "Origin Effects IR Cab Library",
+  "maker": "Origin Effects",
+  "url": "https://origineffects.com/product/ir-cab-library/"
+ },
+ "voiceLabel": "TONE",
+ "voices": [
+  {
+   "name": "BRIGHT MIX",
+   "album": "BRIGHT",
+   "song": "MIX",
+   "irA": "Packs/origin-effects/American Twin 2x12/American Twin 2x12 - Bright - Mix.wav",
+   "irB": "Packs/origin-effects/American Twin 2x12/American Twin 2x12 - Bright - Mix.wav"
+  },
+  {
+   "name": "BRIGHT M160",
+   "album": "BRIGHT",
+   "song": "M160",
+   "irA": "Packs/origin-effects/American Twin 2x12/American Twin 2x12 Mics/American Twin 2x12 - Bright - 160.wav",
+   "irB": "Packs/origin-effects/American Twin 2x12/American Twin 2x12 Mics/American Twin 2x12 - Bright - 160.wav"
+  },
+  {
+   "name": "BRIGHT U87",
+   "album": "BRIGHT",
+   "song": "U87",
+   "irA": "Packs/origin-effects/American Twin 2x12/American Twin 2x12 Mics/American Twin 2x12 - Bright - 87.wav",
+   "irB": "Packs/origin-effects/American Twin 2x12/American Twin 2x12 Mics/American Twin 2x12 - Bright - 87.wav"
+  },
+  {
+   "name": "MEDIUM MIX",
+   "album": "MEDIUM",
+   "song": "MIX",
+   "irA": "Packs/origin-effects/American Twin 2x12/American Twin 2x12 - Medium - Mix.wav",
+   "irB": "Packs/origin-effects/American Twin 2x12/American Twin 2x12 - Medium - Mix.wav"
+  },
+  {
+   "name": "MEDIUM M160",
+   "album": "MEDIUM",
+   "song": "M160",
+   "irA": "Packs/origin-effects/American Twin 2x12/American Twin 2x12 Mics/American Twin 2x12 - Medium - 160.wav",
+   "irB": "Packs/origin-effects/American Twin 2x12/American Twin 2x12 Mics/American Twin 2x12 - Medium - 160.wav"
+  },
+  {
+   "name": "MEDIUM U87",
+   "album": "MEDIUM",
+   "song": "U87",
+   "irA": "Packs/origin-effects/American Twin 2x12/American Twin 2x12 Mics/American Twin 2x12 - Medium - 87.wav",
+   "irB": "Packs/origin-effects/American Twin 2x12/American Twin 2x12 Mics/American Twin 2x12 - Medium - 87.wav"
+  },
+  {
+   "name": "DARK MIX",
+   "album": "DARK",
+   "song": "MIX",
+   "irA": "Packs/origin-effects/American Twin 2x12/American Twin 2x12 - Dark - Mix.wav",
+   "irB": "Packs/origin-effects/American Twin 2x12/American Twin 2x12 - Dark - Mix.wav"
+  },
+  {
+   "name": "DARK M160",
+   "album": "DARK",
+   "song": "M160",
+   "irA": "Packs/origin-effects/American Twin 2x12/American Twin 2x12 Mics/American Twin 2x12 - Dark - 160.wav",
+   "irB": "Packs/origin-effects/American Twin 2x12/American Twin 2x12 Mics/American Twin 2x12 - Dark - 160.wav"
+  },
+  {
+   "name": "DARK U87",
+   "album": "DARK",
+   "song": "U87",
+   "irA": "Packs/origin-effects/American Twin 2x12/American Twin 2x12 Mics/American Twin 2x12 - Dark - 87.wav",
+   "irB": "Packs/origin-effects/American Twin 2x12/American Twin 2x12 Mics/American Twin 2x12 - Dark - 87.wav"
+  }
+ ],
+ "irA": "Packs/origin-effects/American Twin 2x12/American Twin 2x12 - Bright - Mix.wav",
+ "irB": "Packs/origin-effects/American Twin 2x12/American Twin 2x12 - Bright - Mix.wav",
+ "img": "cabs/castor_cab.webp",
+ "imgW": 740,
+ "imgH": 640,
+ "speakers": [
+  [212.6, 341.6, 144.0, 144.1],
+  [527.4, 341.6, 144.0, 144.1]
+ ]
+}

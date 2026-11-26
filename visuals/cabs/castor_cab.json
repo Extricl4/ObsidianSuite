@@ -1,0 +1,76 @@
+{
+ "builder": "cab",
+ "name": "Castor 2x12",
+ "based_on": "Fender Twin Reverb 2x12 (JBL D120F)",
+ "size": [
+  66.0,
+  26.7,
+  51.0
+ ],
+ "border": {
+  "side": 3.0,
+  "bottom": 3.3,
+  "top": 3.6
+ },
+ "recess": 0.9,
+ "edge": 0.9,
+ "tolex": {
+  "kind": "taurus",
+  "color": [
+   0.011,
+   0.011,
+   0.012
+  ],
+  "rough": 0.5,
+  "sheen": 0.14,
+  "grain": 22.0,
+  "bump": 0.4
+ },
+ "grille": {
+  "cloth": "silver",
+  "tile_cm": 7.0,
+  "tint": [
+   1,
+   1,
+   1
+  ],
+  "rough": 0.78,
+  "sheen": 0.4,
+  "bump": 0.8
+ },
+ "reveal": {
+  "w": 0.5,
+  "d": 0.8
+ },
+ "corners": {
+  "kind": "none"
+ },
+ "feet": 1.2,
+ "top_handle": {
+  "w": 17.0,
+  "h": 4.2,
+  "b": 3.4,
+  "color": [
+   0.012,
+   0.011,
+   0.011
+  ],
+  "ends": [
+   0.6,
+   0.6,
+   0.62
+  ]
+ },
+ "speakers": [
+  [
+   -15.3,
+   22.05,
+   14.0
+  ],
+  [
+   15.3,
+   22.05,
+   14.0
+  ]
+ ]
+}

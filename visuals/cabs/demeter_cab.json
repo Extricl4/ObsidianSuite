@@ -1,0 +1,71 @@
+{
+ "builder": "cab",
+ "name": "Demeter 1x12",
+ "based_on": "Fender Brown Deluxe 1x12 (6G3)",
+ "size": [
+  52.0,
+  23.0,
+  42.0
+ ],
+ "border": {
+  "side": 3.0,
+  "bottom": 3.3,
+  "top": 3.6
+ },
+ "recess": 0.9,
+ "edge": 0.9,
+ "tolex": {
+  "kind": "levant",
+  "color": [
+   0.085,
+   0.048,
+   0.024
+  ],
+  "rough": 0.48,
+  "sheen": 0.16,
+  "grain": 4.0,
+  "bump": 0.5
+ },
+ "grille": {
+  "cloth": "wheat",
+  "tile_cm": 9.6,
+  "tint": [
+   1.0,
+   0.92,
+   0.8
+  ],
+  "rough": 0.78,
+  "sheen": 0.4,
+  "bump": 0.8
+ },
+ "reveal": {
+  "w": 0.5,
+  "d": 0.8
+ },
+ "corners": {
+  "kind": "none"
+ },
+ "feet": 1.2,
+ "top_handle": {
+  "w": 15.0,
+  "h": 4.0,
+  "b": 3.2,
+  "color": [
+   0.05,
+   0.025,
+   0.012
+  ],
+  "ends": [
+   0.6,
+   0.6,
+   0.62
+  ]
+ },
+ "speakers": [
+  [
+   0,
+   17.55,
+   14.0
+  ]
+ ]
+}

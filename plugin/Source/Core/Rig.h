@@ -95,7 +95,13 @@ public:
     static void installPack (dsp::Module& m, PackFiles& files);
 
     static juce::var ampLibrary();
+    /** Every cab. A cab whose IRs come from a maker's free pack the plugin may not ship ("pack": {id, name, url})
+        has "packReady": false until that pack is installed into IRs/Packs/<id>. */
     static juce::var cabLibrary();
+    /** Installs an IR pack zip the user downloaded from its maker: finds the folder holding the files the cabs ask
+        for (the 48 kHz one when the pack comes in several sample rates) and keeps its IRs as IRs/Packs/<id>.
+        Returns what happened; an error starts with "!". irsRoot: where IRs/ is (the self-test uses a temp folder). */
+    static juce::String installIrPack (const juce::File& zip, juce::File irsRoot = {});
     static juce::var findInLibrary (const juce::var& lib, const juce::String& key);
     /** True when a capture amp's amp file and its first capture are installed (the amp pack is optional). */
     static bool captureAmpInstalled (const juce::String& key);

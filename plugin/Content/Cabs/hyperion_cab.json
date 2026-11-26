@@ -1,0 +1,111 @@
+{
+ "key": "hyperion_cab",
+ "name": "Hyperion 4x12",
+ "size": "4x12",
+ "basedOn": "Bogner 412ST straight 4x12 (Celestion Vintage 30)",
+ "source": "Origin Effects IR Cab Library (free from Origin Effects; not included, installed with INSTALL PACK)",
+ "pack": {
+  "id": "origin-effects",
+  "name": "Origin Effects IR Cab Library",
+  "maker": "Origin Effects",
+  "url": "https://origineffects.com/product/ir-cab-library/"
+ },
+ "voiceLabel": "TONE",
+ "voices": [
+  {
+   "name": "BRIGHT MIX",
+   "album": "BRIGHT",
+   "song": "MIX",
+   "irA": "Packs/origin-effects/Modern Boutique 4x12/Modern Boutique 4x12 - Bright - Mix.wav",
+   "irB": "Packs/origin-effects/Modern Boutique 4x12/Modern Boutique 4x12 - Bright - Mix.wav"
+  },
+  {
+   "name": "BRIGHT SM57",
+   "album": "BRIGHT",
+   "song": "SM57",
+   "irA": "Packs/origin-effects/Modern Boutique 4x12/Modern Boutique 4x12 Mics/Modern Boutique 4x12 - Bright - 57.wav",
+   "irB": "Packs/origin-effects/Modern Boutique 4x12/Modern Boutique 4x12 Mics/Modern Boutique 4x12 - Bright - 57.wav"
+  },
+  {
+   "name": "BRIGHT MD421",
+   "album": "BRIGHT",
+   "song": "MD421",
+   "irA": "Packs/origin-effects/Modern Boutique 4x12/Modern Boutique 4x12 Mics/Modern Boutique 4x12 - Bright - 421.wav",
+   "irB": "Packs/origin-effects/Modern Boutique 4x12/Modern Boutique 4x12 Mics/Modern Boutique 4x12 - Bright - 421.wav"
+  },
+  {
+   "name": "BRIGHT M160",
+   "album": "BRIGHT",
+   "song": "M160",
+   "irA": "Packs/origin-effects/Modern Boutique 4x12/Modern Boutique 4x12 Mics/Modern Boutique 4x12 - Bright - 160.wav",
+   "irB": "Packs/origin-effects/Modern Boutique 4x12/Modern Boutique 4x12 Mics/Modern Boutique 4x12 - Bright - 160.wav"
+  },
+  {
+   "name": "MEDIUM MIX",
+   "album": "MEDIUM",
+   "song": "MIX",
+   "irA": "Packs/origin-effects/Modern Boutique 4x12/Modern Boutique 4x12 - Medium - Mix.wav",
+   "irB": "Packs/origin-effects/Modern Boutique 4x12/Modern Boutique 4x12 - Medium - Mix.wav"
+  },
+  {
+   "name": "MEDIUM SM57",
+   "album": "MEDIUM",
+   "song": "SM57",
+   "irA": "Packs/origin-effects/Modern Boutique 4x12/Modern Boutique 4x12 Mics/Modern Boutique 4x12 - Medium - 57.wav",
+   "irB": "Packs/origin-effects/Modern Boutique 4x12/Modern Boutique 4x12 Mics/Modern Boutique 4x12 - Medium - 57.wav"
+  },
+  {
+   "name": "MEDIUM MD421",
+   "album": "MEDIUM",
+   "song": "MD421",
+   "irA": "Packs/origin-effects/Modern Boutique 4x12/Modern Boutique 4x12 Mics/Modern Boutique 4x12 - Medium - 421.wav",
+   "irB": "Packs/origin-effects/Modern Boutique 4x12/Modern Boutique 4x12 Mics/Modern Boutique 4x12 - Medium - 421.wav"
+  },
+  {
+   "name": "MEDIUM M160",
+   "album": "MEDIUM",
+   "song": "M160",
+   "irA": "Packs/origin-effects/Modern Boutique 4x12/Modern Boutique 4x12 Mics/Modern Boutique 4x12 - Medium - 160.wav",
+   "irB": "Packs/origin-effects/Modern Boutique 4x12/Modern Boutique 4x12 Mics/Modern Boutique 4x12 - Medium - 160.wav"
+  },
+  {
+   "name": "DARK MIX",
+   "album": "DARK",
+   "song": "MIX",
+   "irA": "Packs/origin-effects/Modern Boutique 4x12/Modern Boutique 4x12 - Dark - Mix.wav",
+   "irB": "Packs/origin-effects/Modern Boutique 4x12/Modern Boutique 4x12 - Dark - Mix.wav"
+  },
+  {
+   "name": "DARK SM57",
+   "album": "DARK",
+   "song": "SM57",
+   "irA": "Packs/origin-effects/Modern Boutique 4x12/Modern Boutique 4x12 Mics/Modern Boutique 4x12 - Dark - 57.wav",
+   "irB": "Packs/origin-effects/Modern Boutique 4x12/Modern Boutique 4x12 Mics/Modern Boutique 4x12 - Dark - 57.wav"
+  },
+  {
+   "name": "DARK MD421",
+   "album": "DARK",
+   "song": "MD421",
+   "irA": "Packs/origin-effects/Modern Boutique 4x12/Modern Boutique 4x12 Mics/Modern Boutique 4x12 - Dark - 421.wav",
+   "irB": "Packs/origin-effects/Modern Boutique 4x12/Modern Boutique 4x12 Mics/Modern Boutique 4x12 - Dark - 421.wav"
+  },
+  {
+   "name": "DARK M160",
+   "album": "DARK",
+   "song": "M160",
+   "irA": "Packs/origin-effects/Modern Boutique 4x12/Modern Boutique 4x12 Mics/Modern Boutique 4x12 - Dark - 160.wav",
+   "irB": "Packs/origin-effects/Modern Boutique 4x12/Modern Boutique 4x12 Mics/Modern Boutique 4x12 - Dark - 160.wav"
+  }
+ ],
+ "irA": "Packs/origin-effects/Modern Boutique 4x12/Modern Boutique 4x12 - Bright - Mix.wav",
+ "irB": "Packs/origin-effects/Modern Boutique 4x12/Modern Boutique 4x12 - Bright - Mix.wav",
+ "img": "cabs/hyperion_cab.webp",
+ "imgW": 593,
+ "imgH": 640,
+ "speakers": [
+  [175.9, 166.1, 99.6, 99.7],
+  [417.1, 166.1, 99.6, 99.7],
+  [175.9, 411.5, 99.6, 99.7],
+  [417.1, 411.5, 99.6, 99.7]
+ ]
+}

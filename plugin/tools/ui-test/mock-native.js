@@ -100,6 +100,7 @@
     },
     ampKnob: (j, v) => { if (S.rig.amp.face) S.rig.amp.face.knobs[j] = v; return true; },
     ampSwitch: (i, on) => { if (S.rig.amp.face) S.rig.amp.face.switches[i] = !!on; return S.rig; },
+    installIrPack: () => { (S.cabs || []).forEach(c => { if (c.pack) c.packReady = true; }); later('obs:cabs', JSON.parse(JSON.stringify(S.cabs)), 10); return true; },
     setCab: key => { const c = (S.cabs || []).find(x => x.key === key) || {}, v = (c.voices || [])[0] || c; S.rig.cab = { key, name: c.name || key, irA: v.irA || '', irB: v.irB || '', irAName: '', irBName: '', voice: 0 }; cabMics(true); later('obs:rig', S.rig, 10); return S.rig; },
     // like the plugin: your own IR goes on mic A, B or both (2), and the cab becomes "custom" (the IR loader shows it)
     loadIr: mic => { const c = S.rig.cab = S.rig.cab || {}, name = 'Test IR ' + (mic === 2 ? 'AB' : 'AB'[mic | 0]);

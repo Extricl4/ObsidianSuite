@@ -1,0 +1,88 @@
+{
+ "key": "zephyrus_cab",
+ "name": "Zephyrus 2x10",
+ "size": "2x10",
+ "basedOn": "Fender Vibrolux Reverb 2x10",
+ "source": "Origin Effects IR Cab Library (free from Origin Effects; not included, installed with INSTALL PACK)",
+ "pack": {
+  "id": "origin-effects",
+  "name": "Origin Effects IR Cab Library",
+  "maker": "Origin Effects",
+  "url": "https://origineffects.com/product/ir-cab-library/"
+ },
+ "voiceLabel": "TONE",
+ "voices": [
+  {
+   "name": "BRIGHT MIX",
+   "album": "BRIGHT",
+   "song": "MIX",
+   "irA": "Packs/origin-effects/Lux-O-Vibe 2x10/LuxOVibe 2x10 Bright Mix.wav",
+   "irB": "Packs/origin-effects/Lux-O-Vibe 2x10/LuxOVibe 2x10 Bright Mix.wav"
+  },
+  {
+   "name": "BRIGHT MD421",
+   "album": "BRIGHT",
+   "song": "MD421",
+   "irA": "Packs/origin-effects/Lux-O-Vibe 2x10/Lux-O-Vibe 2x10 Mics/LuxOVibe 2x10 Bright 421.wav",
+   "irB": "Packs/origin-effects/Lux-O-Vibe 2x10/Lux-O-Vibe 2x10 Mics/LuxOVibe 2x10 Bright 421.wav"
+  },
+  {
+   "name": "BRIGHT M160",
+   "album": "BRIGHT",
+   "song": "M160",
+   "irA": "Packs/origin-effects/Lux-O-Vibe 2x10/Lux-O-Vibe 2x10 Mics/LuxOVibe 2x10 Bright 160.wav",
+   "irB": "Packs/origin-effects/Lux-O-Vibe 2x10/Lux-O-Vibe 2x10 Mics/LuxOVibe 2x10 Bright 160.wav"
+  },
+  {
+   "name": "MEDIUM MIX",
+   "album": "MEDIUM",
+   "song": "MIX",
+   "irA": "Packs/origin-effects/Lux-O-Vibe 2x10/LuxOVibe 2x10 Medium Mix.wav",
+   "irB": "Packs/origin-effects/Lux-O-Vibe 2x10/LuxOVibe 2x10 Medium Mix.wav"
+  },
+  {
+   "name": "MEDIUM MD421",
+   "album": "MEDIUM",
+   "song": "MD421",
+   "irA": "Packs/origin-effects/Lux-O-Vibe 2x10/Lux-O-Vibe 2x10 Mics/LuxOVibe 2x10 Medium 421.wav",
+   "irB": "Packs/origin-effects/Lux-O-Vibe 2x10/Lux-O-Vibe 2x10 Mics/LuxOVibe 2x10 Medium 421.wav"
+  },
+  {
+   "name": "MEDIUM M160",
+   "album": "MEDIUM",
+   "song": "M160",
+   "irA": "Packs/origin-effects/Lux-O-Vibe 2x10/Lux-O-Vibe 2x10 Mics/LuxOVibe 2x10 Medium 160.wav",
+   "irB": "Packs/origin-effects/Lux-O-Vibe 2x10/Lux-O-Vibe 2x10 Mics/LuxOVibe 2x10 Medium 160.wav"
+  },
+  {
+   "name": "DARK MIX",
+   "album": "DARK",
+   "song": "MIX",
+   "irA": "Packs/origin-effects/Lux-O-Vibe 2x10/LuxOVibe 2x10 Dark Mix.wav",
+   "irB": "Packs/origin-effects/Lux-O-Vibe 2x10/LuxOVibe 2x10 Dark Mix.wav"
+  },
+  {
+   "name": "DARK MD421",
+   "album": "DARK",
+   "song": "MD421",
+   "irA": "Packs/origin-effects/Lux-O-Vibe 2x10/Lux-O-Vibe 2x10 Mics/LuxOVibe 2x10 Dark 421.wav",
+   "irB": "Packs/origin-effects/Lux-O-Vibe 2x10/Lux-O-Vibe 2x10 Mics/LuxOVibe 2x10 Dark 421.wav"
+  },
+  {
+   "name": "DARK M160",
+   "album": "DARK",
+   "song": "M160",
+   "irA": "Packs/origin-effects/Lux-O-Vibe 2x10/Lux-O-Vibe 2x10 Mics/LuxOVibe 2x10 Dark 160.wav",
+   "irB": "Packs/origin-effects/Lux-O-Vibe 2x10/Lux-O-Vibe 2x10 Mics/LuxOVibe 2x10 Dark 160.wav"
+  }
+ ],
+ "irA": "Packs/origin-effects/Lux-O-Vibe 2x10/LuxOVibe 2x10 Bright Mix.wav",
+ "irB": "Packs/origin-effects/Lux-O-Vibe 2x10/LuxOVibe 2x10 Bright Mix.wav",
+ "img": "cabs/zephyrus_cab.webp",
+ "imgW": 744,
+ "imgH": 640,
+ "speakers": [
+  [220.2, 343.5, 129.5, 129.6],
+  [523.8, 343.5, 129.5, 129.6]
+ ]
+}

@@ -38,6 +38,8 @@ def build_page(standalone):
     state['presetFolders'] = ['Drop D', 'Live set']
     # the IR cabs (cab pack), with their pictures
     state['cabs'] += [json.loads(f.read_text(encoding='utf-8')) for f in sorted((CONTENT / 'Cabs').glob('*.json'))]
+    for c in state['cabs']:           # a maker's IR pack (not shipped) isn't installed on a fresh machine
+        if c.get('pack'): c['packReady'] = False
     faces = OUT / 'faces'
     if faces.is_symlink() or faces.exists():
         faces.unlink() if faces.is_symlink() else shutil.rmtree(faces)
@@ -1047,6 +1049,34 @@ async def run(standalone):
                 fits = await pg.evaluate("[...document.querySelectorAll('.obs-cabscreen.ld b')].every(b=>b.scrollWidth<=b.parentElement.clientWidth)")
                 check(asked == [2, 2] and n == 1 and fits, f"its one LOAD button loads your IR onto both mics ({asked}; {n} button; fits {fits})")
                 await pg.screenshot(path=str(OUT / 'cab-proteus.png'))
+                await pick_cab('builtin-4x12')
+            # ---- a maker's IR pack we may not ship (Origin Effects): a bar in CHOOSE CAB, its cabs dimmed until INSTALL PACK
+            packed = [c for c in state['cabs'] if c.get('pack')]
+            if packed:
+                pid, key, nm = packed[0]['pack']['id'], packed[0]['key'], packed[0]['name']
+                await pg.evaluate("window.__mock.log.length=0")
+                await pg.evaluate(big + ".click()"); await pg.wait_for_timeout(200)
+                bar = await pg.evaluate(f"(()=>{{const b=document.querySelector('.obs-packbar[data-pack=\"{pid}\"]'); return b && b.offsetParent ? b.textContent : ''}})()")
+                dim = await pg.evaluate("[...document.querySelectorAll('.obs-tile.needpack')].filter(t=>t.offsetParent).map(t=>t.dataset.cab)")
+                await pg.screenshot(path=str(OUT / 'cab-packbar.png'))
+                await pg.locator(f'.obs-tile[data-cab="{key}"]:visible').click(); await pg.wait_for_timeout(300)
+                still = await pg.evaluate("[...document.querySelectorAll('.pop')].some(p=>p.style.display==='block')")
+                sent = await pg.evaluate("window.__mock.log.filter(x=>x[0]==='setCab').length")
+                check(f'{len(packed)} cabs' in bar and sorted(dim) == sorted(c['key'] for c in packed) and still and sent == 0,
+                      f"a pack we can't ship shows a GET IT / INSTALL PACK bar, its {len(dim)} cabs dimmed; clicking one keeps the chooser open ({bar[:60]}; sent {sent})")
+                await pg.locator(f'.obs-packbar[data-pack="{pid}"] [data-pack-get]').click(); await pg.wait_for_timeout(100)
+                await pg.locator(f'.obs-packbar[data-pack="{pid}"] [data-pack-install]').click(); await pg.wait_for_timeout(500)
+                calls = await pg.evaluate("window.__mock.log.filter(x=>x[0]==='openUrl'||x[0]==='installIrPack').map(x=>x[0]+(x[1]?' '+x[1]:''))")
+                left = await pg.evaluate("[document.querySelectorAll('.obs-packbar').length, document.querySelectorAll('.obs-tile.needpack').length]")
+                check(len(calls) == 2 and calls[0].startswith('openUrl https://') and calls[1] == 'installIrPack' and left == [0, 0],
+                      f'GET IT opens the maker\'s page, INSTALL PACK installs the zip and the cabs light up ({calls}; left {left})')
+                await pg.locator(f'.obs-tile[data-cab="{key}"]:visible').click(); await pg.wait_for_timeout(400)
+                tones = await pg.evaluate("[...document.querySelectorAll('.obs-cabvoices .obs-cabrow:not(.songs) .obs-cabchip')].map(b=>b.textContent)")
+                mics = await pg.evaluate("[...document.querySelectorAll('.obs-cabvoices .obs-cabrow.songs .obs-cabchip')].map(b=>b.textContent)")
+                name = await pg.evaluate("(document.querySelector('.obs-cabname')||{}).textContent")
+                check(name == nm and tones == ['BRIGHT', 'MEDIUM', 'DARK'] and mics[:1] == ['MIX'] and len(mics) >= 3,
+                      f'then it plays: {nm} with BRIGHT / MEDIUM / DARK and the mix or each mic ({tones}; {mics})')
+                await pg.screenshot(path=str(OUT / 'cab-origin.png'))
                 await pick_cab('builtin-4x12')
 
         # ---- control sweep fixes (2026-11-25): defaults on double-click, live values on the cut knobs, EQ faders, footer, SIREN

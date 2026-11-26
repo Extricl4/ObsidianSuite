@@ -15,7 +15,8 @@ Spec (cabs/<key>.json, "builder": "cab"):
   border    {"side", "bottom", "top"}  covered frame around the grille;  recess: grille depth behind the frame
   edge      rounding of the box edges
   tolex     {"kind": bronco|levant|taurus|carpet|duratex|metal, "color", "rough", "sheen", "grain", "bump"}
-  grille    cloth: {"cloth": jute|basket|checker|diamond|wheat, "tile_cm", "tint", "sheen", "bump"}
+            {"kind": "tweed", "tile_cm", "tint", "coat", "varnish": [r,g,b]}  lacquered tweed (art/weave_tweed.png, box-projected)
+  grille    cloth: {"cloth": jute|basket|checker|diamond|wheat|silver|stripe, "tile_cm", "tint", "sheen", "bump"}
             metal: {"kind": "perf", "holes": round|hex|square|slot, "tile_cm", "color", "metal", "rough", "scrim": cloth}
   piping    {"color", "r", "inset", "depth"}            cord round the grille (optional)
   reveal    {"w", "d"}                                   a shadow gap round the grille instead of piping (optional)
@@ -27,6 +28,7 @@ Spec (cabs/<key>.json, "builder": "cab"):
   displays  [{"id", "w", "h", "x", "z"}]  several screens; buttons [{"id", "x", "z", "r"} or {"id", "shape": "rect", "w", "h", ...}]
             (the map file lists every screen and button by id: display* -> the plugin's screen*, button* -> button*)
   leds      [{"z", "w", "color", "strength"}]   thin light lines on the frame;  screws {"inset", "r"}  rack screws
+  top_handle  {"w", "h", "b", "color", "ends"}  a strap handle arching over the top (combos)
 """
 import bpy, bmesh, math, sys, json, os, itertools
 from mathutils import Vector, Matrix
@@ -138,6 +140,28 @@ def color_variation(m, color, lo=0.85, hi=1.15, scale=0.05):
 
 def tolex_mat(t):
     kind = t.get('kind', 'bronco'); col = t.get('color', [0.012, 0.012, 0.013]); rough = t.get('rough', 0.6)
+    if kind == 'tweed':      # lacquered tweed: a twill-weave image box-projected over the box, under an amber varnish
+        m = bpy.data.materials.new('tolex'); m.use_nodes = True; nt, ln = nodes(m); b = nt['Principled BSDF']
+        tc = nt.new('ShaderNodeTexCoord'); mp = nt.new('ShaderNodeMapping'); tile = t.get('tile_cm', 4.8)
+        mp.inputs['Scale'].default_value = (1 / tile, 1 / tile, 1 / tile); mp.inputs['Rotation'].default_value = (0.3, 0.2, 0.1)
+        ln.new(tc.outputs['Object'], mp.inputs['Vector'])
+        ci = nt.new('ShaderNodeTexImage'); ci.image = bpy.data.images.load(os.path.join(ROOT, 'art', 'weave_tweed.png'))
+        hi = nt.new('ShaderNodeTexImage'); hi.image = bpy.data.images.load(os.path.join(ROOT, 'art', 'weave_tweed_h.png')); hi.image.colorspace_settings.name = 'Non-Color'
+        for im in (ci, hi): im.projection = 'BOX'; im.projection_blend = 0.25; im.interpolation = 'Cubic'; ln.new(mp.outputs['Vector'], im.inputs['Vector'])
+        tn = nt.new('ShaderNodeMix'); tn.data_type = 'RGBA'; tn.blend_type = 'MULTIPLY'; tn.inputs[0].default_value = 1.0
+        tn.inputs[7].default_value = tuple(t.get('tint', [1, 1, 1])) + (1,); ln.new(ci.outputs['Color'], tn.inputs[6])
+        ln.new(tn.outputs[2], b.inputs['Base Color'])
+        b.inputs['Roughness'].default_value = rough; b.inputs['Coat Weight'].default_value = t.get('coat', 0.55)
+        b.inputs['Coat Roughness'].default_value = t.get('coat_rough', 0.22)
+        if 'Coat Tint' in b.inputs: b.inputs['Coat Tint'].default_value = tuple(t.get('varnish', [1.0, 0.86, 0.62])) + (1,)
+        add_bump(m, hi.outputs['Color'], t.get('bump', 0.5), 0.03)
+        # age: big soft blotches of darker varnish
+        big = nt.new('ShaderNodeTexNoise'); big.inputs['Scale'].default_value = 0.07; big.inputs['Detail'].default_value = 3
+        ln.new(tc.outputs['Object'], big.inputs['Vector'])
+        cr = nt.new('ShaderNodeMapRange'); cr.inputs['To Min'].default_value = 0.86; cr.inputs['To Max'].default_value = 1.1; ln.new(big.outputs['Fac'], cr.inputs['Value'])
+        mul = nt.new('ShaderNodeMix'); mul.data_type = 'RGBA'; mul.blend_type = 'MULTIPLY'; mul.inputs[0].default_value = 1.0
+        ln.new(tn.outputs[2], mul.inputs[6]); ln.new(cr.outputs['Result'], mul.inputs[7]); ln.new(mul.outputs[2], b.inputs['Base Color'])
+        return m
     if kind == 'metal':      # anodised brushed aluminium panels
         m = mat('tolex', col, 1.0, rough, aniso=0.6)
         nt, ln = nodes(m); tc = nt.new('ShaderNodeTexCoord')
@@ -519,6 +543,22 @@ if RH:   # rack-style front handles on the frame's sides (like Eidolon's): a bar
             el = add(bpy.ops.mesh.primitive_uv_sphere_add, radius=rr_ * 1.02, segments=24, ring_count=12, location=(x, -so, z)); setmat(el, RHM); smooth(el, 80)
             ft = add(bpy.ops.mesh.primitive_cylinder_add, vertices=32, radius=rr_ * 1.7, depth=0.3, location=(x, -0.15, z))
             ft.rotation_euler = (math.pi / 2, 0, 0); setmat(ft, RHM); bevel(ft, 0.1, 2)
+TH = S.get('top_handle')
+if TH:   # a strap handle on top (combos): a leather band in an arch, its ends in metal caps
+    hw, hh, hb = TH.get('w', 16.0), TH.get('h', 4.5), TH.get('b', 3.2); yc = TH.get('y', D / 2); th = TH.get('t', 1.1); N = 24
+    vs, fs = [], []
+    for i in range(N + 1):
+        a = math.pi * i / N; x = -hw / 2 * math.cos(a); z = H + 0.4 + hh * math.sin(a)
+        nx, nz = -math.cos(a), math.sin(a)
+        for (dy, dt) in ((-hb / 2, 0), (hb / 2, 0), (hb / 2, th), (-hb / 2, th)):
+            vs.append((x + nx * dt, yc + dy, z + nz * dt))
+    for i in range(N):
+        a0, a1 = 4 * i, 4 * (i + 1)
+        for k in range(4): fs.append((a0 + k, a0 + (k + 1) % 4, a1 + (k + 1) % 4, a1 + k))
+    fs += [(0, 1, 2, 3), (4 * N + 3, 4 * N + 2, 4 * N + 1, 4 * N)]
+    st_ = mesh_obj('strap', vs, fs, mat('strap', TH.get('color', [0.012, 0.009, 0.007]), 0, 0.42, coat=0.3, sheen=0.2)); smooth(st_, 50)
+    EC = mat('strapend', TH.get('ends', [0.6, 0.6, 0.62]), 1.0, 0.2)
+    for sx in (-1, 1): rbox((sx * hw / 2, yc, H + 0.5), (2.2, hb + 1.0, 1.0), EC, 0.2, 2)
 SC = S.get('screws')
 if SC:   # rack screws in the frame's corners: a domed head with a hex socket
     SCM = mat('screw', (0.09, 0.09, 0.095), 1.0, 0.25); HEX = mat('hex', (0.004, 0.004, 0.004), 0.5, 0.5)
@@ -570,11 +610,12 @@ area((0, -60, -8), 150, 1.0e4 * kL, (0.9, 0.9, 1.0), tgt=(0, YC, HT * 0.25), sy=
 cd = bpy.data.cameras.new('cam'); cam = link(bpy.data.objects.new('cam', cd)); sc.camera = cam
 if VIEW == 'front':
     cd.lens = 85; m_ = S.get('margin', 0.03); cd.sensor_fit = 'VERTICAL'; cd.sensor_height = 36
-    fw, fh = W + 2.0 + 2 * m_ * HT, HT * (1 + 2 * m_)
+    FT = HT + ((TH.get('h', 4.5) + TH.get('t', 1.1) + 0.8) if TH else 0.0)   # the frame takes in a strap handle on top
+    fw, fh = W + 2.0 + 2 * m_ * FT, FT * (1 + 2 * m_)
     ry = int(S.get('px', 1000)); rx = int(round(ry * fw / fh))
     sc.render.resolution_x, sc.render.resolution_y = rx, ry
     dist = (fh / 2) / math.tan(math.atan(36 / 2 / 85))
-    cam.location = (0, -dist, HT / 2); cam.rotation_euler = (math.pi / 2, 0, 0)
+    cam.location = (0, -dist, FT / 2); cam.rotation_euler = (math.pi / 2, 0, 0)
     S_out = os.path.join(ROOT, 'out', 'front', KEY + '.png')
 else:
     cd.lens = float(A.get('lens', S.get('lens', 60)))

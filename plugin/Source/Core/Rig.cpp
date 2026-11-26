@@ -621,6 +621,13 @@ void Rig::setCab (const juce::String& key)
             message (entry["name"].toString() + " plays your own IRs: press its LOAD buttons or Load IR…", false);
         return;
     }
+    if (entry["pack"].isObject() && ! (bool) entry["packReady"])
+    {
+        // its IRs are the maker's (free, but not ours to ship): nothing to play until the pack is installed
+        message (entry["name"].toString() + " needs the free " + entry["pack"]["name"].toString()
+                 + ": download it, then INSTALL PACK in CHOOSE CAB", false);
+        return;
+    }
     // a cab with several IR sets ("voices": album tones, mic positions, speakers) starts on its first one
     const juce::var voices = entry["voices"];
     const juce::var src = (voices.isArray() && voices.size() > 0) ? voices[0] : entry;
@@ -1080,10 +1087,82 @@ juce::var Rig::cabLibrary()
             if (! vs->isEmpty() && v["irA"].toString().isEmpty())
                 for (auto k : { "irA", "irB" }) o->setProperty (k, vs->getReference (0)[k]);
         }
+        if (v["pack"].isObject())
+        {
+            // its IRs come from the maker's pack (not shipped): ready once every file the cab asks for is there
+            bool ready = true;
+            auto check = [&ready] (const juce::var& d) { for (auto k : { "irA", "irB" }) { const auto p = d[k].toString(); if (p.isNotEmpty() && ! juce::File (p).existsAsFile()) ready = false; } };
+            check (v);
+            if (auto* vs = v["voices"].getArray()) for (auto& vv : *vs) check (vv);
+            o->setProperty ("packReady", ready);
+        }
         o->setProperty ("builtIn", false);
         list.add (v);
     }
     return list;
+}
+
+juce::String Rig::installIrPack (const juce::File& zipFile, juce::File irsRoot)
+{
+    if (irsRoot == juce::File()) irsRoot = contentFolder().getChildFile ("IRs");
+    juce::ZipFile zip (zipFile);
+    if (zip.getNumEntries() == 0) return "!" + zipFile.getFileName() + " isn't a zip with IRs in it";
+    // the packs the cab files know, and every file their cabs ask for (relative to the pack's own folder)
+    struct Pack { juce::String id, name; juce::StringArray files; int cabs = 0; };
+    std::vector<Pack> packs;
+    for (const auto& f : contentFolder().getChildFile ("Cabs").findChildFiles (juce::File::findFiles, false, "*.json"))
+    {
+        const auto v = readJsonFile (f);
+        const auto id = v["pack"]["id"].toString();
+        if (id.isEmpty()) continue;
+        auto it = std::find_if (packs.begin(), packs.end(), [&id] (const Pack& p) { return p.id == id; });
+        if (it == packs.end()) { packs.push_back ({ id, v["pack"]["name"].toString(), {}, 0 }); it = std::prev (packs.end()); }
+        ++it->cabs;
+        const juce::String pre = "Packs/" + id + "/";
+        auto add = [&] (const juce::var& d) { for (auto k : { "irA", "irB" }) { const auto p = d[k].toString(); if (p.startsWith (pre)) it->files.addIfNotAlreadyThere (p.substring (pre.length())); } };
+        add (v);
+        if (auto* vs = v["voices"].getArray()) for (auto& vv : *vs) add (vv);
+    }
+    juce::StringArray names;
+    for (int i = 0; i < zip.getNumEntries(); ++i) names.add (zip.getEntry (i)->filename.replaceCharacter ('\\', '/'));
+    juce::StringArray done;
+    for (auto& pk : packs)
+    {
+        if (pk.files.isEmpty()) continue;
+        // where the pack's folder is inside the zip: what comes before one of its files. A pack shipped at several
+        // sample rates has that folder once per rate: take the 48 kHz one (the plugin resamples to the session rate)
+        const auto probe = pk.files[0];
+        juce::StringArray prefixes;
+        for (const auto& n : names)
+            if (n.endsWithIgnoreCase (probe) && (n.length() == probe.length() || n[n.length() - probe.length() - 1] == '/'))
+                prefixes.add (n.dropLastCharacters (probe.length()));
+        if (prefixes.isEmpty()) continue;
+        auto prefix = prefixes[0];
+        for (const auto& p : prefixes) if (p.containsIgnoreCase ("48k")) { prefix = p; break; }
+        // unzip next to the old copy, then swap: a failed unzip never leaves half a pack
+        const auto dest = irsRoot.getChildFile ("Packs").getChildFile (pk.id), tmp = dest.getSiblingFile (pk.id + ".installing");
+        tmp.deleteRecursively();
+        for (int i = 0; i < zip.getNumEntries(); ++i)
+        {
+            const auto& n = names[i];
+            if (! n.startsWithIgnoreCase (prefix) || n.endsWithChar ('/') || n.contains ("..")) continue;
+            const auto rel = n.substring (prefix.length());
+            if (! rel.endsWithIgnoreCase (".wav")) continue;          // just the IRs
+            const auto out = tmp.getChildFile (rel);
+            out.getParentDirectory().createDirectory();
+            std::unique_ptr<juce::InputStream> in (zip.createStreamForEntry (i));
+            bool ok = in != nullptr;
+            if (ok) { juce::FileOutputStream os (out); ok = os.openedOk() && os.writeFromInputStream (*in, -1) >= 0; os.flush(); }
+            if (! ok) { tmp.deleteRecursively(); return "!Couldn't unzip " + rel + " from " + zipFile.getFileName(); }
+        }
+        int missing = 0;
+        for (const auto& f : pk.files) if (! tmp.getChildFile (f).existsAsFile()) ++missing;
+        dest.deleteRecursively();
+        if (! tmp.moveFileTo (dest)) { tmp.deleteRecursively(); return "!Couldn't write " + dest.getFullPathName(); }
+        done.add (pk.name + ": " + juce::String (pk.cabs) + " cabs ready" + (missing > 0 ? " (" + juce::String (missing) + " IRs missing from this version of the pack)" : ""));
+    }
+    if (done.isEmpty()) return "!" + zipFile.getFileName() + " isn't one of the IR packs the cabs use";
+    return "Installed " + done.joinIntoString ("; ");
 }
 
 // --------------------------------------------------------------------------------- json
