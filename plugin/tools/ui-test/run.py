@@ -313,6 +313,27 @@ async def run(standalone):
         held2 = await pg.evaluate("window.__mock.log.filter(x=>x[0]==='synthNote').map(x=>x[2])")
         await pg.locator('.sy-kb2.latch').click(); await pg.wait_for_timeout(60)
         check(held1 == [True] and held2 == [True, False] and 'stays on' in tip, f'LATCH: a click keeps the key on ({held1}, "{tip}"), a second click lets it go ({held2})')
+        # LATCH chords (2026-11-26): latched keys ring together (each goes out as a stacked note), so a chord is clicked
+        # out key by key; a key pressed again leaves the chord, LATCH off lets go of the rest
+        async def tap_key(m):
+            kb = await pg.locator(f'.sy-keys .sy-pk[data-m="{m}"]').bounding_box()
+            await pg.mouse.click(kb['x'] + kb['width'] / 2, kb['y'] + kb['height'] * .85); await pg.wait_for_timeout(120)
+        notes_sent = "window.__mock.log.filter(x=>x[0]==='synthNote').map(x=>[x[1], x[2], !!x[4]])"
+        lat_keys = "[...document.querySelectorAll('.sy-keys .sy-pk.lat')].map(k=>+k.dataset.m)"
+        ch = [rng[0] + 12, rng[0] + 16, rng[0] + 19]
+        await pg.evaluate("window.__mock.log.length=0")
+        await pg.locator('.sy-kb2.latch').click(); await pg.wait_for_timeout(60)
+        for m in ch: await tap_key(m)
+        on3 = await pg.evaluate(notes_sent); lat3 = await pg.evaluate(lat_keys); tip = await pg.evaluate("document.querySelector('.sy-keys-tip').textContent")
+        check(on3 == [[m, True, True] for m in ch] and lat3 == ch and tip.startswith('Cmaj'),
+              f'LATCH: clicking C, E and G latches all three as one chord ({on3}, lit {lat3}, "{tip}")')
+        await pg.evaluate("window.__mock.log.length=0"); await tap_key(ch[1])
+        out1 = await pg.evaluate(notes_sent); lat2 = await pg.evaluate(lat_keys)
+        await pg.evaluate("window.__mock.log.length=0")
+        await pg.locator('.sy-kb2.latch').click(); await pg.wait_for_timeout(100)
+        rest = await pg.evaluate(notes_sent); lat0 = await pg.evaluate(lat_keys)
+        check(out1 == [[ch[1], False, False]] and lat2 == [ch[0], ch[2]] and sorted(rest) == sorted([[ch[0], False, False], [ch[2], False, False]]) and lat0 == [],
+              f'LATCH: clicking E again takes it out of the chord ({out1}, lit {lat2}); LATCH off lets go of the rest ({rest})')
         # PADS: 16 pads, every one in the key
         await pg.locator('.sy-keys-h .sy-seg button[data-v="pads"]').click(); await pg.wait_for_timeout(100)
         pads = await pg.evaluate("[...document.querySelectorAll('.sy-keys .sy-pad')].map(p=>+p.dataset.m)")
@@ -984,6 +1005,29 @@ async def run(standalone):
             await pick_cab('atlas_cab')
             hidden = await pg.evaluate("document.querySelector('.obs-cabvoices').classList.contains('obs-hidden')")
             check(hidden, 'a cab with one IR set shows no voice buttons')
+            # ---- the mics stay where they're dropped (2026-11-26: click-then-drag made the OS send a double-click at the
+            # drop, which put the mic back on its recorded spot) and snap onto the recorded spot, the dust cap and the edge
+            import math
+            knob_a = "document.querySelector('[data-param=\"cab.a.pos\"]').parentElement.querySelector('.kn-val').textContent"
+            g = await pg.evaluate(geo)
+            (sx, sy), r0 = g['spk'][0], g['rad'][0]
+            ma = g['mics'][0]; ang = math.atan2(ma[1] - sy, ma[0] - sx)
+            at = lambda f: (sx + r0 * f * math.cos(ang), sy + r0 * f * math.sin(ang))
+            async def mic_drop(a, z, dbl=False):
+                if dbl: await pg.mouse.move(*a); await pg.mouse.down(); await pg.mouse.up(); await pg.wait_for_timeout(60)
+                await pg.mouse.move(*a); await pg.mouse.down(click_count=2 if dbl else 1)
+                await pg.mouse.move(*z, steps=10); await pg.mouse.up(click_count=2 if dbl else 1); await pg.wait_for_timeout(1300)
+                return await pg.evaluate(knob_a)
+            v = await mic_drop(ma, at(.62), dbl=True)
+            check(v in ('0.60', '0.61', '0.62', '0.63', '0.64'), f'click, then drag mic A: it stays where it was dropped (POSITION {v}; it used to jump back to 0.30)')
+            snapped = []
+            await pg.mouse.move(*at(.62)); await pg.mouse.down(); await pg.mouse.move(*at(.35), steps=8)
+            snapped.append(await pg.evaluate("document.querySelector('.obs-mic[data-mic=\"0\"]').classList.contains('snapped')"))
+            await pg.mouse.up(); await pg.wait_for_timeout(1300)
+            v_rec = await pg.evaluate(knob_a); rec_on = await pg.evaluate("document.querySelector('.obs-mic[data-mic=\"0\"]').classList.contains('rec')")
+            v_cap = await mic_drop(at(.30), at(.06)); v_edge = await mic_drop(at(0), at(.96))
+            check(v_rec == '0.30' and rec_on and snapped == [True] and v_cap == '0.00' and v_edge == '1.00',
+                  f'mic A snaps onto its recorded spot, the dust cap and the edge (rec {v_rec}/{rec_on}/glow {snapped}, cap {v_cap}, edge {v_edge})')
             await pick_cab('builtin-4x12')
             check(await pg.evaluate("!document.querySelector('.obs-cabpic')"), 'a built-in cab goes back to the plain card')
 

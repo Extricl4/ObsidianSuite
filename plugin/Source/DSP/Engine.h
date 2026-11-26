@@ -77,6 +77,7 @@ public:
     float gateGain() const                        { return gate.currentGain(); }
     float synthActivity() const                   { return synth.currentActivity(); }
     float synthNote() const                       { return synth.currentNote(); }
+    int   synthChord (float* out, int maxN) const { return synth.currentChord (out, maxN); }
     int   synthStep() const                       { return synth.currentStep(); }
     int   synthSource() const                     { return synth.currentSource(); }
     /** AETHER, for its page: how busy each layer is (0 bed, 1 drone, 2 texture) and a count of texture events. */
@@ -111,11 +112,12 @@ public:
     void uiSynthMod (float amount)  { uiMod.store (juce::jlimit (0.f, 1.f, amount)); }
     void midiSynthBend (float semis) { midiBend.store (juce::jlimit (-24.f, 24.f, semis)); }
     void midiSynthMod (float amount) { midiMod.store (juce::jlimit (0.f, 1.f, amount)); }
-    void uiSynthNote (int note, bool on, float velocity = 0.85f)
+    /** stack: a latched key (KEYS panel, LATCH on) - latched keys ring together as a chord. */
+    void uiSynthNote (int note, bool on, float velocity = 0.85f, bool stack = false)
     {
         int s1, n1, s2, n2; uiNotes.prepareToWrite (1, s1, n1, s2, n2);
         const int vel = juce::jlimit (1, 127, (int) std::lround (velocity * 127.f));
-        if (n1 > 0) { uiNoteBuf[(size_t) s1] = on ? (note | (vel << 8)) : -1 - note; uiNotes.finishedWrite (1); }
+        if (n1 > 0) { uiNoteBuf[(size_t) s1] = on ? (note | (vel << 8) | (stack ? 1 << 15 : 0)) : -1 - note; uiNotes.finishedWrite (1); }
     }
     float cpuLoad() const                         { return cpu.load(); }
     bool  takeClip()                              { return outMeterL.takeClip() | outMeterR.takeClip(); }

@@ -1268,7 +1268,9 @@ const KEYMAP = { a: 0, w: 1, s: 2, e: 3, d: 4, f: 5, t: 6, g: 7, y: 8, h: 9, u: 
 const KEYCHAR = Object.fromEntries(Object.entries(KEYMAP).map(([c, o]) => [o, c.toUpperCase()]));
 const PADKEYS = ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i'];          // in PADS: bottom row, then top row
 const padNote = i => { const sc = SCALES[Math.round(S['syn.scale'])]; return scaleTone(KB.oct + 12 + Math.round(S['syn.key']), i, sc); };
-const kbHeld = new Map();                    // who holds a note: 'ptr:<id>', 'key:<char>', 'latch' -> midi note
+const kbHeld = new Map();                    // who holds a note: 'ptr:<id>', 'key:<char>', 'latch:<note>' -> midi note
+const isLatchSrc = k => k.startsWith('latch:');
+const latchedNotes = () => [...kbHeld.entries()].filter(([k]) => isLatchSrc(k)).map(([, n]) => n).sort((a, b) => a - b);
 const kbSus = new Set();                     // let go while SUSTAIN was down: still sounding
 let susDown = false, latch = false;
 const isBlackKey = m => [1, 3, 6, 8, 10].includes(((m % 12) + 12) % 12);
@@ -1301,12 +1303,14 @@ function shiftOct(d) { allOff(); KB.oct = clamp(KB.oct + d, 12, 72); kbSave(); d
 const velFor = (ev, keyEl) => { if (KB.vel === 'soft') return .5; if (KB.vel === 'hard') return 1;
   const r = keyEl.getBoundingClientRect(); return clamp(.3 + .7 * (ev.clientY - r.top) / Math.max(1, r.height), .3, 1); };
 const keyVel = () => KB.vel === 'soft' ? .5 : KB.vel === 'hard' ? 1 : .85;
-/* notes: one place decides what sounds (the synth plays one note, or one chord, at a time) */
+/* notes: one place decides what sounds (the synth plays one note, or one chord, at a time; LATCH: the latched keys
+   ring together, so a chord can be clicked out key by key) */
 const heldElsewhere = (m, except) => [...kbHeld.entries()].some(([k, n]) => n === m && k !== except);
 function letGo(m) { if (heldElsewhere(m)) return; if (susDown) { kbSus.add(m); return; } releaseKey(m); }
 function freeSustained(except) { [...kbSus].forEach(n => { if (n !== except && !heldElsewhere(n)) releaseKey(n); }); kbSus.clear(); }
 function kbOn(src, m, vel, moving) {
   m = snapNote(m); const old = kbHeld.get(src); if (old === m) return;
+  if (isLatchSrc(src)) { freeSustained(m); kbHeld.set(src, m); press(m, 'KEYS', vel, false, true); drawKbLit(); return; }   // one more note in the chord
   const slide = on('syn.legato') && (moving || old != null || kbHeld.size > (kbHeld.has(src) ? 1 : 0));
   freeSustained(m);
   kbHeld.set(src, m);
@@ -1317,14 +1321,15 @@ function kbOn(src, m, vel, moving) {
 function kbOff(src) { const m = kbHeld.get(src); if (m == null) return; kbHeld.delete(src); letGo(m); drawKbLit(); }
 function allOff() { susDown = false; susBtn.classList.remove('on'); [...kbHeld.keys()].forEach(k => { const m = kbHeld.get(k); kbHeld.delete(k); if (!heldElsewhere(m)) releaseKey(m); }); freeSustained(); drawKbLit(); }
 function setSustain(down) { if (susDown === !!down) return; susDown = !!down; susBtn.classList.toggle('on', susDown); if (!susDown) freeSustained(); drawKbLit(); }
-function setLatch(v, quiet) { latch = !!v; latchBtn.classList.toggle('on', latch); if (!latch && kbHeld.has('latch')) kbOff('latch'); if (!quiet) drawKbLit(); }
-function tapLatch(m, vel) { m = snapNote(m); if (kbHeld.get('latch') === m) kbOff('latch'); else kbOn('latch', m, vel); }
+function setLatch(v, quiet) { latch = !!v; latchBtn.classList.toggle('on', latch); if (!latch) [...kbHeld.keys()].filter(isLatchSrc).forEach(k => kbOff(k)); if (!quiet) drawKbLit(); }
+// a latched key: press it and it joins the chord, press it again and it leaves
+function tapLatch(m, vel) { m = snapNote(m); const k = 'latch:' + m; if (kbHeld.has(k)) kbOff(k); else kbOn(k, m, vel); }
 function drawKbLit() {
-  const lit = new Set(kbHeld.values()), lat = kbHeld.get('latch'); if (typeof drawTip === 'function') drawTip();
-  kbBody.querySelectorAll('[data-m]').forEach(k => { const m = +k.dataset.m; k.classList.toggle('lit', lit.has(m)); k.classList.toggle('sus', !lit.has(m) && kbSus.has(m)); k.classList.toggle('lat', m === lat); });
+  const lit = new Set(kbHeld.values()), lat = new Set(latchedNotes()); if (typeof drawTip === 'function') drawTip();
+  kbBody.querySelectorAll('[data-m]').forEach(k => { const m = +k.dataset.m; k.classList.toggle('lit', lit.has(m)); k.classList.toggle('sus', !lit.has(m) && kbSus.has(m)); k.classList.toggle('lat', lat.has(m)); });
 }
 function buildKb() {
-  [...kbHeld.keys()].filter(k => k !== 'latch').forEach(k => kbOff(k));
+  [...kbHeld.keys()].filter(k => !isLatchSrc(k)).forEach(k => kbOff(k));
   kbBody.replaceChildren(); kbBody.className = 'sy-keys-b ' + KB.view;
   if (KB.view === 'pads') {
     const root = KB.oct + 12 + Math.round(S['syn.key']), sc = SCALES[Math.round(S['syn.scale'])];
@@ -1396,13 +1401,27 @@ const glideK = knob('syn.glide', { label: 'GLIDE', size: 34, tip: 'How long a sl
 const slideChip = chip('syn.legato', 'SLIDE', 'Notes glide into each other: drag across the keys, or hold one key and press the next');
 const kbBtn2 = (cls, label, sub, tip) => { const b = el('button', 'sy-kb2 ' + cls, '<b>' + label + '</b><small>' + sub + '</small>'); b.title = tip; return b; };
 const susBtn = kbBtn2('sus', 'SUSTAIN', 'hold SPACE', 'Like a piano pedal: while it\'s down, notes keep ringing after you let go (until the next note)');
-const latchBtn = kbBtn2('latch', 'LATCH', 'keys stay on', 'Press a key and it stays on; press it again to stop, or another key to move');
+const latchBtn = kbBtn2('latch', 'LATCH', 'keys stay on', 'Press keys and they stay on, all together: click out a chord. Press a key again to take it out');
 susBtn.addEventListener('pointerdown', e => { e.preventDefault(); setSustain(true); });
 ['pointerup', 'pointerleave', 'pointercancel'].forEach(t => susBtn.addEventListener(t, () => setSustain(false)));
 latchBtn.addEventListener('click', () => setLatch(!latch));
 const kbTip = el('div', 'sy-keys-tip');
-const drawTip = () => { const lat = kbHeld.get('latch'), ring = [...kbSus].map(noteLbl);
-  kbTip.innerHTML = lat != null ? '<b>' + noteLbl(lat) + '</b> stays on · press it again to stop' : latch ? 'Press a key: it stays on' : susDown ? (ring.length ? 'Ringing: <b>' + ring.join(' ') + '</b>' : 'Sustain is down') : 'SPACE sustain · ↑ ↓ bend · Z X octave'; };
+// the name of a latched chord: C E G -> Cmaj, A C E -> Am, E B -> E power ('' when it's no common shape)
+const CHORD_SHAPES = { '0,4,7': 'maj', '0,3,7': 'm', '0,3,6': 'dim', '0,4,8': 'aug', '0,2,7': 'sus2', '0,5,7': 'sus4', '0,7': ' power',
+  '0,4,7,10': '7', '0,4,7,11': 'maj7', '0,3,7,10': 'm7', '0,3,6,10': 'm7b5', '0,3,6,9': 'dim7', '0,2,4,7': 'add9', '0,4,7,9': '6', '0,3,7,9': 'm6' };
+function chordName(ns) {
+  const pcs = [...new Set(ns.map(n => ((n % 12) + 12) % 12))]; if (pcs.length < 2) return '';
+  const lowPc = ((ns[0] % 12) + 12) % 12;
+  for (const r of [lowPc, ...pcs.filter(p => p !== lowPc)]) {          // the lowest note as the root first
+    const shape = CHORD_SHAPES[pcs.map(p => (p - r + 12) % 12).sort((x, y) => x - y).join(',')];
+    if (shape) return NOTE_NAMES[r] + shape + (r !== lowPc ? '/' + NOTE_NAMES[lowPc] : '');
+  }
+  return '';
+}
+const drawTip = () => { const lat = latchedNotes(), ring = [...kbSus].map(noteLbl), cn = chordName(lat);
+  kbTip.innerHTML = lat.length > 1 ? (cn ? '<b>' + cn + '</b> · ' : 'Chord: ') + lat.map(noteLbl).join(' ') + ' · click a key again to drop it'
+    : lat.length ? '<b>' + noteLbl(lat[0]) + '</b> stays on · press it again to stop, or add more keys'
+    : latch ? 'Press keys: they stay on, together (a chord)' : susDown ? (ring.length ? 'Ringing: <b>' + ring.join(' ') + '</b>' : 'Sustain is down') : 'SPACE sustain · ↑ ↓ bend · Z X octave'; };
 const playCol = el('div', 'sy-keys-pc'); playCol.append(row([glideK, slideChip], 'gap: 12px; align-items: center'), susBtn, latchBtn, kbTip);
 kbLeft.append(whCol, playCol);
 drawBend(); drawMod(); drawTip();
@@ -1581,7 +1600,7 @@ const RATE_BEATS = [1, .5, 1 / 3, .25, 1 / 6, .125];
 let arp = null, held = null, srcName = 'KEYS';
 const live = { note: null, src: '', step: -1 };
 function arpList(rootNote) {
-  const chord = Math.round(S['syn.chord']) ? chordNotes(rootNote) : [rootNote], oct = Math.round(S['syn.arp.oct']) + 1, list = [];
+  const chord = stackSet.size > 1 ? stackList() : Math.round(S['syn.chord']) ? chordNotes(rootNote) : [rootNote], oct = Math.round(S['syn.arp.oct']) + 1, list = [];
   for (let o = 0; o < oct; o++) chord.forEach(n => list.push(n + 12 * o));
   const pat = Math.round(S['syn.arp.pattern']);
   if (pat === 1) list.reverse();
@@ -1621,16 +1640,27 @@ function startArp() {
   tick();
 }
 function stopArp() { if (!arp) return; clearTimeout(arp.timer); arp = null; live.step = -1; }
-function press(m, src, vel = .9, slide = false) {
+// stack: a latched key. Latched keys ring together (two or more: those notes as they are, the CHORD shape isn't added)
+const stackSet = new Set();
+const stackList = () => [...stackSet].sort((a, b) => a - b);
+function press(m, src, vel = .9, slide = false, stack = false) {
   if (!powered && !inPlugin()) return;
-  if (inPlugin()) { held = m; if (window.obsSynth.noteOut) window.obsSynth.noteOut(m, true, vel); return; }
-  srcName = src || 'KEYS'; held = m;
-  if (on('syn.arp.on')) { live.note = m; live.src = srcName; startArp(); }
+  if (stack) stackSet.add(m);
+  if (inPlugin()) { held = stack ? stackList()[0] : m; if (window.obsSynth.noteOut) window.obsSynth.noteOut(m, true, vel, stack); return; }
+  srcName = src || 'KEYS'; held = stack ? stackList()[0] : m;
+  if (on('syn.arp.on')) { live.note = held; live.src = srcName; startArp(); }
+  else if (stack && stackSet.size > 1) noteOn(stackList(), vel);
   else noteOn(chordNotes(m), vel, undefined, slide || on('syn.legato'));
 }
 function releaseKey(m) {
-  if (inPlugin()) { if (held === m) held = null; if (window.obsSynth.noteOut) window.obsSynth.noteOut(m, false); return; }
-  if (held !== m) return; held = null;
+  const wasStack = stackSet.delete(m);
+  if (inPlugin()) { if (held === m) held = null; if (wasStack && stackSet.size) held = stackList()[0]; if (window.obsSynth.noteOut) window.obsSynth.noteOut(m, false); return; }
+  if (wasStack && stackSet.size) {                                 // the rest of the chord keeps ringing
+    held = stackList()[0];
+    if (on('syn.arp.on')) live.note = held; else noteOn(stackSet.size > 1 ? stackList() : chordNotes(held), velNow, undefined, true);
+    return;
+  }
+  if (held !== m && !wasStack) return; held = null;
   if (on('syn.hold')) return;
   if (on('syn.arp.on')) { stopArp(); live.note = null; } else { noteOff(); live.note = null; }
 }
@@ -1649,7 +1679,7 @@ addEventListener('keyup', e => { const c = e.key.toLowerCase();
   if (c === ' ') { if (susDown || kbKeysOn()) e.preventDefault(); setSustain(false); return; }
   if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { if (bendV !== 0) setBend(bendV, true); return; }
   if (KEYMAP[c] == null && !PADKEYS.includes(c)) return; kbOff('key:' + c); });
-addEventListener('blur', () => { [...kbHeld.keys()].filter(k => k !== 'latch').forEach(k => kbOff(k)); setSustain(false); if (bendV) setBend(bendV, true); });
+addEventListener('blur', () => { [...kbHeld.keys()].filter(k => !isLatchSrc(k)).forEach(k => kbOff(k)); setSustain(false); if (bendV) setBend(bendV, true); });
 /* browser: show what the preview plays */
 setInterval(() => { if (inPlugin() || window.__obsSynthLive) return; showNote(live.note, live.src, live.note != null ? .7 : 0); showStep(on('syn.arp.on') ? live.step : -1); }, 50);
 

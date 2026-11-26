@@ -166,7 +166,7 @@ void Engine::process (juce::AudioBuffer<float>& buffer, int numIn, const HostInf
             for (int k = 0; k < ui; ++k)
             {
                 const int c = uiNoteBuf[(size_t) (k < n1 ? s1 + k : s2 + (k - n1))];
-                synthNotes[k] = c >= 0 ? SynthNote { 0, c & 255, (float) ((c >> 8) & 127) / 127.f } : SynthNote { 0, -1 - c, 0.f };
+                synthNotes[k] = c >= 0 ? SynthNote { 0, c & 255, (float) ((c >> 8) & 127) / 127.f, ((c >> 15) & 1) != 0 } : SynthNote { 0, -1 - c, 0.f };
             }
             numSynthNotes += ui;
         }
@@ -220,7 +220,7 @@ void Engine::process (juce::AudioBuffer<float>& buffer, int numIn, const HostInf
         SynthNote chunkNotes[kMaxSynthNotes]; int numChunk = 0;
         for (int e = 0; e < numSynthNotes; ++e)
             if (synthNotes[e].offset >= start && synthNotes[e].offset < start + n)
-                chunkNotes[numChunk++] = { synthNotes[e].offset - start, synthNotes[e].note, synthNotes[e].vel };
+                chunkNotes[numChunk++] = { synthNotes[e].offset - start, synthNotes[e].note, synthNotes[e].vel, synthNotes[e].stack };
         if (! synthOn) synth.keysWhileOff (chunkNotes, numChunk);
         if (synthOn)
         {

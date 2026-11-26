@@ -19,6 +19,7 @@
 //  Everything runs at audio rate except modulation, which is updated every
 //  16 samples. No allocation on the audio thread.
 // =============================================================================
+#include <algorithm>
 #include "DspCore.h"
 #include "PitchTracker.h"
 #include "SynthDefs.h"
@@ -42,12 +43,13 @@ struct SynthParams
 };
 
 /** A note from MIDI or the UI: vel > 0 = note on, 0 = note off. offset = sample in the block. */
-struct SynthNote { int offset = 0; int note = 60; float vel = 0.f; };
+// stack: a latched key from the KEYS panel. Stacked keys ring together, so a chord can be clicked out note by note.
+struct SynthNote { int offset = 0; int note = 60; float vel = 0.f; bool stack = false; };
 
 class GuitarSynth
 {
 public:
-    static constexpr int kCtl = 16, kMaxNotes = 4, kMaxUni = 7;
+    static constexpr int kCtl = 16, kMaxNotes = 6, kMaxUni = 7;
 
     void prepare (double s)
     {
@@ -209,6 +211,8 @@ public:
 
     float currentActivity() const   { return activity.load (std::memory_order_relaxed); }
     float currentNote() const       { return liveNote.load (std::memory_order_relaxed); }   // MIDI note, -1 = silent
+    /** The notes sounding now (the chord's voices), lowest first. For the tests. */
+    int currentChord (float* out, int maxN) const { int n = 0; if (sounding || held) for (int i = 0; i < kMaxNotes && n < maxN; ++i) if (notes[i].on) out[n++] = notes[i].target; std::sort (out, out + n); return n; }
     int   currentStep() const       { return liveStep.load (std::memory_order_relaxed); }   // arp step, -1 = arp idle
     int   currentSource() const     { return liveSrc.load (std::memory_order_relaxed); }    // 0 guitar, 1 midi, 2 hold
 
@@ -377,15 +381,44 @@ private:
         if (e.vel > 0)
         {
             for (int i = 0; i < kbCount; ++i) if (kb[i].note == e.note) { removeKb (i); break; }
-            if (kbCount < 8) kb[kbCount++] = { e.note, e.vel };
-            startNote ((float) e.note, e.vel, Src::Midi, kbCount > 1);
+            if (kbCount == kMaxKeys) removeKb (0);
+            kb[kbCount++] = { e.note, e.vel, e.stack };
+            if (e.stack && stackCount() > 1) playStack (e.vel, true);         // one more note in the clicked-out chord
+            else startNote ((float) e.note, e.vel, Src::Midi, kbCount > 1);
         }
         else
         {
-            for (int i = 0; i < kbCount; ++i) if (kb[i].note == e.note) { removeKb (i); break; }
-            if (kbCount > 0) startNote ((float) kb[kbCount - 1].note, kb[kbCount - 1].vel, Src::Midi, true);   // back to the held key
+            bool wasStack = false;
+            for (int i = 0; i < kbCount; ++i) if (kb[i].note == e.note) { wasStack = kb[i].stack; removeKb (i); break; }
+            const int st = stackCount();
+            if (wasStack && st > 1) playStack (vel, false);                    // the rest of the chord keeps ringing
+            else if (wasStack && st == 1) { for (int i = 0; i < kbCount; ++i) if (kb[i].stack) startNote ((float) kb[i].note, kb[i].vel, Src::Midi, true); }
+            else if (kbCount > 0) startNote ((float) kb[kbCount - 1].note, kb[kbCount - 1].vel, Src::Midi, true);   // back to the held key
             else if (src == Src::Midi) stopNote();
         }
+    }
+    int stackCount() const { int n = 0; for (int i = 0; i < kbCount; ++i) n += kb[i].stack ? 1 : 0; return n; }
+    /** The stacked keys, lowest first (at most kMaxNotes: the newest ones). */
+    int stackNotes (float* out) const
+    {
+        int n = 0;
+        for (int i = kbCount - 1; i >= 0 && n < kMaxNotes; --i) if (kb[i].stack) out[n++] = (float) kb[i].note;
+        std::sort (out, out + n);
+        return n;
+    }
+    /** Two or more latched keys: they all sound (each as it is, the preset's chord shape isn't stacked on top). */
+    void playStack (float velocity, bool strike)
+    {
+        const auto& p = *prm;
+        float ch[kMaxNotes]; const int cnt = stackNotes (ch);
+        if (cnt == 0) return;
+        src = Src::Midi; vel = clampf (velocity, 0.05f, 1.f);
+        const bool wasSounding = sounding && ! held;
+        held = false; sounding = true; rootNote = ch[0]; lastFollow = ch[0];
+        if (p.on (sd::arpOn)) { if (! arpActive) startArp(); return; }   // the arpeggiator walks the chord
+        arpActive = false;
+        setChordTargets (rootNote, ! wasSounding);
+        if (strike || ! wasSounding) retrigger (vel);
     }
 public:
     /** While the synth is switched off: keys let go meanwhile are let go here too
@@ -439,8 +472,9 @@ private:
     void setChordTargets (float root, bool snap)
     {
         const auto& p = *prm;
-        float ch[4]; int cnt = 1;
-        if (p.choice (sd::chord) > 0)
+        float ch[kMaxNotes]; int cnt = 1;
+        if (stackCount() > 1) cnt = stackNotes (ch);                                 // latched keys: the clicked-out chord
+        else if (p.choice (sd::chord) > 0)
         {
             // the chord shape comes from the rounded note, so bends move the whole chord
             const float rr = std::round (root);
@@ -472,8 +506,9 @@ private:
     int arpList (float root, float* out) const
     {
         const auto& p = *prm;
-        float ch[4]; int cnt = 1; ch[0] = root;
-        if (p.choice (sd::chord) > 0) { const float rr = std::round (root); cnt = chordNotes (rr, p.choice (sd::chord), p.choice (sd::key), p.choice (sd::scale), ch); for (int i = 0; i < cnt; ++i) ch[i] += root - rr; }
+        float ch[kMaxNotes]; int cnt = 1; ch[0] = root;
+        if (stackCount() > 1) cnt = stackNotes (ch);                                 // a clicked-out chord
+        else if (p.choice (sd::chord) > 0) { const float rr = std::round (root); cnt = chordNotes (rr, p.choice (sd::chord), p.choice (sd::key), p.choice (sd::scale), ch); for (int i = 0; i < cnt; ++i) ch[i] += root - rr; }
         const int oct = p.choice (sd::arpOct) + 1;
         int n = 0;
         for (int o = 0; o < oct; ++o) for (int i = 0; i < cnt; ++i) out[n++] = ch[i] + 12.f * o;
@@ -513,7 +548,7 @@ private:
                 if (pat == 4) note = scaleTone (root, s.note, p.choice (sd::key), p.choice (sd::scale));
                 else
                 {
-                    float list[16]; const int cnt = arpList (root, list);
+                    float list[kMaxNotes * 4]; const int cnt = arpList (root, list);
                     if (pat == 3) note = list[rng.nextInt (cnt)];
                     else if (pat == 2 && cnt > 1)
                     {
@@ -811,7 +846,8 @@ private:
     EnvFollower envFast, envSlow;
     bool gateOpen = false, sounding = false, held = false, pendingStart = false;
     Src src = Src::Guitar;
-    struct Key { int note; float vel; } kb[8] {}; int kbCount = 0;
+    static constexpr int kMaxKeys = 16;
+    struct Key { int note; float vel; bool stack; } kb[kMaxKeys] {}; int kbCount = 0;
     int onsetHold = 0;
     float detectedMidi = -1, lastFollow = -1, rootNote = -1, vel = 0.8f;
     float dynGain = 0, dynTarget = 0;

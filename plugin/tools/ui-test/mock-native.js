@@ -61,10 +61,20 @@
     later('obs:rig', S.rig, 10);
     return S.rig;
   }
+  const echoDirty = new Set(); let echoTimer = 0;
+  function startEcho() {
+    if (echoTimer) return;
+    echoTimer = setInterval(() => {
+      if (echoDirty.size) { const o = {}; echoDirty.forEach(id => o[id] = params[id]); echoDirty.clear(); window.__mock.emit('obs:params', o); }
+      if (window.__mock.rigDirty) { window.__mock.rigDirty = false; window.__mock.emit('obs:rig', JSON.parse(JSON.stringify(S.rig))); }
+    }, 33);
+  }
   const commands = {
     ready: () => { startMeters(); return S; },
     init: () => S,
-    setParam: (id, v) => { params[id] = v; if (window.__mock.echo) later('obs:params', { [id]: v }, 33); return true; },
+    // with __mock.echo on, it answers like the plugin: a 30 Hz timer sends back every changed parameter (its value
+    // then) and the rig after anything changed it (UiBridge::timerCallback)
+    setParam: (id, v) => { params[id] = v; if (window.__mock.echo) { echoDirty.add(id); startEcho(); } return true; },
     beginGesture: () => true, endGesture: () => true,
     getRig: () => S.rig,
     setModule: (r, s, k) => setModule(r, s, k),
@@ -99,7 +109,7 @@
       if (c.spots) { let on = c.spots.filter(s => s.spk.includes(spk | 0)); if (!on.length) on = c.spots;
         const b = on.reduce((a, s) => Math.abs(s.pos - pos) < Math.abs(a.pos - pos) ? s : a); S.rig.cab['ir' + k] = b.ir;
         S.rig.cab.voice = (c.voices || []).findIndex(v => v.irA === S.rig.cab.irA && v.irB === S.rig.cab.irB); }
-      cabMics(); return S.rig; },
+      cabMics(); if (window.__mock.echo) { window.__mock.rigDirty = true; startEcho(); } return S.rig; },
     presetList: () => S.presets,
     presetLoad: id => { const p = S.presets.find(x => x.id === id); if (!p) return false; S.preset = Object.assign({}, S.preset, { id: p.id, name: p.name, category: p.category, factory: p.factory, dirty: false }); applyPreset(S.presetStates && S.presetStates[id]); later('obs:preset', S.preset, 10); return true; },
     presetNext: d => { const i = S.presets.findIndex(x => x.id === S.preset.id); const p = S.presets[(i + d + S.presets.length) % S.presets.length]; return commands.presetLoad(p.id); },

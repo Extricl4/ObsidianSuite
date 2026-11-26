@@ -30,7 +30,22 @@ ObsidianEditor::ObsidianEditor (ObsidianProcessor& p)
             if (args.isEmpty()) { done (juce::var()); return; }
             juce::Array<juce::var> rest;
             for (int i = 1; i < args.size(); ++i) rest.add (args[i]);
+           #if JUCE_LINUX
+            // Linux (development only): JUCE's WebKit pipe can't carry a big answer either; hand it over as a
+            // script file next to the page instead (the bridge loads it: obsidianLinuxResult)
+            bridge->handle (args[0].toString(), rest, [done] (juce::var r)
+            {
+                const auto json = juce::JSON::toString (r, true);
+                if (json.length() < 24000) { done (r); return; }
+                static std::atomic<int> n { 0 };
+                const auto name = "r" + juce::String (++n) + ".js";
+                juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("obsidian-ui").getChildFile (name)
+                    .replaceWithText ("window.__obsLinux=window.__obsLinux||{};window.__obsLinux['" + name + "']=" + json + ";");
+                auto o = new juce::DynamicObject(); o->setProperty ("__file", name); done (juce::var (o));
+            });
+           #else
             bridge->handle (args[0].toString(), rest, [done] (juce::var r) { done (r); });
+           #endif
         })
        #if JUCE_WEB_BROWSER_RESOURCE_PROVIDER_AVAILABLE && ! JUCE_LINUX
         .withResourceProvider ([this] (const juce::String& url) { return provide (url); })

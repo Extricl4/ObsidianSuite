@@ -978,6 +978,31 @@ OBS_NOINLINE static int runSelfTestBody (Report& r, const juce::StringArray& arg
                                         e.uiSynthNote (57, false); render (p, SR, BLOCK, 1.0, [&] (int) { return 0.f; }); return m; };
         const float soft = keyAct (0.3f), hard = keyAct (1.0f);
         r.check (soft > 0.02f && hard > soft * 2.f && e.synthActivity() < 0.01f, juce::String::formatted ("on-screen KEYS: a soft key plays softer than a hard one (%.2f vs %.2f) and lets go", soft, hard));
+        // LATCH on the KEYS: latched keys ring together, so a chord is clicked out key by key (2026-11-26).
+        // Plain keys still play one at a time (the newest), like before.
+        {
+            const auto zero = [] (int) { return 0.f; };
+            const auto pw = [&] (const std::vector<float>& o, double f) { return tonePower (o, SR, f, o.size() / 3, o.size()); };
+            const double fC = 261.63, fE = 329.63;
+            const auto chordNow = [&] { float c[8]; const int n = e.synthChord (c, 8); juce::String t; for (int i = 0; i < n; ++i) t << (i ? " " : "") << juce::String (c[i], 0); return t; };
+            std::vector<float> mono;
+            e.uiSynthNote (60, true, 0.85f); e.uiSynthNote (64, true, 0.85f);
+            render (p, SR, BLOCK, 0.4, zero, 2, &mono);
+            const auto plain = chordNow();
+            e.uiSynthNote (60, false); e.uiSynthNote (64, false); render (p, SR, BLOCK, 1.0, zero);
+            e.uiSynthNote (60, true, 0.85f, true); render (p, SR, BLOCK, 0.1, zero);
+            e.uiSynthNote (64, true, 0.85f, true); render (p, SR, BLOCK, 0.1, zero);
+            e.uiSynthNote (67, true, 0.85f, true); render (p, SR, BLOCK, 0.3, zero);
+            const auto three = chordNow(); const float act3 = e.synthActivity();
+            e.uiSynthNote (64, false); render (p, SR, BLOCK, 0.3, zero);
+            const auto two = chordNow(); const float act2 = e.synthActivity();
+            e.uiSynthNote (60, false); e.uiSynthNote (67, false); render (p, SR, BLOCK, 1.5, zero);
+            const double mC = pw (mono, fC), mE = pw (mono, fE);
+            r.check (mC < 0.05 * mE && plain == "64", juce::String::formatted ("plain keys: the newest one plays (C4 %.1f dB under E4; playing ", 10.0 * std::log10 (mE / juce::jmax (1e-12, mC))) + plain + ")");
+            r.check (three == "60 64 67" && act3 > 0.05f, "LATCH: C4, E4 and G4 latched ring together (playing " + three + ", activity " + juce::String (act3, 2) + ")");
+            r.check (two == "60 67" && act2 > 0.05f, "LATCH: taking E4 out leaves C4 and G4 ringing (playing " + two + ")");
+            r.check (e.synthActivity() < 0.01f, "LATCH: taking the last keys out lets the chord go (" + juce::String (e.synthActivity(), 3) + ")");
+        }
         // stuck notes: MIDI from the DAW, through processBlock like a host sends it
         auto midiBlock = [&] (std::function<void (juce::MidiBuffer&)> fill) { juce::AudioBuffer<float> b (2, BLOCK); b.clear(); juce::MidiBuffer m; fill (m); p.processBlock (b, m); };
         midiBlock ([] (juce::MidiBuffer& m) { m.addEvent (juce::MidiMessage::noteOn (1, 76, 0.9f), 0); });
