@@ -23,14 +23,17 @@ enum P
     drnOn, drnVoice, drnChord, drnOct, drnFollow, drnDetune, drnTone, drnMotion, drnLevel,
     // TEXTURE: things that happen now and then (drips, creaks, whispers, a heartbeat...)
     texOn, texType, texDensity, texTone, texChaos, texLevel,
+    // added 2026-11-26 (at the end, so saved settings keep their places): the space's shimmer, the drone's shine and air
+    shimmer, drnShine, drnAir,
     count
 };
 
 // The choices, so the engine and tests can name them.
-enum Bed     { Hiss, Wind, Rain, Surf, Rumble, Static, Breath, kBedTypes };
-enum Voice   { Organ, Strings, Choir, Glass, Abyss, Descent, Ascent, kVoices };
-enum Chord   { Root, Fifth, Octaves, Minor, Sus, Tritone, Cluster, Dread, kChords };
-enum Texture { Vinyl, Fire, Drips, Metal, Shimmer, Whispers, Heartbeat, Knocks, Moans, Flesh, kTextures };
+// New ones go at the end of each list, so a saved choice keeps meaning the same thing.
+enum Bed     { Hiss, Wind, Rain, Surf, Rumble, Static, Breath, Brook, Night, Forest, SoftRain, Underwater, Air, kBedTypes };
+enum Voice   { Organ, Strings, Choir, Glass, Abyss, Descent, Ascent, PipeOrgan, Pad, Angels, Tanpura, Bowls, Harmonium, Flute, kVoices };
+enum Chord   { Root, Fifth, Octaves, Minor, Sus, Tritone, Cluster, Dread, Major, Maj7, Add9, Sus2, Min7, Min9, Heaven, Open, kChords };
+enum Texture { Vinyl, Fire, Drips, Metal, Shimmer, Whispers, Heartbeat, Knocks, Moans, Flesh, Chimes, Birds, MusicBox, Bells, Harp, Stars, Kalimba, Leaves, kTextures };
 
 inline const Def* table()
 {
@@ -47,15 +50,15 @@ inline const Def* table()
         { "atm.freeze",      "Aether Freeze",         BOOL,   0,     1,    0,   "",   1 },
 
         { "atm.bed.on",      "Bed On",                BOOL,   0,     1,    1,   "",   1 },
-        { "atm.bed.type",    "Bed Type",              CHOICE, 0,     6,    1,   "Hiss|Wind|Rain|Surf|Rumble|Static|Breath", 1 },
+        { "atm.bed.type",    "Bed Type",              CHOICE, 0,    12,    1,   "Hiss|Wind|Rain|Surf|Rumble|Static|Breath|Brook|Night|Forest|Soft Rain|Underwater|Air", 1 },
         { "atm.bed.tone",    "Bed Tone",              F,      0,   100,   50,   "%",  1 },
         { "atm.bed.motion",  "Bed Motion",            F,      0,   100,   35,   "%",  1 },
         { "atm.bed.depth",   "Bed Depth",             F,      0,   100,   50,   "%",  1 },
         { "atm.bed.level",   "Bed Level",             F,      0,   100,   60,   "%",  1 },
 
         { "atm.drn.on",      "Drone On",              BOOL,   0,     1,    1,   "",   1 },
-        { "atm.drn.voice",   "Drone Voice",           CHOICE, 0,     6,    1,   "Organ|Strings|Choir|Glass|Abyss|Descent|Ascent", 1 },
-        { "atm.drn.chord",   "Drone Chord",           CHOICE, 0,     7,    1,   "Root|Fifth|Octaves|Minor|Sus|Tritone|Cluster|Dread", 1 },
+        { "atm.drn.voice",   "Drone Voice",           CHOICE, 0,    13,    1,   "Organ|Strings|Choir|Glass|Abyss|Descent|Ascent|Pipe Organ|Pad|Angels|Tanpura|Singing Bowls|Harmonium|Flute", 1 },
+        { "atm.drn.chord",   "Drone Chord",           CHOICE, 0,    15,    1,   "Root|Fifth|Octaves|Minor|Sus|Tritone|Cluster|Dread|Major|Maj7|Add9|Sus2|Min7|Min9|Heaven|Open", 1 },
         { "atm.drn.oct",     "Drone Octave",          CHOICE, 0,     3,    1,   "Sub|Low|Mid|High", 1 },
         { "atm.drn.follow",  "Drone Follows Guitar",  BOOL,   0,     1,    0,   "",   1 },
         { "atm.drn.detune",  "Drone Detune",          F,      0,   100,   25,   "%",  1 },
@@ -64,11 +67,15 @@ inline const Def* table()
         { "atm.drn.level",   "Drone Level",           F,      0,   100,   35,   "%",  1 },
 
         { "atm.tex.on",      "Texture On",            BOOL,   0,     1,    0,   "",   1 },
-        { "atm.tex.type",    "Texture Type",          CHOICE, 0,     9,    1,   "Vinyl|Fire|Drips|Metal|Shimmer|Whispers|Heartbeat|Knocks|Moans|Flesh", 1 },
+        { "atm.tex.type",    "Texture Type",          CHOICE, 0,    17,    1,   "Vinyl|Fire|Drips|Metal|Shimmer|Whispers|Heartbeat|Knocks|Moans|Flesh|Wind Chimes|Birds|Music Box|Bells|Harp|Stars|Kalimba|Leaves", 1 },
         { "atm.tex.density", "Texture Density",       F,      0,   100,   40,   "%",  1 },
         { "atm.tex.tone",    "Texture Tone",          F,      0,   100,   50,   "%",  1 },
         { "atm.tex.chaos",   "Texture Chaos",         F,      0,   100,   40,   "%",  1 },
         { "atm.tex.level",   "Texture Level",         F,      0,   100,   50,   "%",  1 },
+
+        { "atm.shimmer",     "Aether Shimmer",        F,      0,   100,    0,   "%",  1 },
+        { "atm.drn.shine",   "Drone Shine",           F,      0,   100,    0,   "%",  1 },
+        { "atm.drn.air",     "Drone Air",             F,      0,   100,    0,   "%",  1 },
     };
     return d;
 }

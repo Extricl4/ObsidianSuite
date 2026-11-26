@@ -110,6 +110,7 @@ class Checks:
 
 async def run(standalone):
     state = build_page(standalone)
+    state_params = {q['id']: q for q in state['params']}
     check = Checks()
     print(f'\n== UI test ({"standalone" if standalone else "plugin in a DAW"})')
     async with async_playwright() as p:
@@ -428,7 +429,8 @@ async def run(standalone):
         await pg.locator('.ae-grid[data-param="atm.bed.type"] button[data-i="2"]').click(); await pg.wait_for_timeout(150)
         v = await pg.evaluate("window.__mock.sent('atm.bed.type')")
         labels = await pg.evaluate("[...document.querySelectorAll('.sy-aether .sy-kl')].slice(0, 4).map(e => e.textContent)")
-        check(v is not None and abs(v - 2 / 6) < 1e-6 and labels[:3] == ['TONE', 'AMOUNT', 'DROPS'], f'RAIN -> atm.bed.type = {v}; the knobs follow the bed ({labels[:3]})')
+        nb = len(state_params['atm.bed.type']['choices']) - 1          # beds 0..nb (the list grows at its end)
+        check(v is not None and abs(v - 2 / nb) < 1e-6 and labels[:3] == ['TONE', 'AMOUNT', 'DROPS'], f'RAIN -> atm.bed.type = {v}; the knobs follow the bed ({labels[:3]})')
         k = pg.locator('.sy-kn[data-param="atm.drn.tone"]'); box = await k.bounding_box()
         await pg.evaluate("window.__mock.log.length=0")
         await pg.mouse.move(box['x'] + box['width'] / 2, box['y'] + box['height'] / 2); await pg.mouse.down()
@@ -462,7 +464,7 @@ async def run(standalone):
         await pg.locator('.sy-prs.sy-aether .sy-pr').first.click(); await pg.wait_for_timeout(300)
         sent = await pg.evaluate("Object.fromEntries(window.__mock.log.filter(x=>x[0]==='setParam').map(x=>[x[1],x[2]]))")
         mood = await pg.evaluate("document.querySelector('.sy-sel[data-param=\"ui.mood\"] .opt.on').textContent")
-        check(n_sc >= 25 and hor >= 10 and abs(sent.get('atm.tex.type', -1) - 8 / 9) < 1e-6 and sent.get('atm.on') in (None, 1) and mood == 'HORROR' and not any(k.startswith('syn.') for k in sent),
+        check(n_sc >= 25 and hor >= 10 and abs(sent.get('atm.tex.type', -1) - 8 / (len(state_params['atm.tex.type']['choices']) - 1)) < 1e-6 and sent.get('atm.on') in (None, 1) and mood == 'HORROR' and not any(k.startswith('syn.') for k in sent),
               f'AETHER scenes: {n_sc}, {hor} under HORROR in red; "Flesh Choir" sends moans and sets the MOOD ({mood})')
         await pg.locator('.sy-prs.sy-aether .x').click(); await pg.wait_for_timeout(100)
         bad = await pg.evaluate("""() => { const D = Object.fromEntries(obsSynth.defs.map(d => [d[0], d])), out = [];
@@ -497,8 +499,41 @@ async def run(standalone):
         await pg.evaluate(f"obsSynth.loadPreset({hi})"); await pg.wait_for_timeout(900)      # not a click: the bridge's regular scan sends it
         sent = await pg.evaluate("Object.fromEntries(window.__mock.log.filter(x=>x[0]==='setParam').map(x=>[x[1],x[2]]))")
         cls = await pg.evaluate("[document.querySelector('.sy-dev .sy-badge .pn').classList.contains('hor'), document.querySelector('.ae-badge .pn u').textContent]")
-        check(sent.get('atm.on') == 1 and abs(sent.get('atm.tex.type', -1) - 1) < 1e-6 and any(k.startswith('syn.') for k in sent) and cls == [True, 'Abattoir'],
+        check(sent.get('atm.on') == 1 and abs(sent.get('atm.tex.type', -1) - 9 / (len(state_params['atm.tex.type']['choices']) - 1)) < 1e-6 and any(k.startswith('syn.') for k in sent) and cls == [True, 'Abattoir'],
               f'the HORROR preset "Abattoir" sets SIREN and its atmosphere, AETHER turns on, the name shows in red ({cls}, on {sent.get("atm.on")}, texture {sent.get("atm.tex.type")})')
+        # ---- AETHER's new sounds (2026-11-26): 13 beds, 14 voices, 16 chords, 18 event types, SHINE / AIR / SHIMMER, calm scenes
+        await pg.evaluate("obsSynth.showPage('aether')"); await pg.wait_for_timeout(200)
+        counts = await pg.evaluate("['atm.bed.type','atm.drn.voice','atm.drn.chord','atm.tex.type'].map(id => document.querySelectorAll('.ae-grid[data-param=\"' + id + '\"] button').length)")
+        check(counts == [13, 14, 16, 18], f'AETHER shows every bed, voice, chord and event type ({counts})')
+        nv = len(state_params['atm.drn.voice']['choices']) - 1
+        async def pick_voice(label):
+            await pg.locator('.ae-grid[data-param="atm.drn.voice"] button', has_text=label).first.click(); await pg.wait_for_timeout(150)
+            return await pg.evaluate("[...document.querySelectorAll('.sy-knobs.ae-six .sy-kl')].map(e => e.textContent)")
+        await pg.evaluate("window.__mock.log.length=0")
+        org = await pick_voice('ORGAN'); tan = await pick_voice('TANPURA')
+        sent_v = await pg.evaluate("window.__mock.sent('atm.drn.voice')")
+        check(org[:5] == ['CHORUS', 'DRAWBARS', 'LESLIE', 'SHINE', 'AIR'] and tan[:3] == ['JAWARI', 'TONE', 'PACE'] and abs((sent_v or -1) - 10 / nv) < 1e-6,
+              f'the drone knobs follow the sound: organ {org[:3]}, tanpura {tan[:3]} (sent {sent_v})')
+        await pg.evaluate("window.__mock.log.length=0")
+        for kid in ('atm.drn.shine', 'atm.drn.air', 'atm.shimmer'):
+            kb = await pg.evaluate("id => { const e = document.querySelector('[data-param=\"' + id + '\"]'); const r = e.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2] }", kid)
+            await pg.mouse.move(*kb); await pg.mouse.down(); await pg.mouse.move(kb[0], kb[1] - 40, steps=5); await pg.mouse.up(); await pg.wait_for_timeout(80)
+        new_k = await pg.evaluate("['atm.drn.shine','atm.drn.air','atm.shimmer'].map(id => window.__mock.sent(id))")
+        check(all(v is not None and v > 0.1 for v in new_k), f'SHINE, AIR and SHIMMER turn and reach the engine ({new_k})')
+        si = await pg.evaluate("(window.OBS_AETHER_SCENES || []).findIndex(s => s.name === 'Gates of Heaven')")
+        await pg.locator('.sy-aether .sy-prbtn').click(); await pg.wait_for_timeout(150)
+        await pg.locator('.sy-prs.sy-aether .sy-prs-cats button[data-c="DREAM"]').click(); await pg.wait_for_timeout(100)
+        await pg.evaluate("window.__mock.log.length=0")
+        await pg.locator('.sy-prs.sy-aether .sy-pr', has_text='Gates of Heaven').click(); await pg.wait_for_timeout(300)
+        sc = await pg.evaluate("['atm.drn.voice','atm.drn.chord','atm.shimmer','atm.drn.shine','atm.tex.type'].map(id => window.__mock.sent(id))")
+        nc, nt = len(state_params['atm.drn.chord']['choices']) - 1, len(state_params['atm.tex.type']['choices']) - 1
+        notes = await pg.evaluate("document.querySelector('.ae-notes').textContent")
+        check(si >= 0 and abs(sc[0] - 9 / nv) < 1e-6 and abs(sc[1] - 14 / nc) < 1e-6 and abs(sc[2] - 0.45) < 1e-3 and abs(sc[3] - 0.45) < 1e-3 and abs(sc[4] - 15 / nt) < 1e-6 and notes.count('·') == 3,
+              f'the scene "Gates of Heaven": angels on the HEAVEN chord (four notes: {notes}), SHINE and SHIMMER, stars ({sc})')
+        await pg.locator('.sy-prs.sy-aether .x').click(); await pg.wait_for_timeout(100)
+        fit = await pg.evaluate("(() => { const k = document.querySelector('.sy-knobs.ae-six').getBoundingClientRect(), b = document.querySelector('.ae-bot').getBoundingClientRect(); return [Math.round(k.bottom), Math.round(b.top)]; })()")
+        check(fit[0] <= fit[1] + 2, f'the DRONE panel fits above the bottom bar (knobs end at {fit[0]}, the bar starts at {fit[1]})')
+        await pg.locator('.sy-page button[data-p="siren"]').click(); await pg.wait_for_timeout(150)
         await pg.locator('.sy-siren .sy-prbtn').click(); await pg.wait_for_timeout(150)
         await pg.locator('.sy-prs.sy-siren .sy-prs-cats button[data-c="HORROR"]').click(); await pg.wait_for_timeout(100)
         n_h = await pg.locator('.sy-prs.sy-siren .sy-pr.hor').count()

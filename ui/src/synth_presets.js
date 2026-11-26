@@ -71,38 +71,38 @@ const H = (name, note, v, a) => Object.assign(P('HORROR', name, note, v), { a })
 /* AETHER parts of the HORROR presets (also among AETHER's scenes, under HORROR) */
 const A = {
   // each one is led by ONE sound of its own; the others stay out or far behind
-  flesh:    { level: -10, evolve: 70, tone: -25, space: 80, size: 90, follow: 30, 'bed.on': 0,                       // lead: a choir on a dread chord
+  flesh:    { level: -10.5, evolve: 70, tone: -25, space: 80, size: 90, follow: 30, 'bed.on': 0,                       // lead: a choir on a dread chord
               'drn.voice': 'Choir', 'drn.chord': 'Dread', 'drn.oct': 'Low', 'drn.detune': 70, 'drn.tone': 40, 'drn.motion': 60, 'drn.level': 62,
               'tex.on': 1, 'tex.type': 'Moans', 'tex.density': 18, 'tex.tone': 30, 'tex.chaos': 70, 'tex.level': 36 },
-  saw:      { level: -3.5, evolve: 40, grit: 35, tone: -5, space: 40, size: 50, 'bed.on': 0, 'drn.on': 0,             // lead: metal being sawn and scraped
+  saw:      { level: -4, evolve: 40, grit: 35, tone: -5, space: 40, size: 50, 'bed.on': 0, 'drn.on': 0,             // lead: metal being sawn and scraped
               'tex.on': 1, 'tex.type': 'Metal', 'tex.density': 78, 'tex.tone': 45, 'tex.chaos': 25, 'tex.level': 76 },
-  descent:  { level: -14, evolve: 45, tone: -30, space: 70, size: 85,                                                // lead: a tone that falls forever
+  descent:  { level: -13, evolve: 45, tone: -30, space: 70, size: 85,                                                // lead: a tone that falls forever
               'bed.type': 'Rumble', 'bed.tone': 25, 'bed.motion': 30, 'bed.depth': 50, 'bed.level': 26,
               'drn.voice': 'Descent', 'drn.chord': 'Tritone', 'drn.detune': 30, 'drn.tone': 45, 'drn.motion': 45, 'drn.level': 70 },
-  walls:    { level: 0, evolve: 50, tone: -35, space: 28, size: 32, 'drn.on': 0,                                    // lead: knocking, close, in the house
+  walls:    { level: 1.5, evolve: 50, tone: -35, space: 28, size: 32, 'drn.on': 0,                                    // lead: knocking, close, in the house
               'bed.type': 'Breath', 'bed.tone': 30, 'bed.motion': 25, 'bed.depth': 45, 'bed.level': 30,
               'tex.on': 1, 'tex.type': 'Knocks', 'tex.density': 45, 'tex.tone': 25, 'tex.chaos': 70, 'tex.level': 82 },
-  wound:    { level: -5.5, grit: 20, space: 22, size: 30, tone: -5, follow: -40, 'drn.on': 0,                         // lead: ragged breathing right next to you
+  wound:    { level: -4, grit: 20, space: 22, size: 30, tone: -5, follow: -40, 'drn.on': 0,                         // lead: ragged breathing right next to you
               'bed.type': 'Breath', 'bed.tone': 55, 'bed.motion': 62, 'bed.depth': 100, 'bed.level': 78 },
-  asylum:   { level: -9, evolve: 55, tone: -20, space: 72, size: 82, 'drn.on': 0,                                    // lead: a broken music box, off key
+  asylum:   { level: -10.5, evolve: 55, tone: -20, space: 72, size: 82, 'drn.on': 0,                                    // lead: a broken music box, off key
               'bed.type': 'Static', 'bed.tone': 35, 'bed.motion': 20, 'bed.depth': 35, 'bed.level': 30,
               'tex.on': 1, 'tex.type': 'Shimmer', 'tex.density': 52, 'tex.tone': 30, 'tex.chaos': 90, 'tex.level': 72 },
-  abattoir: { level: -3, evolve: 45, grit: 40, tone: -25, space: 35, size: 45, 'drn.on': 0,                          // lead: wet, cracking, tearing
+  abattoir: { level: -3.5, evolve: 45, grit: 40, tone: -25, space: 35, size: 45, 'drn.on': 0,                          // lead: wet, cracking, tearing
               'bed.type': 'Rumble', 'bed.tone': 45, 'bed.motion': 40, 'bed.depth': 55, 'bed.level': 38,
               'tex.on': 1, 'tex.type': 'Flesh', 'tex.density': 62, 'tex.tone': 40, 'tex.chaos': 55, 'tex.level': 82 },
   terror:   { level: 3, evolve: 50, follow: 40, space: 25, size: 35, 'drn.on': 0,                                    // lead: a racing, stumbling heart
               'bed.type': 'Breath', 'bed.tone': 60, 'bed.motion': 92, 'bed.depth': 70, 'bed.level': 44,
               'tex.on': 1, 'tex.type': 'Heartbeat', 'tex.density': 82, 'tex.tone': 30, 'tex.chaos': 62, 'tex.level': 82 },
-  mass:     { level: -11.5, evolve: 55, tone: -20, space: 85, size: 95, follow: 25,                                     // lead: an organ on a dread chord
+  mass:     { level: -13.5, evolve: 55, tone: -20, space: 85, size: 95, follow: 25,                                     // lead: an organ on a dread chord
               'bed.type': 'Rumble', 'bed.tone': 30, 'bed.motion': 25, 'bed.depth': 60, 'bed.level': 30,
               'drn.voice': 'Organ', 'drn.chord': 'Dread', 'drn.detune': 30, 'drn.tone': 65, 'drn.motion': 35, 'drn.level': 70 },
-  possessed:{ level: -2.5, evolve: 75, grit: 45, tone: -25, space: 50, size: 65, follow: 60, 'bed.on': 0,              // lead: whispering all around you
+  possessed:{ level: 0.5, evolve: 75, grit: 45, tone: -25, space: 50, size: 65, follow: 60, 'bed.on': 0,              // lead: whispering all around you
               'drn.voice': 'Abyss', 'drn.chord': 'Tritone', 'drn.oct': 'Sub', 'drn.detune': 60, 'drn.tone': 50, 'drn.motion': 70, 'drn.level': 34,
               'tex.on': 1, 'tex.type': 'Whispers', 'tex.density': 72, 'tex.tone': 30, 'tex.chaos': 95, 'tex.level': 80 },
-  radio:    { level: -11.5, evolve: 70, grit: 30, tone: 0, space: 35, size: 50, 'drn.on': 0,                           // lead: a radio between stations
+  radio:    { level: -13, evolve: 70, grit: 30, tone: 0, space: 35, size: 50, 'drn.on': 0,                           // lead: a radio between stations
               'bed.type': 'Static', 'bed.tone': 55, 'bed.motion': 65, 'bed.depth': 95, 'bed.level': 74,
               'tex.on': 1, 'tex.type': 'Whispers', 'tex.density': 28, 'tex.tone': 60, 'tex.chaos': 70, 'tex.level': 36 },
-  agony:    { level: -11, evolve: 70, tone: -10, space: 70, size: 80, follow: 20, 'drn.on': 0,                        // lead: voices wailing in pain
+  agony:    { level: -8.5, evolve: 70, tone: -10, space: 70, size: 80, follow: 20, 'drn.on': 0,                        // lead: voices wailing in pain
               'bed.type': 'Wind', 'bed.tone': 40, 'bed.motion': 55, 'bed.depth': 90, 'bed.level': 36,
               'tex.on': 1, 'tex.type': 'Moans', 'tex.density': 66, 'tex.tone': 72, 'tex.chaos': 85, 'tex.level': 80 },
 };
@@ -356,42 +356,81 @@ window.OBS_SYNTH_PRESETS = [
 const SC = (cat, name, note, a) => ({ cat, name, note, a });
 window.OBS_AETHER_SCENES = [
   /* NATURE */
-  SC('NATURE', 'Rain on Glass', 'Rain against a window, the gutter dripping', { level: -6, space: 35, size: 40, 'bed.type': 'Rain', 'bed.tone': 70, 'bed.motion': 40, 'bed.depth': 70, 'bed.level': 65, 'drn.on': 0,
+  SC('NATURE', 'Rain on Glass', 'Rain against a window, the gutter dripping', { level: -7, space: 35, size: 40, 'bed.type': 'Rain', 'bed.tone': 70, 'bed.motion': 40, 'bed.depth': 70, 'bed.level': 65, 'drn.on': 0,
     'tex.on': 1, 'tex.type': 'Drips', 'tex.density': 25, 'tex.tone': 70, 'tex.chaos': 50, 'tex.level': 40 }),
-  SC('NATURE', 'Night Wind', 'Wind around the house, gusting and howling', { level: -15.5, space: 35, 'bed.type': 'Wind', 'bed.tone': 35, 'bed.motion': 50, 'bed.depth': 75, 'bed.level': 75, 'drn.on': 0 }),
-  SC('NATURE', 'Ocean Floor', 'Deep under the waves, bubbles rising', { level: -8, tone: -35, space: 75, size: 85, 'bed.type': 'Surf', 'bed.tone': 15, 'bed.motion': 20, 'bed.depth': 70, 'bed.level': 55, 'drn.on': 0,
+  SC('NATURE', 'Night Wind', 'Wind around the house, gusting and howling', { level: -16, space: 35, 'bed.type': 'Wind', 'bed.tone': 35, 'bed.motion': 50, 'bed.depth': 75, 'bed.level': 75, 'drn.on': 0 }),
+  SC('NATURE', 'Ocean Floor', 'Deep under the waves, bubbles rising', { level: -8.5, tone: -35, space: 75, size: 85, 'bed.type': 'Surf', 'bed.tone': 15, 'bed.motion': 20, 'bed.depth': 70, 'bed.level': 55, 'drn.on': 0,
     'tex.on': 1, 'tex.type': 'Drips', 'tex.density': 45, 'tex.tone': 20, 'tex.chaos': 80, 'tex.level': 62 }),
-  SC('NATURE', 'Campfire', 'A fire crackling under the night air', { level: -2.5, space: 15, size: 30, follow: -40, 'bed.type': 'Wind', 'bed.tone': 25, 'bed.motion': 20, 'bed.depth': 25, 'bed.level': 48, 'drn.on': 0,
+  SC('NATURE', 'Campfire', 'A fire crackling under the night air', { level: -3, space: 15, size: 30, follow: -40, 'bed.type': 'Wind', 'bed.tone': 25, 'bed.motion': 20, 'bed.depth': 25, 'bed.level': 48, 'drn.on': 0,
     'tex.on': 1, 'tex.type': 'Fire', 'tex.density': 55, 'tex.tone': 45, 'tex.level': 85 }),
   SC('NATURE', 'Thunderhead', 'A downpour, and the sky rolling overhead', { level: -8, evolve: 70, space: 50, size: 70, 'bed.type': 'Rain', 'bed.tone': 55, 'bed.motion': 85, 'bed.depth': 80, 'bed.level': 66,
     'drn.voice': 'Abyss', 'drn.chord': 'Root', 'drn.oct': 'Sub', 'drn.tone': 25, 'drn.motion': 60, 'drn.level': 36 }),
-  SC('NATURE', 'Shoreline', 'Waves on the sand, slow and even', { level: -6, space: 30, size: 45, follow: -30, 'bed.type': 'Surf', 'bed.tone': 55, 'bed.motion': 35, 'bed.depth': 55, 'bed.level': 68, 'drn.on': 0 }),
+  SC('NATURE', 'Shoreline', 'Waves on the sand, slow and even', { level: -7, space: 30, size: 45, follow: -30, 'bed.type': 'Surf', 'bed.tone': 55, 'bed.motion': 35, 'bed.depth': 55, 'bed.level': 68, 'drn.on': 0 }),
+  SC('NATURE', 'Forest Morning', 'Leaves in a light breeze, birds waking up', { level: -7, space: 30, size: 45, follow: -25, 'bed.type': 'Forest', 'bed.tone': 55, 'bed.motion': 30, 'bed.depth': 50, 'bed.level': 62, 'drn.on': 0,
+    'tex.on': 1, 'tex.type': 'Birds', 'tex.density': 45, 'tex.tone': 55, 'tex.chaos': 45, 'tex.level': 62 }),
+  SC('NATURE', 'Babbling Brook', 'A stream over stones, a bird now and then', { level: -6, space: 25, size: 40, follow: -25, 'bed.type': 'Brook', 'bed.tone': 50, 'bed.motion': 45, 'bed.depth': 50, 'bed.level': 66, 'drn.on': 0,
+    'tex.on': 1, 'tex.type': 'Birds', 'tex.density': 18, 'tex.tone': 45, 'tex.chaos': 50, 'tex.level': 45 }),
+  SC('NATURE', 'Night Meadow', 'Crickets in the grass under the stars', { level: -4.5, space: 55, size: 70, follow: -30, 'bed.type': 'Night', 'bed.tone': 45, 'bed.motion': 40, 'bed.depth': 60, 'bed.level': 62, 'drn.on': 0,
+    'tex.on': 1, 'tex.type': 'Stars', 'tex.density': 25, 'tex.tone': 55, 'tex.chaos': 40, 'tex.level': 45 }),
+  SC('NATURE', 'Wind Chime Porch', 'A soft breeze through the chimes on the porch', { level: -2.5, space: 40, size: 55, follow: -30, 'bed.type': 'Forest', 'bed.tone': 45, 'bed.motion': 25, 'bed.depth': 30, 'bed.level': 40, 'drn.on': 0,
+    'tex.on': 1, 'tex.type': 'Wind Chimes', 'tex.density': 35, 'tex.tone': 50, 'tex.chaos': 45, 'tex.level': 60 }),
+  SC('NATURE', 'Kalimba Garden', 'A kalimba by the water, the stream behind it', { level: 0.5, space: 35, size: 50, follow: -25, 'bed.type': 'Brook', 'bed.tone': 40, 'bed.motion': 25, 'bed.depth': 30, 'bed.level': 42, 'drn.on': 0,
+    'tex.on': 1, 'tex.type': 'Kalimba', 'tex.density': 40, 'tex.tone': 45, 'tex.chaos': 35, 'tex.level': 62 }),
+  SC('NATURE', 'Summer Rain', 'Rain pattering on the leaves, a soft hiss behind', { level: -4, space: 30, size: 45, follow: -25, 'bed.type': 'Soft Rain', 'bed.tone': 50, 'bed.motion': 40, 'bed.depth': 45, 'bed.level': 55, 'drn.on': 0,
+    'tex.on': 1, 'tex.type': 'Leaves', 'tex.density': 55, 'tex.tone': 50, 'tex.chaos': 50, 'tex.level': 55 }),
   /* DREAM */
-  SC('DREAM', 'Deep Space', 'Drifting between the stars, glass all around', { level: -12, evolve: 70, space: 85, size: 95, 'bed.on': 0,
+  SC('DREAM', 'Deep Space', 'Drifting between the stars, glass all around', { level: -11.5, evolve: 70, space: 85, size: 95, 'bed.on': 0,
     'drn.voice': 'Glass', 'drn.chord': 'Sus', 'drn.oct': 'Mid', 'drn.detune': 35, 'drn.tone': 55, 'drn.motion': 40, 'drn.level': 58,
     'tex.on': 1, 'tex.type': 'Shimmer', 'tex.density': 25, 'tex.tone': 75, 'tex.chaos': 40, 'tex.level': 40 }),
   SC('DREAM', 'Cathedral', 'A choir in a stone hall', { level: -11, tone: -10, space: 75, size: 90, 'bed.on': 0,
     'drn.voice': 'Choir', 'drn.chord': 'Fifth', 'drn.detune': 30, 'drn.tone': 45, 'drn.motion': 40, 'drn.level': 60 }),
   SC('DREAM', 'Glass Garden', 'Glass chimes in a soft breeze', { level: -10.5, tone: 25, space: 70, size: 80, 'bed.type': 'Wind', 'bed.tone': 70, 'bed.motion': 25, 'bed.depth': 25, 'bed.level': 28, 'drn.on': 0,
     'tex.on': 1, 'tex.type': 'Shimmer', 'tex.density': 58, 'tex.tone': 85, 'tex.chaos': 30, 'tex.level': 68 }),
-  SC('DREAM', 'Old Record', 'A warm organ on a dusty record', { level: -5, grit: 15, tone: -20, space: 20, size: 35, 'bed.type': 'Hiss', 'bed.tone': 60, 'bed.motion': 10, 'bed.depth': 20, 'bed.level': 25,
+  SC('DREAM', 'Old Record', 'A warm organ on a dusty record', { level: -1.5, grit: 15, tone: -20, space: 20, size: 35, 'bed.type': 'Hiss', 'bed.tone': 60, 'bed.motion': 10, 'bed.depth': 20, 'bed.level': 25,
     'drn.voice': 'Organ', 'drn.chord': 'Sus', 'drn.oct': 'Mid', 'drn.detune': 20, 'drn.tone': 35, 'drn.motion': 25, 'drn.level': 45,
     'tex.on': 1, 'tex.type': 'Vinyl', 'tex.density': 50, 'tex.tone': 55, 'tex.level': 60 }),
-  SC('DREAM', 'Ascension', 'Rising, and rising, and rising', { level: -12, space: 75, size: 90, 'bed.type': 'Wind', 'bed.tone': 60, 'bed.depth': 35, 'bed.level': 30,
+  SC('DREAM', 'Ascension', 'Rising, and rising, and rising', { level: -11.5, space: 75, size: 90, 'bed.type': 'Wind', 'bed.tone': 60, 'bed.depth': 35, 'bed.level': 30,
     'drn.voice': 'Ascent', 'drn.chord': 'Fifth', 'drn.oct': 'Mid', 'drn.detune': 20, 'drn.tone': 55, 'drn.motion': 35, 'drn.level': 60,
     'tex.on': 1, 'tex.type': 'Shimmer', 'tex.density': 25, 'tex.level': 35 }),
+  SC('DREAM', 'Gates of Heaven', 'Angels on a wide open chord, the space rising', { level: -15.5, evolve: 50, space: 80, size: 92, shimmer: 45, 'bed.type': 'Air', 'bed.tone': 60, 'bed.motion': 25, 'bed.depth': 40, 'bed.level': 30,
+    'drn.voice': 'Angels', 'drn.chord': 'Heaven', 'drn.oct': 'Low', 'drn.detune': 30, 'drn.tone': 50, 'drn.motion': 35, 'drn.level': 60, 'drn.shine': 45, 'drn.air': 25,
+    'tex.on': 1, 'tex.type': 'Stars', 'tex.density': 25, 'tex.tone': 60, 'tex.chaos': 40, 'tex.level': 40 }),
+  SC('DREAM', 'Cathedral Dawn', 'A pipe organ at first light, a bell far off', { level: -10.5, space: 85, size: 95, shimmer: 18, 'bed.on': 0,
+    'drn.voice': 'Pipe Organ', 'drn.chord': 'Add9', 'drn.oct': 'Low', 'drn.detune': 15, 'drn.tone': 50, 'drn.motion': 15, 'drn.level': 58,
+    'tex.on': 1, 'tex.type': 'Bells', 'tex.density': 25, 'tex.tone': 30, 'tex.chaos': 30, 'tex.level': 45 }),
+  SC('DREAM', 'Tanpura Meditation', 'A tanpura going round, soft air around it', { level: -10, evolve: 25, space: 50, size: 70, follow: -20, 'bed.type': 'Air', 'bed.tone': 45, 'bed.motion': 20, 'bed.depth': 30, 'bed.level': 25,
+    'drn.voice': 'Tanpura', 'drn.chord': 'Fifth', 'drn.oct': 'Low', 'drn.detune': 55, 'drn.tone': 50, 'drn.motion': 30, 'drn.level': 62 }),
+  SC('DREAM', 'Temple Bowls', 'Singing bowls, rubbed and struck in a quiet temple', { level: -14.5, space: 70, size: 85, shimmer: 12, 'bed.type': 'Air', 'bed.tone': 40, 'bed.motion': 15, 'bed.depth': 25, 'bed.level': 22,
+    'drn.voice': 'Singing Bowls', 'drn.chord': 'Sus2', 'drn.oct': 'Mid', 'drn.detune': 30, 'drn.tone': 55, 'drn.motion': 35, 'drn.level': 60 }),
+  SC('DREAM', 'Rain on the Window', 'Soft rain outside, a warm pad inside', { level: -5.5, space: 40, size: 55, follow: -20, 'bed.type': 'Soft Rain', 'bed.tone': 45, 'bed.motion': 45, 'bed.depth': 50, 'bed.level': 62,
+    'drn.voice': 'Pad', 'drn.chord': 'Maj7', 'drn.oct': 'Low', 'drn.detune': 30, 'drn.tone': 30, 'drn.motion': 30, 'drn.level': 38 }),
+  SC('DREAM', 'Under the Sea', 'Deep and blue, slow bubbles, voices far above', { level: -14.5, tone: -15, evolve: 50, space: 75, size: 88, shimmer: 25, 'bed.type': 'Underwater', 'bed.tone': 30, 'bed.motion': 40, 'bed.depth': 55, 'bed.level': 58,
+    'drn.voice': 'Angels', 'drn.chord': 'Sus2', 'drn.oct': 'Mid', 'drn.detune': 35, 'drn.tone': 30, 'drn.motion': 30, 'drn.level': 32 }),
+  SC('DREAM', 'Snowfall', 'Soft air, a music box far away, a glassy pad', { level: -7.5, tone: 10, space: 75, size: 85, shimmer: 30, 'bed.type': 'Air', 'bed.tone': 70, 'bed.motion': 25, 'bed.depth': 35, 'bed.level': 30,
+    'drn.voice': 'Pad', 'drn.chord': 'Maj7', 'drn.oct': 'Mid', 'drn.detune': 25, 'drn.tone': 40, 'drn.motion': 25, 'drn.level': 40, 'drn.shine': 35,
+    'tex.on': 1, 'tex.type': 'Music Box', 'tex.density': 25, 'tex.tone': 60, 'tex.chaos': 30, 'tex.level': 50 }),
+  SC('DREAM', 'Starlight', 'Warm strings under a sky full of stars', { level: -12, evolve: 40, space: 80, size: 90, shimmer: 35, 'bed.on': 0,
+    'drn.voice': 'Strings', 'drn.chord': 'Maj7', 'drn.oct': 'Low', 'drn.detune': 25, 'drn.tone': 40, 'drn.motion': 30, 'drn.level': 58, 'drn.shine': 30,
+    'tex.on': 1, 'tex.type': 'Stars', 'tex.density': 40, 'tex.tone': 60, 'tex.chaos': 40, 'tex.level': 45 }),
+  SC('DREAM', 'Lullaby', 'Breathy flutes and a harp, crickets outside', { level: -4, space: 55, size: 70, follow: -20, 'bed.type': 'Night', 'bed.tone': 40, 'bed.motion': 30, 'bed.depth': 30, 'bed.level': 30,
+    'drn.voice': 'Flute', 'drn.chord': 'Add9', 'drn.oct': 'Mid', 'drn.detune': 25, 'drn.tone': 40, 'drn.motion': 30, 'drn.level': 42,
+    'tex.on': 1, 'tex.type': 'Harp', 'tex.density': 35, 'tex.tone': 45, 'tex.chaos': 30, 'tex.level': 55 }),
+  SC('DREAM', 'Harmonium Hymn', 'A reed organ breathing in a small wooden chapel', { level: -7, space: 55, size: 60, 'bed.on': 0,
+    'drn.voice': 'Harmonium', 'drn.chord': 'Major', 'drn.oct': 'Low', 'drn.detune': 30, 'drn.tone': 45, 'drn.motion': 35, 'drn.level': 58 }),
+  SC('DREAM', 'Gospel Organ', 'A tonewheel organ through a slow Leslie', { level: -5.5, space: 40, size: 55, 'bed.on': 0,
+    'drn.voice': 'Organ', 'drn.chord': 'Major', 'drn.oct': 'Mid', 'drn.detune': 50, 'drn.tone': 60, 'drn.motion': 45, 'drn.level': 58 }),
   /* DARK */
-  SC('DARK', 'The Cellar', 'Damp stone, water dripping in the dark', { level: -1.5, tone: -35, space: 50, size: 60, 'bed.type': 'Rumble', 'bed.tone': 20, 'bed.motion': 25, 'bed.depth': 40, 'bed.level': 40, 'drn.on': 0,
+  SC('DARK', 'The Cellar', 'Damp stone, water dripping in the dark', { level: -0.5, tone: -35, space: 50, size: 60, 'bed.type': 'Rumble', 'bed.tone': 20, 'bed.motion': 25, 'bed.depth': 40, 'bed.level': 40, 'drn.on': 0,
     'tex.on': 1, 'tex.type': 'Drips', 'tex.density': 38, 'tex.tone': 30, 'tex.chaos': 70, 'tex.level': 70 }),
-  SC('DARK', 'Haunted Ward', 'Glass ringing out of tune in an empty hospital', { level: -10.5, evolve: 60, space: 65, size: 80, 'bed.type': 'Hiss', 'bed.tone': 30, 'bed.motion': 20, 'bed.depth': 40, 'bed.level': 22,
+  SC('DARK', 'Haunted Ward', 'Glass ringing out of tune in an empty hospital', { level: -8, evolve: 60, space: 65, size: 80, 'bed.type': 'Hiss', 'bed.tone': 30, 'bed.motion': 20, 'bed.depth': 40, 'bed.level': 22,
     'drn.voice': 'Glass', 'drn.chord': 'Tritone', 'drn.oct': 'Mid', 'drn.detune': 55, 'drn.tone': 40, 'drn.motion': 45, 'drn.level': 62 }),
-  SC('DARK', 'Number Station', 'A shortwave signal that should not be there', { level: -9.5, grit: 30, space: 30, 'bed.type': 'Static', 'bed.tone': 70, 'bed.motion': 35, 'bed.depth': 60, 'bed.level': 55,
+  SC('DARK', 'Number Station', 'A shortwave signal that should not be there', { level: -8.5, grit: 30, space: 30, 'bed.type': 'Static', 'bed.tone': 70, 'bed.motion': 35, 'bed.depth': 60, 'bed.level': 55,
     'drn.voice': 'Organ', 'drn.chord': 'Root', 'drn.oct': 'High', 'drn.detune': 0, 'drn.tone': 20, 'drn.motion': 0, 'drn.level': 42 }),
   SC('DARK', 'Heartbeat', 'A slow heart, loud in your ears', { level: 0, space: 20, size: 30, 'bed.type': 'Breath', 'bed.tone': 40, 'bed.motion': 20, 'bed.depth': 20, 'bed.level': 24, 'drn.on': 0,
     'tex.on': 1, 'tex.type': 'Heartbeat', 'tex.density': 25, 'tex.chaos': 20, 'tex.level': 82 }),
-  SC('DARK', 'Ghost Ship', 'An empty ship creaking on the waves', { level: 1.5, space: 55, size: 70, 'bed.type': 'Surf', 'bed.tone': 30, 'bed.motion': 30, 'bed.depth': 55, 'bed.level': 45, 'drn.on': 0,
+  SC('DARK', 'Ghost Ship', 'An empty ship creaking on the waves', { level: 0, space: 55, size: 70, 'bed.type': 'Surf', 'bed.tone': 30, 'bed.motion': 30, 'bed.depth': 55, 'bed.level': 45, 'drn.on': 0,
     'tex.on': 1, 'tex.type': 'Metal', 'tex.density': 35, 'tex.tone': 10, 'tex.chaos': 15, 'tex.level': 70 }),
-  SC('DARK', 'Mineshaft', 'Down where the light does not reach, metal groaning', { level: -7, tone: -30, space: 65, size: 85, 'bed.type': 'Rumble', 'bed.tone': 30, 'bed.motion': 35, 'bed.depth': 60, 'bed.level': 55, 'drn.on': 0,
+  SC('DARK', 'Mineshaft', 'Down where the light does not reach, metal groaning', { level: -5, tone: -30, space: 65, size: 85, 'bed.type': 'Rumble', 'bed.tone': 30, 'bed.motion': 35, 'bed.depth': 60, 'bed.level': 55, 'drn.on': 0,
     'tex.on': 1, 'tex.type': 'Metal', 'tex.density': 25, 'tex.tone': 25, 'tex.chaos': 85, 'tex.level': 62 }),
   /* HORROR: the atmospheres of SIREN's HORROR presets */
   SC('HORROR', 'Flesh Choir', 'A choir of the damned on a dread chord', A.flesh),

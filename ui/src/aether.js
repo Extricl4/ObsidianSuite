@@ -2,11 +2,17 @@
 /* =============================================================================
    AETHER: SIREN's second page. Noise, ambience and atmospheres that play by
    themselves around your playing (no notes needed).
-     BED      noise you sit in: hiss, wind, rain, surf, rumble, static, breath
-     DRONE    tones that hang in the air (in SIREN's key, or following you)
+     BED      noise you sit in: hiss, wind, rain, surf, rumble, static, breath,
+              brook, night (crickets), forest, soft rain, underwater, air
+     DRONE    tones that hang in the air (in SIREN's key, or following you):
+              organ (drawbars, Leslie), strings, choir, glass, abyss, descent,
+              ascent, pipe organ, pad, angels, tanpura, singing bowls,
+              harmonium, flute; SHINE (an octave sheen) and AIR (breath)
      TEXTURE  things that happen now and then: crackle, fire, drips, metal,
-              shimmer, whispers, a heartbeat, knocks, moans, flesh
-     VOID     the space it all lives in (SIZE, SPACE, FREEZE in the strip)
+              shimmer, whispers, a heartbeat, knocks, moans, flesh, wind
+              chimes, birds, a music box, bells, a harp, stars, a kalimba,
+              rain on leaves (the melodic ones in SIREN's key and scale)
+     VOID     the space it all lives in (SIZE, SPACE, SHIMMER; FREEZE in the strip)
    MOOD decides what the dice, MUTATE and SUMMON reach for (calm .. horror).
    Built on SIREN's device with its controls (synth.js shares them as
    window.__sirenKit). The engine is plugin/Source/DSP/Atmos.h (settings:
@@ -19,11 +25,13 @@ const { el, P, S, set, onChange, on, fmt, toN, toV, clamp, knob, toggle, chip, s
 const inPlugin = K.inPlugin;
 
 /* ------------------------------------------------------------ names */
-const BEDS = ['HISS', 'WIND', 'RAIN', 'SURF', 'RUMBLE', 'STATIC', 'BREATH'];
-const VOICES = ['ORGAN', 'STRINGS', 'CHOIR', 'GLASS', 'ABYSS', 'DESCENT', 'ASCENT'];
-const CHORDS = ['ROOT', '5TH', 'OCT', 'MIN', 'SUS', 'TRI', 'CLUS', 'DREAD'];
-const CHORD_INT = [[0], [0, 7], [0, 12], [0, 3, 7], [0, 5, 7], [0, 6], [0, 1, 2], [0, 1, 6, 11]];      // as in Atmos.h
-const TEXS = ['VINYL', 'FIRE', 'DRIPS', 'METAL', 'SHIMMER', 'WHISPERS', 'HEART', 'KNOCKS', 'MOANS', 'FLESH'];
+const BEDS = ['HISS', 'WIND', 'RAIN', 'SURF', 'RUMBLE', 'STATIC', 'BREATH', 'BROOK', 'NIGHT', 'FOREST', 'SOFT RAIN', 'UNDERSEA', 'AIR'];
+const VOICES = ['ORGAN', 'STRINGS', 'CHOIR', 'GLASS', 'ABYSS', 'DESCENT', 'ASCENT', 'PIPES', 'PAD', 'ANGELS', 'TANPURA', 'BOWLS', 'REEDS', 'FLUTE'];   // REEDS: the harmonium
+const CHORDS = ['ROOT', '5TH', 'OCT', 'MIN', 'SUS', 'TRI', 'CLUS', 'DREAD', 'MAJ', 'MAJ7', 'ADD9', 'SUS2', 'MIN7', 'MIN9', 'HEAVEN', 'OPEN'];
+const CHORD_INT = [[0], [0, 7], [0, 12], [0, 3, 7], [0, 5, 7], [0, 6], [0, 1, 2], [0, 1, 6, 11],
+  [0, 4, 7], [0, 4, 7, 11], [0, 4, 7, 14], [0, 2, 7], [0, 3, 7, 10], [0, 3, 10, 14], [0, 7, 14, 16], [0, 7, 12, 19]];      // as in Atmos.h
+const TEXS = ['VINYL', 'FIRE', 'DRIPS', 'METAL', 'SHIMMER', 'WHISPERS', 'HEART', 'KNOCKS', 'MOANS', 'FLESH', 'CHIMES', 'BIRDS', 'MUSICBOX', 'BELLS', 'HARP', 'STARS', 'KALIMBA', 'LEAVES'];
+const isShep = v => v === 5 || v === 6;                     // Descent, Ascent: no notes, partials gliding forever
 const MOODS = ['CALM', 'DREAM', 'EERIE', 'DREAD', 'HORROR'];
 const MOOD_COL = ['#7fd6c2', '#9bb4ff', '#9fd18a', '#b07cff', '#e0262f'];
 
@@ -43,15 +51,28 @@ const BED_INFO = [
   ['TONE', 'DRIFT', 'HEAVE', 'Rumble: deep earth and a sub that heaves'],
   ['BAND', 'CRACKLE', 'WHISTLE', 'Static: an old radio, crackle and a tuning whistle'],
   ['THROAT', 'PACE', 'RASP', 'Breath: slow breathing, ragged and rasping when DEEP'],
+  ['PITCH', 'FLOW', 'SPLASH', 'Brook: a stream gurgling over stones, bubbles of every size'],
+  ['PITCH', 'CHIRP', 'CHORUS', 'Night: crickets in the grass and the soft night air'],
+  ['TONE', 'BREEZE', 'RUSTLE', 'Forest: leaves rustling in a breeze, the low wind under them'],
+  ['TONE', 'AMOUNT', 'DROPS', 'Soft rain: gentle rain on a window, small taps on the glass'],
+  ['TONE', 'CURRENT', 'BUBBLES', 'Undersea: deep and muffled, slow bubbles rising'],
+  ['HEIGHT', 'DRIFT', 'SWELL', 'Air: a soft, high sheen of air, like a huge quiet hall'],
 ];
 const VOICE_INFO = [
-  ['DETUNE', 'TONE', 'MOTION', 'Organ: soft pipes, more harmonics as TONE goes up'],
-  ['DETUNE', 'TONE', 'MOTION', 'Strings: a section of bowed strings with vibrato'],
-  ['DETUNE', 'TONE', 'MOTION', 'Choir: voices singing vowels that drift'],
+  ['CHORUS', 'DRAWBARS', 'LESLIE', 'Organ: tonewheels and drawbars through a Leslie (stopped, slow, then fast)'],
+  ['DETUNE', 'TONE', 'MOTION', 'Strings: a section, each player with their own bow and vibrato'],
+  ['DETUNE', 'TONE', 'MOTION', 'Choir: voices singing vowels that drift, with breath'],
   ['DETUNE', 'SHINE', 'MOTION', 'Glass: bell-like, struck glass'],
   ['DETUNE', 'GROWL', 'MOTION', 'Abyss: a sub with a growl underneath'],
   ['DETUNE', 'TONE', 'SPEED', 'Descent: a tone that falls forever and never lands'],
   ['DETUNE', 'TONE', 'SPEED', 'Ascent: a tone that rises forever'],
+  ['CELESTE', 'STOPS', 'TREMULANT', 'Pipe organ: a soft flute, then principals, then the full organ as STOPS goes up'],
+  ['DETUNE', 'TONE', 'SWEEP', 'Pad: warm, slow analog strings, the filter drifting'],
+  ['DETUNE', 'TONE', 'MOTION', 'Angels: an airy "ooh", an octave floating above it'],
+  ['JAWARI', 'TONE', 'PACE', 'Tanpura: four strings plucked round and round, buzzing as they ring'],
+  ['BEAT', 'RING', 'STRIKES', 'Singing bowls: rubbed, and struck now and then, slowly beating'],
+  ['MUSETTE', 'STOPS', 'BELLOWS', 'Harmonium: reeds breathing with the bellows'],
+  ['ENSEMBLE', 'BREATH', 'VIBRATO', 'Flute: a soft choir of breathy flutes'],
 ];
 const TEX_INFO = [
   ['DENSITY', 'TONE', 'CHAOS', 'Vinyl: crackle and pops of an old record'],
@@ -64,6 +85,14 @@ const TEX_INFO = [
   ['DENSITY', 'TONE', 'CHAOS', 'Knocks: knocking on a door somewhere in the house'],
   ['DENSITY', 'PITCH', 'CHAOS', 'Moans: voices in pain, low groans to high wails'],
   ['DENSITY', 'TONE', 'CRACKS', 'Flesh: wet, cracking, tearing'],
+  ['DENSITY', 'PITCH', 'BREEZE', 'Wind chimes: a breeze through tubes tuned to your scale'],
+  ['DENSITY', 'PITCH', 'CHAOS', 'Birds: songbirds calling, near and far'],
+  ['DENSITY', 'PITCH', 'WANDER', 'Music box: little melodies in your scale'],
+  ['DENSITY', 'PITCH', 'CHAOS', 'Bells: a church bell far away in your key; now and then it tolls'],
+  ['DENSITY', 'PITCH', 'CHAOS', 'Harp: a few notes rolled up your scale'],
+  ['DENSITY', 'PITCH', 'CHAOS', 'Stars: soft, high notes that fade in and twinkle away'],
+  ['DENSITY', 'PITCH', 'CHAOS', 'Kalimba: thumb-plucked figures in your scale'],
+  ['DENSITY', 'TONE', 'CHAOS', 'Leaves: rain pattering on leaves'],
 ];
 
 /* ------------------------------------------------------------ styles */
@@ -85,6 +114,9 @@ css.textContent = `
 .ae-screen { transition: opacity .2s, filter .2s; }
 .ae-screen .sy-body { gap: 8px; }
 .ae-grid { display: grid; gap: 3px; padding: 3px; border-radius: 8px; background: #0e0e10; box-shadow: inset 0 0 0 1px rgba(255,255,255,.05); flex: none; }
+.ae-grid.tight button { height: 21px; font-size: 7.5px; letter-spacing: .03em; padding: 0 1px; }
+.ae-chords.tight button { height: 18px; }
+.ae-six .sy-kl { letter-spacing: .04em; }
 .ae-grid button { height: 24px; min-width: 0; border: none; border-radius: 6px; background: none; color: #6f6f76; font: inherit; font-size: 8.5px; font-weight: 600; letter-spacing: .08em; cursor: pointer; white-space: nowrap; padding: 0 2px; transition: color .12s, background .12s; }
 .ae-grid button:hover { color: #e9e6df; }
 .ae-grid button.on { color: #f1eee7; background: linear-gradient(#34343a, #25252a); box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 1px 2px rgba(0,0,0,.5), inset 0 -2px 0 var(--sc), 0 0 12px color-mix(in srgb, var(--sc) 16%, transparent); }
@@ -140,8 +172,8 @@ const drawMoodOpts = () => { if (!moodSel) return; [...moodSel.querySelectorAll(
 
 /* ---- the screen ---- */
 const ascreen = el('div', 'sy-screen ae-screen sy-aether'); dev.appendChild(ascreen);
-function grid(id, labels, cols) {
-  const g = el('div', 'ae-grid'); g.style.gridTemplateColumns = 'repeat(' + cols + ', minmax(0, 1fr))'; g.dataset.param = id;
+function grid(id, labels, cols, tight) {
+  const g = el('div', 'ae-grid' + (tight ? ' tight' : '')); g.style.gridTemplateColumns = 'repeat(' + cols + ', minmax(0, 1fr))'; g.dataset.param = id;
   labels.forEach((l, i) => { const b = el('button', null, l); b.dataset.i = i; b.title = P[id].opts[i]; g.appendChild(b); });
   const draw = () => [...g.children].forEach((b, i) => b.classList.toggle('on', i === Math.round(S[id])));
   g.addEventListener('click', e => { const b = e.target.closest('button'); if (b) set(id, +b.dataset.i, 'ui'); });
@@ -164,7 +196,7 @@ const sub = t => el('span', 'ae-sub', t);
 const cBed = section('NOISE', 300, 'var(--a-bed)', ascreen);
 const bedDice = diceBtn('Roll new noise (follows the MOOD)', () => { keepUndo(); rollBed(); markScene(); flash(); });
 cBed._h.append(sub('the air around you'), el('span', 'sy-sp'), bedDice, toggle('atm.bed.on', 'Noise on'));
-const bedGrid = grid('atm.bed.type', BEDS, 4);
+const bedGrid = grid('atm.bed.type', BEDS, 5, true);
 const bedVis = canvasBox(66);
 const bedKnobs = typedKnobs(['atm.bed.tone', 'atm.bed.motion', 'atm.bed.depth', 'atm.bed.level'], () => [...BED_INFO[Math.round(S['atm.bed.type'])].slice(0, 3), 'LEVEL']);
 const bedHint = el('div', 'ae-hint');
@@ -174,21 +206,25 @@ cBed._b.append(bedGrid, bedVis, bedKnobs, bedHint);
 const cDrn = section('DRONE', 340, 'var(--a-drn)', ascreen);
 const drnDice = diceBtn('Roll a new drone (follows the MOOD)', () => { keepUndo(); rollDrone(); markScene(); flash(); });
 cDrn._h.append(sub('a chord that hangs'), el('span', 'sy-sp'), chip('atm.drn.follow', 'FOLLOW', 'The drone moves to the note you play (otherwise it stays on SIREN\'s key)'), drnDice, toggle('atm.drn.on', 'Drone on'));
-const drnGrid = grid('atm.drn.voice', VOICES, 4);
-const chordSeg = seg('atm.drn.chord', CHORDS, { small: true }); chordSeg.classList.add('tight');
-chordSeg.title = 'The chord the drone holds: from one note to a dread cluster';
+const drnGrid = grid('atm.drn.voice', VOICES, 7, true);
+const chordSeg = grid('atm.drn.chord', CHORDS, 8, true); chordSeg.classList.add('ae-chords');
+chordSeg.title = 'The chord the drone holds: one note, fifths, majors, sevenths, ninths, wide open, or a dread cluster';
 const octSeg = seg('atm.drn.oct', ['SUB', 'LOW', 'MID', 'HIGH'], { small: true, width: 150 });
 const drnNotes = el('span', 'ae-notes');
 const octRow = el('div', 'ae-row'); octRow.append(octSeg, drnNotes);
-const drnVis = canvasBox(34);
-const drnKnobs = typedKnobs(['atm.drn.detune', 'atm.drn.tone', 'atm.drn.motion', 'atm.drn.level'], () => [...VOICE_INFO[Math.round(S['atm.drn.voice'])].slice(0, 3), 'LEVEL']);
+const drnVis = canvasBox(22);
+const drnKnobs = typedKnobs(['atm.drn.detune', 'atm.drn.tone', 'atm.drn.motion', 'atm.drn.shine', 'atm.drn.air', 'atm.drn.level'],
+  () => [...VOICE_INFO[Math.round(S['atm.drn.voice'])].slice(0, 3), 'SHINE', 'AIR', 'LEVEL']);
+drnKnobs.classList.add('ae-six');
+drnKnobs.children[3].title = 'SHINE: the chord an octave and two octaves up, softly glinting';
+drnKnobs.children[4].title = 'AIR: breath around the drone';
 cDrn._b.append(drnGrid, chordSeg, octRow, drnVis, drnKnobs);
 
 /* TEXTURE */
 const cTex = section('EVENTS', 320, 'var(--a-tex)', ascreen);
 const texDice = diceBtn('Roll new events (follows the MOOD)', () => { keepUndo(); rollTexture(); markScene(); flash(); });
 cTex._h.append(sub('sounds now and then'), el('span', 'sy-sp'), texDice, toggle('atm.tex.on', 'Events on'));
-const texGrid = grid('atm.tex.type', TEXS, 5);
+const texGrid = grid('atm.tex.type', TEXS, 6, true);
 const texVis = canvasBox(66);
 const texKnobs = typedKnobs(['atm.tex.density', 'atm.tex.tone', 'atm.tex.chaos', 'atm.tex.level'], () => [...TEX_INFO[Math.round(S['atm.tex.type'])].slice(0, 3), 'LEVEL'],
   (i, v) => i === 0 && Math.round(S['atm.tex.type']) === 6 ? Math.round(42 + v * 1.18) + ' BPM' : null);
@@ -201,7 +237,8 @@ const voidMood = el('span', 'sy-lbl'); cVoid._h.append(el('span', 'sy-sp'), void
 const voidVis = canvasBox(0); voidVis.classList.add('ae-void');
 const voidKnobs = el('div', 'sy-knobs');
 voidKnobs.append(knob('atm.size', { label: 'SIZE', size: 34, tip: 'From a room to an endless void (the tail it leaves)' }),
-  knob('atm.space', { label: 'SPACE', size: 34, tip: 'How much of it is in the space' }));
+  knob('atm.space', { label: 'SPACE', size: 34, tip: 'How much of it is in the space' }),
+  knob('atm.shimmer', { label: 'SHIMMER', size: 34, tip: 'The space rises an octave as it rings: a halo over everything (needs SPACE)' }));
 cVoid._b.append(voidVis, voidKnobs);
 
 const flashAe = () => { ascreen.classList.remove('sy-flash'); void ascreen.offsetWidth; ascreen.classList.add('sy-flash'); };
@@ -242,7 +279,7 @@ function droneNotes() {
 }
 const noteName = m => K.NOTE_NAMES[((m % 12) + 12) % 12] + (Math.floor(m / 12) - 1);
 function drawDroneInfo() {
-  const v = Math.round(S['atm.drn.voice']), shep = v >= 5;
+  const v = Math.round(S['atm.drn.voice']), shep = isShep(v);
   drnNotes.textContent = shep ? (v === 5 ? 'FALLING' : 'RISING') + ' · ' + droneNotes().map(m => K.NOTE_NAMES[((m % 12) + 12) % 12]).join(' ') : droneNotes().map(noteName).join(' · ');
   drawDroneVis();
 }
@@ -339,11 +376,23 @@ const rng = r => rr(r[0], r[1]);
 const wpick = ws => { let t = Math.random() * ws.reduce((x, y) => x + y, 0); for (let i = 0; i < ws.length; i++) { t -= ws[i]; if (t <= 0) return i; } return ws.length - 1; };
 //                weights per MOOD:  CALM DREAM EERIE DREAD HORROR
 const W = {
-  bed:   [[1.5, 2, 1, .3, .2], [2, 2, 3, 2, 1], [3, 1, .6, .3, .2], [3, 2, .3, .2, 0], [.4, .3, 1, 3, 2.5], [.2, .4, 2, 1.2, 2], [0, .2, 1.5, 2, 3]],
-  voice: [[3, 1, .5, .3, .3], [3, 2, 1.5, 1, 1], [1, 2.5, 3, 2, 3], [2, 3, 2, .5, .3], [.2, .2, 1, 3, 3], [0, .3, 2, 3, 2.5], [.3, 1.5, .5, .3, .2]],
-  chord: [[1, 1, 1, .5, .3], [3, 2, 1, .6, .2], [2.5, 2, .8, .6, .3], [.5, .6, 3, 1.5, .6], [2, 3, .5, .2, 0], [0, .1, 2.5, 3, 2], [0, .2, 1, 2.5, 3], [0, 0, .4, 3, 4]],
+  //      Hiss          Wind        Rain            Surf            Rumble           Static          Breath
+  bed:   [[1.5, 2, 1, .3, .2], [2, 2, 3, 2, 1], [3, 1, .6, .3, .2], [3, 2, .3, .2, 0], [.4, .3, 1, 3, 2.5], [.2, .4, 2, 1.2, 2], [0, .2, 1.5, 2, 3],
+  //      Brook         Night             Forest          Soft rain         Undersea         Air
+          [3, 1.2, .3, 0, 0], [2.5, 2, 1, .3, .1], [3, 1, .3, 0, 0], [2.5, 2.2, .5, .2, 0], [.8, 2.5, 1, .6, .2], [1.5, 3, .6, .2, 0]],
+  //      Organ         Strings          Choir          Glass           Abyss            Descent          Ascent
+  voice: [[3, 1, .5, .3, .3], [3, 2, 1.5, 1, 1], [1, 2.5, 3, 2, 3], [2, 3, 2, .5, .3], [.2, .2, 1, 3, 3], [0, .3, 2, 3, 2.5], [.3, 1.5, .5, .3, .2],
+  //      Pipe organ      Pad             Angels           Tanpura          Bowls             Harmonium        Flute
+          [1, 2, 1, 1.2, .5], [2, 3, .5, .2, 0], [1.5, 3.5, .4, .1, 0], [2.5, 2, .3, 0, 0], [2.5, 2.5, .6, .2, 0], [2, 1.5, .4, .2, 0], [2.5, 2, .3, 0, 0]],
+  //      Root        5th          Oct             Min               Sus            Tri              Clus            Dread
+  chord: [[1, 1, 1, .5, .3], [3, 2, 1, .6, .2], [2.5, 2, .8, .6, .3], [.5, .6, 3, 1.5, .6], [2, 3, .5, .2, 0], [0, .1, 2.5, 3, 2], [0, .2, 1, 2.5, 3], [0, 0, .4, 3, 4],
+  //      Maj           Maj7          Add9           Sus2              Min7            Min9              Heaven          Open
+          [2.5, 1.5, .2, 0, 0], [2, 3, .3, 0, 0], [2, 2.5, .3, 0, 0], [2, 2.5, .6, .2, 0], [1.5, 2, 1, .3, 0], [1.2, 2.5, 1, .3, 0], [1, 3, .2, 0, 0], [2, 2, .8, .5, .2]],
   oct:   [[.3, .2, .6, 2, 2], [2, 1.5, 2, 2, 2], [2, 2, 1.5, .6, .6], [.5, 1.5, .6, .2, .2]],
-  tex:   [[2, .7, .6, .2, .1], [3, .5, .2, .3, .1], [2, 2, 2, .8, .4], [0, .2, 2, 2.5, 2], [2, 4, 1, 0, 0], [0, .6, 3, 1.5, 2.5], [0, 0, .6, 3, 2], [0, 0, 1.5, 2, 1], [0, 0, .5, 2, 3.5], [0, 0, 0, .6, 3]],
+  //      Vinyl         Fire           Drips         Metal           Shimmer        Whispers          Heart           Knocks          Moans            Flesh
+  tex:   [[2, .7, .6, .2, .1], [3, .5, .2, .3, .1], [2, 2, 2, .8, .4], [0, .2, 2, 2.5, 2], [2, 4, 1, 0, 0], [0, .6, 3, 1.5, 2.5], [0, 0, .6, 3, 2], [0, 0, 1.5, 2, 1], [0, 0, .5, 2, 3.5], [0, 0, 0, .6, 3],
+  //      Chimes        Birds          Music box         Bells               Harp             Stars           Kalimba          Leaves
+          [3, 2, .4, 0, 0], [3, .6, .2, 0, 0], [1, 2.5, 1.2, .4, .5], [1, 1.5, 1.5, 1.2, .5], [2, 2.5, .2, 0, 0], [1.5, 3.5, .5, 0, 0], [2.5, 1.5, .2, 0, 0], [3, .8, .3, 0, 0]],
 };
 //                ranges per MOOD:   CALM       DREAM      EERIE      DREAD       HORROR
 const R = {
@@ -366,6 +415,9 @@ const R = {
   texTone:   [[25, 70], [45, 90], [20, 70], [10, 55], [15, 70]],
   chaos:     [[10, 45], [20, 55], [35, 75], [40, 80], [55, 100]],
   texLevel:  [[40, 70], [35, 60], [45, 70], [50, 75], [50, 75]],
+  shimmer:   [[0, 20], [15, 55], [0, 20], [0, 10], [0, 5]],
+  shine:     [[0, 30], [15, 60], [0, 25], [0, 10], [0, 10]],
+  air:       [[0, 30], [10, 45], [0, 35], [0, 25], [0, 30]],
 };
 const ON = { bed: [.95, .9, .9, .9, .9], drn: [.7, .9, .8, .9, .9], tex: [.7, .75, .85, .9, .95] };
 const col = (tbl, m) => tbl.map(w => w[m]);
@@ -380,6 +432,7 @@ function rollDrone(m = mood(), sw = true) {
   set('atm.drn.voice', wpick(col(W.voice, m)), 'dice'); set('atm.drn.chord', wpick(col(W.chord, m)), 'dice'); set('atm.drn.oct', wpick(col(W.oct, m)), 'dice');
   set('atm.drn.detune', rng(R.detune[m]), 'dice'); set('atm.drn.tone', rng(R.drnTone[m]), 'dice'); set('atm.drn.motion', rng(R.drnMotion[m]), 'dice');
   set('atm.drn.level', rng(R.drnLevel[m]), 'dice'); if (sw) set('atm.drn.on', 1, 'dice');
+  set('atm.drn.shine', Math.random() < (m <= 1 ? .6 : .25) ? rng(R.shine[m]) : 0, 'dice'); set('atm.drn.air', Math.random() < .5 ? rng(R.air[m]) : 0, 'dice');
   rollName = VOICES[Math.round(S['atm.drn.voice'])][0] + VOICES[Math.round(S['atm.drn.voice'])].slice(1).toLowerCase() + ' (rolled)';
 }
 function rollTexture(m = mood(), sw = true) {
@@ -404,6 +457,7 @@ function summonWorld() {
   set('atm.drn.follow', Math.random() < (m >= 3 ? .3 : .15) ? 1 : 0, 'dice');
   set('atm.evolve', rng(R.evolve[m]), 'dice'); set('atm.grit', rng(R.grit[m]), 'dice'); set('atm.tone', rng(R.tone[m]), 'dice');
   set('atm.space', rng(R.space[m]), 'dice'); set('atm.size', rng(R.size[m]), 'dice'); set('atm.follow', rng(R.follow[m]), 'dice'); set('atm.width', rng(R.width[m]), 'dice');
+  set('atm.shimmer', Math.random() < (m <= 1 ? .55 : .15) ? rng(R.shimmer[m]) : 0, 'dice');
   set('atm.freeze', 0, 'dice');
   rollName = pick(NAME_A[m]) + ' ' + pick(NAME_B[m]);
   showScene(rollName, -1, ''); flash();
@@ -411,7 +465,8 @@ function summonWorld() {
 }
 summon.addEventListener('click', summonWorld);
 const CONT = ['atm.evolve', 'atm.grit', 'atm.tone', 'atm.width', 'atm.space', 'atm.size', 'atm.follow', 'atm.bed.tone', 'atm.bed.motion', 'atm.bed.depth', 'atm.bed.level',
-  'atm.drn.detune', 'atm.drn.tone', 'atm.drn.motion', 'atm.drn.level', 'atm.tex.density', 'atm.tex.tone', 'atm.tex.chaos', 'atm.tex.level'];
+  'atm.drn.detune', 'atm.drn.tone', 'atm.drn.motion', 'atm.drn.level', 'atm.tex.density', 'atm.tex.tone', 'atm.tex.chaos', 'atm.tex.level',
+  'atm.shimmer', 'atm.drn.shine', 'atm.drn.air'];
 function mutateWorld() {
   keepUndo();
   const m = mood();
@@ -437,7 +492,13 @@ function bedShape(t, x) {           // x 0..1 = 20 Hz .. 20 kHz (log)
     case 3: return bump(.3 + tone * .2, .25) * .9 + .2 * bump(.7, .2);
     case 4: return bump(.08 + tone * .12, .1) + .6 * bump(.04, .03);
     case 5: return bump(.55 + tone * .2, .2) * .8 + .5 * d * bump(.6 + .1 * Math.sin(performance.now() / 900), .015);
-    default: return bump(.42 + tone * .1, .05) * .9 + .7 * bump(.58 + tone * .1, .05) + .2 * bump(.6, .3);
+    case 6: return bump(.42 + tone * .1, .05) * .9 + .7 * bump(.58 + tone * .1, .05) + .2 * bump(.6, .3);
+    case 7: return bump(.52 + tone * .15, .18) * .9 + .45 * bump(.68 + tone * .12, .1);
+    case 8: return .3 * bump(.25, .12) + bump(.76 + tone * .08, .025) * (.6 + .4 * d);
+    case 9: return .35 * bump(.3, .1) + bump(.72 + tone * .1, .17);
+    case 10: return .6 * bump(.52 + tone * .15, .25) + .4 * bump(.78, .07);
+    case 11: return bump(.12 + tone * .14, .1) + .3 * bump(.3, .07);
+    default: return bump(.7 + tone * .14, .15);
   }
 }
 function drawBedVis(tNow) {
@@ -456,13 +517,14 @@ function drawBedVis(tNow) {
 function drawDroneVis() {
   const [g, w, h] = hidpi(drnVis._cv); if (!g) return;
   const v = Math.round(S['atm.drn.voice']), c = hueOf('drn'), live = alive() && on('atm.drn.on');
-  if (v >= 5) {                       // Shepard: octave partials under a bell, gliding
+  if (isShep(v)) {                    // Shepard: octave partials under a bell, gliding
     const t = performance.now() / 1000, sp = (.02 + S['atm.drn.motion'] / 100 * .2) * (v === 5 ? -1 : 1), pos = ((t * sp) % 1 + 1) % 1;
     for (let k = 0; k < 9; k++) { const y = (k + pos) / 9, x = y * w, a = Math.sin(Math.PI * y);
       g.strokeStyle = rgba(c, (live ? .85 : .3) * a); g.lineWidth = 2; g.beginPath(); g.moveTo(x, h * (1 - .8 * a)); g.lineTo(x, h); g.stroke(); }
     return;
   }
-  const notes = droneNotes(), lo = Math.floor(Math.min(...notes) / 12) * 12, keys = 24, kw = w / 14;
+  const notes = droneNotes(), lo = Math.floor(Math.min(...notes) / 12) * 12;
+  const keys = Math.max(24, Math.ceil((Math.max(...notes) - lo + 1) / 12) * 12), kw = w / (keys / 12 * 7);   // wide chords get a third octave
   const isBlack = n => [1, 3, 6, 8, 10].includes(((n % 12) + 12) % 12);
   let xi = 0; const pos = [];
   for (let i = 0; i < keys; i++) { const n = lo + i; if (!isBlack(n)) { pos[i] = xi * kw; xi++; } else pos[i] = xi * kw - kw * .32; }
@@ -509,11 +571,11 @@ function drawVoid(tNow, dt) {
     g.fillStyle = gr; g.fillRect(x - r, y - r, r * 2, r * 2); });
   // rings (DRONE)
   const drnA = live && on('atm.drn.on') ? Math.min(1, actSm[1] * 1.8) : 0, dc = hueOf('drn'), notes = CHORD_INT[Math.round(S['atm.drn.chord'])], v = Math.round(S['atm.drn.voice']);
-  const t = tNow / 1000, shep = v >= 5 ? (((t * (.02 + S['atm.drn.motion'] / 100 * .2) * (v === 5 ? -1 : 1)) % 1) + 1) % 1 : 0;
+  const t = tNow / 1000, sh = isShep(v), shep = sh ? (((t * (.02 + S['atm.drn.motion'] / 100 * .2) * (v === 5 ? -1 : 1)) % 1) + 1) % 1 : 0;
   notes.forEach((iv, k) => {
-    for (let o = 0; o < (v >= 5 ? 3 : 1); o++) {
-      const rr0 = v >= 5 ? ((o + shep) / 3) : (.45 + .55 * ((iv % 12) / 12) * .9 + k * .06);
-      const rad = R0 * rr0 * (1 + .04 * Math.sin(t * (1 + k * .3) + k) * (S['atm.drn.motion'] / 100)), a = drnA * (v >= 5 ? Math.sin(Math.PI * rr0) : 1) * .7;
+    for (let o = 0; o < (sh ? 3 : 1); o++) {
+      const rr0 = sh ? ((o + shep) / 3) : (.45 + .55 * ((iv % 12) / 12) * .9 + k * .06);
+      const rad = R0 * rr0 * (1 + .04 * Math.sin(t * (1 + k * .3) + k) * (S['atm.drn.motion'] / 100)), a = drnA * (sh ? Math.sin(Math.PI * rr0) : 1) * .7;
       if (a < .01) continue;
       g.strokeStyle = rgba(dc, a); g.lineWidth = 1.4 + S['atm.drn.detune'] / 100 * 2; g.shadowColor = dc; g.shadowBlur = 8 * drnA;
       g.beginPath(); g.ellipse(cx, cy, rad * (.75 + .25 * wid), rad * .8, frz ? 0 : t * .05 * (k % 2 ? 1 : -1), 0, 7); g.stroke(); g.shadowBlur = 0; }
@@ -551,7 +613,7 @@ function loop() {
   if (vis) {
     if (!shown) { drawDroneVis(); drawDisplay(); }
     drawBedVis(now); drawTexVis(now); drawVoid(now, dt); drawMeters();
-    if (Math.round(S['atm.drn.voice']) >= 5) drawDroneVis();
+    if (isShep(Math.round(S['atm.drn.voice']))) drawDroneVis();
   }
   shown = vis;
   requestAnimationFrame(loop);
@@ -579,6 +641,12 @@ Object.assign(window.obsSynth, { aetherSummon: summonWorld, aetherMutate: mutate
 /* ============================================================ preview engine (browser only) */
 /* In the plugin the C++ engine plays (Atmos.h); here a simpler Web Audio version does, so the page can be heard anywhere. */
 const PV = { on: false };
+/* The browser's small engine has the first sounds of each list; the newer ones (2026-11-26) play as the nearest of those
+   here. The plugin plays them all, with SHINE, AIR and SHIMMER. */
+const PV_BED_OF = [0, 1, 2, 3, 4, 5, 6, 2, 0, 1, 2, 3, 0], PV_VOICE_OF = [0, 1, 2, 3, 4, 5, 6, 0, 1, 2, 3, 3, 0, 0];
+const PV_TEX_OF = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 4, 4, 4, 3, 4, 4, 4, 1];
+const pvBedT = () => PV_BED_OF[Math.round(S['atm.bed.type'])] ?? 0, pvVoice = () => PV_VOICE_OF[Math.round(S['atm.drn.voice'])] ?? 0,
+  pvTexT = () => PV_TEX_OF[Math.round(S['atm.tex.type'])] ?? 0;
 function noiseBuf(ac, kind, secs = 4) {
   const n = Math.floor(ac.sampleRate * secs), b = ac.createBuffer(2, n, ac.sampleRate);
   for (let c = 0; c < 2; c++) { const d = b.getChannelData(c); let b0 = 0, b1 = 0, b2 = 0, br = 0;
@@ -612,7 +680,7 @@ function pvSrc(buf) { const s = PV.ac.createBufferSource(); s.buffer = buf; s.lo
 function pvLfo(hz, amt, target, type = 'sine') { const o = PV.ac.createOscillator(), g = PV.ac.createGain(); o.type = type; o.frequency.value = hz; g.gain.value = amt; o.connect(g); g.connect(target); o.start(); return [o, g]; }
 function pvBed() {
   const L = PV.bed, ac = PV.ac; stopAll(L); if (!on('atm.bed.on')) return;
-  const t = Math.round(S['atm.bed.type']), tone = S['atm.bed.tone'] / 100, mo = S['atm.bed.motion'] / 100, d = S['atm.bed.depth'] / 100, rate = .04 + mo * mo * 1.6;
+  const t = pvBedT(), tone = S['atm.bed.tone'] / 100, mo = S['atm.bed.motion'] / 100, d = S['atm.bed.depth'] / 100, rate = .04 + mo * mo * 1.6;
   const f = ac.createBiquadFilter(), g = ac.createGain(); f.connect(g); g.connect(L.g); L.nodes.push(f, g);
   const src = pvSrc(t === 4 ? PV.bufs.brown : t === 5 ? PV.bufs.white : PV.bufs.pink); src.connect(f); L.nodes.push(src);
   if (t === 0) { f.type = 'lowpass'; f.frequency.value = 1800 * Math.pow(2, tone * 3.3); L.nodes.push(...pvLfo(rate, .3 * d, g.gain)); }
@@ -629,7 +697,7 @@ function pvBed() {
 }
 function pvDrone() {
   const L = PV.drn, ac = PV.ac; stopAll(L); if (!on('atm.drn.on')) return;
-  const v = Math.round(S['atm.drn.voice']), tone = S['atm.drn.tone'] / 100, det = S['atm.drn.detune'] / 100, mo = S['atm.drn.motion'] / 100, tune = S['syn.tune'] || 440;
+  const v = pvVoice(), tone = S['atm.drn.tone'] / 100, det = S['atm.drn.detune'] / 100, mo = S['atm.drn.motion'] / 100, tune = S['syn.tune'] || 440;
   const hz = m => tune * Math.pow(2, (m - 69) / 12), notes = droneNotes();
   const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.Q.value = .7; lp.connect(L.g); L.nodes.push(lp);
   const norm = 1 / Math.sqrt(notes.length * 2);
@@ -657,7 +725,7 @@ function pvDrone() {
 }
 /* textures: one-shot sounds scheduled a little ahead */
 function pvTexEvent(t) {
-  const ac = PV.ac, L = PV.tex, ty = Math.round(S['atm.tex.type']), tone = S['atm.tex.tone'] / 100, ch = S['atm.tex.chaos'] / 100, w = S['atm.width'] / 100;
+  const ac = PV.ac, L = PV.tex, ty = pvTexT(), tone = S['atm.tex.tone'] / 100, ch = S['atm.tex.chaos'] / 100, w = S['atm.width'] / 100;
   const pan = ac.createStereoPanner(); pan.pan.value = rr(-1, 1) * w * .9; pan.connect(L.g);
   const env = (g, a, at, dec) => { g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(a, t + at); g.gain.setTargetAtTime(0, t + at, dec); };
   const noise = dur => { const s = ac.createBufferSource(); s.buffer = PV.bufs.white; s.start(t, Math.random() * 3, dur); return s; };
@@ -688,7 +756,7 @@ function pvTexEvent(t) {
 }
 function pvTexBed() {
   const L = PV.tex, ac = PV.ac; stopAll(L); if (!on('atm.tex.on')) return;
-  const ty = Math.round(S['atm.tex.type']), tone = S['atm.tex.tone'] / 100, d = S['atm.tex.density'] / 100;
+  const ty = pvTexT(), tone = S['atm.tex.tone'] / 100, d = S['atm.tex.density'] / 100;
   if (ty === 0) { const s = pvSrc(PV.bufs.crackle), hp = ac.createBiquadFilter(), g = ac.createGain(); s.playbackRate.value = .5 + d * 3; hp.type = 'highpass'; hp.frequency.value = 900; g.gain.value = 2; s.connect(hp); hp.connect(g); g.connect(L.g); L.nodes.push(s, hp, g); }
   if (ty === 1) { const s = pvSrc(PV.bufs.brown), lp = ac.createBiquadFilter(), g = ac.createGain(); lp.type = 'lowpass'; lp.frequency.value = 250 + tone * 900; g.gain.value = .5 + .4 * d; s.connect(lp); lp.connect(g); g.connect(L.g); L.nodes.push(s, lp, g, ...pvLfo(.4 + d, .25, g.gain)); }
 }
@@ -702,7 +770,7 @@ const TEX_RATE = [[.15, 2], [.8, 14], [.25, 7], [.06, 1.4], [.6, 22], [.15, 2.8]
 let pvNext = 0;
 function pvSchedule() {
   if (!PV.on || !on('atm.tex.on')) return;
-  const ac = PV.ac, ty = Math.round(S['atm.tex.type']), d = S['atm.tex.density'] / 100, ch = S['atm.tex.chaos'] / 100;
+  const ac = PV.ac, ty = pvTexT(), d = S['atm.tex.density'] / 100, ch = S['atm.tex.chaos'] / 100;
   const rate = ty === 6 ? (42 + d * 118) / 60 : TEX_RATE[ty][0] + (TEX_RATE[ty][1] - TEX_RATE[ty][0]) * d * d;
   if (pvNext < ac.currentTime) pvNext = ac.currentTime + .05;
   while (pvNext < ac.currentTime + .2) {
@@ -724,9 +792,9 @@ function pvGlobal() {
   if (key !== PV.irKey) { PV.irKey = key; PV.conv.buffer = ir(ac, Math.min(t60, 12), on('atm.freeze')); }
   // per sound, so the preview's balance follows the plugin's (measured in headless Chrome against the engine's renders)
   const lv = (L, id, idOn, trim) => L.g.gain.setTargetAtTime(on(idOn) ? lvlOf(S[id]) * Math.pow(10, trim / 20) : 0, now, .08);
-  lv(PV.bed, 'atm.bed.level', 'atm.bed.on', PV_BED_DB[Math.round(S['atm.bed.type'])]);
-  lv(PV.drn, 'atm.drn.level', 'atm.drn.on', PV_DRN_DB[Math.round(S['atm.drn.voice'])]);
-  lv(PV.tex, 'atm.tex.level', 'atm.tex.on', PV_TEX_DB[Math.round(S['atm.tex.type'])]);
+  lv(PV.bed, 'atm.bed.level', 'atm.bed.on', PV_BED_DB[pvBedT()]);
+  lv(PV.drn, 'atm.drn.level', 'atm.drn.on', PV_DRN_DB[pvVoice()]);
+  lv(PV.tex, 'atm.tex.level', 'atm.tex.on', PV_TEX_DB[pvTexT()]);
 }
 const rms = an => { const a = new Float32Array(an.fftSize); an.getFloatTimeDomainData(a); let s = 0; for (const x of a) s += x * x; return Math.sqrt(s / a.length) * 4; };
 function previewMeters() {

@@ -101,6 +101,7 @@ void Engine::readAtmosParams (AtmosParams& ap)
     for (int i = 0; i < obs::atmosdefs::count; ++i) ap.v[i] = p.atm[i]->load (std::memory_order_relaxed);
     ap.key = (int) std::lround (p.syn[obs::synthdefs::key]->load (std::memory_order_relaxed));
     ap.tuneHz = p.syn[obs::synthdefs::tune]->load (std::memory_order_relaxed);
+    ap.scale = (int) std::lround (p.syn[obs::synthdefs::scale]->load (std::memory_order_relaxed));   // the melodic events stay in it
     // the guitar as it sounds (after TRANSPOSE), for a drone that follows it
     ap.guitarHz = pitch.frequency() * std::exp2 (std::round (p.transpose->load (std::memory_order_relaxed)) / 12.f);
     ap.guitarConf = pitch.confidence();

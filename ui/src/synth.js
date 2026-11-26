@@ -51,13 +51,14 @@ const DEFS = [
   ['atm.on', 'bool', 0, 1, 0], ['atm.level', 'f', -36, 6, -6, 'dB', 1], ['atm.follow', 'f', -100, 100, 0, '%', 1], ['atm.evolve', 'f', 0, 100, 35, '%', 1],
   ['atm.grit', 'f', 0, 100, 0, '%', 1], ['atm.tone', 'f', -100, 100, 0, '%', 1], ['atm.width', 'f', 0, 100, 80, '%', 1], ['atm.space', 'f', 0, 100, 45, '%', 1],
   ['atm.size', 'f', 0, 100, 60, '%', 1], ['atm.freeze', 'bool', 0, 1, 0],
-  ['atm.bed.on', 'bool', 0, 1, 1], ['atm.bed.type', 'choice', 0, 6, 1, 'Hiss|Wind|Rain|Surf|Rumble|Static|Breath'], ['atm.bed.tone', 'f', 0, 100, 50, '%', 1],
+  ['atm.bed.on', 'bool', 0, 1, 1], ['atm.bed.type', 'choice', 0, 12, 1, 'Hiss|Wind|Rain|Surf|Rumble|Static|Breath|Brook|Night|Forest|Soft Rain|Underwater|Air'], ['atm.bed.tone', 'f', 0, 100, 50, '%', 1],
   ['atm.bed.motion', 'f', 0, 100, 35, '%', 1], ['atm.bed.depth', 'f', 0, 100, 50, '%', 1], ['atm.bed.level', 'f', 0, 100, 60, '%', 1],
-  ['atm.drn.on', 'bool', 0, 1, 1], ['atm.drn.voice', 'choice', 0, 6, 1, 'Organ|Strings|Choir|Glass|Abyss|Descent|Ascent'],
-  ['atm.drn.chord', 'choice', 0, 7, 1, 'Root|Fifth|Octaves|Minor|Sus|Tritone|Cluster|Dread'], ['atm.drn.oct', 'choice', 0, 3, 1, 'Sub|Low|Mid|High'],
+  ['atm.drn.on', 'bool', 0, 1, 1], ['atm.drn.voice', 'choice', 0, 13, 1, 'Organ|Strings|Choir|Glass|Abyss|Descent|Ascent|Pipe Organ|Pad|Angels|Tanpura|Singing Bowls|Harmonium|Flute'],
+  ['atm.drn.chord', 'choice', 0, 15, 1, 'Root|Fifth|Octaves|Minor|Sus|Tritone|Cluster|Dread|Major|Maj7|Add9|Sus2|Min7|Min9|Heaven|Open'], ['atm.drn.oct', 'choice', 0, 3, 1, 'Sub|Low|Mid|High'],
   ['atm.drn.follow', 'bool', 0, 1, 0], ['atm.drn.detune', 'f', 0, 100, 25, '%', 1], ['atm.drn.tone', 'f', 0, 100, 45, '%', 1], ['atm.drn.motion', 'f', 0, 100, 30, '%', 1], ['atm.drn.level', 'f', 0, 100, 35, '%', 1],
-  ['atm.tex.on', 'bool', 0, 1, 0], ['atm.tex.type', 'choice', 0, 9, 1, 'Vinyl|Fire|Drips|Metal|Shimmer|Whispers|Heartbeat|Knocks|Moans|Flesh'],
+  ['atm.tex.on', 'bool', 0, 1, 0], ['atm.tex.type', 'choice', 0, 17, 1, 'Vinyl|Fire|Drips|Metal|Shimmer|Whispers|Heartbeat|Knocks|Moans|Flesh|Wind Chimes|Birds|Music Box|Bells|Harp|Stars|Kalimba|Leaves'],
   ['atm.tex.density', 'f', 0, 100, 40, '%', 1], ['atm.tex.tone', 'f', 0, 100, 50, '%', 1], ['atm.tex.chaos', 'f', 0, 100, 40, '%', 1], ['atm.tex.level', 'f', 0, 100, 50, '%', 1],
+  ['atm.shimmer', 'f', 0, 100, 0, '%', 1], ['atm.drn.shine', 'f', 0, 100, 0, '%', 1], ['atm.drn.air', 'f', 0, 100, 0, '%', 1],
 ];
 const P = {}, S = {};
 DEFS.forEach(([id, type, min, max, def, extra, skew]) => {
