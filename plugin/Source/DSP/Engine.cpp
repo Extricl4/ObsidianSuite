@@ -247,7 +247,7 @@ void Engine::process (juce::AudioBuffer<float>& buffer, int numIn, const HostInf
         auto runKeraunos = [&] (float* a, float* b)
         {
             if (! kerWasActive) keraunos.reset();
-            KeraunosParams kp; readKeraunosParams (kp);
+            KeraunosParams kp; readKeraunosParams (kp); kp.di = di.data();
             std::copy (a, a + n, fxDryL.data()); if (b != nullptr) std::copy (b, b + n, fxDryR.data());
             keraunos.process (a, b, n, kp);
             if (! kerFade.full()) kerFade.mix (fxDryL.data(), b != nullptr ? fxDryR.data() : nullptr, a, b, n);

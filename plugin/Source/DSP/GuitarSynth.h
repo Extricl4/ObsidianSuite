@@ -53,8 +53,9 @@ public:
 
     void prepare (double s)
     {
-        sr = s; osSr = 2.0 * s;
+        sr = s; osSr = 2.0 * s; fltSr = 4.0 * s;
         envFast.set (s, 1.f, 25.f); envSlow.set (s, 20.f, 160.f);
+        duckCoef = 1.f - std::exp (-1.f / (0.003f * (float) s));
         dcL.prepare (s); dcR.prepare (s);
         const int maxDelay = (int) (s * 2.1);
         echoL.prepare (maxDelay); echoR.prepare (maxDelay);
@@ -66,7 +67,7 @@ public:
     {
         envFast.reset(); envSlow.reset();
         gateOpen = false; sounding = false; held = false; pendingStart = false;
-        kbCount = 0; onsetHold = 0; detectedMidi = -1; lastFollow = -1; rootNote = -1;
+        kbCount = 0; onsetHold = 0; pendingAge = 0; duck = duckTarget = 1.f; wasResolving = retrigAtPick = false; detectedMidi = -1; lastFollow = -1; rootNote = -1;
         ampEnv.reset(); fltEnv.reset();
         dynGain = 0; dynTarget = 0; vel = 0.8f;
         for (auto& n : notes) n = {};
@@ -80,7 +81,7 @@ public:
         vhsLp1 = vhsLp2 = vhsLp3 = vhsLp4 = 0; wow = 0; flutter = 0; noiseLp = 0; bendNow = 0; modNow = 0; vibPh = 0;
         echoL.clear(); echoR.clear(); for (auto& a : diffL) a.clear(); for (auto& a : diffR) a.clear();
         echoLpL = echoLpR = 0;
-        dcL.reset(); dcR.reset(); overL.reset(); overR.reset(); wasActive = false;
+        dcL.reset(); dcR.reset(); overL.reset(); overR.reset(); over4[0].reset(); over4[1].reset(); nl4Was = false; wasActive = false;
         levelSm = 1; liveNote.store (-1.f); liveStep.store (-1); activity.store (0.f);
         ctlLeft = 0;
     }
@@ -103,9 +104,36 @@ public:
         const float lfoDepth = p.get (sd::lDepth) * 0.01f;
 
         // Detected guitar note (continuous, so bends come through), relative to the tuning reference.
+        // The tracker only reports a picked note once it is sure of it (no blip of the old note, no wrong
+        // first note), and counts every new note: a pick, the same note picked again, a hammer-on, a slide.
         const float f0 = pt.frequency(), conf = pt.confidence();
         if (f0 > 0 && conf > 0.6f)
             detectedMidi = 69.f + 12.f * std::log2 (f0 / tuneHz) + p.transposeSemis;
+        const int serialNow = pt.noteSerial();
+        const bool fresh = serialNow != lastSerial && f0 > 0 && conf > 0.6f;
+        if (fresh) lastSerial = serialNow;
+        const bool legatoMode = p.on (sd::legato);
+        const bool guitarVoice = kbCount == 0 && sounding && src == Src::Guitar && ! held && ! legatoMode && ! arpActive;
+        // a pick on a sounding note: restart the envelopes at once (tight chugs), quieter until the new note
+        // is known; then it opens up on the right note (only the last few ms of the old pitch, and soft)
+        const bool resolvingNow = pt.resolving();
+        if (resolvingNow && ! wasResolving && guitarVoice) { retrigger (0.8f); retrigAtPick = true; }
+        wasResolving = resolvingNow;
+        if (kbCount == 0 && fresh && detectedMidi > 0)
+        {
+            if (pendingStart || (gateOpen && ! sounding && ! held))
+            { pendingStart = false; startNote (detectedMidi, 0.8f, Src::Guitar, false); }
+            else if (sounding && src == Src::Guitar && ! held)
+            {
+                // a new pick (also the same note again) or a hammer-on restarts the envelopes; a bend or slide glides
+                const bool restart = pt.noteWasPicked() ? ! retrigAtPick : pt.noteWasSudden();
+                if (restart && ! legatoMode && ! arpActive) retrigger (0.8f);
+                lastFollow = detectedMidi; rootNote = detectedMidi;
+            }
+            retrigAtPick = false;
+        }
+        if (! resolvingNow && ! fresh) retrigAtPick = false;
+        duckTarget = guitarVoice && resolvingNow ? 0.45f : 1.f;
 
         // Space (echo) settings.
         const double beat = 60.0 / juce::jlimit (30.0, 300.0, p.bpm);
@@ -122,28 +150,20 @@ public:
 
             // ---- guitar gate + onsets ------------------------------------------------------
             const float x = in != nullptr ? in[i] : 0.f;
-            const float ef = envFast.process (x), es = envSlow.process (x);
+            const float ef = envFast.process (x);
             const bool wasOpen = gateOpen;
             if (! gateOpen && ef > openLin) gateOpen = true;
             else if (gateOpen && ef < closeLin) gateOpen = false;
             if (kbCount == 0)
             {
-                // a new pick: wait for a fresh, confident pitch before the note starts (no wrong-note blips)
-                if (gateOpen && ! wasOpen) { pendingStart = true; if (sounding || held) detectedMidi = -1; }
+                // a new pick: the note starts when the tracker knows it (above, once a block). A soft note
+                // with no clear attack starts once its pitch has been steady for 40 ms.
+                if (gateOpen && ! wasOpen) { pendingStart = true; pendingAge = 0; }
                 if (! gateOpen) pendingStart = false;
-                if (pendingStart && detectedMidi > 0) { pendingStart = false; startNote (detectedMidi, 0.8f, Src::Guitar, false); }
-                if (onsetHold > 0) --onsetHold;
-                else if (gateOpen && ef > es * 1.9f && ef > openLin * 1.5f)
-                {
-                    onsetHold = (int) (0.06 * sr);
-                    if (sounding && ! held && src == Src::Guitar && ! p.on (sd::legato) && ! arpActive) retrigger (0.8f);
-                }
-                if (gateOpen && detectedMidi > 0 && sounding && src == Src::Guitar)
-                {
-                    // follow the guitar; a clear new note (not a bend) restarts the envelopes
-                    if (std::abs (detectedMidi - lastFollow) > 0.8f && ! p.on (sd::legato) && ! arpActive) retrigger (0.8f);
-                    lastFollow = detectedMidi; rootNote = detectedMidi;
-                }
+                if (pendingStart && ++pendingAge > (int) (0.04 * sr) && detectedMidi > 0 && conf > 0.6f && ! pt.resolving())
+                { pendingStart = false; startNote (detectedMidi, 0.8f, Src::Guitar, false); }
+                if (gateOpen && detectedMidi > 0 && sounding && src == Src::Guitar && ! held)
+                { lastFollow = detectedMidi; rootNote = detectedMidi; }              // bends, vibrato, slides
                 if (! gateOpen && wasOpen && src == Src::Guitar && sounding && ! held) { stopNote(); detectedMidi = -1; }
                 dynTarget = src == Src::Guitar && gateOpen ? juce::jmin (1.f, std::sqrt (ef * sensGain)) : dynTarget;
             }
@@ -156,21 +176,36 @@ public:
             dynGain += (dynTarget - dynGain) * 0.002f;
             const float dyn = p.get (sd::dyn) * 0.01f;
             const float dynMul = src == Src::Guitar && ! held ? (1.f - dyn) + dyn * dynGain : (1.f - dyn) + dyn * vel;
-            float g = a * dynMul * tremolo * outGain;
+            duck += (duckTarget - duck) * duckCoef;
+            float g = a * dynMul * tremolo * outGain * duck;
 
             float l = 0, r = 0;
             if (a > 1.0e-6f || ampEnv.active())
             {
-                if (! wasActive) { overL.reset(); overR.reset(); wasActive = true; }
+                if (! wasActive) { overL.reset(); overR.reset(); over4[0].reset(); over4[1].reset(); nl4Was = false; wasActive = true; }
                 // oscillators, drive and filter run at twice the sample rate: far less aliasing
                 float l2[2], r2[2];
                 const bool fOn = p.on (sd::fOn);
+                // the saturation (ANALOG) and the filter's drive run at 4x: driven hard on a high note, their
+                // overtones would otherwise fold back down as harsh, out-of-tune fizz
+                const bool nl4 = fOn || character == 1;
+                if (nl4 && ! nl4Was) { over4[0].reset(); over4[1].reset(); }
+                nl4Was = nl4;
                 for (int k = 0; k < 2; ++k)
                 {
                     float xl = 0, xr = 0;
                     renderVoices (xl, xr);
-                    if (character == 1) { xl = fastTanh (xl * 1.35f) * 0.78f; xr = fastTanh (xr * 1.35f) * 0.78f; }
-                    if (fOn) { xl = flt[0].process (xl); xr = flt[1].process (xr); }
+                    if (nl4)
+                    {
+                        float a[2], b[2];
+                        over4[0].up (xl, a[0], a[1]); over4[1].up (xr, b[0], b[1]);
+                        for (int q = 0; q < 2; ++q)
+                        {
+                            if (character == 1) { a[q] = fastTanh (a[q] * 1.35f) * 0.78f; b[q] = fastTanh (b[q] * 1.35f) * 0.78f; }
+                            if (fOn) { a[q] = flt[0].process (a[q]); b[q] = flt[1].process (b[q]); }
+                        }
+                        xl = over4[0].down (a[0], a[1]); xr = over4[1].down (b[0], b[1]);
+                    }
                     l2[k] = xl; r2[k] = xr;
                 }
                 l = overL.down (l2[0], l2[1]); r = overR.down (r2[0], r2[1]);
@@ -702,13 +737,13 @@ private:
         const int type = p.choice (sd::fType);
         for (auto& f : flt)
         {
-            if (type <= 1) f.setLadder (osSr, fc, res, type == 0, drive);
+            if (type <= 1) f.setLadder (fltSr, fc, res, type == 0, drive);
             else if (type == 6)
             {
                 float fr[3]; vowelFormants (fc, fr);
-                f.setVowel (osSr, fr, res, drive);
+                f.setVowel (fltSr, fr, res, drive);
             }
-            else f.setSvf (osSr, fc, res, type, drive);
+            else f.setSvf (fltSr, fc, res, type, drive);
         }
         // the amp envelope finished: forget the held note
         if (! ampEnv.active() && ! sounding && ! held) { for (auto& s : notes) s.on = false; }
@@ -840,15 +875,18 @@ private:
     void panicReset() { for (auto& f : flt) f.reset(); for (auto& o : osc) for (auto& s : o) for (auto& v : s) { v.y1 = v.y2 = 0; } echoL.clear(); echoR.clear(); }
 
     // ------------------------------------------------------------------ state
-    double sr = 48000, osSr = 96000;
+    double sr = 48000, osSr = 96000, fltSr = 192000;   // the oscillators run at 2x, the drive and filter at 4x
     const SynthParams* prm = nullptr;
     obs::amp::Over2 overL, overR; bool wasActive = false;
+    obs::amp::Over2 over4[2]; bool nl4Was = false;
     EnvFollower envFast, envSlow;
     bool gateOpen = false, sounding = false, held = false, pendingStart = false;
     Src src = Src::Guitar;
     static constexpr int kMaxKeys = 16;
     struct Key { int note; float vel; bool stack; } kb[kMaxKeys] {}; int kbCount = 0;
-    int onsetHold = 0;
+    int onsetHold = 0, pendingAge = 0, lastSerial = 0;
+    bool wasResolving = false, retrigAtPick = false;
+    float duck = 1.f, duckTarget = 1.f, duckCoef = 0.01f;
     float detectedMidi = -1, lastFollow = -1, rootNote = -1, vel = 0.8f;
     float dynGain = 0, dynTarget = 0;
     Adsr ampEnv, fltEnv;

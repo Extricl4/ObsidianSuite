@@ -20,6 +20,7 @@
 #include <atomic>
 #include "DspCore.h"
 #include "FxLabDefs.h"
+#include "Harmonizer.h"   // KERAUNOS' pitch effects run on HYDRA's pitch-synchronous voices
 
 namespace obs::dsp
 {
@@ -90,6 +91,7 @@ struct KeraunosParams
 {
     float v[obs::fxdefs::ker::count] {};
     float guitarHz = 0, guitarConf = 0;
+    const float* di = nullptr;      // the clean guitar for this block (the pitch effects listen to it); null: the input
     float get (int i) const     { return v[i]; }
     int   choice (int i) const  { return (int) std::lround (v[i]); }
 };
@@ -101,7 +103,7 @@ public:
     void prepare (double sampleRate)
     {
         sr = (float) sampleRate;
-        for (auto& s : shift) s.prepare (sampleRate);
+        hz.prepare (sampleRate, kCtl);
         int n = 1; while (n < (int) (sr * 0.03f)) n <<= 1;
         comb[0].assign ((size_t) n, 0.f); comb[1].assign ((size_t) n, 0.f); combMask = n - 1;
         for (auto* f : { &fA[0], &fA[1], &fB[0], &fB[1], &fC[0], &fC[1], &toneL, &toneR }) f->setSampleRate (sampleRate);
@@ -111,7 +113,7 @@ public:
     }
     void reset()
     {
-        for (auto& s : shift) s.reset();
+        hz.reset(); std::fill (std::begin (shA), std::end (shA), 0.f); std::fill (std::begin (shB), std::end (shB), 0.f);
         for (auto& c : comb) std::fill (c.begin(), c.end(), 0.f);
         combW = 0;
         for (auto* f : { &fA[0], &fA[1], &fB[0], &fB[1], &fC[0], &fC[1], &toneL, &toneR }) f->reset();
@@ -128,20 +130,29 @@ public:
         namespace k = obs::fxdefs::ker;
         const int algo = juce::jlimit (0, (int) k::kAlgos - 1, p.choice (k::algo));
         const float mix = p.get (k::mix) * 0.01f, out = dbToGain (p.get (k::level)), color = p.get (k::color) * 0.01f;
-        for (int i = 0; i < n; ++i)
+        const bool pitchAlgo = algo <= k::DetuneDrop;
+        for (int i = 0; i < n;)
         {
+            // a control tick every kCtl samples; the pitch voices run one tick's worth at a time
+            if (ctlLeft <= 0) { ctlLeft = kCtl; control (p, algo, color); }
+            const int m = juce::jmin (ctlLeft, n - i);
+            runVoices (L + i, R != nullptr ? R + i : nullptr, p.di != nullptr ? p.di + i : nullptr, m, pitchAlgo);
+            for (int j = 0; j < m; ++j, ++i)
+            {
             const float inL = L[i], inR = R != nullptr ? R[i] : inL;
             const float mono = 0.5f * (inL + inR);
-            if (--ctlLeft <= 0) { ctlLeft = kCtl; control (p, algo, color); }
             detect (mono);
             float wl = 0, wr = 0;
+            shNow = j;
             render (algo, inL, inR, wl, wr, color, (float) (kCtl - ctlLeft) / (float) kCtl);
+            --ctlLeft;
             // switching effects: a short dip, no click
             if (algoFade < 1.f) { algoFade = juce::jmin (1.f, algoFade + 1.f / (0.012f * sr)); wl *= algoFade; wr *= algoFade; }
             wl = dcL.process (wl); wr = dcR.process (wr);
             const float yl = (inL * (1.f - mix) + wl * mix) * out, yr = (inR * (1.f - mix) + wr * mix) * out;
             L[i] = std::isfinite (yl) ? softClip (yl) : 0.f;
             if (R != nullptr) R[i] = std::isfinite (yr) ? softClip (yr) : 0.f;
+            }
         }
         shownPos.store (posSm, std::memory_order_relaxed);
     }
@@ -150,6 +161,27 @@ public:
 
 private:
     static inline float softClip (float x) { return std::abs (x) < 1.2f ? x : (x > 0 ? 1.2f + 0.3f * fastTanh ((x - 1.2f) * 3.f) : -1.2f - 0.3f * fastTanh ((-x - 1.2f) * 3.f)); }
+
+    /** The pitch voices for the next m samples (m <= kCtl): voice A (semisA) and voice B (semisB), each a
+        HYDRA LEAD voice with a free shift (in cents: the pedal sweeps it smoothly). They follow the clean
+        guitar's periods, so they splice in step with the note (no warble), trail it by only ~2-5 ms, and let
+        pick attacks pass. A hard left, B hard right: shA / shB. Kept running (voices off) for the other
+        effects, so switching to a pitch effect starts warm. */
+    void runVoices (const float* inL, const float* inR, const float* di, int m, bool pitchAlgo)
+    {
+        float in[kCtl], det[kCtl];
+        for (int j = 0; j < m; ++j) { in[j] = inR != nullptr ? 0.5f * (inL[j] + inR[j]) : inL[j]; det[j] = di != nullptr ? di[j] : in[j]; }
+        hzp.on = true; hzp.track = 0; hzp.mix = 1.f; hzp.outDb = 0; hzp.human = 0; hzp.spread = 0.5f; hzp.transpose = 0;
+        for (int v = 0; v < hydra::kVoices; ++v) hzp.v[v].on = false;
+        const bool useB = pitchAlgo && (algoNow == obs::fxdefs::ker::OctFifth || blendB > 0.f);
+        auto set = [&] (int v, bool on, float semis, float pan) {
+            auto& vs = hzp.v[v]; vs.on = on; vs.smart = false; vs.semi = 0; vs.detune = semis * 100.f;
+            vs.level = 1.f; vs.pan = pan; vs.delayMs = 0;
+        };
+        set (0, pitchAlgo, semisA, -100.f);
+        set (1, useB, semisB, 100.f);
+        hz.process (det, in, nullptr, shA, shB, m, hzp);
+    }
 
     void control (const KeraunosParams& p, int algo, float color)
     {
@@ -297,16 +329,15 @@ private:
         namespace k = obs::fxdefs::ker;
         if (algo <= k::DetuneDrop)
         {
-            const float win = 0.045f * sr;
-            const float ra = std::exp2 (semisA / 12.f), rb = std::exp2 (semisB / 12.f);
-            float a0 = shift[0].process (inL, ra, win), a1 = shift[1].process (inR, ra, win * 1.07f);
-            if (algo == k::OctFifth || blendB > 0.f)
+            const float a = shA[shNow], b = shB[shNow];
+            float a0 = a, a1 = a;
+            if (algo == k::OctFifth) { const float h = a * 0.6f + b * 0.55f; a0 = inL * (1.f - 0.5f * blendB) + h * blendB; a1 = inR * (1.f - 0.5f * blendB) + h * blendB; }
+            else if (blendB > 0.f)
             {
-                const float b0 = shift[2].process (inL, rb, win * 0.93f), b1 = shift[3].process (inR, rb, win * 1.13f);
-                if (algo == k::OctFifth) { a0 = inL * (1.f - 0.5f * blendB) + (a0 * 0.6f + b0 * 0.55f) * blendB; a1 = inR * (1.f - 0.5f * blendB) + (a1 * 0.6f + b1 * 0.55f) * blendB; }
-                else { a0 = inL * (1.f - 0.5f * blendB) + (a0 + b1) * 0.5f * blendB; a1 = inR * (1.f - 0.5f * blendB) + (a1 + b0) * 0.5f * blendB; }
+                // the detune drop: the low voice leans left, the high one right (width)
+                a0 = inL * (1.f - 0.5f * blendB) + (0.75f * a + 0.25f * b) * blendB;
+                a1 = inR * (1.f - 0.5f * blendB) + (0.25f * a + 0.75f * b) * blendB;
             }
-            else if (algo != k::OctFifth) { shift[2].process (inL, 1.f, win); shift[3].process (inR, 1.f, win); }
             toneL.tick (a0); toneR.tick (a1);
             wl = toneL.low; wr = toneR.low; return;
         }
@@ -372,7 +403,8 @@ private:
 
     float sr = 48000.f; int ctlLeft = 0;
     fx::Rng rng;
-    fx::PitchShift shift[4];
+    hydra::Harmonizer hz; hydra::Params hzp;
+    float shA[kCtl] {}, shB[kCtl] {}; int shNow = 0;
     std::vector<float> comb[2]; int combMask = 0, combW = 0;
     float ap[2][4] {}; float apCoef = 0;
     fx::Hilbert hil[2]; float fsFb[2] {};
@@ -452,16 +484,27 @@ public:
             beat += inc;
             if (hold && ev[cur].type >= 0) ev[cur].dur = juce::jmax (ev[cur].dur, ev[cur].t + 4.f * stepLen);      // HOLD keeps it going
 
+            // the pitch shifter hears every sample exactly once (at the ratio of the PITCH glitch playing, if any),
+            // so a PITCH glitch never starts on a stale or doubled buffer
+            {
+                float pr = 1.f;
+                if (ev[cur ^ 1].type == obs::fxdefs::glt::Pitch) pr = ev[cur ^ 1].a;
+                if (ev[cur].type == obs::fxdefs::glt::Pitch) pr = ev[cur].a;
+                psL = shiftL.process (dl, pr, 0.04f * sr); psR = shiftR.process (dr, pr, 0.043f * sr);
+            }
             // the event(s): the current one, and the last one fading out (3 ms) so nothing clicks
             float wl = 0, wr = 0, envSum = 0;
             for (int s = 0; s < 2; ++s)
             {
                 auto& e = ev[s];
                 if (e.type < 0) continue;
+                // a pitch shift fades in and out more slowly (two different signals crossfading)
+                const float fi = e.type == obs::fxdefs::glt::Pitch ? 0.008f : 0.003f, fo = e.type == obs::fxdefs::glt::Pitch ? 0.008f : 0.004f;
+                const float fadeIn = juce::jmin (1.f, e.t / (fi * sr)), fadeOut = juce::jmin (1.f, (e.dur - e.t) / (fo * sr));
+                const float env = juce::jmax (0.f, juce::jmin (fadeIn, fadeOut)) * e.gain;
+                curEnv = env;                                     // an echo throw's send fades with its event
                 float el, er;
                 render (e, dl, dr, el, er);
-                const float fadeIn = juce::jmin (1.f, e.t / (0.003f * sr)), fadeOut = juce::jmin (1.f, (e.dur - e.t) / (0.004f * sr));
-                const float env = juce::jmax (0.f, juce::jmin (fadeIn, fadeOut)) * e.gain;
                 wl += el * env; wr += er * env; envSum += env;
                 e.t += 1.f;
                 if (e.t >= e.dur) e.type = -1;
@@ -572,6 +615,19 @@ private:
         return a + (b - a) * f;
     }
 
+    /** Read a loop of length Lp starting at base, u in [0, Lp): over the last 3 ms of each pass it crossfades
+        into the audio just before base, which runs straight on into the next pass (no jump, no click). */
+    inline float loopRead (int c, double base, float u, float Lp) const
+    {
+        const float a = readH (c, base + (double) u);
+        const float X = juce::jmin (0.003f * sr, 0.25f * Lp);
+        if (u < Lp - X || X < 2.f) return a;
+        const float w = 0.5f - 0.5f * std::cos (kPi * (u - (Lp - X)) / X);
+        return a + (readH (c, base + (double) u - (double) Lp) - a) * w;
+    }
+    /** Crossfade weight (0..1) over the first 3 ms after a jump to new material. */
+    inline float xIn (float since) const { const float X = 0.003f * sr; return since >= X ? 1.f : 0.5f - 0.5f * std::cos (kPi * since / X); }
+
     inline void render (Ev& e, float dl, float dr, float& ol, float& orr)
     {
         namespace g = obs::fxdefs::glt;
@@ -580,16 +636,22 @@ private:
         {
             case g::Stutter:
             {
-                const double pos = (double) e.start + std::fmod (t, e.a);
-                ol = readH (0, pos); orr = readH (1, pos); break;
+                const float u = std::fmod (t, e.a);
+                ol = loopRead (0, (double) e.start, u, e.a); orr = loopRead (1, (double) e.start, u, e.a); break;
             }
             case g::Roll:
             {
+                // the repeats get shorter every quarter; each change crossfades from the repeat that was playing
+                auto rollAt = [&] (int qq, int c) {
+                    const float local = t - (float) qq * D * 0.25f, Lq = juce::jmax (0.004f * sr, st / (float) (1 << qq));
+                    return loopRead (c, (double) e.start, std::fmod (local, Lq), Lq);
+                };
                 const int q = juce::jmin (3, (int) (4.f * t / D));
-                const float local = t - (float) q * D * 0.25f, Lq = juce::jmax (0.004f * sr, st / (float) (1 << q));
-                const double pos = (double) e.start + std::fmod (local, Lq);
+                ol = rollAt (q, 0); orr = rollAt (q, 1);
+                const float since = t - (float) q * D * 0.25f;
+                if (q > 0 && since < 0.003f * sr) { const float w = xIn (since); ol = rollAt (q - 1, 0) * (1.f - w) + ol * w; orr = rollAt (q - 1, 1) * (1.f - w) + orr * w; }
                 const float gup = 0.7f + 0.3f * (t / D);
-                ol = readH (0, pos) * gup; orr = readH (1, pos) * gup; break;
+                ol *= gup; orr *= gup; break;
             }
             case g::Reverse:
             {
@@ -604,10 +666,16 @@ private:
             }
             case g::Skip:
             {
-                const int seg = (int) (t / e.b); const float local = t - (float) seg * e.b;
-                const double base = (double) e.start + (double) seg * e.b * 0.5 - fx::hash01 (e.seed, (uint32_t) seg) * e.a;
-                const double pos = base + std::fmod (local, e.a);
-                ol = readH (0, pos); orr = readH (1, pos); break;
+                // a CD skipping: short loops that jump to another spot every segment (each jump crossfades)
+                auto skipAt = [&] (int sg, int c) {
+                    const float local = t - (float) sg * e.b;
+                    const double base = (double) e.start + (double) sg * e.b * 0.5 - fx::hash01 (e.seed, (uint32_t) sg) * e.a;
+                    return loopRead (c, base, std::fmod (local, e.a), e.a);
+                };
+                const int seg = (int) (t / e.b); const float since = t - (float) seg * e.b;
+                ol = skipAt (seg, 0); orr = skipAt (seg, 1);
+                if (seg > 0 && since < 0.003f * sr) { const float w = xIn (since); ol = skipAt (seg - 1, 0) * (1.f - w) + ol * w; orr = skipAt (seg - 1, 1) * (1.f - w) + orr * w; }
+                break;
             }
             case g::Freeze:
             {
@@ -619,7 +687,7 @@ private:
                 ol *= 0.75f; orr *= 0.75f; break;
             }
             case g::Pitch:
-                ol = shiftL.process (dl, e.a, 0.04f * sr); orr = shiftR.process (dr, e.a, 0.043f * sr); return;
+                ol = psL; orr = psR; return;
             case g::TapeStop:
             {
                 const float r = std::pow (juce::jmax (0.f, 1.f - t / D), 1.3f);
@@ -655,7 +723,8 @@ private:
             case g::Chop:
             {
                 const float u = std::fmod (t, e.a) / e.a;
-                const float a = u < 0.45f ? juce::jmin (1.f, u * 40.f) : juce::jmax (0.f, 1.f - (u - 0.45f) * 40.f);
+                const float rr = juce::jmin (40.f, e.a / (0.0012f * sr));            // ramps of at least 1.2 ms: choppy, not clicky
+                const float a = u < 0.45f ? juce::jmin (1.f, u * rr) : juce::jmax (0.f, 1.f - (u - 0.45f) * rr);
                 ol = dl * a; orr = dr * a; break;
             }
             case g::Dropout:
@@ -730,7 +799,7 @@ private:
                 ol *= 0.55f; orr *= 0.55f; break;
             }
             case g::Echo:
-                ol = dl; orr = dr; echoSend[0] += dl; echoSend[1] += dr; return;
+                ol = dl; orr = dr; echoSend[0] += dl * curEnv; echoSend[1] += dr * curEnv; return;
             case g::Vinyl:
             {
                 const float d = 0.003f * sr * (1.f + std::sin (kTwoPi * 0.6f * t / sr));
@@ -742,8 +811,6 @@ private:
             }
             default: ol = dl; orr = dr; break;
         }
-        // keep the pitch shifter fed so a PITCH glitch starts smoothly
-        if (e.type != g::Pitch) { shiftL.process (dl, 1.f, 0.04f * sr); shiftR.process (dr, 1.f, 0.043f * sr); }
     }
 
     float sr = 48000.f, stepLen = 6000.f, mixNow = 1, chaos = 0.4f, pitchSt = 12; int dir = 2, loopSteps = 16;
@@ -752,7 +819,7 @@ private:
     double beat = 0; long long lastStep = -1;
     Ev ev[2]; int cur = 0;
     Grain grains[kGrains];
-    fx::Rng rng; fx::PitchShift shiftL, shiftR;
+    fx::Rng rng; fx::PitchShift shiftL, shiftR; float psL = 0, psR = 0, curEnv = 1;
     Svf djL, djR, bpL, bpR, echoLp[2]; bool filterOn = false, filterLow = true;
     float heldSample[2] {};
     bool holdWas = false;
