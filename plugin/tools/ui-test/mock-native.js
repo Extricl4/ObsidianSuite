@@ -65,7 +65,7 @@
   function startEcho() {
     if (echoTimer) return;
     echoTimer = setInterval(() => {
-      if (echoDirty.size) { const o = {}; echoDirty.forEach(id => o[id] = params[id]); echoDirty.clear(); window.__mock.emit('obs:params', o); }
+      if (echoDirty.size) { const o = {}; echoDirty.forEach(id => o[id] = Math.fround(params[id])); /* the plugin keeps 32-bit floats */ echoDirty.clear(); window.__mock.emit('obs:params', o); }
       if (window.__mock.rigDirty) { window.__mock.rigDirty = false; window.__mock.emit('obs:rig', JSON.parse(JSON.stringify(S.rig))); }
     }, 33);
   }

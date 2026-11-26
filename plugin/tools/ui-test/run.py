@@ -531,6 +531,19 @@ async def run(standalone):
         check(si >= 0 and abs(sc[0] - 9 / nv) < 1e-6 and abs(sc[1] - 14 / nc) < 1e-6 and abs(sc[2] - 0.45) < 1e-3 and abs(sc[3] - 0.45) < 1e-3 and abs(sc[4] - 15 / nt) < 1e-6 and notes.count('·') == 3,
               f'the scene "Gates of Heaven": angels on the HEAVEN chord (four notes: {notes}), SHINE and SHIMMER, stars ({sc})')
         await pg.locator('.sy-prs.sy-aether .x').click(); await pg.wait_for_timeout(100)
+        # the plugin answers every value the page sends, as a 32-bit float: a loaded scene keeps its name through that
+        # echo, and only a real change from the plugin (automation, a main preset) makes it "Custom" (bug found 2026-11-26)
+        await pg.evaluate("window.__mock.echo = true")
+        await pg.locator('.sy-aether .sy-prbtn').click(); await pg.wait_for_timeout(150)
+        await pg.locator('.sy-prs.sy-aether .sy-pr', has_text='Cathedral Dawn').click(); await pg.wait_for_timeout(600)
+        await pg.locator('.sy-prs.sy-aether .x').click(); await pg.wait_for_timeout(100)
+        kept = await pg.evaluate("document.querySelector('.sy-aether .sy-prname').textContent")
+        lv = await pg.evaluate("window.__mock.sent('atm.drn.level')")
+        await pg.evaluate("v => window.__mock.emit('obs:params', {'atm.drn.level': v})", 0.9 if (lv or 0) < 0.8 else 0.2); await pg.wait_for_timeout(200)
+        auto = await pg.evaluate("document.querySelector('.sy-aether .sy-prname').textContent")
+        await pg.evaluate("window.__mock.echo = false")
+        check(kept == 'Cathedral Dawn' and auto == 'Custom',
+              f'a loaded scene keeps its name through the plugin\'s echo ("{kept}"); a real change from the plugin makes it "{auto}"')
         fit = await pg.evaluate("(() => { const k = document.querySelector('.sy-knobs.ae-six').getBoundingClientRect(), b = document.querySelector('.ae-bot').getBoundingClientRect(); return [Math.round(k.bottom), Math.round(b.top)]; })()")
         check(fit[0] <= fit[1] + 2, f'the DRONE panel fits above the bottom bar (knobs end at {fit[0]}, the bar starts at {fit[1]})')
         await pg.locator('.sy-page button[data-p="siren"]').click(); await pg.wait_for_timeout(150)
@@ -978,6 +991,9 @@ async def run(standalone):
             tile = await pg.evaluate("(()=>{const t=document.querySelector('.obs-tile[data-cab=metallon_cab]'); return t ? t.querySelector('i').textContent + ' | ' + t.querySelector('small').textContent + ' | ' + !!t.querySelector('.obs-tilepic') : ''})()")
             check('10 albums' in tile and 'Based on' in tile and tile.endswith('true'), f'CHOOSE CAB: the album cab shows its picture, album count and what it is ({tile})')
             await pg.locator('.obs-tile[data-cab="metallon_cab"]:visible').click(); await pg.wait_for_timeout(400)
+            try:   # the picture decodes in its own time (a slow machine): wait for it, up to 3 s
+                await pg.wait_for_function("(() => { const i = document.querySelector('.obs-cabpic img'); return i && i.complete && i.naturalWidth > 0 })()", timeout=3000)
+            except Exception: pass
             pic = await pg.evaluate("(()=>{const i=document.querySelector('.obs-cabpic img'); return i ? [i.getAttribute('src'), i.naturalWidth] : null})()")
             check(pic and 'cabs/metallon_cab.webp' in pic[0] and pic[1] > 100, f'the CAB page shows the cab picture ({pic})')
             scr = await pg.evaluate("(document.querySelector('.obs-cabscreen')||{}).textContent")

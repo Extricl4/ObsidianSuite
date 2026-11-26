@@ -84,6 +84,9 @@ function set(id, v, from) {
   v = +v; if (!isFinite(v)) return;
   v = clamp(v, p.min, p.max); if (p.type !== 'f' && p.type !== 'log') v = Math.round(v);
   if (S[id] === v) return;
+  // the plugin keeps 32-bit floats: a value the page just sent comes back a hair off (0.45 -> 0.4500000178).
+  // That is not a change, or loading a scene or preset would at once read as "Custom"
+  if (from === 'plugin' && Math.abs(v - S[id]) <= 1e-5 * (Math.abs(p.max - p.min) + Math.abs(v))) return;
   S[id] = v;
   listeners.forEach(fn => fn(id, v, from));
 }
