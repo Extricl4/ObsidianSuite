@@ -202,6 +202,29 @@ int main (int argc, char** argv)
             else std::printf ("  state saved and loaded back: ok\n");
         }
 
+        std::printf ("5b. DAW automation sweeps the filter while the song plays (no waiting for the knob to stop)\n");
+        {
+            resetAll (p); p.transport ("play", 0); render (p, 1);
+            auto bright = [] (const juce::AudioBuffer<float>& b, int from, int len)   // the share of the signal's change: brighter = more
+            {
+                double d = 0, e = 0; const float* x = b.getReadPointer (0);
+                for (int i = from + 1; i < from + len; ++i) { d += (double) (x[i] - x[i - 1]) * (x[i] - x[i - 1]); e += (double) x[i] * x[i]; }
+                return d / (e + 1e-12);
+            };
+            juce::AudioBuffer<float> all (2, (int) (SR * 3)); int at = 0; bool bad = false;
+            for (int k2 = 0; k2 < 60; ++k2)
+            {
+                setP (p, "syn.flt.cutoff", (float) (200 * std::pow (40.0, k2 / 59.0)));
+                auto q = render (p, .05, SR, 256, {}, 0); bad |= q.bad;
+                for (int c = 0; c < 2; ++c) all.copyFrom (c, at, q.buf, c, 0, std::min (q.buf.getNumSamples(), all.getNumSamples() - at));
+                at += q.buf.getNumSamples();
+            }
+            const double b0 = bright (all, (int) (SR * .2), (int) (SR * .5)), b1 = bright (all, (int) (SR * 2.4), (int) (SR * .5));
+            std::printf ("   brightness at 200 Hz %.4f, at 8 kHz %.4f\n", b0, b1);
+            if (bad || ! (b1 > b0 * 3)) fail ("the cutoff didn't follow the automation");
+            writeWav (out.getChildFile ("05b-sweep.wav"), all);
+        }
+
         std::printf ("6. presets\n");
         const juce::File pj (argc > 2 ? juce::File::getCurrentWorkingDirectory().getChildFile (argv[2]) : juce::File());
         if (pj.existsAsFile())

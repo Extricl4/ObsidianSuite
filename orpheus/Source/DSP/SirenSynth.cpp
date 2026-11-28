@@ -50,7 +50,7 @@ std::unique_ptr<SirenSynth::Voice> SirenSynth::makeVoice (const std::vector<floa
     v->ch = S.ch (P_char);
     v->nNotes = (int) notes.size(); v->notes = notes;
     v->drive = 1 + S[P_flt_drive] / 100.0 * 5 + (v->ch == 1 ? .6 : 0); v->driveNorm = std::tanh (v->drive);
-    v->amp.setNow (0); v->trem.setNow (1); v->killed.setNow (1);
+    v->amp.setNow (0); v->trem.setNow (1); v->killed.setNow (1); v->fMul.setNow (1);
     v->os[0].init (sr); v->os[1].init (sr);
     // filter
     v->fOn = S.on (P_flt_on); v->ft = S.ch (P_flt_type);
@@ -146,6 +146,8 @@ void SirenSynth::applyFilter (Voice& v, float root, float vel, bool steady, cons
     if (! v.fOn || v.nf == 0) return;
     const double key = std::pow (2.0, (root - 52.0) / 12.0 * S[P_flt_key] / 100.0);
     const double base = std::max (20.0, std::min (18000.0, S[P_flt_cutoff] * key));
+    for (int k = 0; k < v.nf; ++k) v.fe[k].f.v *= v.fMul.v;   // (a live cutoff change so far: kept, from here on in the ramps)
+    v.base0 = base; v.fMul.setNow (1);
     const double env = S.on (P_env_f_on) ? S[P_flt_env] / 100.0 * (.6 + .4 * vel) : 0.0;
     auto hzAt = [&] (double l) { return std::max (20.0, std::min (18000.0, base * std::pow (2.0, env * 6 * l))); };
     const int n = std::max (1, std::min (8, S.ch (P_fenv_n)));
@@ -221,7 +223,7 @@ void SirenSynth::noteOff (const Snapshot& S)
         for (int k = 0; k < cur->nf; ++k)
         {
             cur->fe[k].pts.clear(); cur->fe[k].next = 0;
-            cur->fe[k].f.approach ((float) (cur->ft == 6 ? vowelF (base, k) : base), S[P_env_f_rel] / 3000.0, sr);
+            cur->fe[k].f.approach ((float) (cur->ft == 6 ? vowelF (base, k) : base / std::max (1e-3f, cur->fMul.target)), S[P_env_f_rel] / 3000.0, sr);
         }
     }
 }
@@ -231,21 +233,53 @@ void SirenSynth::filterKick (float root, const Snapshot& S)
     if (cur && gateOpen) applyFilter (*cur, root, velNow, false, S);
 }
 
+/* Which settings rebuild the voice (50 ms after the last change, as in the preview), which move it live, which don't
+   touch it. Live (the plugin's own, so DAW automation sweeps smoothly): the filter's cutoff, key tracking, resonance and
+   drive (except for VOWEL, which is rebuilt). */
+enum : uint8_t { K_REBUILD, K_NONE, K_LIVE };
+static const std::array<uint8_t, P_COUNT>& paramKinds()
+{
+    static const auto k = []
+    {
+        std::array<uint8_t, P_COUNT> a {};
+        for (int i = 0; i < P_COUNT; ++i)
+        {
+            const juce::String id (paramDefs()[i].id);
+            a[(size_t) i] = K_REBUILD;
+            if (id.startsWith ("syn.fx.") || id.startsWith ("syn.fenv.") || i == P_env_f_rel || i == P_glide || i == P_dyn || i == P_legato || i == P_level
+                || i == P_trim || i == P_space || i == P_env_a_att || i == P_env_a_dec || i == P_env_a_rel) a[(size_t) i] = K_NONE;
+            if (i == P_flt_cutoff || i == P_flt_key || i == P_flt_res || i == P_flt_drive) a[(size_t) i] = K_LIVE;
+        }
+        return a;
+    }();
+    return k;
+}
+
 void SirenSynth::paramsChanged (const Snapshot& now, const Snapshot& before)
 {
-    bool rebuild = false;
-    for (int i = 0; i < P_COUNT && ! rebuild; ++i)
+    const auto& kinds = paramKinds();
+    bool rebuild = false, live = false;
+    for (int i = 0; i < P_COUNT; ++i)
     {
         if (now.v[(size_t) i] == before.v[(size_t) i]) continue;
-        const juce::String id (paramDefs()[i].id);
         if (i == P_fx_oct_mix) { if (cur) cur->octG.approach ((float) (now[P_fx_oct_mix] / 100.0 * (now.ch (P_fx_oct_mode) >= 2 ? .8 : 1)), .03, sr); continue; }
-        const bool octChange = i == P_fx_oct_on || i == P_fx_oct_mode || (i == P_fx_on && now.on (P_fx_oct_on));
-        if (id.startsWith ("syn.fx.") && ! octChange) continue;
-        if (id.startsWith ("syn.fenv.") || i == P_env_f_rel || i == P_glide || i == P_dyn || i == P_legato || i == P_level || i == P_trim
-            || i == P_space || i == P_env_a_att || i == P_env_a_dec || i == P_env_a_rel) continue;
-        rebuild = true;
+        if (i == P_fx_oct_on || i == P_fx_oct_mode || (i == P_fx_on && now.on (P_fx_oct_on))) { rebuild = true; continue; }
+        const auto k = kinds[(size_t) i];
+        if (k == K_LIVE && cur && cur->ft != 6) live = true;
+        else if (k != K_NONE) rebuild = true;
     }
-    if (rebuild && cur) rebuildIn = (int) (sr * .05);
+    if (live && cur)
+    {
+        Voice& v = *cur;
+        const double r = now[P_flt_res] / 100.0;
+        for (int k = 0; k < v.nf; ++k) v.q[k] = v.ft <= 1 ? (k ? .7 : .7 + r * (v.ft ? 16 : 12)) : .7 + r * 14;
+        v.drive = 1 + now[P_flt_drive] / 100.0 * 5 + (v.ch == 1 ? .6 : 0); v.driveNorm = std::tanh (v.drive);
+        const double root = curNotes.empty() ? 40.0 : curNotes[0];
+        const double base = std::max (20.0, std::min (18000.0, now[P_flt_cutoff] * std::pow (2.0, (root - 52.0) / 12.0 * now[P_flt_key] / 100.0)));
+        v.fMul.approach ((float) (base / std::max (20.0, v.base0)), .02, sr);
+    }
+    if (rebuild && cur && rebuildIn < 0) rebuildIn = (int) (sr * .05);
+    else if (rebuild && cur) rebuildIn = (int) (sr * .05);
 }
 
 /* ------------------------------------------------------------ sound */
@@ -308,7 +342,7 @@ float SirenSynth::renderVoice (Voice& v, const Snapshot& S, float* L, float* R, 
         // filter
         if (v.fOn && v.nf > 0)
         {
-            const double addHz = (v.lfoOn && v.lfoTarget == 1) ? lv * amt : 0.0;
+            const double addHz = (v.lfoOn && v.lfoTarget == 1) ? lv * amt : 0.0, fm = v.fMul.next();
             double yl = 0, yr = 0;
             for (int k = 0; k < v.nf; ++k)
             {
@@ -316,7 +350,7 @@ float SirenSynth::renderVoice (Voice& v, const Snapshot& S, float* L, float* R, 
                 if ((s & 3) == 0)
                 {
                     const auto type = v.ft == 6 ? WABiquad::BP : v.ft <= 2 ? WABiquad::LP : v.ft == 3 ? WABiquad::BP : v.ft == 4 ? WABiquad::HP : WABiquad::NOTCH;
-                    const double fq = std::max (0.0, (double) fk + addHz);
+                    const double fq = std::max (0.0, std::min (18000.0, std::max (20.0, (double) fk * fm)) + addHz);
                     v.fl[k][0].set (type, fq, v.q[k]); v.fl[k][1].b0 = v.fl[k][0].b0; v.fl[k][1].b1 = v.fl[k][0].b1; v.fl[k][1].b2 = v.fl[k][0].b2; v.fl[k][1].a1 = v.fl[k][0].a1; v.fl[k][1].a2 = v.fl[k][0].a2;
                 }
                 if (v.ft == 6) { yl += v.fl[k][0].process ((float) l) * v.vowelG[k]; yr += v.fl[k][1].process ((float) r) * v.vowelG[k]; }

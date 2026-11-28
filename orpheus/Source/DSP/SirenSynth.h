@@ -52,6 +52,7 @@ private:
         Target amp, octG, lfoAmt, trem, killed;
         int ft = 0; bool fOn = true; int nf = 0; double q[3] {}; WABiquad fl[3][2]; FilterEnv fe[3]; float vowelG[3] { 1, 1, 1 };
         double drive = 1, driveNorm = 1; Os2 os[2];
+        double base0 = 1000; Target fMul;   // the cutoff the filter's ramps were made from; a live change scales them
         int ch = 0; WABiquad vhs[2]; double charPh = 0, charRate = 0, charCents = 0;
         int lfoShape = 0, lfoTarget = 0; bool lfoOn = false; double lfoPh = 0, lfoDepth = 0, rndA = 0, rndT = 0; int rndLeft = 0; float lfoAmtFull = 0;
         std::shared_ptr<const std::vector<float>> noise; size_t noiseI = 0; float noiseG = 0;
